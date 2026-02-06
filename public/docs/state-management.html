@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>State Management - ryOS Docs</title>
+  <link rel="icon" href="/icons/mac-192.png">
+  <style>
+    @font-face { font-family: "Geneva"; src: url("/fonts/geneva-12.woff2") format("woff2"); }
+    @font-face { font-family: "Monaco"; src: url("/fonts/monacottf.woff2") format("woff2"); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Geneva", system-ui, sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: #fff;
+      color: #000;
+    }
+    a { color: #00f; }
+    a:hover { text-decoration: none; }
+    code, pre { font-family: "Monaco", monospace; font-size: 11px; }
+    code { background: #f0f0f0; padding: 1px 4px; }
+    pre { background: #f8f8f8; border: 1px solid #ddd; padding: 12px; overflow-x: auto; margin: 12px 0; }
+    pre code { background: none; padding: 0; }
+    
+    /* Layout */
+    .header {
+      position: sticky; top: 0; z-index: 10;
+      background: #fff; border-bottom: 1px solid #ccc;
+      padding: 0 16px; height: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-left img { width: 20px; height: 20px; display: block; }
+    .header-left span { font-weight: bold; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a { text-decoration: none; color: #333; }
+    .header-right a:hover { color: #000; }
+    .header-right .github { display: flex; align-items: center; gap: 4px; }
+    .header-right .launch { background: #000; color: #fff; padding: 4px 12px; }
+    
+    .container { display: flex; max-width: 1100px; margin: 0 auto; }
+    
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      border-right: 1px solid #ccc;
+      padding: 12px;
+      position: sticky; top: 40px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .sidebar a {
+      display: block; padding: 4px 8px; margin: 2px 0;
+      text-decoration: none; color: #333;
+      font-size: 11px;
+    }
+    .sidebar a:hover { background: #f0f0f0; }
+    .sidebar a.active { background: #000; color: #fff; }
+    
+    /* Tree hierarchy styles */
+    .nav-group { margin: 4px 0; }
+    .nav-spacer { width: 8px; flex-shrink: 0; } /* Same width as toggle arrow */
+    .nav-no-toggle { cursor: default; }
+    .nav-toggle {
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; padding: 0; width: 100%;
+      cursor: pointer; text-align: left; font: inherit; color: inherit;
+    }
+    .nav-toggle:hover { background: #f0f0f0; }
+    .nav-toggle svg { flex-shrink: 0; opacity: 0.6; transition: transform 0.2s; }
+    .nav-toggle a { flex: 1; padding: 4px 8px; margin: 0; pointer-events: auto; font-size: 11px; }
+    .nav-children { margin-left: 12px; overflow: hidden; transition: height 0.2s ease-out; }
+    .nav-child { padding-left: 8px !important; font-size: 10px !important; color: #555 !important; }
+    .nav-child:hover { color: #000 !important; }
+    .nav-child.active { color: #fff !important; }
+    
+    .content { flex: 1; padding: 24px 32px; min-width: 0; }
+    
+    /* Typography */
+    h1 { font-size: 18px; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 16px; }
+    hr { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+    h2 { font-size: 14px; margin: 24px 0 12px; }
+    h3 { font-size: 12px; margin: 16px 0 8px; }
+    h4 { font-size: 11px; margin: 12px 0 6px; font-weight: bold; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 8px 20px; }
+    li { margin: 4px 0; }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    th { background: #f0f0f0; font-weight: bold; }
+    
+    /* Mermaid diagrams */
+    pre.mermaid { background: none; border: none; padding: 0; text-align: center; margin: 16px 0; }
+    .mermaid svg { max-width: 100%; height: auto; font-family: "Geneva", system-ui, sans-serif !important; }
+    .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { fill: #f8f8f8 !important; stroke: #ccc !important; }
+    .mermaid .edgeLabel { background: #fff !important; font-size: 10px !important; }
+    .mermaid .label { font-size: 10px !important; }
+    .mermaid .nodeLabel { font-size: 10px !important; }
+    .mermaid .cluster-label { font-size: 10px !important; }
+    .mermaid .messageText { font-size: 10px !important; }
+    .mermaid .actor { font-size: 10px !important; }
+    .mermaid .labelText { font-size: 10px !important; }
+    
+    /* Collapsible details */
+    details { margin: 8px 0; }
+    details summary { 
+      cursor: pointer; 
+      color: #666; 
+      font-size: 11px;
+      padding: 4px 0;
+      user-select: none;
+    }
+    details summary:hover { color: #000; }
+    details[open] summary { margin-bottom: 8px; }
+    details ul { margin-top: 0; }
+    
+    /* Navigation */
+    .nav { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ccc; }
+    .nav a { text-decoration: none; color: #333; }
+    .nav a:hover { color: #000; }
+    
+    /* Mobile menu button */
+    .menu-btn { 
+      display: none; 
+      background: transparent; 
+      border: 0; 
+      padding: 4px; 
+      cursor: pointer; 
+      line-height: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+      color: inherit;
+    }
+    .menu-btn svg { display: block; width: 18px; height: 18px; pointer-events: none; }
+    @media screen and (max-width: 768px) {
+      .menu-btn { 
+        display: -webkit-flex !important;
+        display: flex !important; 
+        -webkit-align-items: center;
+        align-items: center; 
+        -webkit-justify-content: center;
+        justify-content: center;
+      }
+      .header-left img { display: none !important; }
+      .sidebar { 
+        position: fixed; left: -240px; top: 40px; 
+        width: 240px; height: calc(100vh - 40px);
+        background: #fff; z-index: 20;
+        transition: left 0.2s;
+      }
+      .sidebar.open { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit">
+        <img src="/icons/mac-192.png" alt="ryOS" width="20" height="20">
+        <span>ryOS</span>
+      </a>
+      <span style="color:#999">/</span>
+      <span style="color:#666">Docs</span>
+    </div>
+    <div class="header-right">
+      <a href="https://github.com/ryokun6/ryos" target="_blank" class="github">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href="/" class="launch">Launch</a>
+    </div>
+  </header>
+  
+  <div class="container">
+    <nav class="sidebar">
+      <div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/overview" class="">1. Overview</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/architecture" class="nav-child ">1.1 Architecture & Build</a>
+    <a href="/docs/api-architecture" class="nav-child ">1.2 API Architecture</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/apps" class="">2. Apps</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chats" class="nav-child ">2.1 Chats</a>
+    <a href="/docs/internet-explorer" class="nav-child ">2.2 Internet Explorer</a>
+    <a href="/docs/ipod" class="nav-child ">2.3 iPod</a>
+    <a href="/docs/karaoke" class="nav-child ">2.4 Karaoke</a>
+    <a href="/docs/textedit" class="nav-child ">2.5 TextEdit</a>
+    <a href="/docs/finder" class="nav-child ">2.6 Finder</a>
+    <a href="/docs/paint" class="nav-child ">2.7 Paint</a>
+    <a href="/docs/photo-booth" class="nav-child ">2.8 Photo Booth</a>
+    <a href="/docs/terminal" class="nav-child ">2.9 Terminal</a>
+    <a href="/docs/control-panels" class="nav-child ">2.10 Control Panels</a>
+    <a href="/docs/soundboard" class="nav-child ">2.11 Soundboard</a>
+    <a href="/docs/synth" class="nav-child ">2.12 Synth</a>
+    <a href="/docs/videos" class="nav-child ">2.13 Videos</a>
+    <a href="/docs/minesweeper" class="nav-child ">2.14 Minesweeper</a>
+    <a href="/docs/virtual-pc" class="nav-child ">2.15 Virtual PC</a>
+    <a href="/docs/admin" class="nav-child ">2.16 Admin</a>
+    <a href="/docs/applet-store" class="nav-child ">2.17 Applet Store</a>
+    <a href="/docs/stickies" class="nav-child ">2.18 Stickies</a>
+    <a href="/docs/infinite-mac" class="nav-child ">2.19 Infinite Mac</a>
+  </div>
+</div>
+<div class="nav-group expanded">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="true">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(90deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/application-framework" class="">3. Application Framework</a>
+  </button>
+  <div class="nav-children" style="display: block;">
+    <a href="/docs/window-management" class="nav-child ">3.1 Window Management</a>
+    <a href="/docs/state-management" class="nav-child active">3.2 State Management</a>
+    <a href="/docs/theme-system" class="nav-child ">3.3 Theme System</a>
+    <a href="/docs/hooks-architecture" class="nav-child ">3.4 Hooks Architecture</a>
+    <a href="/docs/component-architecture" class="nav-child ">3.5 Component Architecture</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/ai-system" class="">4. AI System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/file-system" class="">5. File System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/audio-system" class="">6. Audio System</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/ui-components" class="">7. UI Components and Shared Systems</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/component-library" class="nav-child ">7.1 Components</a>
+    <a href="/docs/i18n" class="nav-child ">7.2 i18n & Hooks</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/api-reference" class="">8. API Reference</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chat-api" class="nav-child ">8.1 Chat API</a>
+    <a href="/docs/song-api" class="nav-child ">8.2 Song API</a>
+    <a href="/docs/media-api" class="nav-child ">8.3 Media API</a>
+    <a href="/docs/auth-api" class="nav-child ">8.4 Auth API</a>
+    <a href="/docs/rooms-api" class="nav-child ">8.5 Rooms API</a>
+    <a href="/docs/messages-api" class="nav-child ">8.6 Messages API</a>
+    <a href="/docs/presence-api" class="nav-child ">8.7 Presence API</a>
+    <a href="/docs/ai-generation-apis" class="nav-child ">8.8 AI Endpoints</a>
+    <a href="/docs/utility-apis" class="nav-child ">8.9 Utility APIs</a>
+    <a href="/docs/api-design-guide" class="nav-child ">8.10 ryOS API Design Guide</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/changelog" class="">9. Changelog</a>
+  </div>
+</div>
+    </nav>
+    
+    <main class="content">
+      <article>
+        <h1>State Management</h1>
+<p>ryOS uses Zustand for state management with 21+ stores following consistent patterns, combined with localStorage and IndexedDB for persistence.</p>
+<h2>Architecture Overview</h2>
+<pre class="mermaid">flowchart TB
+    subgraph "Presentation Layer"
+        COMP[React Components]
+    end
+    
+    subgraph "Store Layer"
+        subgraph "Core Stores"
+            APP[useAppStore<br/>Window Management]
+            FILES[useFilesStore<br/>File System]
+            THEME[useThemeStore<br/>Theming]
+        end
+        
+        subgraph "Feature Stores"
+            CHAT[useChatsStore]
+            IPOD[useIpodStore]
+            DOCK[useDockStore]
+        end
+        
+        subgraph "Settings Stores"
+            AUDIO[useAudioSettingsStore]
+            DISPLAY[useDisplaySettingsStore]
+        end
+    end
+    
+    subgraph "Persistence Layer"
+        LS[(localStorage)]
+        IDB[(IndexedDB)]
+    end
+    
+    subgraph "External"
+        API[REST APIs]
+        REDIS[(Redis Cache)]
+    end
+    
+    COMP --> APP
+    COMP --> FILES
+    COMP --> CHAT
+    COMP --> IPOD
+    
+    APP -.->|cross-store| FILES
+    IPOD -.->|auth| CHAT
+    
+    APP --> LS
+    FILES --> LS
+    FILES --> IDB
+    CHAT --> LS
+    DISPLAY --> IDB
+    
+    IPOD --> API
+    CHAT --> API
+    API --> REDIS</pre>
+<h2>Store Inventory</h2>
+<h3>Core System Stores</h3>
+<table><thead><tr><th>Store</th><th>Persistence Key</th><th>Purpose</th></tr></thead><tbody><tr><td><code>useAppStore</code></td><td><code>ryos:app-store</code></td><td>Window/instance management, boot state, AI model selection, recent apps/documents, expose mode</td></tr><tr><td><code>useFilesStore</code></td><td><code>ryos:files</code></td><td>Virtual filesystem metadata</td></tr><tr><td><code>useThemeStore</code></td><td><code>os_theme</code> (manual)</td><td>OS theme selection</td></tr><tr><td><code>useDisplaySettingsStore</code></td><td><code>ryos:display-settings</code></td><td>Wallpaper, shaders, screen saver</td></tr><tr><td><code>useDockStore</code></td><td><code>dock-storage</code></td><td>Dock pinned items, scale, visibility</td></tr><tr><td><code>useAudioSettingsStore</code></td><td><code>ryos:audio-settings</code></td><td>Volume controls, audio feature toggles</td></tr><tr><td><code>useLanguageStore</code></td><td><code>ryos:language</code></td><td>UI language preference</td></tr></tbody></table>
+<h3>App-Specific Stores</h3>
+<table><thead><tr><th>Store</th><th>Persistence Key</th><th>Purpose</th></tr></thead><tbody><tr><td><code>useChatsStore</code></td><td><code>ryos:chats</code></td><td>Chat rooms, messages, authentication</td></tr><tr><td><code>useIpodStore</code></td><td><code>ryos:ipod</code></td><td>Music library, playback state, lyrics</td></tr><tr><td><code>useVideoStore</code></td><td><code>ryos:videos</code></td><td>Video library, playback</td></tr><tr><td><code>useKaraokeStore</code></td><td><code>ryos:karaoke</code></td><td>Karaoke session state</td></tr><tr><td><code>useTerminalStore</code></td><td><code>ryos:terminal</code></td><td>Command history, vim state</td></tr><tr><td><code>useSynthStore</code></td><td><code>ryos:synth</code></td><td>Synthesizer presets</td></tr><tr><td><code>useSoundboardStore</code></td><td><code>ryos:soundboard</code></td><td>Soundboard slots and recordings</td></tr><tr><td><code>useAppletStore</code></td><td><code>applet-storage</code></td><td>Applet window dimensions</td></tr><tr><td><code>useFinderStore</code></td><td><code>ryos:finder</code></td><td>Finder instances, view preferences</td></tr><tr><td><code>useTextEditStore</code></td><td><code>ryos:textedit</code></td><td>Recent documents</td></tr><tr><td><code>useInternetExplorerStore</code></td><td><code>ryos:ie</code></td><td>Favorites, history</td></tr><tr><td><code>usePaintStore</code></td><td><code>ryos:paint</code></td><td>Tool settings</td></tr><tr><td><code>usePhotoBoothStore</code></td><td><code>ryos:photobooth</code></td><td>Recent photos</td></tr><tr><td><code>usePcStore</code></td><td><code>ryos:pc</code></td><td>Virtual PC state</td></tr></tbody></table>
+<h3>Store Architecture Diagram</h3>
+<pre class="mermaid">graph TD
+    subgraph Core["Core System"]
+        AppStore[useAppStore<br/>Windows & Boot]
+        ThemeStore[useThemeStore<br/>Theme]
+        DisplayStore[useDisplaySettingsStore<br/>Wallpaper & Shaders]
+        AudioStore[useAudioSettingsStore<br/>Volume & TTS]
+        DockStore[useDockStore<br/>Pinned Items]
+    end
+
+    subgraph Media["Media Apps"]
+        IpodStore[useIpodStore<br/>Music Library]
+        VideoStore[useVideoStore<br/>Video Library]
+        SynthStore[useSynthStore<br/>Synth Presets]
+    end
+
+    subgraph Social["Communication"]
+        ChatsStore[useChatsStore<br/>Chat & Auth]
+    end
+
+    subgraph Productivity["Productivity"]
+        FilesStore[useFilesStore<br/>Virtual FS]
+        TerminalStore[useTerminalStore<br/>CLI State]
+    end
+
+    AppStore --> |manages| Media
+    AppStore --> |manages| Social
+    AppStore --> |manages| Productivity
+    ChatsStore -.-> |auth| IpodStore</pre>
+<h2>Store Pattern</h2>
+<p>All stores follow a consistent Zustand pattern with persist middleware:</p>
+<pre><code>import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+
+interface ExampleState {
+  // State
+  someValue: string;
+  items: Item[];
+  
+  // Actions
+  setSomeValue: (v: string) =&gt; void;
+  addItem: (item: Item) =&gt; void;
+  removeItem: (id: string) =&gt; void;
+  
+  // Computed (via get())
+  getItemById: (id: string) =&gt; Item | undefined;
+}
+
+export const useExampleStore = create&lt;ExampleState&gt;()(
+  persist(
+    (set, get) =&gt; ({
+      // Initial state
+      someValue: "default",
+      items: [],
+      
+      // Actions
+      setSomeValue: (v) =&gt; set({ someValue: v }),
+      
+      addItem: (item) =&gt; set((state) =&gt; ({
+        items: [...state.items, item],
+      })),
+      
+      removeItem: (id) =&gt; set((state) =&gt; ({
+        items: state.items.filter((item) =&gt; item.id !== id),
+      })),
+      
+      // Computed getter
+      getItemById: (id) =&gt; get().items.find((item) =&gt; item.id === id),
+    }),
+    {
+      name: "ryos:example",           // localStorage key
+      version: 1,                      // Migration version
+      storage: createJSONStorage(() =&gt; localStorage),
+      
+      // Selective persistence
+      partialize: (state) =&gt; ({
+        someValue: state.someValue,
+        items: state.items,
+      }),
+      
+      // Version migrations
+      migrate: (persisted, version) =&gt; {
+        if (version &lt; 1) {
+          // Handle migration
+        }
+        return persisted;
+      },
+      
+      // Post-rehydration hook
+      onRehydrateStorage: () =&gt; (state, error) =&gt; {
+        if (state) {
+          // Initialize or sync after rehydration
+        }
+      },
+    }
+  )
+);</code></pre>
+<h2>Persistence Strategies</h2>
+<h3>localStorage Persistence (via Zustand <code>persist</code>)</h3>
+<p>Used for settings, preferences, and lightweight metadata:</p>
+<pre><code>persist(
+  (set) =&gt; ({ /* state and actions */ }),
+  {
+    name: "ryos:audio-settings",
+    version: STORE_VERSION,
+    partialize: (state) =&gt; ({
+      masterVolume: state.masterVolume,
+      uiVolume: state.uiVolume,
+      // Only persist necessary fields
+    }),
+  }
+)</code></pre>
+<h3>IndexedDB Integration</h3>
+<p>Used for large binary data (images, documents, applets):</p>
+<pre><code>// IndexedDB stores
+const STORES = {
+  DOCUMENTS: "documents",      // Text files
+  IMAGES: "images",           // Binary images
+  APPLETS: "applets",         // HTML applet content
+  TRASH: "trash",             // Deleted file content
+  CUSTOM_WALLPAPERS: "custom_wallpapers",
+};
+
+// Database: ryOS (version 7)
+interface StoredContent {
+  name: string;               // Original filename
+  content: string | Blob;     // File content
+}</code></pre>
+<h3>Hybrid Persistence (Files Store)</h3>
+<p>The <code>useFilesStore</code> demonstrates a sophisticated two-layer architecture:</p>
+<pre class="mermaid">flowchart TB
+    subgraph "Metadata Layer (localStorage)"
+        FS[File System Items<br/>path, name, type, uuid, status]
+    end
+    
+    subgraph "Content Layer (IndexedDB)"
+        DOC[documents store]
+        IMG[images store]
+        APP[applets store]
+    end
+    
+    subgraph "Lazy Loading"
+        CACHE[In-memory cache]
+        PENDING[Pending lazy load map]
+    end
+    
+    FS -->|uuid reference| DOC
+    FS -->|uuid reference| IMG
+    FS -->|uuid reference| APP
+    
+    PENDING -->|on-demand fetch| DOC
+    PENDING -->|on-demand fetch| IMG
+    
+    CACHE -.->|cached JSON| FS</pre>
+<h3>Manual localStorage (Theme Store)</h3>
+<p>Some stores use manual persistence for more control:</p>
+<pre><code>setTheme: (theme) =&gt; {
+  set({ current: theme });
+  localStorage.setItem("os_theme", theme);  // Manual save
+  document.documentElement.dataset.osTheme = theme;
+  ensureLegacyCss(theme);
+},
+
+hydrate: () =&gt; {
+  const saved = localStorage.getItem("os_theme");
+  const theme = saved || "macosx";
+  set({ current: theme });
+  document.documentElement.dataset.osTheme = theme;
+},</code></pre>
+<h2>Migration System</h2>
+<h3>Version-Based Migrations</h3>
+<pre><code>migrate: (persistedState: unknown, version: number) =&gt; {
+  const state = persistedState as StoreState;
+  
+  if (version &lt; 5) {
+    // Add status field and UUIDs
+    for (const path in state.items) {
+      state.items[path] = {
+        ...state.items[path],
+        status: state.items[path].status || "active",
+        uuid: !state.items[path].isDirectory 
+          ? state.items[path].uuid || uuidv4() 
+          : undefined,
+      };
+    }
+  }
+  
+  if (version &lt; 6) {
+    // Add timestamp fields
+    const now = Date.now();
+    for (const path in state.items) {
+      state.items[path].createdAt = state.items[path].createdAt || now;
+      state.items[path].modifiedAt = state.items[path].modifiedAt || now;
+    }
+  }
+  
+  return state;
+},</code></pre>
+<h3>Recovery Mechanisms</h3>
+<p>Critical data uses separate recovery keys to survive store resets:</p>
+<pre><code>const USERNAME_RECOVERY_KEY = "_usr_recovery_key_";
+const AUTH_TOKEN_RECOVERY_KEY = "_auth_recovery_key_";
+
+// Encode/decode for basic obfuscation
+const encode = (value: string) =&gt; btoa(value.split("").reverse().join(""));
+const decode = (encoded: string) =&gt; atob(encoded).split("").reverse().join("");
+
+// Recovery on rehydrate
+onRehydrateStorage: () =&gt; (state, error) =&gt; {
+  if (state?.username === null) {
+    const recovered = getUsernameFromRecovery();
+    if (recovered) state.username = recovered;
+  }
+}</code></pre>
+<h2>Cross-Store Communication</h2>
+<h3>Direct Store Access</h3>
+<p>Stores can access other stores via <code>getState()</code>:</p>
+<pre><code>// In useIpodStore - accessing ChatsStore for auth
+async function saveLyricOffsetToServer(trackId: string, offset: number) {
+  const { username, authToken } = useChatsStore.getState();
+  
+  if (!username || !authToken) {
+    console.log("Skipping save - user not logged in");
+    return false;
+  }
+  
+  // Make authenticated API call
+  await fetch("/api/songs/...", {
+    headers: {
+      "Authorization": `Bearer ${authToken}`,
+      "X-Username": username,
+    },
+  });
+}</code></pre>
+<h3>Store Dependency Pattern</h3>
+<pre><code>// In useAppStore - accessing AppletStore for window sizing
+createAppInstance: (appId, initialData, title) =&gt; {
+  if (appId === "applet-viewer") {
+    const path = (initialData as { path?: string })?.path;
+    if (path) {
+      const saved = useAppletStore.getState().getAppletWindowSize(path);
+      if (saved) size = saved;
+    }
+  }
+}</code></pre>
+<h3>Event-Based Communication</h3>
+<pre><code>// Window state changes broadcast via CustomEvents
+window.dispatchEvent(
+  new CustomEvent("appStateChange", {
+    detail: { appId, isOpen: true, isForeground: true },
+  })
+);
+
+window.dispatchEvent(
+  new CustomEvent("instanceStateChange", {
+    detail: { instanceId, isOpen: true, isForeground: true },
+  })
+);
+
+window.dispatchEvent(
+  new CustomEvent("wallpaperChange", { detail: wallpaperPath })
+);</code></pre>
+<h3>Cross-Store Dependencies Map</h3>
+<pre class="mermaid">flowchart LR
+    subgraph Components["React Components"]
+        C1[IpodApp]
+        C2[KaraokeApp]
+        C3[TextEditApp]
+    end
+
+    subgraph Stores["Zustand Stores"]
+        S1[useIpodStore]
+        S2[useKaraokeStore]
+        S3[useTextEditStore]
+        S4[useChatsStore]
+        S5[useAppStore]
+    end
+
+    subgraph Persist["localStorage"]
+        P1[(ryos:ipod)]
+        P2[(ryos:chats)]
+        P3[(ryos:app-store)]
+    end
+
+    C1 <--> S1
+    C2 <--> S2
+    C3 <--> S3
+
+    S2 -.-> |music library| S1
+    S3 -.-> |foreground instance| S5
+    S1 -.-> |auth credentials| S4
+
+    S1 --> P1
+    S4 --> P2
+    S5 --> P3</pre>
+<h2>State Flow Patterns</h2>
+<h3>App Instance Lifecycle</h3>
+<pre class="mermaid">stateDiagram-v2
+    [*] --> Creating: launchApp()
+    
+    Creating --> Loading: createAppInstance()
+    Loading --> Foreground: markInstanceAsLoaded()
+    
+    Foreground --> Background: bringInstanceToForeground(other)
+    Background --> Foreground: bringInstanceToForeground(this)
+    
+    Foreground --> Minimized: minimizeInstance()
+    Background --> Minimized: minimizeInstance()
+    Minimized --> Foreground: restoreInstance()
+    
+    Foreground --> [*]: closeAppInstance()
+    Background --> [*]: closeAppInstance()
+    Minimized --> [*]: closeAppInstance()</pre>
+<h3>Library Initialization Flow</h3>
+<pre class="mermaid">sequenceDiagram
+    participant R as Rehydrate
+    participant S as Store
+    participant LS as localStorage
+    participant IDB as IndexedDB
+    participant API as External API
+    
+    R->>LS: Load persisted state
+    LS-->>R: Return state (or empty)
+    R->>S: Set initial state
+    
+    alt libraryState === "uninitialized"
+        S->>API: loadDefaultFiles()
+        API-->>S: JSON data
+        S->>LS: Persist metadata
+        S->>IDB: Save text content
+        S->>S: registerFilesForLazyLoad(assets)
+    else libraryState === "loaded"
+        S->>S: syncRootDirectories()
+        S->>S: ensureDefaultDesktopShortcuts()
+    end</pre>
+<h2>Best Practices</h2>
+<h3>Selective Persistence (<code>partialize</code>)</h3>
+<pre><code>partialize: (state) =&gt; ({
+  // Only persist necessary state, exclude:
+  // - Transient UI state (isLoading, etc.)
+  // - Large computed data
+  // - Runtime-only values
+  tracks: state.tracks,
+  currentSongId: state.currentSongId,
+  // NOT: isPlaying, currentLyrics, currentFuriganaMap
+}),</code></pre>
+<h3>Optimized Selectors (<code>useShallow</code>)</h3>
+<pre><code>import { useShallow } from "zustand/react/shallow";
+
+// Prevents unnecessary re-renders when selecting multiple values
+function useAppStoreShallow&lt;T&gt;(
+  selector: (state: AppStoreState) =&gt; T
+): T {
+  return useAppStore(useShallow(selector));
+}
+
+// Usage
+const { instances, foregroundInstanceId } = useAppStoreShallow((s) =&gt; ({
+  instances: s.instances,
+  foregroundInstanceId: s.foregroundInstanceId,
+}));</code></pre>
+<h3>Debounced Server Sync</h3>
+<pre><code>const lyricOffsetSaveTimers = new Map&lt;string, NodeJS.Timeout&gt;();
+
+function debouncedSaveLyricOffset(trackId: string, offset: number): void {
+  const existing = lyricOffsetSaveTimers.get(trackId);
+  if (existing) clearTimeout(existing);
+
+  const timer = setTimeout(() =&gt; {
+    lyricOffsetSaveTimers.delete(trackId);
+    saveLyricOffsetToServer(trackId, offset);
+  }, 2000); // 2 second debounce
+
+  lyricOffsetSaveTimers.set(trackId, timer);
+}</code></pre>
+<h3>Data Caching with Deduplication</h3>
+<pre><code>let cachedFileSystemData: FileSystemData | null = null;
+let fileSystemDataPromise: Promise&lt;FileSystemData&gt; | null = null;
+
+async function loadDefaultFiles(): Promise&lt;FileSystemData&gt; {
+  if (cachedFileSystemData) return cachedFileSystemData;
+  if (fileSystemDataPromise) return fileSystemDataPromise;  // Dedup in-flight
+  
+  fileSystemDataPromise = (async () =&gt; {
+    const data = await fetch("/data/filesystem.json").then(r =&gt; r.json());
+    cachedFileSystemData = data;
+    return data;
+  })();
+  
+  return fileSystemDataPromise;
+}</code></pre>
+<h3>Immutable Updates</h3>
+<pre><code>// Array updates without mutation
+set((state) =&gt; ({
+  tracks: state.tracks.map((track, i) =&gt;
+    i === trackIndex ? { ...track, lyricOffset: newOffset } : track
+  ),
+}));
+
+// Object updates without mutation
+set((state) =&gt; ({
+  instances: {
+    ...state.instances,
+    [instanceId]: { ...state.instances[instanceId], isForeground: true },
+  },
+}));</code></pre>
+<h2>Related Documentation</h2>
+<ul><li><a href="/docs/window-management">Window Management</a> - Window state in useAppStore</li></ul><ul><li><a href="/docs/file-system">File System</a> - useFilesStore details</li><li><a href="/docs/audio-system">Audio System</a> - useAudioSettingsStore details</li></ul>
+      </article>
+      
+      <nav class="nav">
+        <a href="/docs/window-management">← Window Management</a>
+        <a href="/docs/theme-system">Theme System →</a>
+      </nav>
+      
+    </main>
+  </div>
+  
+  <script>
+    function toggleNavGroup(button) {
+      const group = button.closest('.nav-group');
+      const children = group.querySelector('.nav-children');
+      const svg = button.querySelector('svg');
+      const isExpanded = group.classList.contains('expanded');
+      
+      if (isExpanded) {
+        group.classList.remove('expanded');
+        children.style.display = 'none';
+        svg.style.transform = 'rotate(0deg)';
+        button.setAttribute('aria-expanded', 'false');
+      } else {
+        group.classList.add('expanded');
+        children.style.display = 'block';
+        svg.style.transform = 'rotate(90deg)';
+        button.setAttribute('aria-expanded', 'true');
+      }
+    }
+    
+    document.addEventListener('click', (e) => {
+      const sidebar = document.querySelector('.sidebar');
+      const menuBtn = document.querySelector('.menu-btn');
+      const clickedMenuBtn = menuBtn && menuBtn.contains(e.target);
+      if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !clickedMenuBtn) {
+        sidebar.classList.remove('open');
+      }
+    });
+  </script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontFamily: '"Geneva", system-ui, sans-serif',
+        fontSize: '10px',
+        primaryColor: '#f0f0f0',
+        primaryBorderColor: '#ccc',
+        primaryTextColor: '#000',
+        lineColor: '#666',
+        secondaryColor: '#f8f8f8',
+        tertiaryColor: '#fff'
+      },
+      flowchart: { curve: 'basis', padding: 8, nodeSpacing: 30, rankSpacing: 30 },
+      sequence: { actorFontSize: 10, messageFontSize: 10, noteFontSize: 10 }
+    });
+  </script>
+</body>
+</html>

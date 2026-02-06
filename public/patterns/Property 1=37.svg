@@ -1,0 +1,48 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_0_478)">
+<rect width="8" height="8" fill="white"/>
+<rect y="2" width="1" height="6" fill="black"/>
+<rect width="1" height="1" fill="black"/>
+<rect x="2" width="6" height="1" fill="black"/>
+<rect x="2" y="2" width="2" height="6" fill="black"/>
+<rect x="4" y="2" width="4" height="2" fill="black"/>
+</g>
+<g clip-path="url(#clip1_0_478)">
+<rect width="8" height="8" transform="translate(0 8)" fill="white"/>
+<rect y="10" width="1" height="6" fill="black"/>
+<rect y="8" width="1" height="1" fill="black"/>
+<rect x="2" y="8" width="6" height="1" fill="black"/>
+<rect x="2" y="10" width="2" height="6" fill="black"/>
+<rect x="4" y="10" width="4" height="2" fill="black"/>
+</g>
+<g clip-path="url(#clip2_0_478)">
+<rect width="8" height="8" transform="translate(8)" fill="white"/>
+<rect x="8" y="2" width="1" height="6" fill="black"/>
+<rect x="8" width="1" height="1" fill="black"/>
+<rect x="10" width="6" height="1" fill="black"/>
+<rect x="10" y="2" width="2" height="6" fill="black"/>
+<rect x="12" y="2" width="4" height="2" fill="black"/>
+</g>
+<g clip-path="url(#clip3_0_478)">
+<rect width="8" height="8" transform="translate(8 8)" fill="white"/>
+<rect x="8" y="10" width="1" height="6" fill="black"/>
+<rect x="8" y="8" width="1" height="1" fill="black"/>
+<rect x="10" y="8" width="6" height="1" fill="black"/>
+<rect x="10" y="10" width="2" height="6" fill="black"/>
+<rect x="12" y="10" width="4" height="2" fill="black"/>
+</g>
+<defs>
+<clipPath id="clip0_0_478">
+<rect width="8" height="8" fill="white"/>
+</clipPath>
+<clipPath id="clip1_0_478">
+<rect width="8" height="8" fill="white" transform="translate(0 8)"/>
+</clipPath>
+<clipPath id="clip2_0_478">
+<rect width="8" height="8" fill="white" transform="translate(8)"/>
+</clipPath>
+<clipPath id="clip3_0_478">
+<rect width="8" height="8" fill="white" transform="translate(8 8)"/>
+</clipPath>
+</defs>
+</svg>

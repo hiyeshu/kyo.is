@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infinite Mac - ryOS Docs</title>
+  <link rel="icon" href="/icons/mac-192.png">
+  <style>
+    @font-face { font-family: "Geneva"; src: url("/fonts/geneva-12.woff2") format("woff2"); }
+    @font-face { font-family: "Monaco"; src: url("/fonts/monacottf.woff2") format("woff2"); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Geneva", system-ui, sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: #fff;
+      color: #000;
+    }
+    a { color: #00f; }
+    a:hover { text-decoration: none; }
+    code, pre { font-family: "Monaco", monospace; font-size: 11px; }
+    code { background: #f0f0f0; padding: 1px 4px; }
+    pre { background: #f8f8f8; border: 1px solid #ddd; padding: 12px; overflow-x: auto; margin: 12px 0; }
+    pre code { background: none; padding: 0; }
+    
+    /* Layout */
+    .header {
+      position: sticky; top: 0; z-index: 10;
+      background: #fff; border-bottom: 1px solid #ccc;
+      padding: 0 16px; height: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-left img { width: 20px; height: 20px; display: block; }
+    .header-left span { font-weight: bold; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a { text-decoration: none; color: #333; }
+    .header-right a:hover { color: #000; }
+    .header-right .github { display: flex; align-items: center; gap: 4px; }
+    .header-right .launch { background: #000; color: #fff; padding: 4px 12px; }
+    
+    .container { display: flex; max-width: 1100px; margin: 0 auto; }
+    
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      border-right: 1px solid #ccc;
+      padding: 12px;
+      position: sticky; top: 40px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .sidebar a {
+      display: block; padding: 4px 8px; margin: 2px 0;
+      text-decoration: none; color: #333;
+      font-size: 11px;
+    }
+    .sidebar a:hover { background: #f0f0f0; }
+    .sidebar a.active { background: #000; color: #fff; }
+    
+    /* Tree hierarchy styles */
+    .nav-group { margin: 4px 0; }
+    .nav-spacer { width: 8px; flex-shrink: 0; } /* Same width as toggle arrow */
+    .nav-no-toggle { cursor: default; }
+    .nav-toggle {
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; padding: 0; width: 100%;
+      cursor: pointer; text-align: left; font: inherit; color: inherit;
+    }
+    .nav-toggle:hover { background: #f0f0f0; }
+    .nav-toggle svg { flex-shrink: 0; opacity: 0.6; transition: transform 0.2s; }
+    .nav-toggle a { flex: 1; padding: 4px 8px; margin: 0; pointer-events: auto; font-size: 11px; }
+    .nav-children { margin-left: 12px; overflow: hidden; transition: height 0.2s ease-out; }
+    .nav-child { padding-left: 8px !important; font-size: 10px !important; color: #555 !important; }
+    .nav-child:hover { color: #000 !important; }
+    .nav-child.active { color: #fff !important; }
+    
+    .content { flex: 1; padding: 24px 32px; min-width: 0; }
+    
+    /* Typography */
+    h1 { font-size: 18px; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 16px; }
+    hr { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+    h2 { font-size: 14px; margin: 24px 0 12px; }
+    h3 { font-size: 12px; margin: 16px 0 8px; }
+    h4 { font-size: 11px; margin: 12px 0 6px; font-weight: bold; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 8px 20px; }
+    li { margin: 4px 0; }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    th { background: #f0f0f0; font-weight: bold; }
+    
+    /* Mermaid diagrams */
+    pre.mermaid { background: none; border: none; padding: 0; text-align: center; margin: 16px 0; }
+    .mermaid svg { max-width: 100%; height: auto; font-family: "Geneva", system-ui, sans-serif !important; }
+    .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { fill: #f8f8f8 !important; stroke: #ccc !important; }
+    .mermaid .edgeLabel { background: #fff !important; font-size: 10px !important; }
+    .mermaid .label { font-size: 10px !important; }
+    .mermaid .nodeLabel { font-size: 10px !important; }
+    .mermaid .cluster-label { font-size: 10px !important; }
+    .mermaid .messageText { font-size: 10px !important; }
+    .mermaid .actor { font-size: 10px !important; }
+    .mermaid .labelText { font-size: 10px !important; }
+    
+    /* Collapsible details */
+    details { margin: 8px 0; }
+    details summary { 
+      cursor: pointer; 
+      color: #666; 
+      font-size: 11px;
+      padding: 4px 0;
+      user-select: none;
+    }
+    details summary:hover { color: #000; }
+    details[open] summary { margin-bottom: 8px; }
+    details ul { margin-top: 0; }
+    
+    /* Navigation */
+    .nav { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ccc; }
+    .nav a { text-decoration: none; color: #333; }
+    .nav a:hover { color: #000; }
+    
+    /* Mobile menu button */
+    .menu-btn { 
+      display: none; 
+      background: transparent; 
+      border: 0; 
+      padding: 4px; 
+      cursor: pointer; 
+      line-height: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+      color: inherit;
+    }
+    .menu-btn svg { display: block; width: 18px; height: 18px; pointer-events: none; }
+    @media screen and (max-width: 768px) {
+      .menu-btn { 
+        display: -webkit-flex !important;
+        display: flex !important; 
+        -webkit-align-items: center;
+        align-items: center; 
+        -webkit-justify-content: center;
+        justify-content: center;
+      }
+      .header-left img { display: none !important; }
+      .sidebar { 
+        position: fixed; left: -240px; top: 40px; 
+        width: 240px; height: calc(100vh - 40px);
+        background: #fff; z-index: 20;
+        transition: left 0.2s;
+      }
+      .sidebar.open { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit">
+        <img src="/icons/mac-192.png" alt="ryOS" width="20" height="20">
+        <span>ryOS</span>
+      </a>
+      <span style="color:#999">/</span>
+      <span style="color:#666">Docs</span>
+    </div>
+    <div class="header-right">
+      <a href="https://github.com/ryokun6/ryos" target="_blank" class="github">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href="/" class="launch">Launch</a>
+    </div>
+  </header>
+  
+  <div class="container">
+    <nav class="sidebar">
+      <div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/overview" class="">1. Overview</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/architecture" class="nav-child ">1.1 Architecture & Build</a>
+    <a href="/docs/api-architecture" class="nav-child ">1.2 API Architecture</a>
+  </div>
+</div>
+<div class="nav-group expanded">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="true">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(90deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/apps" class="">2. Apps</a>
+  </button>
+  <div class="nav-children" style="display: block;">
+    <a href="/docs/chats" class="nav-child ">2.1 Chats</a>
+    <a href="/docs/internet-explorer" class="nav-child ">2.2 Internet Explorer</a>
+    <a href="/docs/ipod" class="nav-child ">2.3 iPod</a>
+    <a href="/docs/karaoke" class="nav-child ">2.4 Karaoke</a>
+    <a href="/docs/textedit" class="nav-child ">2.5 TextEdit</a>
+    <a href="/docs/finder" class="nav-child ">2.6 Finder</a>
+    <a href="/docs/paint" class="nav-child ">2.7 Paint</a>
+    <a href="/docs/photo-booth" class="nav-child ">2.8 Photo Booth</a>
+    <a href="/docs/terminal" class="nav-child ">2.9 Terminal</a>
+    <a href="/docs/control-panels" class="nav-child ">2.10 Control Panels</a>
+    <a href="/docs/soundboard" class="nav-child ">2.11 Soundboard</a>
+    <a href="/docs/synth" class="nav-child ">2.12 Synth</a>
+    <a href="/docs/videos" class="nav-child ">2.13 Videos</a>
+    <a href="/docs/minesweeper" class="nav-child ">2.14 Minesweeper</a>
+    <a href="/docs/virtual-pc" class="nav-child ">2.15 Virtual PC</a>
+    <a href="/docs/admin" class="nav-child ">2.16 Admin</a>
+    <a href="/docs/applet-store" class="nav-child ">2.17 Applet Store</a>
+    <a href="/docs/stickies" class="nav-child ">2.18 Stickies</a>
+    <a href="/docs/infinite-mac" class="nav-child active">2.19 Infinite Mac</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/application-framework" class="">3. Application Framework</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/window-management" class="nav-child ">3.1 Window Management</a>
+    <a href="/docs/state-management" class="nav-child ">3.2 State Management</a>
+    <a href="/docs/theme-system" class="nav-child ">3.3 Theme System</a>
+    <a href="/docs/hooks-architecture" class="nav-child ">3.4 Hooks Architecture</a>
+    <a href="/docs/component-architecture" class="nav-child ">3.5 Component Architecture</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/ai-system" class="">4. AI System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/file-system" class="">5. File System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/audio-system" class="">6. Audio System</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/ui-components" class="">7. UI Components and Shared Systems</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/component-library" class="nav-child ">7.1 Components</a>
+    <a href="/docs/i18n" class="nav-child ">7.2 i18n & Hooks</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/api-reference" class="">8. API Reference</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chat-api" class="nav-child ">8.1 Chat API</a>
+    <a href="/docs/song-api" class="nav-child ">8.2 Song API</a>
+    <a href="/docs/media-api" class="nav-child ">8.3 Media API</a>
+    <a href="/docs/auth-api" class="nav-child ">8.4 Auth API</a>
+    <a href="/docs/rooms-api" class="nav-child ">8.5 Rooms API</a>
+    <a href="/docs/messages-api" class="nav-child ">8.6 Messages API</a>
+    <a href="/docs/presence-api" class="nav-child ">8.7 Presence API</a>
+    <a href="/docs/ai-generation-apis" class="nav-child ">8.8 AI Endpoints</a>
+    <a href="/docs/utility-apis" class="nav-child ">8.9 Utility APIs</a>
+    <a href="/docs/api-design-guide" class="nav-child ">8.10 ryOS API Design Guide</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/changelog" class="">9. Changelog</a>
+  </div>
+</div>
+    </nav>
+    
+    <main class="content">
+      <article>
+        <h1>Infinite Mac</h1>
+<p>Infinite Mac is a ryOS application that brings classic Macintosh computing to your browser. It provides access to a curated selection of historic Mac OS versions, from the original System 1.0 (1984) to Mac OS X 10.4 Tiger (2005), all running through the Infinite Mac emulator project.</p>
+<h2>Overview</h2>
+<p>The Infinite Mac app transforms your ryOS desktop into a time machine for classic Macintosh systems. Powered by browser-based emulation technology, it allows users to experience the evolution of Mac OS through 12 different system versions spanning over two decades of computing history. Each system runs in an authentic emulated environment, complete with the original user interface, applications, and capabilities of that era.</p>
+<p>Whether you're a longtime Mac enthusiast wanting to revisit the Platinum appearance of Mac OS 8, explore the Japanese KanjiTalk 7.5.3, or experience the original Macintosh System 1.0, Infinite Mac provides an accessible window into Apple's operating system history—all without leaving your browser.</p>
+<h2>Features</h2>
+<ul><li><strong>Classic Mac Emulator</strong>: Run authentic classic Mac OS systems in your browser via the Infinite Mac project, from System 1.0 (1984) to Mac OS X 10.4 (2005).</li></ul><ul><li><strong>Select a System</strong>: Choose from 12 historic Mac OS versions including System 1.0, System 6.0.8, System 7.5.3, KanjiTalk 7.5.3, Mac OS 8.0, Mac OS 8.5, Mac OS 9.0, Mac OS 9.2.2, and Mac OS X 10.1-10.4.</li><li><strong>Display Scaling</strong>: Adjust the emulator display with 1x, 1.5x, or 2x scaling options via View ▸ Scaling.</li><li><strong>Pause / Resume</strong>: Use View ▸ Pause or Resume to save system resources when not actively interacting.</li><li><strong>Capture Screenshot</strong>: Use View ▸ Capture Screenshot to save the current emulator display as a PNG image.</li><li><strong>Back to Systems</strong>: Use File ▸ Back to Systems or the grid icon in the title bar to return to the system selection.</li></ul>
+<h2>User Guide</h2>
+<h3>Getting Started</h3>
+Launch Infinite Mac from the ryOS application launcher. You'll be presented with a grid of available Mac OS systems, each showing a preview thumbnail, the system name, and its release year. Simply click on any system to load it.
+<h3>Key Actions</h3>
+<ul><li><strong>Selecting a System</strong>: Click on any system card in the grid to load that Mac OS version. The emulator will initialize and display a loading indicator while the system boots.</li></ul><ul><li><strong>Navigating Back</strong>: To return to the system selection grid, use <code>File &gt; Back to Systems</code> in the menu bar, or click the grid icon in the window title bar.</li><li><strong>Adjusting Display Scale</strong>: Access <code>View &gt; Scaling</code> to choose between 1x, 1.5x, or 2x display scaling. The window will resize to accommodate the new scale.</li><li><strong>Pausing the Emulator</strong>: When you're not actively using the emulated system, select <code>View &gt; Pause</code> to freeze emulation and conserve CPU resources. Select <code>View &gt; Resume</code> to continue.</li><li><strong>Capturing Screenshots</strong>: With an emulator running, select <code>View &gt; Capture Screenshot</code> to download a PNG image of the current emulator display.</li></ul>
+<h3>Available Systems</h3>
+<table><thead><tr><th>System</th><th>Year</th><th>Description</th></tr></thead><tbody><tr><td>System 1.0</td><td>1984</td><td>Initial Mac system software</td></tr><tr><td>System 6.0.8</td><td>1991</td><td>Final System 6 release</td></tr><tr><td>System 7.5.3</td><td>1996</td><td>Open Transport and broader Mac support</td></tr><tr><td>KanjiTalk 7.5.3</td><td>1996</td><td>Japanese edition of System 7.5.3</td></tr><tr><td>Mac OS 8.0</td><td>1997</td><td>Platinum appearance, multi-threaded Finder</td></tr><tr><td>Mac OS 8.5</td><td>1998</td><td>Sherlock, 32-bit icons, font smoothing</td></tr><tr><td>Mac OS 9.0</td><td>1999</td><td>Keychain, multiple users, Sherlock channels</td></tr><tr><td>Mac OS 9.2.2</td><td>2001</td><td>Final classic Mac OS release</td></tr><tr><td>Mac OS X 10.1</td><td>2001</td><td>Puma - improved performance, DVD playback</td></tr><tr><td>Mac OS X 10.2</td><td>2002</td><td>Jaguar - Quartz Extreme, Address Book, iChat</td></tr><tr><td>Mac OS X 10.3</td><td>2003</td><td>Panther - Exposé, fast user switching</td></tr><tr><td>Mac OS X 10.4</td><td>2005</td><td>Tiger - Spotlight, Dashboard, Safari RSS</td></tr></tbody></table>
+<h3>Tips & Shortcuts</h3>
+<ul><li><strong>Resource Management</strong>: Pause emulation when switching to other ryOS apps to free up CPU resources.</li></ul><ul><li><strong>Screen Resolution</strong>: Different systems have different native resolutions. System 1.0 and 6.0.8 use 512×342, while later systems use 640×480.</li><li><strong>Persistence</strong>: The emulated systems support saving data to a virtual hard disk that persists between sessions.</li><li><strong>Keyboard Input</strong>: Your physical keyboard inputs are forwarded to the emulated Mac when the emulator window is focused.</li></ul>
+<h2>Technical Details</h2>
+<h3>Window Configuration</h3>
+<ul><li>Default size: 640×504px (content area 640×480 + titlebar)</li><li>Minimum size: 512×342px</li><li>Maximum size: 1024×792px</li></ul>
+<h3>Component Architecture</h3>
+The app consists of 2 component file(s):
+<ul><li><code><a href="https://github.com/ryokun6/ryos/blob/main/src/apps/infinite-mac/components/InfiniteMacMenuBar.tsx" target="_blank" rel="noopener noreferrer" style="color: #00f; text-decoration: underline;">src/apps/infinite-mac/components/InfiniteMacMenuBar.tsx</a></code>: Manages the application's menu bar, handling File menu actions (back to presets, close), View menu actions (scaling, pause/resume, screenshot), and Help menu items.</li></ul><ul><li><code><a href="https://github.com/ryokun6/ryos/blob/main/src/apps/infinite-mac/components/InfiniteMacAppComponent.tsx" target="_blank" rel="noopener noreferrer" style="color: #00f; text-decoration: underline;">src/apps/infinite-mac/components/InfiniteMacAppComponent.tsx</a></code>: The main application component, responsible for rendering both the system selection grid and the embedded emulator iframe, managing emulator lifecycle and communication.</li></ul>
+<h3>Hooks & Utilities</h3>
+<strong>Custom Hooks:</strong>
+<ul><li><code><a href="https://github.com/ryokun6/ryos/blob/main/src/apps/infinite-mac/hooks/useInfiniteMacLogic.ts" target="_blank" rel="noopener noreferrer" style="color: #00f; text-decoration: underline;">src/apps/infinite-mac/hooks/useInfiniteMacLogic.ts</a></code>: A comprehensive hook that manages emulator state, preset selection, window resizing, iframe communication via postMessage, and screenshot capture functionality.</li></ul>
+<strong>Generated Files:</strong>
+<ul><li><code><a href="https://github.com/ryokun6/ryos/blob/main/src/apps/infinite-mac/presetAverageColors.generated.ts" target="_blank" rel="noopener noreferrer" style="color: #00f; text-decoration: underline;">src/apps/infinite-mac/presetAverageColors.generated.ts</a></code>: Pre-computed average colors for each system's thumbnail, used for smooth loading transitions.</li></ul>
+<h3>State Management</h3>
+Infinite Mac uses a combination of local React state and a dedicated Zustand store:
+<ul><li><strong>Local State</strong>: Manages UI concerns like dialog visibility (<code>isHelpDialogOpen</code>, <code>isAboutDialogOpen</code>), currently selected preset (<code>selectedPreset</code>), emulator loading state (<code>isEmulatorLoaded</code>), and pause state (<code>isPaused</code>).</li></ul><ul><li><strong>useInfiniteMacStore</strong>: A Zustand store that persists the user's preferred display scale setting (<code>scale</code>) across sessions.</li></ul>
+<h3>Emulator Integration</h3>
+The app integrates with Infinite Mac via a same-origin wrapper that enables cross-origin isolation (COEP/COOP headers required for SharedArrayBuffer). Communication with the emulator happens through postMessage:
+<ul><li><strong>emulator_loaded</strong>: Received when the emulator has fully initialized</li></ul><ul><li><strong>emulator_screen</strong>: Received with screen dimensions and pixel data for dynamic window sizing and screenshots</li><li><strong>emulator_pause / emulator_unpause</strong>: Sent to control emulator execution</li></ul>
+<h2>Related Apps</h2>
+<ul><li><strong><a href="/docs/virtual-pc">Virtual PC</a></strong>: Another emulation app in ryOS that runs classic DOS games and applications, offering a complementary retro computing experience.</li></ul><ul><li><strong><a href="/docs/control-panels">Control Panels</a></strong>: System-wide preferences that may affect display settings and audio output for the emulated systems.</li></ul>
+      </article>
+      
+      <nav class="nav">
+        <a href="/docs/stickies">← Stickies</a>
+        <a href="/docs/application-framework">Application Framework →</a>
+      </nav>
+      
+    </main>
+  </div>
+  
+  <script>
+    function toggleNavGroup(button) {
+      const group = button.closest('.nav-group');
+      const children = group.querySelector('.nav-children');
+      const svg = button.querySelector('svg');
+      const isExpanded = group.classList.contains('expanded');
+      
+      if (isExpanded) {
+        group.classList.remove('expanded');
+        children.style.display = 'none';
+        svg.style.transform = 'rotate(0deg)';
+        button.setAttribute('aria-expanded', 'false');
+      } else {
+        group.classList.add('expanded');
+        children.style.display = 'block';
+        svg.style.transform = 'rotate(90deg)';
+        button.setAttribute('aria-expanded', 'true');
+      }
+    }
+    
+    document.addEventListener('click', (e) => {
+      const sidebar = document.querySelector('.sidebar');
+      const menuBtn = document.querySelector('.menu-btn');
+      const clickedMenuBtn = menuBtn && menuBtn.contains(e.target);
+      if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !clickedMenuBtn) {
+        sidebar.classList.remove('open');
+      }
+    });
+  </script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontFamily: '"Geneva", system-ui, sans-serif',
+        fontSize: '10px',
+        primaryColor: '#f0f0f0',
+        primaryBorderColor: '#ccc',
+        primaryTextColor: '#000',
+        lineColor: '#666',
+        secondaryColor: '#f8f8f8',
+        tertiaryColor: '#fff'
+      },
+      flowchart: { curve: 'basis', padding: 8, nodeSpacing: 30, rankSpacing: 30 },
+      sequence: { actorFontSize: 10, messageFontSize: 10, noteFontSize: 10 }
+    });
+  </script>
+</body>
+</html>

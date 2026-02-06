@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Architecture - ryOS Docs</title>
+  <link rel="icon" href="/icons/mac-192.png">
+  <style>
+    @font-face { font-family: "Geneva"; src: url("/fonts/geneva-12.woff2") format("woff2"); }
+    @font-face { font-family: "Monaco"; src: url("/fonts/monacottf.woff2") format("woff2"); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Geneva", system-ui, sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: #fff;
+      color: #000;
+    }
+    a { color: #00f; }
+    a:hover { text-decoration: none; }
+    code, pre { font-family: "Monaco", monospace; font-size: 11px; }
+    code { background: #f0f0f0; padding: 1px 4px; }
+    pre { background: #f8f8f8; border: 1px solid #ddd; padding: 12px; overflow-x: auto; margin: 12px 0; }
+    pre code { background: none; padding: 0; }
+    
+    /* Layout */
+    .header {
+      position: sticky; top: 0; z-index: 10;
+      background: #fff; border-bottom: 1px solid #ccc;
+      padding: 0 16px; height: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-left img { width: 20px; height: 20px; display: block; }
+    .header-left span { font-weight: bold; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a { text-decoration: none; color: #333; }
+    .header-right a:hover { color: #000; }
+    .header-right .github { display: flex; align-items: center; gap: 4px; }
+    .header-right .launch { background: #000; color: #fff; padding: 4px 12px; }
+    
+    .container { display: flex; max-width: 1100px; margin: 0 auto; }
+    
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      border-right: 1px solid #ccc;
+      padding: 12px;
+      position: sticky; top: 40px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .sidebar a {
+      display: block; padding: 4px 8px; margin: 2px 0;
+      text-decoration: none; color: #333;
+      font-size: 11px;
+    }
+    .sidebar a:hover { background: #f0f0f0; }
+    .sidebar a.active { background: #000; color: #fff; }
+    
+    /* Tree hierarchy styles */
+    .nav-group { margin: 4px 0; }
+    .nav-spacer { width: 8px; flex-shrink: 0; } /* Same width as toggle arrow */
+    .nav-no-toggle { cursor: default; }
+    .nav-toggle {
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; padding: 0; width: 100%;
+      cursor: pointer; text-align: left; font: inherit; color: inherit;
+    }
+    .nav-toggle:hover { background: #f0f0f0; }
+    .nav-toggle svg { flex-shrink: 0; opacity: 0.6; transition: transform 0.2s; }
+    .nav-toggle a { flex: 1; padding: 4px 8px; margin: 0; pointer-events: auto; font-size: 11px; }
+    .nav-children { margin-left: 12px; overflow: hidden; transition: height 0.2s ease-out; }
+    .nav-child { padding-left: 8px !important; font-size: 10px !important; color: #555 !important; }
+    .nav-child:hover { color: #000 !important; }
+    .nav-child.active { color: #fff !important; }
+    
+    .content { flex: 1; padding: 24px 32px; min-width: 0; }
+    
+    /* Typography */
+    h1 { font-size: 18px; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 16px; }
+    hr { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+    h2 { font-size: 14px; margin: 24px 0 12px; }
+    h3 { font-size: 12px; margin: 16px 0 8px; }
+    h4 { font-size: 11px; margin: 12px 0 6px; font-weight: bold; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 8px 20px; }
+    li { margin: 4px 0; }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    th { background: #f0f0f0; font-weight: bold; }
+    
+    /* Mermaid diagrams */
+    pre.mermaid { background: none; border: none; padding: 0; text-align: center; margin: 16px 0; }
+    .mermaid svg { max-width: 100%; height: auto; font-family: "Geneva", system-ui, sans-serif !important; }
+    .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { fill: #f8f8f8 !important; stroke: #ccc !important; }
+    .mermaid .edgeLabel { background: #fff !important; font-size: 10px !important; }
+    .mermaid .label { font-size: 10px !important; }
+    .mermaid .nodeLabel { font-size: 10px !important; }
+    .mermaid .cluster-label { font-size: 10px !important; }
+    .mermaid .messageText { font-size: 10px !important; }
+    .mermaid .actor { font-size: 10px !important; }
+    .mermaid .labelText { font-size: 10px !important; }
+    
+    /* Collapsible details */
+    details { margin: 8px 0; }
+    details summary { 
+      cursor: pointer; 
+      color: #666; 
+      font-size: 11px;
+      padding: 4px 0;
+      user-select: none;
+    }
+    details summary:hover { color: #000; }
+    details[open] summary { margin-bottom: 8px; }
+    details ul { margin-top: 0; }
+    
+    /* Navigation */
+    .nav { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ccc; }
+    .nav a { text-decoration: none; color: #333; }
+    .nav a:hover { color: #000; }
+    
+    /* Mobile menu button */
+    .menu-btn { 
+      display: none; 
+      background: transparent; 
+      border: 0; 
+      padding: 4px; 
+      cursor: pointer; 
+      line-height: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+      color: inherit;
+    }
+    .menu-btn svg { display: block; width: 18px; height: 18px; pointer-events: none; }
+    @media screen and (max-width: 768px) {
+      .menu-btn { 
+        display: -webkit-flex !important;
+        display: flex !important; 
+        -webkit-align-items: center;
+        align-items: center; 
+        -webkit-justify-content: center;
+        justify-content: center;
+      }
+      .header-left img { display: none !important; }
+      .sidebar { 
+        position: fixed; left: -240px; top: 40px; 
+        width: 240px; height: calc(100vh - 40px);
+        background: #fff; z-index: 20;
+        transition: left 0.2s;
+      }
+      .sidebar.open { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit">
+        <img src="/icons/mac-192.png" alt="ryOS" width="20" height="20">
+        <span>ryOS</span>
+      </a>
+      <span style="color:#999">/</span>
+      <span style="color:#666">Docs</span>
+    </div>
+    <div class="header-right">
+      <a href="https://github.com/ryokun6/ryos" target="_blank" class="github">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href="/" class="launch">Launch</a>
+    </div>
+  </header>
+  
+  <div class="container">
+    <nav class="sidebar">
+      <div class="nav-group expanded">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="true">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(90deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/overview" class="">1. Overview</a>
+  </button>
+  <div class="nav-children" style="display: block;">
+    <a href="/docs/architecture" class="nav-child ">1.1 Architecture & Build</a>
+    <a href="/docs/api-architecture" class="nav-child active">1.2 API Architecture</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/apps" class="">2. Apps</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chats" class="nav-child ">2.1 Chats</a>
+    <a href="/docs/internet-explorer" class="nav-child ">2.2 Internet Explorer</a>
+    <a href="/docs/ipod" class="nav-child ">2.3 iPod</a>
+    <a href="/docs/karaoke" class="nav-child ">2.4 Karaoke</a>
+    <a href="/docs/textedit" class="nav-child ">2.5 TextEdit</a>
+    <a href="/docs/finder" class="nav-child ">2.6 Finder</a>
+    <a href="/docs/paint" class="nav-child ">2.7 Paint</a>
+    <a href="/docs/photo-booth" class="nav-child ">2.8 Photo Booth</a>
+    <a href="/docs/terminal" class="nav-child ">2.9 Terminal</a>
+    <a href="/docs/control-panels" class="nav-child ">2.10 Control Panels</a>
+    <a href="/docs/soundboard" class="nav-child ">2.11 Soundboard</a>
+    <a href="/docs/synth" class="nav-child ">2.12 Synth</a>
+    <a href="/docs/videos" class="nav-child ">2.13 Videos</a>
+    <a href="/docs/minesweeper" class="nav-child ">2.14 Minesweeper</a>
+    <a href="/docs/virtual-pc" class="nav-child ">2.15 Virtual PC</a>
+    <a href="/docs/admin" class="nav-child ">2.16 Admin</a>
+    <a href="/docs/applet-store" class="nav-child ">2.17 Applet Store</a>
+    <a href="/docs/stickies" class="nav-child ">2.18 Stickies</a>
+    <a href="/docs/infinite-mac" class="nav-child ">2.19 Infinite Mac</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/application-framework" class="">3. Application Framework</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/window-management" class="nav-child ">3.1 Window Management</a>
+    <a href="/docs/state-management" class="nav-child ">3.2 State Management</a>
+    <a href="/docs/theme-system" class="nav-child ">3.3 Theme System</a>
+    <a href="/docs/hooks-architecture" class="nav-child ">3.4 Hooks Architecture</a>
+    <a href="/docs/component-architecture" class="nav-child ">3.5 Component Architecture</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/ai-system" class="">4. AI System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/file-system" class="">5. File System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/audio-system" class="">6. Audio System</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/ui-components" class="">7. UI Components and Shared Systems</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/component-library" class="nav-child ">7.1 Components</a>
+    <a href="/docs/i18n" class="nav-child ">7.2 i18n & Hooks</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/api-reference" class="">8. API Reference</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chat-api" class="nav-child ">8.1 Chat API</a>
+    <a href="/docs/song-api" class="nav-child ">8.2 Song API</a>
+    <a href="/docs/media-api" class="nav-child ">8.3 Media API</a>
+    <a href="/docs/auth-api" class="nav-child ">8.4 Auth API</a>
+    <a href="/docs/rooms-api" class="nav-child ">8.5 Rooms API</a>
+    <a href="/docs/messages-api" class="nav-child ">8.6 Messages API</a>
+    <a href="/docs/presence-api" class="nav-child ">8.7 Presence API</a>
+    <a href="/docs/ai-generation-apis" class="nav-child ">8.8 AI Endpoints</a>
+    <a href="/docs/utility-apis" class="nav-child ">8.9 Utility APIs</a>
+    <a href="/docs/api-design-guide" class="nav-child ">8.10 ryOS API Design Guide</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/changelog" class="">9. Changelog</a>
+  </div>
+</div>
+    </nav>
+    
+    <main class="content">
+      <article>
+        <h1>API Architecture</h1>
+<p>ryOS uses Vercel Serverless Functions (Node.js runtime) for its backend API, with AI providers, Redis caching, and real-time features.</p>
+<h2>Architecture Overview</h2>
+<pre class="mermaid">graph TB
+    subgraph Client["Client Layer"]
+        UI[React UI]
+        Hooks[Custom Hooks]
+    end
+    
+    subgraph API["Vercel Serverless (Node.js)"]
+        ChatAPI[chat]
+        SongAPI[songs]
+        SpeechAPI[speech]
+        RoomsAPI[rooms]
+        MessagesAPI[rooms/messages]
+        PresenceAPI[presence]
+        UsersAPI[users]
+        IEAPI[ie-generate]
+        AppletAPI[applet-ai]
+    end
+    
+    subgraph AI["AI Providers"]
+        OpenAI[OpenAI]
+        Anthropic[Anthropic]
+        Google[Google]
+    end
+    
+    subgraph Storage["Storage"]
+        Redis[(Redis)]
+        KV[(Vercel KV)]
+    end
+    
+    subgraph Realtime["Real-time"]
+        Pusher[Pusher]
+    end
+    
+    UI --> Hooks
+    Hooks --> API
+    API --> AI
+    API --> Storage
+    API --> Realtime
+    RoomsAPI --> Pusher</pre>
+<h2>API Directory Structure</h2>
+<pre><code>api/
+├── _utils/                    # Shared utilities (global)
+│   ├── middleware.ts          # Main middleware (consolidated utilities) ★
+│   ├── redis.ts               # Redis client factory
+│   ├── constants.ts           # Centralized constants (REDIS_PREFIXES, TTL, etc.)
+│   ├── _aiModels.ts          # AI provider abstraction
+│   ├── _aiPrompts.ts         # System prompts
+│   ├── _cors.ts              # CORS handling
+│   ├── _hash.ts              # Hashing utilities
+│   ├── _logging.ts           # Logging utilities
+│   ├── _rate-limit.ts        # Rate limiting
+│   ├── _song-service.ts      # Song data service
+│   ├── _sse.ts               # SSE streaming helpers
+│   ├── _url.ts               # URL utilities
+│   ├── _validation.ts        # Input validation
+│   └── auth/                 # Auth utilities (modular)
+│       ├── index.ts          # Main auth exports
+│       ├── _validate.ts      # Token validation
+│       ├── _tokens.ts        # Token management
+│       ├── _extract.ts       # Request auth extraction
+│       ├── _password.ts      # Password hashing (bcrypt)
+│       ├── _password-storage.ts # Password storage operations
+│       ├── _constants.ts     # Auth-specific constants
+│       └── _types.ts         # TypeScript types
+├── auth/                      # Auth endpoints
+│   ├── register.ts
+│   ├── login.ts
+│   ├── logout.ts
+│   ├── logout-all.ts
+│   ├── token/
+│   │   ├── refresh.ts
+│   │   └── verify.ts
+│   ├── password/
+│   │   ├── check.ts
+│   │   └── set.ts
+│   └── tokens.ts
+├── rooms/                     # Room endpoints
+│   ├── _helpers/              # Room-specific helpers
+│   │   ├── _constants.ts
+│   │   ├── _presence.ts
+│   │   ├── _redis.ts
+│   │   ├── _messages.ts
+│   │   ├── _rooms.ts
+│   │   ├── _users.ts
+│   │   └── _types.ts
+│   ├── index.ts
+│   └── [id]/
+│       ├── index.ts
+│       ├── join.ts
+│       ├── leave.ts
+│       ├── users.ts
+│       └── messages/
+│           ├── index.ts
+│           └── [msgId].ts
+├── messages/
+│   └── bulk.ts
+├── presence/
+│   └── switch.ts
+├── users/
+│   └── index.ts
+├── ai/
+│   └── ryo-reply.ts
+├── songs/                    # Multi-file module
+│   ├── index.ts              # List/batch operations
+│   ├── [id].ts               # Single song CRUD
+│   ├── _constants.ts         # Song-specific constants
+│   ├── _lyrics.ts            # Lyrics parsing
+│   ├── _furigana.ts          # Japanese furigana
+│   ├── _soramimi.ts          # Soramimi generation
+│   ├── _kugou.ts             # KuGou lyrics API
+│   └── _utils.ts             # Song utilities
+└── [endpoint].ts             # Individual endpoints</code></pre>
+<h2>Middleware Utilities</h2>
+<p>The <code>middleware.ts</code> file consolidates common utilities and re-exports them for convenient importing. This reduces boilerplate and ensures consistent patterns across all endpoints.</p>
+<h3>Consolidated Imports</h3>
+<pre><code>import {
+  // Redis
+  createRedis,
+  
+  // CORS
+  getEffectiveOrigin,
+  isAllowedOrigin,
+  preflightIfNeeded,
+  
+  // Auth middleware
+  requireAuth,
+  optionalAuth,
+  requireAdmin,
+  isAdmin,
+  extractAuth,
+  
+  // Response helpers
+  jsonResponse,
+  errorResponse,
+  successResponse,
+  rateLimitResponse,
+  
+  // Rate limiting
+  checkRateLimit,
+  RATE_LIMITS,
+  getClientIp,
+  
+  // Request helpers
+  parseJsonBody,
+  getQueryParam,
+  getQueryParams,
+  
+  // Request context
+  createRequestContext,
+  
+  // Constants
+  REDIS_PREFIXES,
+  TTL,
+  RATE_LIMIT_TIERS,
+} from "./_utils/middleware.js";</code></pre>
+<h3>Request Context Pattern</h3>
+<p>For complex handlers, <code>createRequestContext()</code> reduces boilerplate by extracting common data from requests:</p>
+<pre><code>export default async function handler(req: Request) {
+  const ctx = await createRequestContext(req, { requireAuth: true });
+  
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    const preflight = preflightIfNeeded(req, ["POST", "OPTIONS"], ctx.origin);
+    if (preflight) return preflight;
+    return new Response(null, { status: 204 });
+  }
+
+  if (!ctx.originAllowed) {
+    return errorResponse("Unauthorized", 403, ctx.origin);
+  }
+
+  if (!ctx.user) {
+    return errorResponse("Authentication required", 401, ctx.origin);
+  }
+
+  // Use ctx.log for request-scoped logging
+  ctx.log("Processing request", { username: ctx.user.username });
+
+  // Access Redis via ctx.redis
+  const data = await ctx.redis.get("key");
+  
+  return jsonResponse({ data }, 200, ctx.origin);
+}</code></pre>
+<strong>RequestContext interface:</strong>
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>requestId</code></td><td>string</td><td>Unique ID for logging</td></tr><tr><td><code>origin</code></td><td>string \</td><td>null</td><td>Effective origin from request</td></tr><tr><td><code>originAllowed</code></td><td>boolean</td><td>Whether origin is allowed</td></tr><tr><td><code>ip</code></td><td>string</td><td>Client IP address</td></tr><tr><td><code>user</code></td><td>AuthenticatedUser \</td><td>null</td><td>Authenticated user (if any)</td></tr><tr><td><code>redis</code></td><td>Redis</td><td>Redis client instance</td></tr><tr><td><code>log</code></td><td>function</td><td>Logging helper with request ID</td></tr><tr><td><code>logError</code></td><td>function</td><td>Error logging helper</td></tr></tbody></table>
+<h3>Auth Middleware Functions</h3>
+<table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>requireAuth(req, redis, origin)</code></td><td>Returns user or 401 error</td></tr><tr><td><code>optionalAuth(req, redis)</code></td><td>Returns user or null</td></tr><tr><td><code>requireAdmin(req, redis, origin)</code></td><td>Returns user + isAdmin or 403 error</td></tr><tr><td><code>isAdmin(redis, username, token)</code></td><td>Simple admin check (boolean)</td></tr></tbody></table>
+<h3>Rate Limit Presets</h3>
+<pre><code>// Built-in rate limit configurations
+const RATE_LIMITS = {
+  burst: (prefix) =&gt; ({ prefix, windowSeconds: 60, limit: 10, byIp: true }),
+  daily: (prefix, limit = 100) =&gt; ({ prefix, windowSeconds: 86400, limit, byIp: true }),
+  hourly: (prefix, limit = 60) =&gt; ({ prefix, windowSeconds: 3600, limit, byIp: false }),
+  budget5h: (prefix, limit = 15) =&gt; ({ prefix, windowSeconds: 18000, limit, byIp: false }),
+};
+
+// Usage
+const rlResult = await checkRateLimit(req, RATE_LIMITS.burst("my-endpoint"), user, origin);
+if (!rlResult.allowed) return rlResult.error;</code></pre>
+<p>> <strong>See Also:</strong> <a href="/docs/api-design-guide">API Design Guide</a> for comprehensive patterns and examples.</p>
+<h2>API Endpoint Inventory</h2>
+<h3>Core APIs</h3>
+<table><thead><tr><th>Endpoint</th><th>Methods</th><th>Purpose</th></tr></thead><tbody><tr><td><code>/api/chat</code></td><td>POST</td><td>AI chat with streaming and tool calling</td></tr><tr><td><code>/api/speech</code></td><td>POST</td><td>Text-to-speech synthesis</td></tr><tr><td><code>/api/audio-transcribe</code></td><td>POST</td><td>Speech-to-text (Whisper)</td></tr></tbody></table>
+<h3>Media APIs</h3>
+<table><thead><tr><th>Endpoint</th><th>Methods</th><th>Purpose</th></tr></thead><tbody><tr><td><code>/api/songs</code></td><td>GET, POST, DELETE</td><td>Song list and batch operations</td></tr><tr><td><code>/api/songs/[id]</code></td><td>GET, POST, DELETE</td><td>Single song CRUD + lyrics</td></tr><tr><td><code>/api/youtube-search</code></td><td>POST</td><td>YouTube video search</td></tr><tr><td><code>/api/parse-title</code></td><td>GET</td><td>YouTube title parsing</td></tr><tr><td><code>/api/cover</code></td><td>GET</td><td>Album art fetching</td></tr></tbody></table>
+<h3>AI Generation APIs</h3>
+<table><thead><tr><th>Endpoint</th><th>Methods</th><th>Purpose</th></tr></thead><tbody><tr><td><code>/api/ie-generate</code></td><td>POST</td><td>Internet Explorer time-travel</td></tr><tr><td><code>/api/applet-ai</code></td><td>POST</td><td>Applet AI assistant</td></tr></tbody></table>
+<h3>Communication APIs</h3>
+<table><thead><tr><th>Endpoint</th><th>Methods</th><th>Purpose</th></tr></thead><tbody><tr><td><code>/api/rooms</code></td><td>GET, POST</td><td>Rooms list + create</td></tr><tr><td><code>/api/rooms/[id]</code></td><td>GET, DELETE</td><td>Room detail + delete</td></tr><tr><td><code>/api/rooms/[id]/messages</code></td><td>GET, POST</td><td>Messages</td></tr><tr><td><code>/api/rooms/[id]/messages/[msgId]</code></td><td>DELETE</td><td>Delete message (admin)</td></tr><tr><td><code>/api/messages/bulk</code></td><td>GET</td><td>Bulk messages</td></tr><tr><td><code>/api/presence/switch</code></td><td>POST</td><td>Presence switching</td></tr><tr><td><code>/api/users</code></td><td>GET</td><td>User search</td></tr><tr><td><code>/api/ai/ryo-reply</code></td><td>POST</td><td>AI reply in rooms</td></tr><tr><td><code>/api/share-applet</code></td><td>GET, POST, PATCH, DELETE</td><td>Applet sharing/store</td></tr></tbody></table>
+<h3>Utility APIs</h3>
+<table><thead><tr><th>Endpoint</th><th>Methods</th><th>Purpose</th></tr></thead><tbody><tr><td><code>/api/iframe-check</code></td><td>GET</td><td>Check/proxy iframe embedding</td></tr><tr><td><code>/api/link-preview</code></td><td>GET</td><td>OpenGraph metadata extraction</td></tr><tr><td><code>/api/admin</code></td><td>Various</td><td>Admin operations</td></tr></tbody></table>
+<h2>AI Provider Abstraction</h2>
+<h3>Supported Models (AI SDK 6.0)</h3>
+<p>The API uses Vercel AI SDK 6.0 with structured outputs for type-safe responses.</p>
+<table><thead><tr><th>Provider</th><th>Models</th><th>Use Cases</th></tr></thead><tbody><tr><td><strong>OpenAI</strong></td><td>gpt-5, gpt-5.1, gpt-5-mini, gpt-4o, gpt-4.1</td><td>Default chat, code generation</td></tr><tr><td><strong>Anthropic</strong></td><td>claude-4.5, claude-4, claude-3.7, claude-3.5</td><td>Complex reasoning</td></tr><tr><td><strong>Google</strong></td><td>gemini-2.5-pro, gemini-2.5-flash, gemini-3-pro</td><td>Image generation, title parsing</td></tr></tbody></table>
+<strong>Structured Outputs:</strong> Used for deterministic responses like song title parsing (<code>/api/parse-title</code>).
+<h3>Model Selection</h3>
+<pre><code>// api/_utils/_aiModels.ts
+export const getModelInstance = (model: SupportedModel): LanguageModel =&gt; {
+  switch (model) {
+    case "gpt-5":
+      return openai("gpt-5");
+    case "gpt-5.1":
+      return openai("gpt-5.1");
+    case "claude-4.5":
+      return anthropic("claude-sonnet-4-5");
+    case "gemini-2.5-pro":
+      return google("gemini-2.5-pro");
+    // ... more models
+  }
+};</code></pre>
+<h2>Chat API</h2>
+<h3>Streaming Architecture</h3>
+<pre class="mermaid">sequenceDiagram
+    participant Client
+    participant API as /api/chat
+    participant AI as AI Provider
+    participant Tools as Tool Handlers
+    
+    Client->>API: POST (messages, model)
+    API->>AI: streamText()
+    
+    loop Stream Response
+        AI-->>API: Token/Tool Call
+        
+        alt Tool Call
+            API->>Tools: Execute tool
+            Tools-->>API: Tool result
+            API->>AI: Continue with result
+        else Text Token
+            API-->>Client: SSE chunk
+        end
+    end
+    
+    API-->>Client: Stream complete</pre>
+<h3>Tool Calling System</h3>
+<p>The chat API provides tools for system control:</p>
+<pre><code>tools: {
+  launchApp: {
+    description: "Launch ryOS application",
+    parameters: z.object({
+      appId: z.enum(["finder", "textedit", "ipod", ...]),
+      initialData: z.unknown().optional(),
+    }),
+  },
+  
+  ipodControl: {
+    description: "Control iPod playback",
+    parameters: z.object({
+      action: z.enum(["toggle", "play", "pause", "next", "previous", ...]),
+      title: z.string().optional(),
+      artist: z.string().optional(),
+    }),
+  },
+  
+  generateHtml: {
+    description: "Generate HTML applet",
+    parameters: z.object({
+      title: z.string(),
+      icon: z.string(),
+      code: z.string(),
+    }),
+  },
+  
+  // ... more tools
+}</code></pre>
+<h3>System Prompts</h3>
+<pre><code>// api/_utils/_aiPrompts.ts
+export const CORE_PRIORITY_INSTRUCTIONS = `
+  You are Ryo, an AI assistant in ryOS...
+`;
+
+export const RYO_PERSONA_INSTRUCTIONS = `
+  Ryo's personality and background...
+`;
+
+export const CODE_GENERATION_INSTRUCTIONS = `
+  HTML applet generation rules...
+`;
+
+export const TOOL_USAGE_INSTRUCTIONS = `
+  VFS and tool usage patterns...
+`;</code></pre>
+<h2>Song API</h2>
+<h3>Split Storage Architecture</h3>
+<pre class="mermaid">flowchart TB
+    subgraph "Request"
+        REQ[API Request]
+    end
+    
+    subgraph "Redis Storage"
+        META[(song:meta:*<br/>Lightweight)]
+        CONTENT[(song:content:*<br/>Heavy Data)]
+        SET[(song:all<br/>ID Set)]
+    end
+    
+    REQ --> |List/Search| META
+    REQ --> |Full Song| META
+    META --> |UUID Lookup| CONTENT
+    REQ --> |All IDs| SET</pre>
+<h3>Endpoints</h3>
+<table><thead><tr><th>Route</th><th>Action</th><th>Description</th></tr></thead><tbody><tr><td><code>GET /api/songs</code></td><td>List</td><td>Songs with filters</td></tr><tr><td><code>POST /api/songs</code></td><td>Create/Import</td><td>New songs or bulk import</td></tr><tr><td><code>GET /api/songs/[id]</code></td><td>Read</td><td>Song with lyrics, translations</td></tr><tr><td><code>POST /api/songs/[id]</code></td><td>Fetch</td><td>Body: <code>{ action: "fetch-lyrics" }</code></td></tr><tr><td><code>POST /api/songs/[id]</code></td><td>Translate</td><td>Body: <code>{ action: "translate-stream" }</code></td></tr><tr><td><code>POST /api/songs/[id]</code></td><td>Furigana</td><td>Body: <code>{ action: "furigana-stream" }</code></td></tr><tr><td><code>DELETE /api/songs/[id]</code></td><td>Delete</td><td>Remove song</td></tr></tbody></table>
+<h2>Speech APIs</h2>
+<h3>Text-to-Speech</h3>
+<pre><code>// api/speech.ts
+const providers = {
+  openai: {
+    models: ["tts-1", "tts-1-hd"],
+    voices: ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+  },
+  elevenlabs: {
+    models: ["eleven_multilingual_v2", "eleven_turbo_v2"],
+    voices: ["custom voice IDs"],
+  },
+};
+
+// Dual provider support
+if (model === "elevenlabs") {
+  return generateElevenLabsSpeech(text, voiceId, modelId);
+} else {
+  return generateSpeech({
+    model: openai.speech("tts-1"),
+    text,
+    voice,
+  });
+}</code></pre>
+<h3>Audio Transcription</h3>
+<pre><code>// api/audio-transcribe.ts
+const transcription = await openai.audio.transcriptions.create({
+  file: audioFile,
+  model: "whisper-1",
+});</code></pre>
+<h2>Rate Limiting</h2>
+<h3>Counter-Based Limiting</h3>
+<pre><code>// api/_utils/_rate-limit.ts
+export async function checkCounterLimit({
+  key,
+  windowSeconds,
+  limit,
+}: CounterLimitArgs): Promise&lt;CounterLimitResult&gt; {
+  // Atomic increment
+  const newCount = await redis.incr(key);
+  
+  // Set expiry on first request
+  if (newCount === 1) {
+    await redis.expire(key, windowSeconds);
+  }
+  
+  const ttl = await redis.ttl(key);
+  
+  if (newCount &gt; limit) {
+    return { 
+      allowed: false, 
+      count: newCount, 
+      remaining: 0,
+      resetSeconds: ttl,
+    };
+  }
+  
+  return { 
+    allowed: true, 
+    remaining: limit - newCount,
+  };
+}</code></pre>
+<h3>Rate Limit Configurations</h3>
+<table><thead><tr><th>Endpoint</th><th>Burst Limit</th><th>Daily/Budget</th><th>Window</th></tr></thead><tbody><tr><td>Chat AI (auth)</td><td>15</td><td>per 5 hours</td><td>Sliding</td></tr><tr><td>Chat AI (anon)</td><td>3</td><td>per 24 hours</td><td>Sliding</td></tr><tr><td>Speech TTS</td><td>10/min</td><td>50/day</td><td>Fixed</td></tr><tr><td>IE Generate</td><td>3/min</td><td>10/5hr</td><td>Fixed</td></tr><tr><td>Applet AI (auth text)</td><td>50</td><td>per hour</td><td>Fixed</td></tr><tr><td>Applet AI (anon text)</td><td>15</td><td>per hour</td><td>Fixed</td></tr><tr><td>Applet AI (auth image)</td><td>12</td><td>per hour</td><td>Fixed</td></tr><tr><td>Applet AI (anon image)</td><td>1</td><td>per hour</td><td>Fixed</td></tr><tr><td>Transcribe</td><td>10/min</td><td>50/day</td><td>Fixed</td></tr><tr><td>Parse Title</td><td>15/min</td><td>500/day</td><td>Fixed</td></tr><tr><td>YouTube Search</td><td>20/min</td><td>200/day</td><td>Fixed</td></tr></tbody></table>
+<h2>Authentication</h2>
+<h3>Token Validation</h3>
+<pre><code>// api/_utils/auth/_validate.ts
+export async function validateAuth(
+  redis: RedisLike,
+  username: string,
+  authToken: string,
+  options: { allowExpired?: boolean; refreshOnGrace?: boolean } = {}
+): Promise&lt;AuthValidationResult&gt; {
+  // 1. Check active token
+  const userKey = getUserTokenKey(username, authToken);
+  const exists = await redis.exists(userKey);
+  
+  if (exists) {
+    // Refresh TTL on use
+    await redis.expire(userKey, USER_TTL_SECONDS);
+    return { valid: true, expired: false };
+  }
+  
+  // 2. Check grace period for expired tokens
+  if (options.allowExpired) {
+    const lastTokenKey = getLastTokenKey(username);
+    const lastTokenData = await redis.get(lastTokenKey);
+    // ... grace period logic
+  }
+  
+  return { valid: false };
+}</code></pre>
+<h3>Auth Headers</h3>
+<table><thead><tr><th>Header</th><th>Value</th><th>Purpose</th></tr></thead><tbody><tr><td><code>Authorization</code></td><td><code>Bearer &lt;token&gt;</code></td><td>Authentication token</td></tr><tr><td><code>X-Username</code></td><td>Username</td><td>User identification</td></tr></tbody></table>
+<h3>Token Configuration</h3>
+<table><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody><tr><td>Token TTL</td><td>90 days</td></tr><tr><td>Grace period</td><td>30 days</td></tr><tr><td>Admin bypass</td><td>User "ryo"</td></tr></tbody></table>
+<h2>CORS Handling</h2>
+<pre><code>// api/_utils/_cors.ts
+export function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  
+  // Always allow Tailscale origins
+  if (isTailscaleOrigin(origin)) return true;
+  
+  const env = getRuntimeEnv();
+  
+  if (env === "production") {
+    return origin === PROD_ALLOWED_ORIGIN;
+  }
+  
+  if (env === "preview") {
+    return isVercelPreviewOrigin(origin);
+  }
+  
+  // Development
+  return isLocalhostOrigin(origin);
+}</code></pre>
+<h2>Response Patterns</h2>
+<h3>Response Helpers</h3>
+<p>The middleware provides standardized response helpers for consistent API responses:</p>
+<pre><code>// JSON response with optional CORS and extra headers
+jsonResponse(data, status = 200, origin?, extraHeaders?)
+
+// Error response with optional code and details
+errorResponse(message, status = 400, origin?, code?, details?)
+
+// Success response (includes { success: true })
+successResponse(data = {}, status = 200, origin?)
+
+// Rate limit response with retry headers
+rateLimitResponse(origin, limit, resetSeconds, scope?)</code></pre>
+<strong>Example Usage:</strong>
+<pre><code>// Success with data
+return jsonResponse({ items: data }, 200, origin);
+
+// Success response
+return successResponse({ message: "Created" }, 201, origin);
+
+// Error with code
+return errorResponse("Validation failed", 400, origin, "VALIDATION_ERROR", { field: "email" });
+
+// Rate limit exceeded
+return rateLimitResponse(origin, 30, 60, "burst");</code></pre>
+<h3>Error Response Format</h3>
+<p>All error responses follow a consistent format:</p>
+<pre><code>{
+  "error": "Human-readable error message",
+  "code": "MACHINE_READABLE_CODE",
+  "details": { "field": "value" }
+}</code></pre>
+<p>Rate limit errors include additional fields:</p>
+<pre><code>{
+  "error": "rate_limit_exceeded",
+  "limit": 30,
+  "retryAfter": 45,
+  "scope": "burst"
+}</code></pre>
+<h3>SSE Streaming Response</h3>
+<pre><code>const stream = new ReadableStream({
+  async start(controller) {
+    for await (const chunk of aiStream) {
+      controller.enqueue(`data: ${JSON.stringify(chunk)}\n\n`);
+    }
+    controller.enqueue("data: [DONE]\n\n");
+    controller.close();
+  },
+});
+
+return new Response(stream, {
+  headers: {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+  },
+});</code></pre>
+<h2>Runtime Configuration</h2>
+<p>All APIs use Vercel Node.js runtime:</p>
+<pre><code>export const runtime = "nodejs";
+export const maxDuration = 60; // seconds (80 for AI endpoints)</code></pre>
+<h2>Redis Key Patterns</h2>
+<table><thead><tr><th>Prefix</th><th>Purpose</th><th>Example</th></tr></thead><tbody><tr><td><code>rl:ai:</code></td><td>AI rate limiting</td><td><code>rl:ai:chat:user123</code></td></tr><tr><td><code>song:meta:</code></td><td>Song metadata</td><td><code>song:meta:abc123</code></td></tr><tr><td><code>song:content:</code></td><td>Song content</td><td><code>song:content:abc123</code></td></tr><tr><td><code>ie:cache:</code></td><td>IE generation cache</td><td><code>ie:cache:hash</code></td></tr><tr><td><code>applet:share:</code></td><td>Shared applets</td><td><code>applet:share:xyz</code></td></tr><tr><td><code>chat:token:user:</code></td><td>Auth tokens</td><td><code>chat:token:user:alice:tok</code></td></tr><tr><td><code>chat:room:</code></td><td>Chat room data</td><td><code>chat:room:general</code></td></tr></tbody></table>
+<h2>Related Documentation</h2>
+<ul><li><a href="/docs/api-design-guide">API Design Guide</a> - Implementation patterns and best practices</li></ul><ul><li><a href="/docs/chat-api">Chat API</a> - Detailed chat API documentation</li><li><a href="/docs/song-api">Song API</a> - Song API reference</li><li><a href="/docs/ai-generation-apis">AI Generation APIs</a> - IE and Applet AI</li><li><a href="/docs/rooms-api">Rooms API</a> - Chat room management</li><li><a href="/docs/messages-api">Messages API</a> - Chat messaging</li><li><a href="/docs/utility-apis">Utility APIs</a> - Link preview, iframe check, share applet</li></ul>
+      </article>
+      
+      <nav class="nav">
+        <a href="/docs/architecture">← Architecture & Build</a>
+        <a href="/docs/apps">Apps →</a>
+      </nav>
+      
+    </main>
+  </div>
+  
+  <script>
+    function toggleNavGroup(button) {
+      const group = button.closest('.nav-group');
+      const children = group.querySelector('.nav-children');
+      const svg = button.querySelector('svg');
+      const isExpanded = group.classList.contains('expanded');
+      
+      if (isExpanded) {
+        group.classList.remove('expanded');
+        children.style.display = 'none';
+        svg.style.transform = 'rotate(0deg)';
+        button.setAttribute('aria-expanded', 'false');
+      } else {
+        group.classList.add('expanded');
+        children.style.display = 'block';
+        svg.style.transform = 'rotate(90deg)';
+        button.setAttribute('aria-expanded', 'true');
+      }
+    }
+    
+    document.addEventListener('click', (e) => {
+      const sidebar = document.querySelector('.sidebar');
+      const menuBtn = document.querySelector('.menu-btn');
+      const clickedMenuBtn = menuBtn && menuBtn.contains(e.target);
+      if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !clickedMenuBtn) {
+        sidebar.classList.remove('open');
+      }
+    });
+  </script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontFamily: '"Geneva", system-ui, sans-serif',
+        fontSize: '10px',
+        primaryColor: '#f0f0f0',
+        primaryBorderColor: '#ccc',
+        primaryTextColor: '#000',
+        lineColor: '#666',
+        secondaryColor: '#f8f8f8',
+        tertiaryColor: '#fff'
+      },
+      flowchart: { curve: 'basis', padding: 8, nodeSpacing: 30, rankSpacing: 30 },
+      sequence: { actorFontSize: 10, messageFontSize: 10, noteFontSize: 10 }
+    });
+  </script>
+</body>
+</html>

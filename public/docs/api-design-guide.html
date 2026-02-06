@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ryOS API Design Guide - ryOS Docs</title>
+  <link rel="icon" href="/icons/mac-192.png">
+  <style>
+    @font-face { font-family: "Geneva"; src: url("/fonts/geneva-12.woff2") format("woff2"); }
+    @font-face { font-family: "Monaco"; src: url("/fonts/monacottf.woff2") format("woff2"); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Geneva", system-ui, sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: #fff;
+      color: #000;
+    }
+    a { color: #00f; }
+    a:hover { text-decoration: none; }
+    code, pre { font-family: "Monaco", monospace; font-size: 11px; }
+    code { background: #f0f0f0; padding: 1px 4px; }
+    pre { background: #f8f8f8; border: 1px solid #ddd; padding: 12px; overflow-x: auto; margin: 12px 0; }
+    pre code { background: none; padding: 0; }
+    
+    /* Layout */
+    .header {
+      position: sticky; top: 0; z-index: 10;
+      background: #fff; border-bottom: 1px solid #ccc;
+      padding: 0 16px; height: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-left img { width: 20px; height: 20px; display: block; }
+    .header-left span { font-weight: bold; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a { text-decoration: none; color: #333; }
+    .header-right a:hover { color: #000; }
+    .header-right .github { display: flex; align-items: center; gap: 4px; }
+    .header-right .launch { background: #000; color: #fff; padding: 4px 12px; }
+    
+    .container { display: flex; max-width: 1100px; margin: 0 auto; }
+    
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      border-right: 1px solid #ccc;
+      padding: 12px;
+      position: sticky; top: 40px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .sidebar a {
+      display: block; padding: 4px 8px; margin: 2px 0;
+      text-decoration: none; color: #333;
+      font-size: 11px;
+    }
+    .sidebar a:hover { background: #f0f0f0; }
+    .sidebar a.active { background: #000; color: #fff; }
+    
+    /* Tree hierarchy styles */
+    .nav-group { margin: 4px 0; }
+    .nav-spacer { width: 8px; flex-shrink: 0; } /* Same width as toggle arrow */
+    .nav-no-toggle { cursor: default; }
+    .nav-toggle {
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; padding: 0; width: 100%;
+      cursor: pointer; text-align: left; font: inherit; color: inherit;
+    }
+    .nav-toggle:hover { background: #f0f0f0; }
+    .nav-toggle svg { flex-shrink: 0; opacity: 0.6; transition: transform 0.2s; }
+    .nav-toggle a { flex: 1; padding: 4px 8px; margin: 0; pointer-events: auto; font-size: 11px; }
+    .nav-children { margin-left: 12px; overflow: hidden; transition: height 0.2s ease-out; }
+    .nav-child { padding-left: 8px !important; font-size: 10px !important; color: #555 !important; }
+    .nav-child:hover { color: #000 !important; }
+    .nav-child.active { color: #fff !important; }
+    
+    .content { flex: 1; padding: 24px 32px; min-width: 0; }
+    
+    /* Typography */
+    h1 { font-size: 18px; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 16px; }
+    hr { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+    h2 { font-size: 14px; margin: 24px 0 12px; }
+    h3 { font-size: 12px; margin: 16px 0 8px; }
+    h4 { font-size: 11px; margin: 12px 0 6px; font-weight: bold; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 8px 20px; }
+    li { margin: 4px 0; }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    th { background: #f0f0f0; font-weight: bold; }
+    
+    /* Mermaid diagrams */
+    pre.mermaid { background: none; border: none; padding: 0; text-align: center; margin: 16px 0; }
+    .mermaid svg { max-width: 100%; height: auto; font-family: "Geneva", system-ui, sans-serif !important; }
+    .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { fill: #f8f8f8 !important; stroke: #ccc !important; }
+    .mermaid .edgeLabel { background: #fff !important; font-size: 10px !important; }
+    .mermaid .label { font-size: 10px !important; }
+    .mermaid .nodeLabel { font-size: 10px !important; }
+    .mermaid .cluster-label { font-size: 10px !important; }
+    .mermaid .messageText { font-size: 10px !important; }
+    .mermaid .actor { font-size: 10px !important; }
+    .mermaid .labelText { font-size: 10px !important; }
+    
+    /* Collapsible details */
+    details { margin: 8px 0; }
+    details summary { 
+      cursor: pointer; 
+      color: #666; 
+      font-size: 11px;
+      padding: 4px 0;
+      user-select: none;
+    }
+    details summary:hover { color: #000; }
+    details[open] summary { margin-bottom: 8px; }
+    details ul { margin-top: 0; }
+    
+    /* Navigation */
+    .nav { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ccc; }
+    .nav a { text-decoration: none; color: #333; }
+    .nav a:hover { color: #000; }
+    
+    /* Mobile menu button */
+    .menu-btn { 
+      display: none; 
+      background: transparent; 
+      border: 0; 
+      padding: 4px; 
+      cursor: pointer; 
+      line-height: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+      color: inherit;
+    }
+    .menu-btn svg { display: block; width: 18px; height: 18px; pointer-events: none; }
+    @media screen and (max-width: 768px) {
+      .menu-btn { 
+        display: -webkit-flex !important;
+        display: flex !important; 
+        -webkit-align-items: center;
+        align-items: center; 
+        -webkit-justify-content: center;
+        justify-content: center;
+      }
+      .header-left img { display: none !important; }
+      .sidebar { 
+        position: fixed; left: -240px; top: 40px; 
+        width: 240px; height: calc(100vh - 40px);
+        background: #fff; z-index: 20;
+        transition: left 0.2s;
+      }
+      .sidebar.open { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit">
+        <img src="/icons/mac-192.png" alt="ryOS" width="20" height="20">
+        <span>ryOS</span>
+      </a>
+      <span style="color:#999">/</span>
+      <span style="color:#666">Docs</span>
+    </div>
+    <div class="header-right">
+      <a href="https://github.com/ryokun6/ryos" target="_blank" class="github">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href="/" class="launch">Launch</a>
+    </div>
+  </header>
+  
+  <div class="container">
+    <nav class="sidebar">
+      <div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/overview" class="">1. Overview</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/architecture" class="nav-child ">1.1 Architecture & Build</a>
+    <a href="/docs/api-architecture" class="nav-child ">1.2 API Architecture</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/apps" class="">2. Apps</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chats" class="nav-child ">2.1 Chats</a>
+    <a href="/docs/internet-explorer" class="nav-child ">2.2 Internet Explorer</a>
+    <a href="/docs/ipod" class="nav-child ">2.3 iPod</a>
+    <a href="/docs/karaoke" class="nav-child ">2.4 Karaoke</a>
+    <a href="/docs/textedit" class="nav-child ">2.5 TextEdit</a>
+    <a href="/docs/finder" class="nav-child ">2.6 Finder</a>
+    <a href="/docs/paint" class="nav-child ">2.7 Paint</a>
+    <a href="/docs/photo-booth" class="nav-child ">2.8 Photo Booth</a>
+    <a href="/docs/terminal" class="nav-child ">2.9 Terminal</a>
+    <a href="/docs/control-panels" class="nav-child ">2.10 Control Panels</a>
+    <a href="/docs/soundboard" class="nav-child ">2.11 Soundboard</a>
+    <a href="/docs/synth" class="nav-child ">2.12 Synth</a>
+    <a href="/docs/videos" class="nav-child ">2.13 Videos</a>
+    <a href="/docs/minesweeper" class="nav-child ">2.14 Minesweeper</a>
+    <a href="/docs/virtual-pc" class="nav-child ">2.15 Virtual PC</a>
+    <a href="/docs/admin" class="nav-child ">2.16 Admin</a>
+    <a href="/docs/applet-store" class="nav-child ">2.17 Applet Store</a>
+    <a href="/docs/stickies" class="nav-child ">2.18 Stickies</a>
+    <a href="/docs/infinite-mac" class="nav-child ">2.19 Infinite Mac</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/application-framework" class="">3. Application Framework</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/window-management" class="nav-child ">3.1 Window Management</a>
+    <a href="/docs/state-management" class="nav-child ">3.2 State Management</a>
+    <a href="/docs/theme-system" class="nav-child ">3.3 Theme System</a>
+    <a href="/docs/hooks-architecture" class="nav-child ">3.4 Hooks Architecture</a>
+    <a href="/docs/component-architecture" class="nav-child ">3.5 Component Architecture</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/ai-system" class="">4. AI System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/file-system" class="">5. File System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/audio-system" class="">6. Audio System</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/ui-components" class="">7. UI Components and Shared Systems</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/component-library" class="nav-child ">7.1 Components</a>
+    <a href="/docs/i18n" class="nav-child ">7.2 i18n & Hooks</a>
+  </div>
+</div>
+<div class="nav-group expanded">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="true">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(90deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/api-reference" class="">8. API Reference</a>
+  </button>
+  <div class="nav-children" style="display: block;">
+    <a href="/docs/chat-api" class="nav-child ">8.1 Chat API</a>
+    <a href="/docs/song-api" class="nav-child ">8.2 Song API</a>
+    <a href="/docs/media-api" class="nav-child ">8.3 Media API</a>
+    <a href="/docs/auth-api" class="nav-child ">8.4 Auth API</a>
+    <a href="/docs/rooms-api" class="nav-child ">8.5 Rooms API</a>
+    <a href="/docs/messages-api" class="nav-child ">8.6 Messages API</a>
+    <a href="/docs/presence-api" class="nav-child ">8.7 Presence API</a>
+    <a href="/docs/ai-generation-apis" class="nav-child ">8.8 AI Endpoints</a>
+    <a href="/docs/utility-apis" class="nav-child ">8.9 Utility APIs</a>
+    <a href="/docs/api-design-guide" class="nav-child active">8.10 ryOS API Design Guide</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/changelog" class="">9. Changelog</a>
+  </div>
+</div>
+    </nav>
+    
+    <main class="content">
+      <article>
+        <h1>ryOS API Design Guide</h1>
+<p>This document outlines the patterns and conventions used in the ryOS API.</p>
+<h2>Architecture Overview</h2>
+<p>The API uses Vercel serverless functions with Node.js runtime for all endpoints. This provides full Node.js API access including native modules like <code>bcrypt</code> for password hashing.</p>
+<h2>File Structure</h2>
+<pre><code>api/
+├── _utils/                    # Shared utilities (global)
+│   ├── middleware.ts          # Main middleware (consolidated utilities)
+│   ├── redis.ts               # Redis client factory
+│   ├── constants.ts           # Centralized constants
+│   ├── _cors.ts               # CORS handling
+│   ├── _rate-limit.ts         # Rate limiting
+│   ├── _validation.ts         # Input validation
+│   └── auth/                  # Authentication utilities
+│       ├── index.ts           # Main auth exports
+│       ├── _validate.ts       # Token validation
+│       ├── _tokens.ts         # Token management
+│       ├── _extract.ts        # Request auth extraction
+│       ├── _constants.ts      # Auth-specific constants
+│       └── _types.ts          # TypeScript types
+├── auth/                      # Authentication endpoints
+├── rooms/                     # Chat room endpoints
+│   ├── _helpers/              # Room-specific helpers
+│   │   ├── _constants.ts
+│   │   ├── _presence.ts
+│   │   ├── _redis.ts
+│   │   ├── _types.ts
+│   │   └── ...
+│   ├── [id]/                  # Dynamic room routes
+│   └── index.ts               # Room list endpoint
+├── songs/                     # Music library endpoints
+│   ├── _*.ts                  # Song-specific helpers
+│   ├── [id].ts                # Single song endpoint
+│   └── index.ts               # Song list endpoint
+└── ...                        # Other endpoints</code></pre>
+<h3>Naming Conventions</h3>
+<ul><li><code>_helpers/</code> - Domain-specific helper modules (internal to a feature)</li></ul><ul><li><code>_utils/</code> - Global shared utilities</li><li><code>_*.ts</code> - Internal/private helper files (prefixed with underscore)</li><li><code>index.ts</code> - Main entry point for a feature</li><li><code>[param].ts</code> - Dynamic route handlers</li></ul>
+<h2>Common Patterns</h2>
+<h3>1. Runtime Declaration</h3>
+<pre><code>// Node.js runtime (standard for all endpoints)
+export const runtime = "nodejs";
+export const maxDuration = 30; // optional timeout in seconds (default 10, max 60)</code></pre>
+<h3>2. Imports from Middleware</h3>
+<pre><code>import {
+  // Redis
+  createRedis,
+  
+  // CORS
+  getEffectiveOrigin,
+  isAllowedOrigin,
+  preflightIfNeeded,
+  
+  // Auth
+  extractAuth,
+  extractAuthNormalized,
+  
+  // Response helpers
+  jsonResponse,
+  errorResponse,
+  successResponse,
+  rateLimitResponse,
+  
+  // Rate limiting
+  getClientIp,
+  checkRateLimit,
+  RATE_LIMITS,
+  
+  // Request helpers
+  parseJsonBody,
+  getQueryParam,
+  
+  // Request context (reduces boilerplate)
+  createRequestContext,
+  
+  // Constants
+  REDIS_PREFIXES,
+  TTL,
+  RATE_LIMIT_TIERS,
+} from "./_utils/middleware.js";</code></pre>
+<h3>3. Basic Handler Structure</h3>
+<pre><code>export default async function handler(req: Request) {
+  const origin = getEffectiveOrigin(req);
+  
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    const preflight = preflightIfNeeded(req, ["GET", "POST", "OPTIONS"], origin);
+    if (preflight) return preflight;
+    return new Response(null, { status: 204 });
+  }
+
+  // Check origin
+  if (!isAllowedOrigin(origin)) {
+    return errorResponse("Unauthorized", 403, origin);
+  }
+
+  // Method check
+  if (req.method !== "GET" &amp;&amp; req.method !== "POST") {
+    return errorResponse("Method not allowed", 405, origin);
+  }
+
+  // Create Redis client
+  const redis = createRedis();
+
+  try {
+    // Handler logic here
+    return jsonResponse({ data: "example" }, 200, origin);
+  } catch (error) {
+    console.error("Error:", error);
+    return errorResponse("Internal server error", 500, origin);
+  }
+}</code></pre>
+<h3>4. Using Request Context (Recommended for Complex Handlers)</h3>
+<pre><code>export default async function handler(req: Request) {
+  const ctx = await createRequestContext(req, { requireAuth: true });
+  
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    const preflight = preflightIfNeeded(req, ["POST", "OPTIONS"], ctx.origin);
+    if (preflight) return preflight;
+    return new Response(null, { status: 204 });
+  }
+
+  if (!ctx.originAllowed) {
+    return errorResponse("Unauthorized", 403, ctx.origin);
+  }
+
+  if (!ctx.user) {
+    return errorResponse("Authentication required", 401, ctx.origin);
+  }
+
+  ctx.log("Processing request for user", { username: ctx.user.username });
+
+  // Handler logic using ctx.redis, ctx.user, etc.
+}</code></pre>
+<h3>5. Authentication</h3>
+<pre><code>import { validateAuthToken } from "./_utils/auth/index.js";
+
+// Extract and validate auth
+const authHeader = req.headers.get("authorization");
+const usernameHeader = req.headers.get("x-username");
+const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+const authResult = await validateAuthToken(redis, usernameHeader, token, {
+  allowExpired: true,  // Allow tokens within grace period
+});
+
+if (!authResult.valid) {
+  return errorResponse("Unauthorized", 401, origin);
+}</code></pre>
+<h3>6. Rate Limiting</h3>
+<pre><code>import { checkRateLimit, RATE_LIMITS } from "./_utils/middleware.js";
+
+// Using preset configurations
+const rlResult = await checkRateLimit(
+  req,
+  RATE_LIMITS.burst("my-endpoint"),
+  user,  // optional authenticated user
+  origin
+);
+
+if (!rlResult.allowed) {
+  return rlResult.error!;
+}
+
+// Or use rateLimitResponse helper
+const ip = getClientIp(req);
+const rlKey = RateLimit.makeKey(["rl", "endpoint", "ip", ip]);
+const result = await RateLimit.checkCounterLimit({
+  key: rlKey,
+  windowSeconds: 60,
+  limit: 30,
+});
+
+if (!result.allowed) {
+  return rateLimitResponse(origin, 30, result.resetSeconds ?? 60);
+}</code></pre>
+<h3>7. Response Helpers</h3>
+<pre><code>// Success with data
+return jsonResponse({ items: data }, 200, origin);
+
+// Success response with "success: true"
+return successResponse({ message: "Created" }, 201, origin);
+
+// Error response
+return errorResponse("Not found", 404, origin);
+
+// Error with code and details
+return errorResponse(
+  "Validation failed",
+  400,
+  origin,
+  "VALIDATION_ERROR",
+  { field: "email", issue: "invalid format" }
+);
+
+// Rate limit response
+return rateLimitResponse(origin, limit, resetSeconds, "burst");</code></pre>
+<h3>8. Admin Check</h3>
+<pre><code>import { isAdmin } from "./_utils/middleware.js";
+
+// Check if user is admin (ryo) with valid token
+const adminAccess = await isAdmin(redis, username, token);
+if (!adminAccess) {
+  return errorResponse("Forbidden - admin access required", 403, origin);
+}</code></pre>
+<h3>9. Logging</h3>
+<p>Use the logging utility for consistent, color-coded terminal output:</p>
+<pre><code>import { initLogger } from "./_utils/_logging.js";
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const { requestId, logger } = initLogger();
+  const startTime = Date.now();
+  
+  logger.request(req.method || "POST", req.url || "/api/endpoint", "endpoint-name");
+  
+  try {
+    // Handler logic
+    logger.info("Processing request", { userId: "123" });
+    
+    logger.response(200, Date.now() - startTime);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    logger.error("Handler failed", error);
+    logger.response(500, Date.now() - startTime);
+    res.status(500).json({ error: "Internal error" });
+  }
+}</code></pre>
+<strong>Logger Methods:</strong>
+<table><thead><tr><th>Method</th><th>Usage</th></tr></thead><tbody><tr><td><code>logger.request(method, url, action?)</code></td><td>Log incoming request with color-coded method</td></tr><tr><td><code>logger.response(status, duration?)</code></td><td>Log response with status color and timing</td></tr><tr><td><code>logger.info(message, data?)</code></td><td>General information logging</td></tr><tr><td><code>logger.warn(message, data?)</code></td><td>Warning messages (yellow)</td></tr><tr><td><code>logger.error(message, error?)</code></td><td>Error logging (red)</td></tr><tr><td><code>logger.debug(message, data?)</code></td><td>Debug output (dev only)</td></tr></tbody></table>
+<h2>Constants</h2>
+<p>Use centralized constants from <code><a href="https://github.com/ryokun6/ryos/blob/main/src/_utils/constants.ts" target="_blank" rel="noopener noreferrer" style="color: #00f; text-decoration: underline;">_utils/constants.ts</a></code>:</p>
+<pre><code>import { REDIS_PREFIXES, TTL, RATE_LIMIT_TIERS, PASSWORD, VALIDATION } from "./_utils/constants.js";
+
+// Redis keys
+const userKey = `${REDIS_PREFIXES.users}${username}`;
+const tokenKey = `${REDIS_PREFIXES.authToken}user:${username}:${token}`;
+
+// TTLs (in seconds)
+await redis.set(key, value, { ex: TTL.user }); // 90 days
+
+// Rate limits
+const limit = RATE_LIMIT_TIERS.ai.authenticated.limit;  // 15
+const window = RATE_LIMIT_TIERS.ai.authenticated.window; // 5 hours</code></pre>
+<strong>Available Constants:</strong>
+<table><thead><tr><th>Module</th><th>Contents</th></tr></thead><tbody><tr><td><code>REDIS_PREFIXES</code></td><td>Key prefixes: <code>authToken</code>, <code>passwordHash</code>, <code>users</code>, <code>room</code>, <code>messages</code>, <code>songMeta</code>, <code>songContent</code>, etc.</td></tr><tr><td><code>TTL</code></td><td>Expiration times: <code>user</code> (90 days), <code>tokenGrace</code> (30 days), <code>presence</code> (1 day), etc.</td></tr><tr><td><code>RATE_LIMIT_TIERS</code></td><td>Burst, hourly, daily, AI rate limit configs for public/authenticated/admin</td></tr><tr><td><code>PASSWORD</code></td><td><code>minLength</code> (8), <code>maxLength</code> (128), <code>bcryptRounds</code> (10)</td></tr><tr><td><code>VALIDATION</code></td><td>Username/message/roomId regex and length constraints</td></tr><tr><td><code>TOKEN</code></td><td>Token byte length (32)</td></tr></tbody></table>
+<h2>Best Practices</h2>
+<ol><li><strong>Always validate origin</strong> before processing requests</li></ol><ol><li><strong>Use response helpers</strong> for consistent error formats</li><li><strong>Implement rate limiting</strong> on all public endpoints</li><li><strong>Use initLogger()</strong> for consistent request tracing and timing</li><li><strong>Use createRedis()</strong> instead of instantiating Redis directly</li><li><strong>Set appropriate maxDuration</strong> for long-running operations (AI: 80s, standard: 30s)</li><li><strong>Validate all user input</strong> using the validation utilities</li><li><strong>Handle errors gracefully</strong> with try/catch blocks</li></ol>
+<h2>Error Response Format</h2>
+<p>All error responses follow this format:</p>
+<pre><code>{
+  "error": "Human-readable error message",
+  "code": "MACHINE_READABLE_CODE",  // optional
+  "details": { ... }                // optional validation errors
+}</code></pre>
+<p>Rate limit errors include additional fields:</p>
+<pre><code>{
+  "error": "rate_limit_exceeded",
+  "limit": 30,
+  "retryAfter": 45,
+  "scope": "burst"  // optional
+}</code></pre>
+      </article>
+      
+      <nav class="nav">
+        <a href="/docs/utility-apis">← Utility APIs</a>
+        <a href="/docs/changelog">Changelog →</a>
+      </nav>
+      
+    </main>
+  </div>
+  
+  <script>
+    function toggleNavGroup(button) {
+      const group = button.closest('.nav-group');
+      const children = group.querySelector('.nav-children');
+      const svg = button.querySelector('svg');
+      const isExpanded = group.classList.contains('expanded');
+      
+      if (isExpanded) {
+        group.classList.remove('expanded');
+        children.style.display = 'none';
+        svg.style.transform = 'rotate(0deg)';
+        button.setAttribute('aria-expanded', 'false');
+      } else {
+        group.classList.add('expanded');
+        children.style.display = 'block';
+        svg.style.transform = 'rotate(90deg)';
+        button.setAttribute('aria-expanded', 'true');
+      }
+    }
+    
+    document.addEventListener('click', (e) => {
+      const sidebar = document.querySelector('.sidebar');
+      const menuBtn = document.querySelector('.menu-btn');
+      const clickedMenuBtn = menuBtn && menuBtn.contains(e.target);
+      if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !clickedMenuBtn) {
+        sidebar.classList.remove('open');
+      }
+    });
+  </script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontFamily: '"Geneva", system-ui, sans-serif',
+        fontSize: '10px',
+        primaryColor: '#f0f0f0',
+        primaryBorderColor: '#ccc',
+        primaryTextColor: '#000',
+        lineColor: '#666',
+        secondaryColor: '#f8f8f8',
+        tertiaryColor: '#fff'
+      },
+      flowchart: { curve: 'basis', padding: 8, nodeSpacing: 30, rankSpacing: 30 },
+      sequence: { actorFontSize: 10, messageFontSize: 10, noteFontSize: 10 }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting…</title>
+    <meta http-equiv="refresh" content="0; url=/" />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href="/" />
+    <script>
+      (function () {
+        var target = '/';
+        try {
+          if (window && window.location && window.location.origin) {
+            target = window.location.origin + '/';
+          }
+        } catch (e) {}
+        window.location.replace(target);
+      })();
+    </script>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body { display: flex; align-items: center; justify-content: center; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+      a { color: inherit; }
+    </style>
+  </head>
+  <body>
+    <p>Redirecting to <a href="/">/</a>…</p>
+  </body>
+  </html>
+

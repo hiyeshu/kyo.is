@@ -1,0 +1,40 @@
+{
+  "applets": [
+    {
+      "name": "Weather.app",
+      "path": "/Applets/Weather.app",
+      "isDirectory": false,
+      "type": "html",
+      "icon": "🌤️",
+      "status": "active",
+      "shareId": "356e97a80449c725c07a91c4dd07fb87"
+    },
+    {
+      "name": "Currency Converter.app",
+      "path": "/Applets/Currency Converter.app",
+      "isDirectory": false,
+      "type": "html",
+      "icon": "💱",
+      "status": "active",
+      "shareId": "87bf95afdf1dd4187c317baa3fdd1bf2"
+    },
+    {
+      "name": "Calculator.app",
+      "path": "/Applets/Calculator.app",
+      "isDirectory": false,
+      "type": "html",
+      "icon": "🧮",
+      "status": "active",
+      "shareId": "7bd837678200f4d81a7b79fcb9093b6a"
+    },
+    {
+      "name": "AI SimCity.app",
+      "path": "/Applets/AI SimCity.app",
+      "isDirectory": false,
+      "type": "html",
+      "icon": "🏙️",
+      "status": "active",
+      "shareId":"6ae75066f460730949db8221d5b27272"
+    }
+  ]
+}

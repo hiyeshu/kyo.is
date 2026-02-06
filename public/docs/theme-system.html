@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theme System - ryOS Docs</title>
+  <link rel="icon" href="/icons/mac-192.png">
+  <style>
+    @font-face { font-family: "Geneva"; src: url("/fonts/geneva-12.woff2") format("woff2"); }
+    @font-face { font-family: "Monaco"; src: url("/fonts/monacottf.woff2") format("woff2"); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Geneva", system-ui, sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: #fff;
+      color: #000;
+    }
+    a { color: #00f; }
+    a:hover { text-decoration: none; }
+    code, pre { font-family: "Monaco", monospace; font-size: 11px; }
+    code { background: #f0f0f0; padding: 1px 4px; }
+    pre { background: #f8f8f8; border: 1px solid #ddd; padding: 12px; overflow-x: auto; margin: 12px 0; }
+    pre code { background: none; padding: 0; }
+    
+    /* Layout */
+    .header {
+      position: sticky; top: 0; z-index: 10;
+      background: #fff; border-bottom: 1px solid #ccc;
+      padding: 0 16px; height: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-left img { width: 20px; height: 20px; display: block; }
+    .header-left span { font-weight: bold; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a { text-decoration: none; color: #333; }
+    .header-right a:hover { color: #000; }
+    .header-right .github { display: flex; align-items: center; gap: 4px; }
+    .header-right .launch { background: #000; color: #fff; padding: 4px 12px; }
+    
+    .container { display: flex; max-width: 1100px; margin: 0 auto; }
+    
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      border-right: 1px solid #ccc;
+      padding: 12px;
+      position: sticky; top: 40px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .sidebar a {
+      display: block; padding: 4px 8px; margin: 2px 0;
+      text-decoration: none; color: #333;
+      font-size: 11px;
+    }
+    .sidebar a:hover { background: #f0f0f0; }
+    .sidebar a.active { background: #000; color: #fff; }
+    
+    /* Tree hierarchy styles */
+    .nav-group { margin: 4px 0; }
+    .nav-spacer { width: 8px; flex-shrink: 0; } /* Same width as toggle arrow */
+    .nav-no-toggle { cursor: default; }
+    .nav-toggle {
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; padding: 0; width: 100%;
+      cursor: pointer; text-align: left; font: inherit; color: inherit;
+    }
+    .nav-toggle:hover { background: #f0f0f0; }
+    .nav-toggle svg { flex-shrink: 0; opacity: 0.6; transition: transform 0.2s; }
+    .nav-toggle a { flex: 1; padding: 4px 8px; margin: 0; pointer-events: auto; font-size: 11px; }
+    .nav-children { margin-left: 12px; overflow: hidden; transition: height 0.2s ease-out; }
+    .nav-child { padding-left: 8px !important; font-size: 10px !important; color: #555 !important; }
+    .nav-child:hover { color: #000 !important; }
+    .nav-child.active { color: #fff !important; }
+    
+    .content { flex: 1; padding: 24px 32px; min-width: 0; }
+    
+    /* Typography */
+    h1 { font-size: 18px; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 16px; }
+    hr { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+    h2 { font-size: 14px; margin: 24px 0 12px; }
+    h3 { font-size: 12px; margin: 16px 0 8px; }
+    h4 { font-size: 11px; margin: 12px 0 6px; font-weight: bold; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 8px 20px; }
+    li { margin: 4px 0; }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    th { background: #f0f0f0; font-weight: bold; }
+    
+    /* Mermaid diagrams */
+    pre.mermaid { background: none; border: none; padding: 0; text-align: center; margin: 16px 0; }
+    .mermaid svg { max-width: 100%; height: auto; font-family: "Geneva", system-ui, sans-serif !important; }
+    .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { fill: #f8f8f8 !important; stroke: #ccc !important; }
+    .mermaid .edgeLabel { background: #fff !important; font-size: 10px !important; }
+    .mermaid .label { font-size: 10px !important; }
+    .mermaid .nodeLabel { font-size: 10px !important; }
+    .mermaid .cluster-label { font-size: 10px !important; }
+    .mermaid .messageText { font-size: 10px !important; }
+    .mermaid .actor { font-size: 10px !important; }
+    .mermaid .labelText { font-size: 10px !important; }
+    
+    /* Collapsible details */
+    details { margin: 8px 0; }
+    details summary { 
+      cursor: pointer; 
+      color: #666; 
+      font-size: 11px;
+      padding: 4px 0;
+      user-select: none;
+    }
+    details summary:hover { color: #000; }
+    details[open] summary { margin-bottom: 8px; }
+    details ul { margin-top: 0; }
+    
+    /* Navigation */
+    .nav { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ccc; }
+    .nav a { text-decoration: none; color: #333; }
+    .nav a:hover { color: #000; }
+    
+    /* Mobile menu button */
+    .menu-btn { 
+      display: none; 
+      background: transparent; 
+      border: 0; 
+      padding: 4px; 
+      cursor: pointer; 
+      line-height: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+      color: inherit;
+    }
+    .menu-btn svg { display: block; width: 18px; height: 18px; pointer-events: none; }
+    @media screen and (max-width: 768px) {
+      .menu-btn { 
+        display: -webkit-flex !important;
+        display: flex !important; 
+        -webkit-align-items: center;
+        align-items: center; 
+        -webkit-justify-content: center;
+        justify-content: center;
+      }
+      .header-left img { display: none !important; }
+      .sidebar { 
+        position: fixed; left: -240px; top: 40px; 
+        width: 240px; height: calc(100vh - 40px);
+        background: #fff; z-index: 20;
+        transition: left 0.2s;
+      }
+      .sidebar.open { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit">
+        <img src="/icons/mac-192.png" alt="ryOS" width="20" height="20">
+        <span>ryOS</span>
+      </a>
+      <span style="color:#999">/</span>
+      <span style="color:#666">Docs</span>
+    </div>
+    <div class="header-right">
+      <a href="https://github.com/ryokun6/ryos" target="_blank" class="github">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href="/" class="launch">Launch</a>
+    </div>
+  </header>
+  
+  <div class="container">
+    <nav class="sidebar">
+      <div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/overview" class="">1. Overview</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/architecture" class="nav-child ">1.1 Architecture & Build</a>
+    <a href="/docs/api-architecture" class="nav-child ">1.2 API Architecture</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/apps" class="">2. Apps</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chats" class="nav-child ">2.1 Chats</a>
+    <a href="/docs/internet-explorer" class="nav-child ">2.2 Internet Explorer</a>
+    <a href="/docs/ipod" class="nav-child ">2.3 iPod</a>
+    <a href="/docs/karaoke" class="nav-child ">2.4 Karaoke</a>
+    <a href="/docs/textedit" class="nav-child ">2.5 TextEdit</a>
+    <a href="/docs/finder" class="nav-child ">2.6 Finder</a>
+    <a href="/docs/paint" class="nav-child ">2.7 Paint</a>
+    <a href="/docs/photo-booth" class="nav-child ">2.8 Photo Booth</a>
+    <a href="/docs/terminal" class="nav-child ">2.9 Terminal</a>
+    <a href="/docs/control-panels" class="nav-child ">2.10 Control Panels</a>
+    <a href="/docs/soundboard" class="nav-child ">2.11 Soundboard</a>
+    <a href="/docs/synth" class="nav-child ">2.12 Synth</a>
+    <a href="/docs/videos" class="nav-child ">2.13 Videos</a>
+    <a href="/docs/minesweeper" class="nav-child ">2.14 Minesweeper</a>
+    <a href="/docs/virtual-pc" class="nav-child ">2.15 Virtual PC</a>
+    <a href="/docs/admin" class="nav-child ">2.16 Admin</a>
+    <a href="/docs/applet-store" class="nav-child ">2.17 Applet Store</a>
+    <a href="/docs/stickies" class="nav-child ">2.18 Stickies</a>
+    <a href="/docs/infinite-mac" class="nav-child ">2.19 Infinite Mac</a>
+  </div>
+</div>
+<div class="nav-group expanded">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="true">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(90deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/application-framework" class="">3. Application Framework</a>
+  </button>
+  <div class="nav-children" style="display: block;">
+    <a href="/docs/window-management" class="nav-child ">3.1 Window Management</a>
+    <a href="/docs/state-management" class="nav-child ">3.2 State Management</a>
+    <a href="/docs/theme-system" class="nav-child active">3.3 Theme System</a>
+    <a href="/docs/hooks-architecture" class="nav-child ">3.4 Hooks Architecture</a>
+    <a href="/docs/component-architecture" class="nav-child ">3.5 Component Architecture</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/ai-system" class="">4. AI System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/file-system" class="">5. File System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/audio-system" class="">6. Audio System</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/ui-components" class="">7. UI Components and Shared Systems</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/component-library" class="nav-child ">7.1 Components</a>
+    <a href="/docs/i18n" class="nav-child ">7.2 i18n & Hooks</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/api-reference" class="">8. API Reference</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chat-api" class="nav-child ">8.1 Chat API</a>
+    <a href="/docs/song-api" class="nav-child ">8.2 Song API</a>
+    <a href="/docs/media-api" class="nav-child ">8.3 Media API</a>
+    <a href="/docs/auth-api" class="nav-child ">8.4 Auth API</a>
+    <a href="/docs/rooms-api" class="nav-child ">8.5 Rooms API</a>
+    <a href="/docs/messages-api" class="nav-child ">8.6 Messages API</a>
+    <a href="/docs/presence-api" class="nav-child ">8.7 Presence API</a>
+    <a href="/docs/ai-generation-apis" class="nav-child ">8.8 AI Endpoints</a>
+    <a href="/docs/utility-apis" class="nav-child ">8.9 Utility APIs</a>
+    <a href="/docs/api-design-guide" class="nav-child ">8.10 ryOS API Design Guide</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/changelog" class="">9. Changelog</a>
+  </div>
+</div>
+    </nav>
+    
+    <main class="content">
+      <article>
+        <h1>Theme System</h1>
+<p>ryOS supports 4 themes emulating classic operating systems with comprehensive CSS variable systems and platform-specific UI behaviors.</p>
+<h2>Available Themes</h2>
+<table><thead><tr><th>Theme ID</th><th>Name</th><th>Platform</th><th>Era</th><th>Key Elements</th></tr></thead><tbody><tr><td><code>macosx</code></td><td>Aqua</td><td>Mac OS X</td><td>~2001</td><td>Glossy buttons, traffic lights, pinstripe, dock</td></tr><tr><td><code>system7</code></td><td>System 7</td><td>Classic Mac</td><td>~1991</td><td>Black & white, dotted titlebar pattern</td></tr><tr><td><code>xp</code></td><td>Luna</td><td>Windows XP</td><td>~2001</td><td>Blue chrome, rounded corners, taskbar</td></tr><tr><td><code>win98</code></td><td>Classic</td><td>Windows 98</td><td>~1998</td><td>3D beveled face, blue gradient titlebar</td></tr></tbody></table>
+<h2>Theme Architecture</h2>
+<pre class="mermaid">flowchart TD
+    A[User Selection] --> B[Theme Store]
+    B --> C["data-os-theme attribute"]
+    C --> D[CSS Variables Resolve]
+    D --> E[Window Frame]
+    D --> F[Menu Bar]
+    D --> G[Dock/Taskbar]
+    D --> H[UI Components]
+    
+    B --> I{Windows Theme?}
+    I -->|Yes| J[Load Legacy CSS]
+    I -->|No| K[Remove Legacy CSS]</pre>
+<h2>Theme Metadata</h2>
+<p>Each theme provides metadata for layout decisions:</p>
+<pre><code>interface ThemeMetadata {
+  /** Whether this is a Windows-style theme (XP, 98) */
+  isWindows: boolean;
+  /** Whether this is a macOS-style theme (macOS X, System 7) */
+  isMac: boolean;
+  /** Whether the theme has a dock (bottom app launcher) */
+  hasDock: boolean;
+  /** Whether the theme has a taskbar (Windows-style bottom bar) */
+  hasTaskbar: boolean;
+  /** Whether the theme has a top menu bar */
+  hasMenuBar: boolean;
+  /** Title bar controls position: "left" (macOS) or "right" (Windows) */
+  titleBarControlsPosition: "left" | "right";
+  /** Default menu bar height in pixels */
+  menuBarHeight: number;
+  /** Taskbar height in pixels (0 if no taskbar) */
+  taskbarHeight: number;
+  /** Base dock height before scaling (0 if no dock) */
+  baseDockHeight: number;
+}</code></pre>
+<h3>Platform Comparison</h3>
+<table><thead><tr><th>Property</th><th>System 7</th><th>macOS X</th><th>Windows XP</th><th>Windows 98</th></tr></thead><tbody><tr><td><code>isWindows</code></td><td><code>false</code></td><td><code>false</code></td><td><code>true</code></td><td><code>true</code></td></tr><tr><td><code>isMac</code></td><td><code>true</code></td><td><code>true</code></td><td><code>false</code></td><td><code>false</code></td></tr><tr><td><code>hasDock</code></td><td><code>false</code></td><td><code>true</code></td><td><code>false</code></td><td><code>false</code></td></tr><tr><td><code>hasTaskbar</code></td><td><code>false</code></td><td><code>false</code></td><td><code>true</code></td><td><code>true</code></td></tr><tr><td><code>hasMenuBar</code></td><td><code>true</code></td><td><code>true</code></td><td><code>false</code></td><td><code>false</code></td></tr><tr><td><code>titleBarControlsPosition</code></td><td><code>"left"</code></td><td><code>"left"</code></td><td><code>"right"</code></td><td><code>"right"</code></td></tr><tr><td><code>menuBarHeight</code></td><td><code>30px</code></td><td><code>25px</code></td><td><code>0px</code></td><td><code>0px</code></td></tr><tr><td><code>taskbarHeight</code></td><td><code>0px</code></td><td><code>0px</code></td><td><code>30px</code></td><td><code>30px</code></td></tr><tr><td><code>baseDockHeight</code></td><td><code>0px</code></td><td><code>56px</code></td><td><code>0px</code></td><td><code>0px</code></td></tr></tbody></table>
+<h2>Theme Definition Interface</h2>
+<pre><code>interface OsTheme {
+  id: OsThemeId;
+  name: string;
+  metadata: ThemeMetadata;
+  
+  fonts: {
+    ui: string;
+    mono?: string;
+  };
+  
+  colors: {
+    windowBg: string;
+    menubarBg: string;
+    menubarBorder: string;
+    windowBorder: string;
+    windowBorderInactive?: string;
+    
+    titleBar: {
+      activeBg: string;
+      inactiveBg: string;
+      text: string;
+      inactiveText: string;
+      border?: string;
+      borderInactive?: string;
+      pattern?: string;
+    };
+    
+    button: {
+      face: string;
+      highlight: string;
+      shadow: string;
+      activeFace?: string;
+    };
+    
+    trafficLights?: {
+      close: string;
+      minimize: string;
+      maximize: string;
+    };
+    
+    selection: {
+      bg: string;
+      text: string;
+    };
+    
+    text: {
+      primary: string;
+      secondary: string;
+      disabled: string;
+    };
+  };
+  
+  metrics: {
+    borderWidth: string;
+    radius: string;
+    titleBarHeight: string;
+    windowShadow: string;
+  };
+  
+  wallpaperDefaults?: {
+    photo?: string;
+    tile?: string;
+  };
+}</code></pre>
+<h2>CSS Variable System</h2>
+<p>Themes are applied via the <code>data-os-theme</code> attribute on the document root:</p>
+<pre><code>:root[data-os-theme="macosx"] {
+  /* Typography */
+  --os-font-ui: "LucidaGrande", "Lucida Grande", ...;
+  --os-font-mono: Monaco, Menlo, monospace;
+  
+  /* Window */
+  --os-color-window-bg: #ececec;
+  --os-color-window-border: rgba(0, 0, 0, 0.4);
+  --os-window-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  
+  /* Menu Bar */
+  --os-color-menubar-bg: linear-gradient(to bottom, #f8f8f8, #d4d4d4);
+  --os-color-menubar-border: rgba(0, 0, 0, 0.44);
+  --os-color-menubar-text: #000000;
+  
+  /* Title Bar */
+  --os-color-titlebar-active-bg: linear-gradient(to bottom, #e8e8e8, #d0d0d0);
+  --os-color-titlebar-inactive-bg: #f6f6f6;
+  --os-color-titlebar-text: #000000;
+  
+  /* Selection */
+  --os-color-selection-bg: rgba(39, 101, 202, 0.88);
+  --os-color-selection-text: #ffffff;
+  
+  /* Metrics */
+  --os-metrics-border-width: 1px;
+  --os-metrics-radius: 0.45rem;
+  --os-metrics-titlebar-height: 22px;
+  --os-metrics-menubar-height: 25px;
+  
+  /* Textures */
+  --os-pinstripe-window: repeating-linear-gradient(...);
+  --os-pinstripe-titlebar: linear-gradient(...);
+}</code></pre>
+<h3>Variable Categories</h3>
+<table><thead><tr><th>Category</th><th>Variables</th><th>Description</th></tr></thead><tbody><tr><td>Typography</td><td><code>--os-font-ui</code>, <code>--os-font-mono</code></td><td>UI and monospace fonts</td></tr><tr><td>Window</td><td><code>--os-color-window-bg</code>, <code>--os-window-shadow</code></td><td>Window appearance</td></tr><tr><td>Menu Bar</td><td><code>--os-color-menubar-bg</code>, <code>--os-color-menubar-text</code></td><td>Menu bar styling</td></tr><tr><td>Title Bar</td><td><code>--os-color-titlebar-<em></code></td><td>Window title bar</td></tr><tr><td>Selection</td><td><code>--os-color-selection-bg</code>, <code>--os-color-selection-text</code></td><td>Selected items</td></tr><tr><td>Text</td><td><code>--os-color-text-primary</code>, <code>--os-color-text-secondary</code></td><td>Text colors</td></tr><tr><td>Metrics</td><td><code>--os-metrics-radius</code>, <code>--os-metrics-border-width</code></td><td>Dimensions</td></tr><tr><td>Textures</td><td><code>--os-pinstripe-</em></code>, <code>--os-texture-*</code></td><td>Background patterns</td></tr></tbody></table>
+<h2>Theme State Management</h2>
+<pre><code>// src/stores/useThemeStore.ts
+export const useThemeStore = create&lt;ThemeState&gt;((set) =&gt; ({
+  current: "macosx",
+  
+  setTheme: (theme) =&gt; {
+    set({ current: theme });
+    localStorage.setItem("os_theme", theme);
+    document.documentElement.dataset.osTheme = theme;
+    ensureLegacyCss(theme);
+  },
+  
+  hydrate: () =&gt; {
+    const saved = localStorage.getItem("os_theme") as OsThemeId | null;
+    const theme = saved || "macosx";
+    set({ current: theme });
+    document.documentElement.dataset.osTheme = theme;
+    ensureLegacyCss(theme);
+  },
+}));</code></pre>
+<h3>Legacy CSS Loading</h3>
+<p>Windows themes dynamically load additional CSS:</p>
+<pre><code>async function ensureLegacyCss(theme: OsThemeId) {
+  // Only XP and Win98 use legacy CSS
+  if (theme !== "xp" &amp;&amp; theme !== "win98") {
+    if (legacyCssLink) {
+      legacyCssLink.remove();
+      legacyCssLink = null;
+    }
+    return;
+  }
+
+  const href = theme === "xp" 
+    ? "/css/xp-custom.css" 
+    : "/css/98-custom.css";
+
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = href;
+  
+  if (legacyCssLink) {
+    legacyCssLink.replaceWith(link);
+  } else {
+    document.head.appendChild(link);
+  }
+  legacyCssLink = link;
+}</code></pre>
+<h2>Theme Switching Flow</h2>
+<pre class="mermaid">sequenceDiagram
+    participant User
+    participant ControlPanel
+    participant ThemeStore
+    participant DOM
+    participant CSS
+    
+    User->>ControlPanel: Select theme
+    ControlPanel->>ThemeStore: setTheme("xp")
+    ThemeStore->>ThemeStore: Update state
+    ThemeStore->>localStorage: Save preference
+    ThemeStore->>DOM: Set data-os-theme="xp"
+    ThemeStore->>DOM: Load xp-custom.css
+    DOM->>CSS: CSS selectors match
+    CSS->>CSS: Variables resolve
+    Note over DOM,CSS: Components re-render with new styles</pre>
+<h2>Platform-Specific UI</h2>
+<h3>macOS Themes (System 7 & macOS X)</h3>
+<pre class="mermaid">graph TD
+    subgraph Mac["Mac Theme Layout"]
+        MB[Menu Bar - Top]
+        WIN[Window with Traffic Lights]
+        DOCK[Dock - Bottom<br/>macOS X only]
+    end
+    
+    MB --> |Apple Menu| AM[Apple Logo Menu]
+    MB --> |App Menu| APP[Application Menu]
+    WIN --> |Controls - Left| TL[Traffic Light Buttons]</pre>
+<strong>Characteristics:</strong>
+<ul><li>Top menu bar with Apple logo</li><li>Traffic light buttons (close/minimize/zoom) on LEFT</li><li>Dock (macOS X only)</li><li>Aqua button styling with gradients</li><li>Pinstripe textures</li></ul>
+<h3>Windows Themes (XP & 98)</h3>
+<pre class="mermaid">graph TD
+    subgraph Win["Windows Theme Layout"]
+        WIN[Window with Title Bar Controls]
+        TB[Taskbar - Bottom]
+    end
+    
+    WIN --> |Controls - Right| CTRL[Min/Max/Close]
+    TB --> |Start| SM[Start Menu]
+    TB --> |Tasks| TASKS[Running Apps]
+    TB --> |Tray| TRAY[System Tray]</pre>
+<strong>Characteristics:</strong>
+<ul><li>Bottom taskbar with Start button</li><li>Title bar buttons on RIGHT</li><li>Legacy CSS from xp.css/98.css</li><li>3D border effects</li></ul>
+<h2>Theme-Aware Component Pattern</h2>
+<p>Components use the theme store to adapt their rendering:</p>
+<pre><code>import { useThemeStore } from "@/stores/useThemeStore";
+
+function MyComponent() {
+  const currentTheme = useThemeStore((state) =&gt; state.current);
+  const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
+  const isMacTheme = currentTheme === "macosx";
+
+  if (isMacTheme) {
+    return &lt;AquaButton&gt;Click me&lt;/AquaButton&gt;;
+  }
+  
+  if (isXpTheme) {
+    return &lt;button className="button"&gt;Click me&lt;/button&gt;;
+  }
+  
+  return &lt;ClassicButton&gt;Click me&lt;/ClassicButton&gt;;
+}</code></pre>
+<h3>Theme Helper Functions</h3>
+<pre><code>// Check theme platform
+export function isWindowsTheme(theme: OsThemeId): boolean {
+  return theme === "xp" || theme === "win98";
+}
+
+export function isMacTheme(theme: OsThemeId): boolean {
+  return theme === "macosx" || theme === "system7";
+}
+
+// Get theme metadata
+export function getThemeMetadata(theme: OsThemeId): ThemeMetadata {
+  return themes[theme].metadata;
+}</code></pre>
+<h2>Theme-Aware Icon System</h2>
+<p>Icons are resolved based on the current theme:</p>
+<pre><code>// src/utils/icons.ts
+export function pickIconPath(
+  name: string,
+  { theme, fallbackTheme = "default" }: GetIconPathOptions = {}
+): string {
+  // No theme: use fallback
+  if (!theme) {
+    return `/icons/${fallbackTheme}/${name}`;
+  }
+  
+  // Check if theme has this icon
+  if (manifest.themes[theme]?.includes(name)) {
+    return `/icons/${theme}/${name}`;
+  }
+  
+  // Fallback to default
+  return `/icons/${fallbackTheme}/${name}`;
+}</code></pre>
+<strong>Directory Structure:</strong>
+<pre><code>public/icons/
+├── default/          # Fallback icons
+├── macosx/           # macOS X specific
+├── system7/          # System 7 specific
+├── xp/               # Windows XP specific
+└── win98/            # Windows 98 specific</code></pre>
+<h2>Aqua Styling (macOS X)</h2>
+<h3>Aqua Buttons</h3>
+<pre><code>.aqua-button {
+  height: 28px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: linear-gradient(
+    to bottom,
+    #fff 0%,
+    #f0f0f0 50%,
+    #e0e0e0 50%,
+    #f5f5f5 100%
+  );
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.8),
+    0 1px 2px rgba(0,0,0,0.2);
+}
+
+.aqua-button.primary {
+  background: linear-gradient(
+    to bottom,
+    #6cb3fa 0%,
+    #1f7cf5 50%,
+    #1066e5 50%,
+    #58b0fa 100%
+  );
+  color: white;
+}
+
+/* Top shine effect */
+.aqua-button:before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 10%;
+  right: 10%;
+  height: 40%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.8),
+    rgba(255,255,255,0)
+  );
+  border-radius: 50%;
+}</code></pre>
+<h3>Traffic Light Buttons</h3>
+<pre><code>.traffic-light {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.2);
+}
+
+.traffic-light.close {
+  background: linear-gradient(#ff6059, #e33e32);
+}
+
+.traffic-light.minimize {
+  background: linear-gradient(#ffbd2e, #e5a000);
+}
+
+.traffic-light.maximize {
+  background: linear-gradient(#29c941, #19a82e);
+}</code></pre>
+<h3>Pinstripe Textures</h3>
+<pre><code>--os-pinstripe-window: repeating-linear-gradient(
+  0deg,
+  transparent 0px,
+  transparent 1.5px,
+  rgba(255, 255, 255, 0.85) 1.5px,
+  rgba(255, 255, 255, 0.85) 4px
+),
+linear-gradient(to bottom, #ececec 0%, #ececec 100%);</code></pre>
+<h2>Inactive Window Handling</h2>
+<p>Each theme handles inactive windows differently:</p>
+<pre><code>/* System 7 - Gray selection */
+:root[data-os-theme="system7"] .window:not(.is-foreground) {
+  --os-color-selection-bg: #cfcfcf;
+  --os-color-selection-text: #000000;
+}
+
+/* macOS X - Lighter border */
+:root[data-os-theme="macosx"] .window:not(.is-foreground) {
+  --os-color-window-border: rgba(0, 0, 0, 0.08);
+  --os-color-titlebar-border: rgba(0, 0, 0, 0.2);
+}
+
+/* Windows - Standard inactive styling */
+:root[data-os-theme="xp"] .window:not(.is-foreground) .title-bar {
+  background: linear-gradient(#8ca8ce, #a0b8da);
+}</code></pre>
+<h2>Wallpaper Defaults</h2>
+<p>Each theme has default wallpaper suggestions:</p>
+<table><thead><tr><th>Theme</th><th>Photo Default</th><th>Tile Default</th></tr></thead><tbody><tr><td>macOS X</td><td>Aqua Blue</td><td>-</td></tr><tr><td>System 7</td><td>-</td><td>Desktop Pattern</td></tr><tr><td>XP</td><td>Bliss</td><td>-</td></tr><tr><td>Win98</td><td>-</td><td>Teal</td></tr></tbody></table>
+<h2>Related Documentation</h2>
+<ul><li><a href="/docs/application-framework">Application Framework</a> - Theme integration in apps</li></ul><ul><li><a href="/docs/window-management">Window Management</a> - Theme-specific window chrome</li><li><a href="/docs/ui-components">UI Components</a> - Theme-aware components</li></ul>
+      </article>
+      
+      <nav class="nav">
+        <a href="/docs/state-management">← State Management</a>
+        <a href="/docs/hooks-architecture">Hooks Architecture →</a>
+      </nav>
+      
+    </main>
+  </div>
+  
+  <script>
+    function toggleNavGroup(button) {
+      const group = button.closest('.nav-group');
+      const children = group.querySelector('.nav-children');
+      const svg = button.querySelector('svg');
+      const isExpanded = group.classList.contains('expanded');
+      
+      if (isExpanded) {
+        group.classList.remove('expanded');
+        children.style.display = 'none';
+        svg.style.transform = 'rotate(0deg)';
+        button.setAttribute('aria-expanded', 'false');
+      } else {
+        group.classList.add('expanded');
+        children.style.display = 'block';
+        svg.style.transform = 'rotate(90deg)';
+        button.setAttribute('aria-expanded', 'true');
+      }
+    }
+    
+    document.addEventListener('click', (e) => {
+      const sidebar = document.querySelector('.sidebar');
+      const menuBtn = document.querySelector('.menu-btn');
+      const clickedMenuBtn = menuBtn && menuBtn.contains(e.target);
+      if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !clickedMenuBtn) {
+        sidebar.classList.remove('open');
+      }
+    });
+  </script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontFamily: '"Geneva", system-ui, sans-serif',
+        fontSize: '10px',
+        primaryColor: '#f0f0f0',
+        primaryBorderColor: '#ccc',
+        primaryTextColor: '#000',
+        lineColor: '#666',
+        secondaryColor: '#f8f8f8',
+        tertiaryColor: '#fff'
+      },
+      flowchart: { curve: 'basis', padding: 8, nodeSpacing: 30, rankSpacing: 30 },
+      sequence: { actorFontSize: 10, messageFontSize: 10, noteFontSize: 10 }
+    });
+  </script>
+</body>
+</html>

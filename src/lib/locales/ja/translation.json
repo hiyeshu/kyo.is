@@ -1,0 +1,2556 @@
+{
+  "apps": {
+    "admin": {
+      "accessDenied": {
+        "description": "このアプリケーションは管理者専用です。",
+        "loginPrompt": "管理者アカウントでログインしてください。",
+        "title": "アクセス拒否"
+      },
+      "description": "システム管理画面",
+      "dialogs": {
+        "banDescription": "{{username}}をBANしてもよろしいですか？彼らはログアウトされ、サービスにアクセスできなくなります。",
+        "banTitle": "ユーザーをBAN",
+        "deleteDescription": "{{type}}「{{name}}」を削除しますか？この操作は元に戻せません。",
+        "deleteTitle": "{{type}}を削除しますか？",
+        "editSong": "{{field}}を編集",
+        "editSongDescription": "新しい値を入力",
+        "unshareDescription": "これにより、{{user}}の共有曲リストから「{{name}}」が削除されます。曲はライブラリに残りますが、どのユーザーとも関連付けられなくなります。",
+        "unshareTitle": "曲の共有を解除"
+      },
+      "errors": {
+        "cannotForceRefresh": "強制更新できません - 歌詞のソースがないか、認証されていません",
+        "deleteAllFailed": "曲の削除に失敗しました",
+        "exportFailed": "エクスポートに失敗しました",
+        "failedToAddToLibrary": "ライブラリへの追加に失敗しました",
+        "failedToBanUser": "ユーザーのBANに失敗しました",
+        "failedToDeleteMessage": "メッセージの削除に失敗しました。",
+        "failedToDeleteRoom": "ルームの削除に失敗しました。",
+        "failedToDeleteSong": "曲の削除に失敗しました",
+        "failedToDeleteUser": "ユーザーの削除に失敗しました。",
+        "failedToFetchMessages": "メッセージの取得に失敗しました。",
+        "failedToFetchProfile": "ユーザープロフィールの取得に失敗しました",
+        "failedToFetchRooms": "ルームの取得に失敗しました。",
+        "failedToFetchSong": "曲の取得に失敗しました",
+        "failedToFetchSongs": "曲の取得に失敗しました",
+        "failedToFetchUsers": "ユーザーの取得に失敗しました。",
+        "failedToRefreshLyrics": "歌詞の更新に失敗しました",
+        "failedToResetLyrics": "歌詞のリセットに失敗しました",
+        "failedToUnbanUser": "ユーザーのBAN解除に失敗しました",
+        "failedToUnshareSong": "曲の共有解除に失敗しました",
+        "failedToUpdateLyrics": "歌詞の更新に失敗しました",
+        "failedToUpdateMetadata": "メタデータの更新に失敗しました",
+        "failedToUpdateSong": "曲の更新に失敗しました",
+        "importFailed": "インポートに失敗しました",
+        "invalidImportFormat": "無効なファイル形式",
+        "notAuthenticated": "認証されていません",
+        "songNotInLibrary": "ライブラリに曲がありません"
+      },
+      "help": {
+        "adminAccess": {
+          "description": "このアプリは管理者ユーザー (ryo) のみがアクセスできます。",
+          "title": "管理者アクセス"
+        },
+        "roomManagement": {
+          "description": "チャットルームの表示と管理、不適切なコンテンツの削除を行います。",
+          "title": "ルーム管理"
+        },
+        "searchFilter": {
+          "description": "ユーザーまたは曲を名前で検索して、すばやく見つけます。",
+          "title": "検索とフィルタ"
+        },
+        "songLibrary": {
+          "description": "キャッシュされた曲ライブラリをインポート、エクスポート、管理します。",
+          "title": "曲ライブラリ"
+        },
+        "statistics": {
+          "description": "システムの統計情報と利用状況の指標を表示します。",
+          "title": "統計情報"
+        },
+        "userManagement": {
+          "description": "登録済みユーザーの表示、検索、管理を行います。",
+          "title": "ユーザー管理"
+        }
+      },
+      "languages": {
+        "en": "英語",
+        "ja": "日本語",
+        "ko": "韓国語",
+        "zh-CN": "中国語 (簡体字)",
+        "zh-TW": "中国語 (繁体字)"
+      },
+      "loadMore": "さらに読み込む（残り{{remaining}}件）",
+      "menu": {
+        "aboutAdmin": "Adminについて",
+        "adminHelp": "Adminヘルプ",
+        "refreshData": "データ更新",
+        "showSidebar": "サイドバーを表示"
+      },
+      "messages": {
+        "addingToLibrary": "ライブラリに追加中...",
+        "dataRefreshed": "データが更新されました",
+        "deleteAllSuccess": "{{total}}曲中{{success}}曲を削除しました",
+        "exportSuccess": "{{count}}曲をエクスポートしました",
+        "importSuccess": "新規 {{imported}} 件、更新 {{updated}} 件 (合計 {{total}} 件)",
+        "lyricsAndMetadataUpdated": "歌詞とメタデータを更新しました",
+        "lyricsRefreshed": "歌詞をソースから更新しました",
+        "lyricsReset": "歌詞をリセットしました",
+        "lyricsUpdated": "歌詞を更新しました",
+        "messageDeleted": "メッセージが削除されました",
+        "noSongsToDelete": "削除する曲がありません",
+        "playingInIpod": "iPodで再生中",
+        "playingInKaraoke": "カラオケで再生中",
+        "roomDeleted": "ルームが削除されました",
+        "songDeleted": "曲を削除しました",
+        "songUnshared": "曲の共有を解除しました",
+        "songUpdated": "曲を更新しました",
+        "userBanned": "ユーザー{{username}}をBANしました",
+        "userDeleted": "ユーザー {{username}} が削除されました",
+        "userUnbanned": "ユーザー{{username}}のBANを解除しました"
+      },
+      "name": "Admin",
+      "offline": {
+        "description": "管理者がデータを管理するにはインターネット接続が必要です。",
+        "title": "オフライン"
+      },
+      "profile": {
+        "actions": "アクション",
+        "activeRooms": "ルームで活動中",
+        "back": "戻る",
+        "ban": "ユーザーをBAN",
+        "banDetails": "BANの詳細",
+        "banReasonPlaceholder": "BAN理由（任意）",
+        "banned": "BAN済み",
+        "bannedOn": "BAN日時",
+        "confirmBan": "BAN",
+        "delete": "ユーザーを削除",
+        "lastActive": "最終アクティブ",
+        "loading": "プロフィールを読み込み中...",
+        "messages": "メッセージ",
+        "noMessages": "メッセージが見つかりませんでした",
+        "noReason": "理由が指定されていません",
+        "notFound": "ユーザーが見つかりませんでした",
+        "reason": "理由",
+        "recentMessages": "最近のメッセージ",
+        "room": "ルーム",
+        "rooms": "ルーム",
+        "unban": "ユーザーのBANを解除"
+      },
+      "room": {
+        "messagesCount": "メッセージ{{count}}件",
+        "noMessages": "メッセージはありません"
+      },
+      "search": {
+        "noResults": "ユーザーが見つかりません",
+        "placeholder": "ユーザーを検索...",
+        "songsPlaceholder": "曲を検索..."
+      },
+      "sidebar": {
+        "messagesCount": "メッセージ{{count}}件",
+        "online": "オンライン",
+        "private": "プライベート",
+        "rooms": "ルーム",
+        "songs": "曲",
+        "users": "ユーザー"
+      },
+      "song": {
+        "album": "アルバム",
+        "createdAt": "作成",
+        "delete": "曲を削除",
+        "forceRefresh": "強制リフレッシュ",
+        "forceRefreshTooltip": "Kugouから歌詞を再取得し、キャッシュされた注釈をクリアします",
+        "furigana": "ふりがな",
+        "info": "情報",
+        "lines": "行",
+        "lyricsContent": "歌詞の内容",
+        "lyricsOffset": "歌詞オフセット",
+        "lyricsSource": "歌詞",
+        "metadata": "メタデータ",
+        "notAvailable": "利用できません",
+        "notFound": "曲が見つかりません",
+        "notGenerated": "生成されていません",
+        "playInIpod": "iPodで再生",
+        "playInKaraoke": "カラオケで再生",
+        "searchLyrics": "歌詞を検索",
+        "soramimi": "空耳 (そらみみ)",
+        "source": "ソース",
+        "translations": "翻訳",
+        "unknownArtist": "不明なアーティスト",
+        "unshare": "共有を解除",
+        "updatedAt": "更新",
+        "withWordTiming": "単語のタイミング付き",
+        "youtubeId": "YouTube ID"
+      },
+      "songs": {
+        "allSongs": "すべての曲",
+        "deleteAll": "すべての曲を削除",
+        "export": "ライブラリを書き出す",
+        "import": "インポート",
+        "noSongs": "キャッシュに曲がありません",
+        "noSongsToExport": "書き出す曲がありません"
+      },
+      "statusBar": {
+        "loggedInAs": "{{username}}としてログイン中",
+        "messagesCount": "メッセージ{{count}}件",
+        "messagesCount_plural": "メッセージ{{count}}件",
+        "roomsCount": "{{count}}部屋",
+        "roomsCount_plural": "{{count}}部屋",
+        "songsCount": "{{count}} 曲",
+        "usersCount": "{{count}}人",
+        "usersCount_plural": "{{count}}人"
+      },
+      "tableHeaders": {
+        "added": "追加",
+        "addedBy": "作成者",
+        "artist": "アーティスト",
+        "lastActive": "最終アクティブ",
+        "message": "メッセージ",
+        "role": "役割",
+        "status": "ステータス",
+        "time": "時間",
+        "title": "曲名",
+        "user": "ユーザー",
+        "username": "ユーザー名"
+      },
+      "time": {
+        "daysAgo": "{{count}}日",
+        "hoursAgo": "{{count}}時間",
+        "minutesAgo": "{{count}}分",
+        "now": "今"
+      },
+      "title": "管理者",
+      "user": {
+        "active": "アクティブ",
+        "admin": "管理者",
+        "banned": "BAN済み",
+        "user": "ユーザー"
+      }
+    },
+    "applet-viewer": {
+      "description": "アプレットを表示・実行",
+      "dialogs": {
+        "addedToFeatured": "「おすすめ」に追加されました",
+        "allAppletsUpToDate": "すべてのアプレットは最新です",
+        "appletAlreadyShared": "アプレットはすでに共有されています",
+        "appletDeleted": "アプレットが削除されました",
+        "appletExported": "アプレットをエクスポートしました！",
+        "appletExportedDescription": "{{fileName}}.app をエクスポートしました。",
+        "appletImported": "アプレットをインポートしました！",
+        "appletImportedDescription": "{{fileName}} を /Applets{{iconText}} に保存しました",
+        "appletNotFound": "アプレットが見つかりません",
+        "appletNotFoundDescription": "共有されたアプレットが削除されたか、リンクが無効な可能性があります。",
+        "appletSaved": "アプレットを保存しました",
+        "appletSavedDescription": "/Applets/{{fileName}} に保存しました",
+        "appletShared": "アプレットを共有しました！",
+        "appletStore": "アプレットストア",
+        "appletUpdateAvailable": "アプレットの更新があります",
+        "appletUpdateAvailableDescription": "{{appletName}} の更新があります。",
+        "appletUpdated": "アプレットを更新しました",
+        "appletUpdatedShare": "アプレットを更新しました！",
+        "appletsUpdated": "{{count}} 個のアプレットを更新しました",
+        "areYouSureDeleteApplet": "このアプレットを削除してもよろしいですか？",
+        "couldNotCompressAppletFile": "アプレットファイルを圧縮できませんでした。",
+        "couldNotImportFile": "ファイルをインポートできませんでした。",
+        "exportFailed": "エクスポートに失敗しました",
+        "failedToDeleteApplet": "アプレットの削除に失敗しました",
+        "failedToFetchSharedApplet": "共有アプレットの取得に失敗しました",
+        "failedToLoadSharedApplet": "共有アプレットの読み込みに失敗しました",
+        "failedToSaveApplet": "アプレットの保存に失敗しました",
+        "failedToShareApplet": "アプレットの共有に失敗しました",
+        "failedToUpdateApplet": "アプレットの更新に失敗しました",
+        "failedToUpdateApplets": "アプレットの更新に失敗しました",
+        "failedToUpdateFeaturedStatus": "注目のステータスの更新に失敗しました",
+        "importFailed": "インポートに失敗しました",
+        "loading": "読み込み中...",
+        "loginRequired": "ログインが必要です",
+        "mustBeLoggedInToShare": "アプレットを共有するにはログインしている必要があります。",
+        "newAppletUpdates": "{{count}} 件の新しいアプレットの更新",
+        "newAppletUpdatesPlural": "{{count}} 件の新しいアプレットの更新",
+        "noAppletToShare": "共有するアプレットがありません",
+        "noAppletsAvailable": "現在、利用可能なアプレットはありません。",
+        "noAppletsFound": "「{{query}}」に一致するアプレットは見つかりませんでした。",
+        "pleaseCheckConnection": "接続を確認して、もう一度お試しください。",
+        "pleaseOpenAppletFirst": "まずAppletを開いてください。",
+        "pleaseTryAgainLater": "後でもう一度お試しください。",
+        "removedFromFeatured": "おすすめから削除されました",
+        "shareLinkGeneratedSuccessfully": "共有リンクが正常に生成されました。",
+        "shareLinkUpdatedSuccessfully": "共有リンクが正常に更新されました。",
+        "sharedApplet": "共有Applet",
+        "sharedAppletLoaded": "共有Appletが読み込まれました",
+        "showingExistingShareLink": "既存の共有リンクを表示しています。",
+        "untitled": "無題",
+        "untitledApplet": "無題のApplet",
+        "updatingApplet": "Appletを更新中...",
+        "updatingAppletSingle": "1つのAppletを更新中...",
+        "updatingApplets": "{{count}}個のAppletを更新中...",
+        "updatingAppletsPlural": "{{count}} 個のアプレットを更新中..."
+      },
+      "help": {
+        "appletStore": {
+          "description": "コミュニティからアプレットを閲覧・インストール。ストアメニューを開いて新しいアプリを発見。",
+          "title": "アプレットストア"
+        },
+        "createWithRyosChat": {
+          "description": "ryOSチャットにカスタムアプリとアプレットの作成を依頼。アイデアを共有して即座に動作するアプリを取得。",
+          "title": "ryOSチャットで作成"
+        },
+        "keepUpdated": {
+          "description": "ストアメニューで更新を確認して、インストール済みアプレットの最新バージョンを取得。",
+          "title": "最新の状態を保つ"
+        },
+        "openFromFinder": {
+          "description": "ファイルメニューを使用して、システムに保存されたアプレットを閲覧・開く。",
+          "title": "Finderから開く"
+        },
+        "shareApplets": {
+          "description": "ファイルメニューのアプレットを共有オプションを使用して、お気に入りのアプレットを他のユーザーと共有。",
+          "title": "アプレットを共有"
+        },
+        "viewApplets": {
+          "description": "ryOSチャットから保存したアプレットまたはストアからダウンロードしたアプレットを開いて実行。",
+          "title": "アプレットを表示"
+        }
+      },
+      "labels": {
+        "addToFeatured": "おすすめに追加",
+        "deleteApplet": "Appletを削除",
+        "discover": "発見",
+        "removeFromFeatured": "おすすめから削除",
+        "searchApplets": "Appletを検索",
+        "showAll": "すべて表示"
+      },
+      "menu": {
+        "aboutApplets": "アプレットについて",
+        "appletStore": "アプレットストア",
+        "appletsHelp": "アプレットヘルプ",
+        "checkForUpdates": "アップデートを確認",
+        "createAccount": "アカウントを作成...",
+        "exportAs": "名前を付けて書き出す...",
+        "html": "HTML",
+        "importFromDevice": "デバイスから読み込む...",
+        "logOut": "ログアウト",
+        "login": "ログイン...",
+        "noAppletsOpen": "アプレットは開いていません",
+        "open": "開く...",
+        "openAppletStore": "アプレットストアを開く",
+        "ryosApp": "ryOSアプリ",
+        "shareApplet": "アプレットを共有...",
+        "store": "ストア",
+        "untitled": "無題",
+        "updateApplets": "{{count}}個のアプレットをアップデート",
+        "updateAppletsPlural": "{{count}}個のアプレットをアップデート",
+        "window": "ウィンドウ"
+      },
+      "name": "アプレットストア",
+      "sections": {
+        "featured": "おすすめ",
+        "installed": "インストール済み",
+        "newApplets": "新規Applet",
+        "updatesAvailable": "アップデートがあります"
+      },
+      "status": {
+        "get": "入手",
+        "open": "開く",
+        "save": "保存",
+        "update": "アップデート",
+        "updatedDaysAgo": "{{days}}日前更新",
+        "updatedHoursAgo": "{{hours}}時間前更新",
+        "updatedJustNow": "たった今更新",
+        "updatedMinutesAgo": "{{minutes}}分前更新",
+        "updatedMonthsAgo": "{{months}}ヶ月前更新",
+        "updatedWeeksAgo": "{{weeks}}週間前更新",
+        "updatedYearsAgo": "{{years}}年前更新",
+        "updatedYesterday": "昨日更新"
+      }
+    },
+    "chats": {
+      "ariaLabels": {
+        "attachImage": "画像を添付",
+        "clearImage": "画像をクリア",
+        "copyMessage": "メッセージをコピー",
+        "deleteMessage": "メッセージを削除",
+        "deleteRoom": "ルームを削除",
+        "leaveConversation": "会話を退出",
+        "mentionRyo": "Ryoをメンション",
+        "messageUser": "{{username}}にメッセージを送信",
+        "newChat": "新しいチャット",
+        "pushToTalk": "プッシュトゥトーク",
+        "selectedImage": "選択中の画像",
+        "sendNudge": "ナッジを送信",
+        "speakMessage": "メッセージを読み上げる",
+        "stopGeneration": "生成を停止",
+        "stopSpeech": "音声を停止"
+      },
+      "description": "AIとチャット",
+      "dialogs": {
+        "addUsersToPrivateChat": "プライベートチャットにユーザーを追加",
+        "cancel": "キャンセル",
+        "clearChatsDescription": "このチャットをクリアしてもよろしいですか？この操作は元に戻せません。",
+        "clearChatsTitle": "チャットをクリア",
+        "create": "作成",
+        "creating": "作成中...",
+        "deleteChatRoomDescription": "ルーム「{{name}}」を削除してもよろしいですか？この操作は元に戻せません。",
+        "deleteChatRoomTitle": "チャットルームを削除",
+        "failedToCreateRoom": "ルームの作成に失敗しました",
+        "leaveConversationDescription": "「{{name}}」から本当に退出しますか？この会話のメッセージは表示されなくなります。",
+        "leaveConversationTitle": "会話から退出",
+        "newChatDescription": "公開チャットルームを作成するか、プライベートな会話を開始します",
+        "newChatDescriptionPrivate": "プライベートな会話を開始",
+        "newChatTitle": "新しいチャット",
+        "passwordMinLengthError": "パスワードは8文字以上である必要があります",
+        "passwordSetFailed": "パスワードの設定に失敗しました",
+        "passwordSetSuccess": "パスワードを設定しました",
+        "passwordSetSuccessDescription": "これでパスワードを使用してアカウントを復元できます",
+        "public": "公開",
+        "roomName": "ルーム名",
+        "roomNamePlaceholder": "一般",
+        "saveTranscriptDescription": "チャット履歴ファイルの名前を入力してください",
+        "saveTranscriptTitle": "履歴を保存",
+        "searchUsernamePlaceholder": "ユーザー名を検索...",
+        "setPasswordButton": "パスワードを設定",
+        "setPasswordDescription": "アカウント復元を有効にするにはパスワードを設定してください。アクセスを失った場合、このパスワードを使用して新しいトークンを取得できます。",
+        "setPasswordTitle": "パスワードを設定"
+      },
+      "help": {
+        "chatWithRyo": {
+          "description": "メッセージを入力してRyoとチャット、コードを生成、またはryOSのヘルプを取得。",
+          "title": "Ryoとチャット"
+        },
+        "controlApps": {
+          "description": "Ryoにアプリの起動または終了、テーマの切り替え、iPodの再生制御を依頼。",
+          "title": "アプリの制御"
+        },
+        "createEditFiles": {
+          "description": "RyoにHTMLアプレットの作成、書類の編集、ファイルの読み取り、アプレットストアの検索を依頼。",
+          "title": "ファイルの作成と編集"
+        },
+        "joinChatRooms": {
+          "description": "公開チャットルームで他のユーザーと接続。@ryoに言及してAI応答を取得。",
+          "title": "チャットルームに参加"
+        },
+        "nudgeDjMode": {
+          "description": "👋ナッジを送信してコンテキスト対応のヒントを取得。音楽が再生中の場合、RyoがDJになります。",
+          "title": "ナッジとDJモード"
+        },
+        "pushToTalk": {
+          "description": "スペースキーを長押しするか、マイクボタンをタップして音声メッセージを録音・送信。",
+          "title": "プッシュトゥトーク"
+        }
+      },
+      "menu": {
+        "aboutChats": "チャットについて",
+        "chatSpeech": "チャット音声",
+        "chats": "チャット",
+        "chatsHelp": "チャットヘルプ",
+        "clearChat": "チャットをクリア",
+        "createAccount": "アカウントを作成...",
+        "decreaseFontSize": "フォントサイズを小さく",
+        "increaseFontSize": "フォントサイズを大きく",
+        "keepTalking": "会話を続ける",
+        "logOut": "ログアウト",
+        "login": "ログイン...",
+        "newChat": "新規チャット...",
+        "resetFontSize": "フォントサイズをリセット",
+        "saveTranscript": "履歴を保存...",
+        "showRooms": "ルームを表示",
+        "sound": "サウンド",
+        "typingSynth": "タイピングシンセ"
+      },
+      "messages": {
+        "delete": "削除",
+        "greeting": "👋 やあ！リョウだよ。何でも聞いてね！",
+        "ryo": "リョウ",
+        "you": "あなた"
+      },
+      "name": "チャット",
+      "sidebar": {
+        "chats": "チャット",
+        "new": "新規",
+        "online": "オンライン",
+        "private": "プライベート",
+        "rooms": "ルーム"
+      },
+      "status": {
+        "chatRequiresInternet": "チャットにはインターネット接続が必要です",
+        "clear": "クリア",
+        "createAccountToContinue": "続けるにはアカウントを作成してください...",
+        "dailyLimitReached": "1日のAIメッセージ制限に達しました。",
+        "editing": "編集中...",
+        "leave": "退出",
+        "listening": "聴取中",
+        "loginToChat": "チャットにログイン",
+        "loginToContinue": "Ryoとのチャットを続けるにはログインしてください。",
+        "loginToRyOS": "ryOSにログイン",
+        "newChat": "新しいチャット",
+        "noTranscriptionText": "文字起こしテキストが受信されませんでした",
+        "nudgeSent": "👋 *つつき送信済み*",
+        "recording": "録音中...",
+        "retry": "再試行",
+        "ryo": "@ryo",
+        "ryoWillRespond": "Ryoがこのメッセージに返信します",
+        "scrollToBottom": "一番下までスクロール",
+        "sessionExpired": "セッションの有効期限が切れました。もう一度ログインしてください。",
+        "startNewConversation": "新しい会話を開始しますか？",
+        "thinking": "考え中",
+        "transcribing": "文字起こし中...",
+        "typeMessage": "メッセージを入力...",
+        "typeOrPushSpace": "入力または「スペース」を押して話す...",
+        "usingModel": "{{model}}を使用中"
+      },
+      "tokenStatus": {
+        "clickToRefresh": "トークンを手動で更新するにはクリックしてください",
+        "daysAgo": "{{days}}日前",
+        "daysOld": "{{days}}日経過",
+        "hoursAgo": "{{hours}}時間前",
+        "justNow": "たった今",
+        "last": "最後",
+        "minutesAgo": "{{minutes}}分前",
+        "refresh": "更新",
+        "refreshed": "更新済み",
+        "refreshing": "更新中...",
+        "tokenRefreshed": "トークン更新済み"
+      },
+      "toolCalls": {
+        "addedAndStartedPlaying": "新しい曲を追加して再生を開始しました",
+        "addingSong": "曲を追加中…",
+        "applet": "アプレット",
+        "calling": "{{toolName}} を呼び出し中…",
+        "changingSettings": "設定を変更中…",
+        "closed": "{{appName}} を閉じました",
+        "closing": "{{appName}} を閉じています…",
+        "contentWritten": "コンテンツを書き込みました",
+        "controllingPlayback": "再生を制御中…",
+        "createdDocument": "ドキュメントを作成しました: {{path}}",
+        "document": "ドキュメント",
+        "edited": "{{fileName}} を編集しました",
+        "editedApplet": "アプレットを正常に編集しました: {{path}}",
+        "editedDocument": "ドキュメントを正常に編集しました: {{path}}",
+        "editingFile": "ファイルを編集中…",
+        "error": "エラー：{{errorText}}",
+        "failedToEditFile": "ファイルの編集に失敗しました",
+        "failedToListItems": "アイテムのリスト表示に失敗しました",
+        "failedToOpen": "開けませんでした",
+        "failedToReadFile": "ファイルの読み取りに失敗しました",
+        "failedToWriteFile": "ファイルの書き込みに失敗しました",
+        "fetchingApplet": "アプレットを取得中…",
+        "fileContent": "{{fileLabel}}の内容: {{fileName}} ({{charCount}}文字)",
+        "fileCreated": "ファイルを作成しました",
+        "findingFiles": "ファイルを検索中…",
+        "foundApplets": "{{count}} 個のアプレットが見つかりました",
+        "foundAppletsPlural": "{{count}} 個のアプレットが見つかりました",
+        "foundApplications": "{{count}} 個のアプリケーションが見つかりました",
+        "foundApplicationsList": "{{count}}つのアプリケーションが見つかりました",
+        "foundApplicationsListPlural": "{{count}}つのアプリケーションが見つかりました",
+        "foundApplicationsPlural": "{{count}} 個のアプリケーションが見つかりました",
+        "foundDocuments": "{{count}} 個のドキュメントが見つかりました",
+        "foundDocumentsPlural": "{{count}} 個のドキュメントが見つかりました",
+        "foundFileType": "{{count}}つの{{fileType}}が見つかりました",
+        "foundFileTypePlural": "{{count}}つの{{fileType}}が見つかりました",
+        "foundSharedApplets": "{{count}}つの共有アプレットが見つかりました",
+        "foundSharedAppletsPlural": "{{count}}つの共有アプレットが見つかりました",
+        "foundSongs": "{{count}} 曲が見つかりました",
+        "foundSongsInMusic": "Musicに{{count}}曲見つかりました",
+        "foundSongsInMusicPlural": "Musicに{{count}}曲見つかりました",
+        "foundSongsPlural": "{{count}} 曲が見つかりました",
+        "foundVideos": "{{count}}件の動画が見つかりました",
+        "generating": "生成中…",
+        "invalidFilename": "無効なファイル名: {{fileName}}。ドキュメントファイルは.md拡張子で終わる必要があります (例: /Documents/my-notes.md)",
+        "invalidPath": "無効なパス: {{path}}",
+        "invalidPathForEdit": "編集用の無効なパス: {{path}}。/Documents/* または /Applets/* を使用してください",
+        "invalidPathForList": "無効なパス: {{path}}。サポートされているパス: /Applets, /Documents, /Applications, /Music, /Applets Store",
+        "invalidPathForRead": "読み取り用の無効なパス: {{path}}。/Applets/*、/Documents/*、または /Applets Store/* を使用してください",
+        "invalidPathForWrite": "無効なパス: {{path}}。ドキュメントには /Documents/filename.md を使用してください。アプレットには、generateHtml (新規) または edit (小規模な変更) を使用してください。",
+        "ipodAdded": "「{{title}}」を iPod に追加しました。iPod の中央ボタンまたは再生ボタンを押して再生を開始してください",
+        "ipodAddedAndPlaying": "「{{title}}」を iPod に追加して再生を開始しました",
+        "ipodCannotAdd": "{{id}} を追加できません：動画が利用できないか無効です",
+        "ipodFailedToAdd": "{{id}} を iPod に追加できませんでした",
+        "ipodFailedToAddWithError": "{{id}} を追加できませんでした：{{error}}",
+        "ipodPaused": "一時停止中",
+        "ipodPausedTrack": "{{trackDesc}} を一時停止中",
+        "ipodPlaying": "再生中",
+        "ipodPlayingTrack": "{{trackDesc}} を再生中",
+        "ipodReady": "iPod の準備ができました。iPod の中央ボタンまたは再生ボタンを押して再生を開始してください",
+        "ipodSelected": "{{trackDesc}} を選択しました。iPod の中央ボタンまたは再生ボタンを押して再生を開始してください",
+        "ipodSkippedTo": "{{trackDesc}} にスキップしました",
+        "ipodSkippedToNext": "次のトラックにスキップしました",
+        "ipodSongNotFound": "iPod ライブラリに曲が見つかりませんでした",
+        "ipodTranslatedLyricsTo": "歌詞を {{langName}} に翻訳しました",
+        "ipodTurnedOffFullScreen": "フルスクリーンモードをオフにしました",
+        "ipodTurnedOffLyricsTranslation": "歌詞翻訳をオフにしました",
+        "ipodTurnedOffVideo": "動画をオフにしました",
+        "ipodTurnedOnFullScreen": "フルスクリーンモードをオンにしました",
+        "ipodTurnedOnVideo": "動画をオンにしました",
+        "ipodWentBackTo": "{{trackDesc}} に戻りました",
+        "ipodWentBackToPrevious": "前のトラックに戻りました",
+        "karaokeAdded": "'{{title}}' をライブラリに追加しました。カラオケで再生するには「再生」をタップしてください。",
+        "karaokeAddedAndPlaying": "'{{title}}' を追加し、カラオケで再生を開始しました。",
+        "karaokeCannotAdd": "{{id}} を追加できません: 動画が利用できないか、無効です。",
+        "karaokeFailedToAdd": "{{id}} をライブラリに追加できませんでした。",
+        "karaokeFailedToAddWithError": "{{id}} の追加に失敗しました: {{error}}",
+        "karaokeNoIdProvided": "addAndPlay 用の YouTube ID または URL が指定されていません。",
+        "karaokePaused": "カラオケは一時停止しました",
+        "karaokePausedTrack": "カラオケは{{trackDesc}}で一時停止しました",
+        "karaokePlaying": "カラオケを再生中です",
+        "karaokePlayingTrack": "カラオケで{{trackDesc}}を再生中です",
+        "karaokeReady": "カラオケの準備ができました。再生をタップして開始してください",
+        "karaokeSelected": "カラオケで{{trackDesc}}を選択しました。再生をタップして開始してください",
+        "karaokeSkippedTo": "{{trackDesc}}にスキップしました",
+        "karaokeSkippedToNext": "次のトラックにスキップしました",
+        "karaokeSongNotFound": "ライブラリにリクエストされた曲が見つかりませんでした",
+        "karaokeWentBackTo": "{{trackDesc}}に戻りました",
+        "karaokeWentBackToPrevious": "前のトラックに戻りました",
+        "launched": "{{appName}} を起動しました",
+        "launchedApp": "{{appName}}を起動しました",
+        "launchedWithUrl": "{{url}} を起動しました",
+        "launchedWithUrlAndYear": "{{year}} 年に {{url}} を起動しました",
+        "launching": "{{appName}} を起動中…",
+        "launchingApp": "アプリを起動中…",
+        "listedItems": "項目を一覧表示しました",
+        "listingApplications": "アプリケーションを一覧表示中…",
+        "listingSharedApplets": "共有アプレットを一覧表示中…",
+        "loadingMusicLibrary": "音楽ライブラリを読み込み中…",
+        "missingEditParameters": "必須パラメーターが不足しています: path, old_string, and new_string",
+        "multipleMatchesFound": "複数の一致が見つかりました",
+        "musicLibraryEmpty": "Musicライブラリは空です",
+        "noAppIdProvided": "アプリIDが指定されていません",
+        "noContentProvided": "コンテンツが提供されていません",
+        "noFileTypeFound": "{{path}}ディレクトリに{{fileType}}は見つかりませんでした",
+        "noItemsFound": "項目が見つかりませんでした",
+        "noPathProvided": "パスが指定されていません",
+        "noSharedAppletsAvailable": "共有アプレットはありません",
+        "noSharedAppletsMatched": "「{{query}}」に一致する共有アプレットはありませんでした",
+        "oldStringMultipleMatches": "old_string は {{count}} 箇所に一致します。一意にするには、より多くのコンテキストを含めてください。",
+        "oldStringNotFound": "old_string はファイル内で見つかりませんでした。現在のコンテンツを確認するには、読み取りツールを使用してください。",
+        "opened": "開きました",
+        "openedApplet": "{{appletName}}を開きました",
+        "openedDocument": "書類: {{fileName}}を開きました",
+        "openedFile": "{{fileName}}を開きました",
+        "openingAppletPreview": "アプレットプレビューを開いています…",
+        "openingFile": "ファイルを開いています…",
+        "pausedIpod": "iPod を一時停止しました",
+        "playing": "{{title}} を再生中",
+        "playingByArtist": "{{title}} - {{artist}} を再生中",
+        "playingIpod": "iPod を再生中",
+        "playingSong": "曲を再生中…",
+        "playingSongByArtist": "{{artist}} の曲を再生中",
+        "playingSongGeneric": "曲を再生中",
+        "playingSongWithId": "曲を再生中 ({{id}})",
+        "playingTrack": "{{title}}を再生中",
+        "playingTrackByArtist": "{{artist}}の{{title}}を再生中",
+        "preparingHtmlPreview": "HTML プレビューを準備中...",
+        "read": "{{fileName}} を読み取りました",
+        "readingFile": "ファイルを読み取り中…",
+        "running": "{{toolName}} を実行中…",
+        "searchingSongs": "\"{{query}}\"を検索中…",
+        "settingsCheckingForUpdates": "アップデートを確認中…",
+        "settingsLanguageChanged": "言語を{{language}}に変更しました",
+        "settingsMasterVolumeSet": "音量を{{volume}}%に設定しました",
+        "settingsNoChanges": "変更なし",
+        "settingsSpeechDisabled": "音声読み上げを無効にしました",
+        "settingsSpeechEnabled": "音声読み上げを有効にしました",
+        "settingsThemeChanged": "テーマを{{theme}}に変更しました",
+        "settingsUpdated": "設定が更新されました",
+        "skippedToNextTrack": "次のトラックにスキップしました",
+        "skippedToPreviousTrack": "前のトラックにスキップしました",
+        "skippingToNext": "次へスキップ中…",
+        "skippingToPrevious": "前へスキップ中…",
+        "stickies": {
+          "cleared": "{{count}}件の付箋を消去",
+          "createdWithColor": "{{color}}の付箋を作成",
+          "deleted": "付箋を削除",
+          "foundStickies": "{{count}}件の付箋",
+          "invalidAction": "無効なアクション: {{action}}",
+          "managing": "付箋を管理中…",
+          "missingId": "付箋IDがありません",
+          "noStickies": "付箋がありません",
+          "noUpdates": "更新内容がありません",
+          "notFound": "付箋が見つかりません: {{id}}",
+          "nothingToClear": "消去する付箋がありません",
+          "updated": "付箋を更新"
+        },
+        "switchedTo": "{{theme}} に切り替えました",
+        "switchingTheme": "テーマを切り替え中…",
+        "textNotFound": "テキストが見つかりませんでした",
+        "toggledIpodPlayback": "iPod の再生を切り替えました",
+        "toolExecutionFailed": "ツールの実行に失敗しました",
+        "unknownError": "不明なエラー",
+        "updatedDocument": "ドキュメントを更新しました: {{path}}",
+        "writingContent": "コンテンツを書き込み中…"
+      }
+    },
+    "control-panels": {
+      "aiModel": "AIモデル",
+      "aiModelDescription": "チャット、IEなどで使用",
+      "appearance": "外観",
+      "backup": "バックアップ",
+      "backupRestoreDescription": "すべてのアプリ設定とファイルをバックアップまたは復元します。",
+      "bootScreen": "起動画面",
+      "bootScreenDescription": "起動画面のアニメーションをテストします",
+      "chatSynth": "チャットシンセ",
+      "chatSynthVolume": "チャットシンセ音量",
+      "checkForUpdates": "アップデートを確認",
+      "color": "カラー",
+      "crt": "CRT",
+      "custom": "カスタム",
+      "debugMode": "デバッグモード",
+      "debugModeDescription": "デバッグ設定を有効にする",
+      "default": "デフォルト",
+      "description": "システム設定",
+      "displayMode": "表示モード",
+      "downloadMacApp": "Macアプリをダウンロード",
+      "dream": "ドリーム",
+      "elevenlabs": "ElevenLabs",
+      "elevenlabsVoiceId": "ElevenLabs 音声ID",
+      "formatFileSystem": "ファイルシステムをフォーマット",
+      "formatFileSystemDescription": "これにより、すべてのファイル（サンプルドキュメントを除く）、画像、カスタム壁紙が消去されます。フォーマット後、ryOSは再起動します。",
+      "help": {
+        "aiModel": {
+          "description": "チャットとターミナルアシスタントで使用するAIモデルを選択",
+          "title": "AI モデル"
+        },
+        "appearance": {
+          "description": "デスクトップの壁紙に写真、パターン、またはシェーダーエフェクトを選択",
+          "title": "外観"
+        },
+        "backupRestore": {
+          "description": "すべての設定とファイルをエクスポートまたは復元",
+          "title": "バックアップと復元"
+        },
+        "shaderEffects": {
+          "description": "CRT、銀河、またはオーロラの視覚効果を有効化",
+          "title": "シェーダーエフェクト"
+        },
+        "sounds": {
+          "description": "UIサウンド、タイピングシンセ、ターミナル/IEエフェクトを切り替え",
+          "title": "サウンド"
+        },
+        "system": {
+          "description": "設定をリセットまたは仮想ファイルシステムをフォーマット",
+          "title": "システム"
+        }
+      },
+      "highContrast": "ハイコントラスト",
+      "invert": "反転",
+      "ipod": "iPod",
+      "ipodVolume": "iPodの音量",
+      "logIn": "ログイン",
+      "logOut": "ログアウト",
+      "logOutOfAllDevices": "すべてのデバイスからログアウト",
+      "loggedInToRyOS": "ryOSにログイン済み",
+      "loggingOut": "ログアウト中...",
+      "login": "ログイン",
+      "loginToSendMessages": "メッセージの送信などにはログイン",
+      "master": "マスター",
+      "masterVolume": "マスター音量",
+      "menu": {
+        "aboutControlPanels": "コントロールパネルについて",
+        "aboutControlPanelsForMacosX": "システム環境設定について",
+        "app": "アプリ",
+        "controlPanelsHelp": "コントロールパネルヘルプ",
+        "controlPanelsHelpForMacosX": "システム環境設定ヘルプ"
+      },
+      "min": "分",
+      "minute": "分",
+      "minutes": "分",
+      "mono": "モノラル",
+      "name": "コントロールパネル",
+      "nameForMacosX": "システム環境設定",
+      "openai": "OpenAI",
+      "openaiVoice": "OpenAI 音声",
+      "patterns": "パターン",
+      "preview": "プレビュー",
+      "previewActive": "どこでもクリックして終了",
+      "resetAllSettings": "すべての設定をリセット",
+      "resetAllSettingsDescription": "これにより、保存されているすべての設定が消去され、初期設定に戻ります。",
+      "restore": "復元",
+      "ryOSAccount": "ryOS アカウント",
+      "screenSaver": "スクリーンセーバー",
+      "screenSaverDescription": "一定時間操作がないと起動します",
+      "screenSaverExitHint": "クリックまたは、いずれかのキーを押して終了",
+      "screenSaverOptions": {
+        "bouncingLogo": {
+          "description": "DVD風バウンド",
+          "name": "跳ねるロゴ"
+        },
+        "flyingToasters": {
+          "description": "After Darkクラシック",
+          "name": "フライングトースター"
+        },
+        "matrix": {
+          "description": "デジタルレインエフェクト",
+          "name": "マトリックス"
+        },
+        "maze": {
+          "description": "一人称視点迷路",
+          "name": "3D迷路"
+        },
+        "pipes": {
+          "description": "Windows 3Dパイプ",
+          "name": "3Dパイプ"
+        },
+        "starfield": {
+          "description": "定番スターワープエフェクト",
+          "name": "スターフィールド"
+        }
+      },
+      "screenSaverType": "種類",
+      "select": "選択",
+      "selectACategory": "カテゴリを選択",
+      "selectAPreset": "プリセットを選択",
+      "selectScreenSaver": "スクリーンセーバーを選択",
+      "sepia": "セピア",
+      "setPassword": "パスワードを設定",
+      "shaderEffect": "シェーダーエフェクト",
+      "shaderEffectDescription": "パフォーマンスに負荷のかかる背景エフェクト",
+      "show": "表示",
+      "sound": "サウンド",
+      "speech": "スピーチ",
+      "speechVolume": "スピーチ音量",
+      "startAfter": "起動まで",
+      "synth": "シンセ",
+      "system": "システム",
+      "terminalIeAmbientSynth": "シンセ",
+      "theme": "テーマ",
+      "themeDescription": "ウィンドウ、メニュー、コントロールの外観を変更します",
+      "ttsModel": "TTS モデル",
+      "ttsModelDescription": "音声合成提供元",
+      "ttsVoice": "TTS 音声",
+      "ui": "UI",
+      "uiSounds": "UI サウンド",
+      "uiVolume": "UI 音量"
+    },
+    "finder": {
+      "contextMenu": {
+        "addToDesktop": "デスクトップに追加",
+        "date": "日付",
+        "duplicate": "複製",
+        "emptyTrash": "ゴミ箱を空にする...",
+        "kind": "種類",
+        "moveToTrash": "ゴミ箱に入れる",
+        "name": "名前",
+        "newFolder": "新規フォルダ…",
+        "open": "開く",
+        "rename": "名前の変更…",
+        "size": "サイズ",
+        "sortBy": "並び替え"
+      },
+      "defaultNames": {
+        "copy": "コピー",
+        "untitledFolder": "名称未設定フォルダ"
+      },
+      "description": "ファイルを閲覧・管理",
+      "dialogs": {
+        "emptyTrash": {
+          "description": "ゴミ箱を空にしてもよろしいですか？この操作は元に戻せません。",
+          "title": "ゴミ箱を空にする"
+        },
+        "newFolder": {
+          "description": "新規フォルダの名前を入力してください:",
+          "title": "新規フォルダ"
+        },
+        "renameItem": {
+          "description": "「{{name}}」の新しい名前を入力してください",
+          "title": "名前の変更"
+        }
+      },
+      "fileTypes": {
+        "application": "アプリケーション",
+        "bmpImage": "BMP 画像",
+        "directory": "ディレクトリ",
+        "document": "ドキュメント",
+        "file": "ファイル",
+        "folder": "フォルダ",
+        "gifImage": "GIF 画像",
+        "htmlApplet": "HTMLアプレット",
+        "internetShortcut": "インターネットショートカット",
+        "jpegImage": "JPEG 画像",
+        "mp3Audio": "MP3オーディオ",
+        "pngImage": "PNG 画像",
+        "quicktimeMovie": "QuickTimeムービー",
+        "unknown": "不明",
+        "webpImage": "WebP 画像"
+      },
+      "folders": {
+        "applets": "アプレット",
+        "applications": "アプリケーション",
+        "desktop": "デスクトップ",
+        "documents": "書類",
+        "images": "画像",
+        "music": "ミュージック",
+        "sites": "サイト",
+        "trash": "ゴミ箱",
+        "videos": "ビデオ"
+      },
+      "help": {
+        "browseNavigate": {
+          "description": "戻る/進むボタン、アドレスバー、移動メニューで素早くナビゲーション",
+          "title": "閲覧とナビゲーション"
+        },
+        "fileManagement": {
+          "description": "フォルダの作成、名前の変更、移動、ドラッグでファイルを整理",
+          "title": "ファイル管理"
+        },
+        "quickAccess": {
+          "description": "移動メニューから書類、アプリケーション、ゴミ箱に即座にジャンプ",
+          "title": "クイックアクセス"
+        },
+        "storageInfo": {
+          "description": "ウィンドウのフッターで空き容量とアイテム数を確認",
+          "title": "ストレージ情報"
+        },
+        "trash": {
+          "description": "ファイルをゴミ箱にドラッグして空にすると永久に削除",
+          "title": "ゴミ箱"
+        },
+        "viewSort": {
+          "description": "アイコンサイズを切り替え、名前、種類、サイズ、日付で並べ替え",
+          "title": "表示と並べ替え"
+        }
+      },
+      "menu": {
+        "aboutFinder": "Finder について",
+        "back": "戻る",
+        "byDate": "日付順",
+        "byIcon": "アイコン",
+        "byKind": "種類順",
+        "byList": "リスト",
+        "byName": "名前順",
+        "bySize": "サイズ順",
+        "bySmallIcon": "小さいアイコン",
+        "duplicate": "複製",
+        "emptyTrash": "ゴミ箱を空にする...",
+        "finderHelp": "Finder ヘルプ",
+        "forward": "進む",
+        "importFromDevice": "デバイスから読み込む...",
+        "moveToTrash": "ゴミ箱に入れる",
+        "newFinderWindow": "新規 Finder ウインドウ",
+        "newFolder": "新規フォルダ...",
+        "putBack": "元に戻す",
+        "rename": "名称変更..."
+      },
+      "messages": {
+        "appletImported": "アプレットをインポートしました！",
+        "appletImportedDesc": "{{name}} は /Applets に保存されました{{iconText}}",
+        "appletImportedIconText": "{{icon}} アイコン付き",
+        "importFailed": "インポートに失敗しました",
+        "importFailedAppletDesc": "アプレットファイルをインポートできませんでした。",
+        "importFailedDesc": "ファイルをインポートできませんでした。",
+        "invalidFileType": "無効なファイルタイプ",
+        "invalidFileTypeDesc": "アプレットにインポートできるのは、.app、.gz、.htmlファイルのみです。",
+        "loading": "読み込み中..."
+      },
+      "name": "Finder",
+      "placeholders": {
+        "enterPath": "パスを入力"
+      },
+      "statusBar": {
+        "available": "利用可能",
+        "item": "項目",
+        "items": "項目"
+      },
+      "tableHeaders": {
+        "modified": "変更日",
+        "name": "名前",
+        "size": "サイズ",
+        "type": "種類"
+      },
+      "window": {
+        "finder": "Finder",
+        "macintoshHd": "Macintosh HD"
+      }
+    },
+    "infinite-mac": {
+      "description": "クラシックMac OSエミュレータ",
+      "help": {
+        "backToSystems": {
+          "description": "ファイル ▸ システムに戻る を使用してプリセットグリッドに戻ります。",
+          "title": "システムに戻る"
+        },
+        "captureScreenshot": {
+          "description": "「表示 ▸ スクリーンショットをキャプチャ」を使って現在の画面を保存します",
+          "title": "スクリーンショットをキャプチャ"
+        },
+        "classicMacEmulator": {
+          "description": "Infinite Mac経由で、ブラウザでクラシックMac OSシステムを実行します。",
+          "title": "クラシックMacエミュレータ"
+        },
+        "displayScaling": {
+          "description": "「表示 ▸ スケーリング」を使って表示サイズ（1倍、1.5倍、2倍）を調整します",
+          "title": "表示スケーリング"
+        },
+        "pauseResume": {
+          "description": "操作していないときは、表示 ▸ 一時停止または再開 を使用してリソースを節約します。",
+          "title": "一時停止 / 再開"
+        },
+        "selectSystem": {
+          "description": "グリッドからMac OSバージョンを選択して、エミュレータを読み込みます。",
+          "title": "システムを選択"
+        }
+      },
+      "loadingEmulator": "エミュレータを読み込み中...",
+      "loadingSystem": "{{name}}を読み込み中...",
+      "menu": {
+        "aboutInfiniteMac": "Infinite Macについて",
+        "backToPresets": "システムに戻る",
+        "captureScreenshot": "スクリーンショットを撮る",
+        "infiniteMacHelp": "Infinite Macヘルプ",
+        "pause": "一時停止",
+        "resume": "再開",
+        "scaling": "拡大縮小"
+      },
+      "name": "Infinite Mac",
+      "screenshotUnavailable": "スクリーンショットを利用できません。ブラウザのスクリーンショットツール（MacはCmd+Shift+4、WindowsはWin+Shift+S）をご利用ください。",
+      "selectSystem": "クラシックMacシステムを選択",
+      "systemsAvailable": "{{count}} システム利用可能",
+      "title": "Infinite Mac"
+    },
+    "internet-explorer": {
+      "addFavorite": "お気に入りに追加",
+      "aiLanguage": "AI言語",
+      "alienLanguage": "異星言語",
+      "anErrorOccurred": "エラーが発生しました",
+      "appName": "インターネット エクスプローラー",
+      "areYouSureClearFavorites": "すべてのお気に入りを消去してもよろしいですか？",
+      "areYouSureClearHistory": "すべての履歴を消去してもよろしいですか？",
+      "areYouSureResetFavorites": "お気に入りを初期設定に戻してもよろしいですか？",
+      "aurora": "オーロラ",
+      "australia": "オーストラリア",
+      "autodetected": "自動検出",
+      "back": "戻る",
+      "brazil": "ブラジル",
+      "canada": "カナダ",
+      "cannotAccessWebsite": "{{url}} にアクセスできません。ウェブサイトがアクセスをブロックしているか、認証が必要です。",
+      "cannotFindServerOrDnsError": "サーバーが見つからないか、DNSエラーです",
+      "checkWebAddressAndTryAgain": "入力したウェブアドレスを確認して、もう一度お試しください。",
+      "china": "中国",
+      "chineseTraditional": "中国語 (繁体字)",
+      "clearFavorites": "お気に入りを消去",
+      "clearHistory": "履歴を消去",
+      "closeTimeMachine": "タイムマシンを閉じる",
+      "description": "ウェブを閲覧",
+      "digitalBeingLanguage": "デジタル存在言語",
+      "english": "英語",
+      "enterTitleForFavorite": "このお気に入りのタイトルを入力",
+      "enterUrl": "URLを入力",
+      "error": "エラー",
+      "errorLoadingPreview": "プレビューの読み込みエラー。",
+      "failedToGenerateFuturisticWebsite": "未来的なウェブサイトの生成に失敗しました。AIモデルが選択されていない可能性があります。",
+      "favorite": "お気に入り",
+      "fetch": "取得",
+      "fetchingContentForReconstruction": "再構築のため、{{hostname}}のコンテンツを取得中...",
+      "fetchingFromYear": "{{year}}年から{{hostname}}を取得中...",
+      "folder": "フォルダ",
+      "france": "フランス",
+      "french": "フランス語",
+      "from": "から",
+      "futureTimeline": {
+        "description": "未来のタイムラインの設定を編集",
+        "reset": "リセット",
+        "selectYear": "年を選択",
+        "title": "未来のタイムラインを編集"
+      },
+      "galaxy": "銀河",
+      "german": "ドイツ語",
+      "germany": "ドイツ",
+      "goBackToPreviousPage": "前のページに戻る。",
+      "goToNow": "今すぐ表示",
+      "help": {
+        "browseWeb": {
+          "description": "URLを入力し、ナビゲーションボタン（戻る、進む、更新、停止）を使用。",
+          "title": "ウェブの閲覧"
+        },
+        "exploreTimeNodes": {
+          "description": "アドレスバーの時計アイコンをクリックして、現在のサイトの時間をまたいだ利用可能なスナップショットを表示。",
+          "title": "タイムノードを探索"
+        },
+        "historyReimagined": {
+          "description": "AIが非常に古いサイト（1996年以前）を再構築し、未来のウェブ体験を想像します。",
+          "title": "歴史の再構築"
+        },
+        "saveFavorites": {
+          "description": "サイトと特定の年をお気に入りバーに追加して簡単にアクセス。",
+          "title": "お気に入りを保存"
+        },
+        "shareJourney": {
+          "description": "共有ボタンを使用して、表示中の正確なページと年のリンクを生成。",
+          "title": "旅を共有"
+        },
+        "travelThroughTime": {
+          "description": "ドロップダウンから年を選択して、過去または未来のウェブサイトを表示。",
+          "title": "時を旅する"
+        }
+      },
+      "history": "履歴",
+      "host": "ホスト: {{hostname}}",
+      "in": "内",
+      "india": "インド",
+      "invalidShareLink": "無効な共有リンク",
+      "japan": "日本",
+      "japanese": "日本語",
+      "korean": "韓国語",
+      "latin": "ラテン語",
+      "loading": "{{hostname}} を読み込み中...",
+      "loadingEllipsis": "読み込み中...",
+      "loadingTitle": "Internet Explorer - 読み込み中",
+      "loadingTitleWithSite": "{{site}} - 読み込み中",
+      "menu": {
+        "aboutInternetExplorer": "Internet Explorer について",
+        "addToFavorites": "お気に入りに追加...",
+        "aiLanguage": "AI言語",
+        "alien": "エイリアン",
+        "australia": "オーストラリア",
+        "auto": "自動",
+        "back": "戻る",
+        "brazil": "ブラジル",
+        "canada": "カナダ",
+        "china": "中国",
+        "chinese": "中国語",
+        "clearFavorites": "お気に入りをクリア...",
+        "clearHistory": "履歴をクリア...",
+        "digitalBeing": "デジタル存在",
+        "editFuture": "未来を編集...",
+        "english": "英語",
+        "favorites": "お気に入り",
+        "folder": "フォルダー",
+        "forward": "進む",
+        "france": "フランス",
+        "french": "フランス語",
+        "german": "ドイツ語",
+        "germany": "ドイツ",
+        "goHome": "ホームへ",
+        "goToUrl": "URLへ",
+        "history": "履歴",
+        "india": "インド",
+        "internetExplorerHelp": "Internet Explorer のヘルプ",
+        "italian": "イタリア語",
+        "japan": "日本",
+        "japanese": "日本語",
+        "korea": "韓国",
+        "korean": "韓国語",
+        "language": "言語",
+        "latin": "ラテン語",
+        "location": "場所",
+        "now": "現在",
+        "openTimeMachine": "Time Machine を開く",
+        "portugal": "ポルトガル",
+        "portuguese": "ポルトガル語",
+        "refresh": "更新",
+        "resetFavorites": "お気に入りをリセット...",
+        "russia": "ロシア",
+        "russian": "ロシア語",
+        "sanskrit": "サンスクリット語",
+        "sharePage": "ページを共有...",
+        "spain": "スペイン",
+        "spanish": "スペイン語",
+        "stop": "停止",
+        "unitedKingdom": "イギリス",
+        "unitedStates": "アメリカ",
+        "welsh": "ウェールズ語",
+        "year": "年"
+      },
+      "name": "Internet Explorer",
+      "nebula": "ネビュラ",
+      "newer": "より新しい",
+      "newerVersion": "より新しいバージョン",
+      "newest": "最新",
+      "now": "今",
+      "off": "オフ",
+      "older": "以前",
+      "olderVersion": "以前のバージョン",
+      "oldest": "最も古い",
+      "openingRequestedPage": "要求されたページを開いています",
+      "openingSharedPage": "共有ページを開いています",
+      "page": "ページ",
+      "pageCouldNotBeLoadedInIframe": "iframe 内でページを読み込めませんでした。これはセキュリティ制限またはネットワークの問題が原因である可能性があります。",
+      "pleaseTryTheFollowing": "以下をお試しください:",
+      "portugal": "ポルトガル",
+      "portuguese": "ポルトガル語",
+      "reconstructingHistoryForYear": "{{hostname}} の {{year}} 年の履歴を再構築しています...",
+      "refresh": "更新",
+      "reimaginingForYear": "{{hostname}} の {{year}} 年を再考しています...",
+      "requiresInternetConnection": "Internet Explorer で閲覧するにはインターネット接続が必要です",
+      "resetFavorites": "お気に入りをリセット",
+      "russia": "ロシア",
+      "sanskrit": "サンスクリット語",
+      "search": "検索",
+      "shareLinkInvalidOrCorrupted": "提供された共有リンクが無効であるか、破損しています。",
+      "shareThisPage": "このページを共有",
+      "shareThisPageAndTime": "このページと時間を共有",
+      "showCachedVersionsTimeMachine": "キャッシュされたバージョンを表示 (Time Machine)",
+      "site": "サイト",
+      "southKorea": "韓国",
+      "spain": "スペイン",
+      "spanish": "スペイン語",
+      "timeNodes": "{{count}} タイムノード",
+      "timeNodes_plural": "{{count}} タイムノード",
+      "travel": "移動",
+      "travellingTitle": "Internet Explorer - 移動中",
+      "travellingTitleWithSite": "{{site}} - 移動中",
+      "tryRefreshingThePage": "ページを再読み込みしてみてください。",
+      "unableToLoadPreview": "プレビューを読み込めません。",
+      "unitedKingdom": "イギリス",
+      "unitedStates": "アメリカ",
+      "welsh": "ウェールズ語",
+      "year": "年"
+    },
+    "ipod": {
+      "ariaLabels": {
+        "closeFullscreen": "フルスクリーンを閉じる",
+        "cycleLyricFont": "歌詞フォントを切り替える",
+        "cycleLyricLayout": "歌詞レイアウトを切り替える",
+        "enterFullscreen": "フルスクリーンを開く",
+        "nextTrack": "次の曲",
+        "playPause": "再生/一時停止",
+        "previousTrack": "前の曲",
+        "select": "選択",
+        "toggleFurigana": "フリガナ切り替え",
+        "toggleHangulRomanization": "ハングル / ローマ字表記を切り替える",
+        "toggleRomanization": "読み仮名の切り替え",
+        "translateLyrics": "歌詞を翻訳"
+      },
+      "description": "ミュージックプレーヤー",
+      "dialogs": {
+        "addSongDescription": "iPodに追加するにはYouTubeリンクを貼り付けてください",
+        "addSongTitle": "曲を追加",
+        "addedNewSongsToTop": "先頭に {{newCount}} 曲の新しい曲を追加しました{{updatedText}}。合計: {{total}} 曲",
+        "addedSongsToTop": "先頭に {{count}} 曲を追加しました。最初の曲を再生できます！",
+        "addingNewTrack": "URLから新しいトラックを追加中...",
+        "andUpdated": "、{{count}} 曲を更新しました",
+        "autoUpdateFailed": "自動更新失敗",
+        "autoUpdatedLibraryAddedSongs": "ライブラリを自動更新しました：先頭に {{newCount}} 曲の新しい曲を追加しました{{updatedText}}",
+        "autoUpdatedTrackMetadata": "{{count}} 曲のメタデータを自動更新しました",
+        "clearLibraryDescription": "音楽ライブラリ全体を消去してもよろしいですか？この操作は元に戻せません。",
+        "clearLibraryTitle": "ライブラリを消去",
+        "errorAdding": "追加エラー:",
+        "failedToAutoUpdateLibrary": "ライブラリの自動更新に失敗しました",
+        "failedToCheckForLibraryUpdates": "ライブラリの更新確認に失敗しました",
+        "failedToExportLibrary": "ライブラリのエクスポートに失敗しました",
+        "failedToImportLibrary": "ライブラリのインポートに失敗しました: 無効な形式です",
+        "failedToLoadSharedTrack": "共有トラックの読み込みに失敗しました",
+        "failedToSyncWithServerLibrary": "サーバーライブラリとの同期に失敗しました",
+        "ipodRequiresInternet": "iPodにはインターネット接続が必要です",
+        "libraryAlreadyUpToDate": "ライブラリはすでに最新です",
+        "libraryAutoUpdated": "ライブラリ自動更新済み",
+        "libraryExportedSuccessfully": "ライブラリが正常にエクスポートされました",
+        "libraryImportedSuccessfully": "ライブラリが正常にインポートされました",
+        "librarySynced": "ライブラリ同期済み",
+        "libraryUpToDateWithSongs": "ライブラリは {{count}} 曲で最新です",
+        "libraryUpdated": "ライブラリ更新済み",
+        "lyricsSearchCurrentSelection": "現在の選択:",
+        "lyricsSearchDescription": "{{artist}}の「{{title}}」の歌詞を検索",
+        "lyricsSearchEmptyQuery": "検索クエリを入力してください",
+        "lyricsSearchError": "歌詞の検索中にエラーが発生しました",
+        "lyricsSearchInvalidResponse": "サーバーからの無効な応答",
+        "lyricsSearchNoResults": "結果が見つかりません",
+        "lyricsSearchPlaceholder": "検索クエリを入力（例：曲名、アーティスト）",
+        "lyricsSearchReset": "自動にリセット",
+        "lyricsSearchSearch": "検索",
+        "lyricsSearchSearching": "検索中...",
+        "lyricsSearchSelectResult": "結果を選択:",
+        "lyricsSearchTitle": "歌詞を検索",
+        "lyricsSearchUseSelected": "選択したものを使用",
+        "noUpdates": "更新なし",
+        "openedSharedTrack": "共有トラックを開きました。再生するには⏯を押してください。",
+        "songSearchAdd": "追加",
+        "songSearchAddSelected": "曲を追加",
+        "songSearchAdding": "曲を追加中...",
+        "songSearchDescription": "曲、アーティストを検索、またはYouTube URLを貼り付け",
+        "songSearchEmptyQuery": "検索キーワードを入力してください",
+        "songSearchError": "曲の検索中にエラーが発生しました",
+        "songSearchInvalidResponse": "サーバーからの応答が無効です",
+        "songSearchNoResults": "結果が見つかりませんでした",
+        "songSearchPlaceholder": "検索またはURLを貼り付け...",
+        "songSearchSearch": "検索",
+        "songSearchSearching": "検索中...",
+        "songSearchSelectResult": "追加する曲を選択してください:",
+        "songSearchTitle": "曲を検索",
+        "syncFailed": "同期失敗",
+        "updateCheckFailed": "更新確認失敗",
+        "youreOffline": "オフライン"
+      },
+      "help": {
+        "addSongs": {
+          "description": "YouTube URLを貼り付けてiPodに音楽を追加。",
+          "title": "曲を追加"
+        },
+        "displayFullscreen": {
+          "description": "バックライト、テーマを調整し、フルスクリーン動画に切り替え。",
+          "title": "表示とフルスクリーン"
+        },
+        "lyricsPronunciation": {
+          "description": "翻訳、フリガナ、ローマ字、ピンイン付きで同期歌詞を表示。",
+          "title": "歌詞・発音"
+        },
+        "playbackControls": {
+          "description": "再生、一時停止、トラックのスキップ、現在の曲の制御。",
+          "title": "再生コントロール"
+        },
+        "playbackModes": {
+          "description": "シャッフル、曲またはプレイリストのリピートなどを有効化。",
+          "title": "再生モード"
+        },
+        "wheelNavigation": {
+          "description": "クリックホイールを使用してメニューとミュージックライブラリを閲覧。",
+          "title": "ホイールナビゲーション"
+        }
+      },
+      "keys": {
+        "enter": "Enter",
+        "escape": "Escape",
+        "select": "選択"
+      },
+      "lyrics": {
+        "noLyricsAvailable": "歌詞はありません",
+        "noLyricsFound": "歌詞が見つかりません",
+        "search": "検索",
+        "searchForLyrics": "歌詞を手動で検索",
+        "unableToLoad": "歌詞を読み込めません"
+      },
+      "menu": {
+        "aboutIpod": "iPodについて",
+        "addSong": "曲を追加...",
+        "addToLibrary": "ライブラリに追加...",
+        "adjustTiming": "タイミングを調整...",
+        "allSongs": "全曲",
+        "alternating": "交互",
+        "backlight": "バックライト",
+        "black": "黒",
+        "cacheCleared": "キャッシュをクリアしました",
+        "chinesePinyin": "中国語",
+        "chineseSoramimi": "空耳（中国語）",
+        "classic": "クラシック",
+        "clearCache": "キャッシュをクリア",
+        "clearLibrary": "ライブラリを消去...",
+        "controls": "コントロール",
+        "coverFlow": "カバーフロー",
+        "enableRomanization": "読み仮名を有効化",
+        "exportLibrary": "ライブラリを書き出す...",
+        "file": "ファイル",
+        "fontRounded": "丸ゴシック",
+        "fontSansSerif": "ゴシック",
+        "fontSerif": "明朝",
+        "fontSerifRed": "明朝（赤）",
+        "fontGoldGlow": "ゴールド",
+        "fontGradient": "グラデーション",
+        "fullScreen": "全画面表示",
+        "furigana": "フリガナ",
+        "importLibrary": "ライブラリを読み込む...",
+        "ipodHelp": "iPod ヘルプ",
+        "japaneseFurigana": "日本語（フリガナ）",
+        "japaneseRomaji": "日本語（ローマ字）",
+        "korean": "韓国語",
+        "koreanRomanization": "韓国語",
+        "lcdFilter": "LCD フィルター",
+        "library": "ライブラリ",
+        "lyrics": "歌詞",
+        "multi": "マルチ",
+        "next": "次へ",
+        "pause": "一時停止",
+        "play": "再生",
+        "previous": "前へ",
+        "pronunciation": "発音",
+        "pronunciationOnly": "発音のみ",
+        "refreshLyrics": "歌詞を検索...",
+        "repeatAll": "全曲リピート",
+        "repeatOne": "1曲リピート",
+        "romanization": "読み仮名",
+        "searchSongs": "曲を検索...",
+        "shareApp": "アプリを共有...",
+        "shareSong": "曲を共有...",
+        "showLyrics": "歌詞を表示",
+        "shuffle": "シャッフル",
+        "single": "シングル",
+        "soramimi": "空耳（英語）",
+        "syncLibrary": "ライブラリを同期...",
+        "traditionalChinese": "繁体字",
+        "translate": "翻訳",
+        "u2": "U2",
+        "unknownArtist": "不明なアーティスト",
+        "video": "ビデオ",
+        "view": "表示"
+      },
+      "menuItems": {
+        "all": "すべて",
+        "allSongs": "すべての曲",
+        "backlight": "バックライト",
+        "extras": "エクストラ",
+        "ipod": "iPod",
+        "music": "ミュージック",
+        "nowPlaying": "再生中",
+        "off": "オフ",
+        "on": "オン",
+        "one": "1曲",
+        "repeat": "リピート",
+        "settings": "設定",
+        "shuffle": "シャッフル",
+        "shuffleSongs": "曲をシャッフル",
+        "theme": "テーマ"
+      },
+      "name": "iPod",
+      "status": {
+        "added": "♬ 追加しました",
+        "fontRounded": "フォント: 丸ゴシック",
+        "fontSansSerif": "フォント: ゴシック",
+        "fontSerif": "フォント: 明朝",
+        "fontSerifRed": "フォント: 明朝（赤）",
+        "fontGoldGlow": "フォント: ゴールド",
+        "fontGradient": "フォント: グラデーション",
+        "furiganaOff": "フリガナ オフ",
+        "furiganaOn": "フリガナ オン",
+        "layoutAlternating": "レイアウト: 交互",
+        "layoutCenter": "レイアウト: 中央",
+        "layoutFocus": "レイアウト: フォーカス",
+        "libraryCleared": "ライブラリをクリアしました",
+        "lightOff": "ライトオフ",
+        "lightOn": "ライトオン",
+        "loadingFurigana": "フリガナを読み込み中…",
+        "loadingLyrics": "歌詞を読み込み中…",
+        "offset": "オフセット",
+        "repeatAll": "全てリピート",
+        "repeatOff": "リピートオフ",
+        "repeatOne": "1曲リピート",
+        "romanizationOff": "ローマ字オフ",
+        "romanizationOn": "ローマ字オン",
+        "shuffleOff": "シャッフルオフ",
+        "shuffleOn": "シャッフルオン",
+        "themeBlack": "テーマ：ブラック",
+        "themeClassic": "テーマ：クラシック",
+        "themeU2": "テーマ：U2",
+        "translatingLyrics": "歌詞を翻訳中…"
+      },
+      "syncMode": {
+        "decreaseOffset": "オフセットを減少",
+        "hint": "ESC または X で閉じる",
+        "increaseOffset": "オフセットを増加",
+        "instructions": "聞こえている行をタップ",
+        "offset": "オフセット",
+        "searchLyrics": "歌詞検索",
+        "syncScroll": "同期スクロール"
+      },
+      "translationLanguages": {
+        "auto": "自動",
+        "chinese": "中国語",
+        "english": "英語",
+        "french": "フランス語",
+        "german": "ドイツ語",
+        "italian": "イタリア語",
+        "japanese": "日本語",
+        "korean": "韓国語",
+        "original": "オリジナル",
+        "portuguese": "ポルトガル語",
+        "russian": "ロシア語",
+        "spanish": "スペイン語"
+      }
+    },
+    "karaoke": {
+      "description": "歌詞同期カラオケプレイヤー",
+      "help": {
+        "addSearchSongs": {
+          "description": "YouTubeで曲を検索するか、URLを貼り付けてライブラリに追加。",
+          "title": "曲を追加・検索"
+        },
+        "keyboardShortcuts": {
+          "description": "スペースで再生/一時停止、矢印キーでシーク・トラック変更。",
+          "title": "キーボードショートカット"
+        },
+        "stylePronunciation": {
+          "description": "フォント、レイアウト、翻訳を変更し、フリガナ/ローマ字/ピンインを追加。",
+          "title": "スタイル・発音"
+        },
+        "syncLyricsTiming": {
+          "description": "[ ]キー、マウスホイール、または左右ドラッグで歌詞オフセットを調整。",
+          "title": "歌詞タイミング同期"
+        },
+        "syncedWithIpod": {
+          "description": "iPodと同じ音楽ライブラリを共有。どちらのアプリでも曲を追加可能。",
+          "title": "iPodと同期"
+        },
+        "worksWithChats": {
+          "description": "Ryoに曲の再生、操作、設定変更をチャットで依頼できます。",
+          "title": "チャットと連携"
+        }
+      },
+      "liveListen": {
+        "activeSessions": "アクティブなセッション",
+        "anonymous": "{{count}} 匿名",
+        "cancel": "キャンセル",
+        "copyFailed": "コピーに失敗しました",
+        "copyFailedDescription": "リンクを選択し、手動でコピーしてください。",
+        "copyLink": "リンクをコピー",
+        "djLabel": "DJ",
+        "end": "ライブリスニングを終了",
+        "endSession": "セッションを終了",
+        "hostLabel": "ホスト",
+        "idle": "待機中",
+        "invite": "ライブリスニングに招待",
+        "inviteTitle": "招待",
+        "inviteToListen": "ライブリスニングに招待",
+        "join": "ライブリスニングに参加...",
+        "joinButton": "参加",
+        "joinSession": "ライブリスニングに参加",
+        "leave": "ライブリスニングを退出",
+        "leaveSession": "セッションを退出",
+        "linkCopied": "リンクをコピーしました",
+        "linkCopiedDescription": "友達を招待するにはリンクを共有してください。",
+        "listener": "リスナー",
+        "listenerPlural": "リスナー",
+        "listening": "{{count}} 聴取中",
+        "loadingSessions": "セッションを読み込み中...",
+        "noActiveSessions": "アクティブなセッションはありません",
+        "nowPlaying": "再生中",
+        "orEnterSessionId": "またはセッションIDを入力",
+        "pasteLinkOrId": "セッションリンクまたはIDを貼り付けて参加します。",
+        "refreshSessions": "更新",
+        "sendReaction": "リアクションを送信",
+        "sessionLinkPlaceholder": "セッションリンクまたはID",
+        "shareLinkInvite": "友達を招待して一緒に聴くには、このリンクを共有してください。",
+        "start": "ライブリスニングを開始"
+      },
+      "lyrics": {
+        "noLyricsFound": "歌詞が見つかりません",
+        "search": "検索",
+        "searchForLyrics": "歌詞を手動で検索"
+      },
+      "menu": {
+        "aboutKaraoke": "カラオケについて",
+        "controls": "操作",
+        "file": "ファイル",
+        "karaokeHelp": "カラオケヘルプ",
+        "next": "次へ",
+        "playPause": "再生/一時停止",
+        "previous": "前へ",
+        "repeatAll": "全曲リピート",
+        "repeatOne": "1曲リピート",
+        "shareApp": "アプリを共有...",
+        "showLyrics": "歌詞を表示",
+        "shuffle": "シャッフル",
+        "view": "表示"
+      },
+      "name": "カラオケ",
+      "noTrack": "トラックが読み込まれていません。曲を選択するにはiPodを開いてください。"
+    },
+    "minesweeper": {
+      "description": "クラシックなパズルゲーム",
+      "help": {
+        "desktopControls": {
+          "description": "左クリックで表示、右クリックでフラグ、数字をダブルクリックで隣接セルを自動表示",
+          "title": "デスクトップコントロール"
+        },
+        "gameRules": {
+          "description": "数字は隣接する地雷の数を示します。すべての地雷にフラグを立て、すべての安全なセルを表示して勝利。",
+          "title": "ゲームルール"
+        },
+        "gameStatus": {
+          "description": "絵文字はゲームの状態を表します: 🙂 プレイ中、💀 ゲームオーバー、😎 勝利！",
+          "title": "ゲームステータス"
+        },
+        "mineCounter": {
+          "description": "トップバーには、残りの未フラグ地雷数と総地雷数が表示されます。",
+          "title": "地雷数"
+        },
+        "mobileControls": {
+          "description": "タップで表示、長押しで地雷にフラグ",
+          "title": "モバイルコントロール"
+        },
+        "restart": {
+          "description": "笑顔アイコンを押すか、ゲーム ▸ 新規を選択して新しいボードを開始",
+          "title": "再開"
+        }
+      },
+      "lcd": {
+        "left": "残り",
+        "total": "合計"
+      },
+      "menu": {
+        "aboutMinesweeper": "マインスイーパについて",
+        "minesweeperHelp": "マインスイーパ ヘルプ",
+        "newGame": "新規ゲーム"
+      },
+      "name": "マインスイーパー"
+    },
+    "paint": {
+      "description": "画像を描画・編集",
+      "dialogs": {
+        "discardChanges": "変更を破棄",
+        "discardChangesDescription": "未保存の変更があります。新しいファイルを続行しますか？",
+        "enterImageName": "画像の名前を入力してください",
+        "error": "エラー",
+        "failedToLoadImageContent": "画像コンテンツの読み込みに失敗しました。",
+        "failedToSaveImage": "画像の保存に失敗しました",
+        "imageSavedSuccessfully": "画像を保存しました",
+        "saveImage": "画像を保存"
+      },
+      "filtersMenu": {
+        "openFiltersMenu": "フィルターメニューを開く"
+      },
+      "help": {
+        "drawingTools": {
+          "description": "左側のツールバーを使用して、鉛筆、ブラシ、図形などのさまざまな描画ツールを選択。",
+          "title": "描画ツール"
+        },
+        "filters": {
+          "description": "フィルタメニューから反転、グレースケール、明るさなどを適用。",
+          "title": "フィルタ"
+        },
+        "patterns": {
+          "description": "下部のパレットからさまざまなパターンを選択して図形と領域を塗りつぶし。",
+          "title": "パターン"
+        },
+        "saving": {
+          "description": "ファイル > 保存を使用して作品を保存、またはファイル > 別名で保存を使用して新しい名前で保存。",
+          "title": "保存"
+        },
+        "strokeWidth": {
+          "description": "ツールバーのコントロールを使って、ブラシと鉛筆の線の太さを調整します。",
+          "title": "線の太さ"
+        },
+        "undo": {
+          "description": "⌘Zを押すか、編集 > 取り消すを使用して最後の操作を取り消し。",
+          "title": "取り消す"
+        }
+      },
+      "menu": {
+        "aboutPaint": "ペイントについて",
+        "export": "エクスポート",
+        "filterBlur": "ぼかし",
+        "filterBrightnessMinus": "明るさ -",
+        "filterBrightnessPlus": "明るさ +",
+        "filterCategoryArtistic": "アート",
+        "filterCategoryBlur": "ぼかし",
+        "filterCategoryColor": "カラー",
+        "filterCategoryRetro": "レトロ",
+        "filterCrt": "CRT",
+        "filterDither": "ディザ",
+        "filterEdgeDetect": "エッジ検出",
+        "filterGaussianBlur": "ガウスぼかし",
+        "filterGlitch": "グリッチ",
+        "filterGrayscale": "グレースケール",
+        "filterInvert": "反転",
+        "filterMotionBlur": "モーションブラー",
+        "filterNoise": "ノイズ",
+        "filterOldPhoto": "古い写真",
+        "filterPixelate": "ピクセル化",
+        "filterRadialBlur": "放射状ぼかし",
+        "filterSepia": "セピア",
+        "filterSharpen": "シャープ化",
+        "filterVhs": "VHS",
+        "filters": "フィルター",
+        "importFromDevice": "デバイスからインポート...",
+        "newFile": "新規ファイル",
+        "open": "開く...",
+        "paintHelp": "ペイントヘルプ",
+        "save": "保存",
+        "saveEllipsis": "名前を付けて保存..."
+      },
+      "name": "ペイント",
+      "selectedPattern": "選択中のパターン",
+      "toolbar": {
+        "brush": "ブラシ",
+        "eraser": "消しゴム",
+        "fillColor": "塗りつぶし色",
+        "hand": "手",
+        "line": "線",
+        "oval": "楕円",
+        "pencil": "鉛筆",
+        "rectangle": "長方形",
+        "rectangleSelect": "矩形選択",
+        "select": "選択",
+        "spray": "スプレー",
+        "text": "テキスト"
+      },
+      "untitled": "無題"
+    },
+    "pc": {
+      "description": "3D PCシミュレーション",
+      "dialogs": {
+        "resetVirtualPcDescription": "PCをリセットしてもよろしいですか？これにより、現在のすべての状態がクリアされます。",
+        "resetVirtualPcTitle": "バーチャルPCをリセット"
+      },
+      "help": {
+        "aspectRatio": {
+          "description": "モニターに合わせて4:3またはワイドスクリーンに切り替え",
+          "title": "アスペクト比"
+        },
+        "fullscreenMode": {
+          "description": "コントロール ▸ フルスクリーンを切り替えて没入感のある表示",
+          "title": "フルスクリーンモード"
+        },
+        "keyboardControls": {
+          "description": "物理キーボードを使用してゲーム内入力",
+          "title": "キーボードコントロール"
+        },
+        "mouseCapture": {
+          "description": "ウィンドウ内をクリックしてマウスをキャプチャ/解放",
+          "title": "マウスキャプチャ"
+        },
+        "pcEmulator": {
+          "description": "ブラウザでクラシックなDOSゲームとアプリを直接実行",
+          "title": "PCエミュレーター"
+        },
+        "resetLoad": {
+          "description": "ファイル ▸ リセットで再開、またはゲームをロードでゲームを切り替えます。",
+          "title": "リセットとロード"
+        }
+      },
+      "loadingEmulator": "エミュレーターを読み込み中",
+      "loadingGame": "{{gameName}}を読み込み中...",
+      "menu": {
+        "aboutVirtualPc": "バーチャルPCについて",
+        "aspectRatio": "アスペクト比",
+        "controls": "コントロール",
+        "fullScreen": "フルスクリーン",
+        "loadGame": "ゲームを読み込む",
+        "loadState": "状態を読み込む",
+        "mouseSensitivity": "マウス感度",
+        "reset": "リセット",
+        "saveState": "状態を保存",
+        "toggleMouseCapture": "マウスキャプチャを切り替える",
+        "virtualPcHelp": "バーチャルPCのヘルプ"
+      },
+      "name": "バーチャルPC",
+      "programsAvailable": "{{count}}個のプログラムが利用可能です",
+      "virtualPc": "バーチャルPC"
+    },
+    "photo-booth": {
+      "ariaLabels": {
+        "photo": "写真{{index}}"
+      },
+      "buttons": {
+        "effects": "エフェクト"
+      },
+      "description": "エフェクト付きで写真を撮影",
+      "effects": {
+        "blackAndWhite": "白黒",
+        "bulge": "膨張",
+        "coldBlue": "コールドブルー",
+        "fishEye": "魚眼",
+        "glitch": "グリッチ",
+        "highContrast": "ハイコントラスト",
+        "kaleidoscope": "カレイドスコープ",
+        "neon": "ネオン",
+        "normal": "通常",
+        "pinch": "ピンチ",
+        "rainbow": "虹",
+        "ripple": "波紋",
+        "squeeze": "スクイーズ",
+        "stretch": "ストレッチ",
+        "twirl": "渦巻き",
+        "vibrant": "鮮やか",
+        "vintage": "ビンテージ",
+        "xRay": "X線"
+      },
+      "errors": {
+        "cameraApiNotAvailable": "カメラAPIが利用できません",
+        "cameraError": "カメラエラー: {{error}}",
+        "cameraPermissionDenied": "カメラのアクセスが拒否されました",
+        "cameraRequiresHttps": "カメラにはHTTPSが必要です",
+        "couldNotAccessCamera": "カメラにアクセスできませんでした",
+        "noCameraFound": "カメラが見つかりません"
+      },
+      "help": {
+        "applyingEffects": {
+          "description": "エフェクトボタン（カメラボタンの右側）をクリックしてエフェクトパネルを開き、ライブカメラビューに楽しいフィルタを適用。",
+          "title": "エフェクトの適用"
+        },
+        "downloadingPhotos": {
+          "description": "写真は自動的に保存されます。写真ストリップの写真をクリックしてダウンロード。",
+          "title": "写真のダウンロード"
+        },
+        "quickSnaps": {
+          "description": "タイマーボタン（カメラボタンの左側）をクリックして、1秒間隔で4枚の写真を連続撮影。",
+          "title": "クイックスナップ"
+        },
+        "switchingCameras": {
+          "description": "複数のカメラが接続されている場合、メニューバーの「カメラ」メニューを使用して利用可能なカメラを切り替え。",
+          "title": "カメラの切り替え"
+        },
+        "takingPhoto": {
+          "description": "大きな赤いカメラボタンをクリックして単一の画像をキャプチャ。",
+          "title": "写真を撮る"
+        },
+        "viewingPhotos": {
+          "description": "写真スタックボタン（左端）をクリックして、下部の写真ストリップを表示または非表示にし、保存されたすべての写真を表示。",
+          "title": "写真の表示"
+        }
+      },
+      "menu": {
+        "aboutPhotoBooth": "フォトブースについて",
+        "camera": "カメラ",
+        "clearAllPhotos": "すべての写真を消去",
+        "effects": "エフェクト",
+        "exportPhotos": "写真を書き出す",
+        "photoBoothHelp": "フォトブースヘルプ"
+      },
+      "name": "フォトブース"
+    },
+    "soundboard": {
+      "description": "効果音を再生",
+      "help": {
+        "customizeSlot": {
+          "description": "各サンプルに絵文字とタイトルを追加して素早く識別",
+          "title": "スロットのカスタマイズ"
+        },
+        "importExport": {
+          "description": "ボードをファイルとして共有；ドラッグ＆ドロップでインポート",
+          "title": "インポート / エクスポート"
+        },
+        "keyboardPlay": {
+          "description": "1-9キーを押して即座に音を再生",
+          "title": "キーボード再生"
+        },
+        "multipleBoards": {
+          "description": "音のセット用にボードを作成、名前変更、切り替え",
+          "title": "複数のボード"
+        },
+        "recordSlot": {
+          "description": "スロットをクリックして録音開始；再度クリックで停止",
+          "title": "録音スロット"
+        },
+        "waveformView": {
+          "description": "録音または再生中にライブ波形を表示",
+          "title": "波形表示"
+        }
+      },
+      "importedSoundboard": "インポートしたサウンドボード",
+      "menu": {
+        "aboutSoundboard": "サウンドボードについて",
+        "deleteSoundboard": "サウンドボードを削除",
+        "emojis": "絵文字",
+        "exportSoundboards": "サウンドボードを書き出す...",
+        "importSoundboards": "サウンドボードをインポート...",
+        "loadSpecialSoundboards": "特殊なサウンドボードを読み込む",
+        "newSoundboard": "新規サウンドボード",
+        "renameSoundboard": "サウンドボードの名前を変更",
+        "resetSoundboards": "サウンドボードをリセット",
+        "soundboardHelp": "サウンドボードのヘルプ",
+        "waveforms": "波形"
+      },
+      "name": "サウンドボード",
+      "newSoundboardDefault": "新規サウンドボード",
+      "soundboards": "サウンドボード"
+    },
+    "stickies": {
+      "description": "ちょっとした付箋",
+      "empty": {
+        "createNote": "新規付箋",
+        "description": "付箋を作成して始めましょう",
+        "title": "まだ付箋がありません"
+      },
+      "help": {
+        "autoSave": {
+          "description": "付箋は自動的に保存され、セッション間で保持されます",
+          "title": "自動保存"
+        },
+        "clearAll": {
+          "description": "ファイル > 全てのメモを消去で、全ての付箋を一度に削除します。",
+          "title": "全て消去"
+        },
+        "colors": {
+          "description": "付箋メニューから付箋の色を変更して、思考を整理しましょう",
+          "title": "色"
+        },
+        "createNote": {
+          "description": "ファイル > 新規付箋をクリックするか、ボタンを使用して新しい付箋を作成します",
+          "title": "付箋を作成"
+        },
+        "deleteNote": {
+          "description": "付箋のXボタンをクリックするか、メニューを使用して削除します",
+          "title": "付箋を削除"
+        },
+        "moveResize": {
+          "description": "タイトルバーをドラッグして移動、角をドラッグしてメモのサイズを変更します。",
+          "title": "移動とサイズ変更"
+        }
+      },
+      "menu": {
+        "about": "Stickies について",
+        "clearAll": "全ての付箋をクリア",
+        "color": "色",
+        "deleteNote": "付箋を削除",
+        "help": "Stickies ヘルプ",
+        "newNote": "新規付箋",
+        "note": "付箋"
+      },
+      "name": "スティッキーズ",
+      "placeholder": "付箋を書く...",
+      "title": "スティッキーズ"
+    },
+    "synth": {
+      "addPreset": "プリセットを追加",
+      "controls": "コントロール",
+      "description": "仮想シンセサイザー",
+      "dialogs": {
+        "enterPresetName": "プリセット名を入力",
+        "saveNewPreset": "新しいプリセットを保存",
+        "updatePreset": "プリセットを更新",
+        "updatePresetName": "プリセット名を更新"
+      },
+      "effects": "エフェクト",
+      "effectsParams": {
+        "bitcrusher": "ビットクラッシャー",
+        "chorus": "コーラス",
+        "delay": "ディレイ",
+        "distortion": "ディストーション",
+        "gain": "ゲイン",
+        "phaser": "フェイザー",
+        "reverb": "リバーブ"
+      },
+      "envelope": "エンベロープ",
+      "envelopeParams": {
+        "attack": "アタック",
+        "decay": "ディケイ",
+        "release": "リリース",
+        "sustain": "サスティン"
+      },
+      "help": {
+        "controlsPanel": {
+          "description": "CONTROLSを切り替えてオシレーター、エンベロープ、エフェクトを調整",
+          "title": "コントロールパネル"
+        },
+        "effects": {
+          "description": "リバーブ、ディレイ、ディストーション、コーラス、フェイザー、ビットクラッシャー",
+          "title": "エフェクト"
+        },
+        "octaveShift": {
+          "description": "-/+ キーまたはボタンでオクターブを上下にシフトします。",
+          "title": "オクターブシフト"
+        },
+        "presets": {
+          "description": "カスタムサウンドプリセットを保存、読み込み、管理",
+          "title": "プリセット"
+        },
+        "virtualKeyboard": {
+          "description": "画面上のキーまたはコンピュータキーボードで音符を演奏",
+          "title": "仮想キーボード"
+        },
+        "waveform3d": {
+          "description": "コントロールパネルが開いているときにライブアニメーション波形を表示",
+          "title": "3D波形"
+        }
+      },
+      "menu": {
+        "aboutSynth": "シンセについて",
+        "keyLabels": "キーラベル",
+        "newPreset": "新規プリセット",
+        "noLabels": "ラベルなし",
+        "noteLabels": "ノートラベル",
+        "presets": "プリセット",
+        "resetSynth": "シンセをリセット",
+        "synthHelp": "シンセのヘルプ"
+      },
+      "name": "シンセ",
+      "noPresetsYet": "プリセットがありません。「新規」ボタンで作成してください。",
+      "oscillator": "オシレーター",
+      "selectPreset": "プリセットを選択",
+      "status": {
+        "octave": "オクターブ {{offset}}",
+        "presetLoaded": "プリセット「{{name}}」を読み込みました",
+        "presetSaved": "プリセット「{{name}}」を保存しました",
+        "presetUpdated": "プリセット「{{name}}」を更新しました",
+        "synthResetToDefaults": "シンセをデフォルトにリセットしました"
+      },
+      "waveform": "波形",
+      "waveforms": {
+        "sawtooth": "ノコギリ波",
+        "sine": "サイン波",
+        "square": "矩形波",
+        "triangle": "三角波"
+      }
+    },
+    "terminal": {
+      "commands": {
+        "about": "ターミナルについて",
+        "ai": "ryoとAIチャットモードに入る",
+        "cat": "ファイルの内容を表示",
+        "cd": "ディレクトリを変更",
+        "chat": "ryoとチャット (エイリアス)",
+        "clear": "ターミナル画面をクリア",
+        "cowsay": "しゃべる牛",
+        "date": "現在の日時を表示",
+        "echo": "テキストを表示",
+        "edit": "テキストエディタで開く",
+        "grep": "ファイル内のパターンを検索",
+        "help": "利用可能なコマンドを表示",
+        "history": "コマンド履歴を表示",
+        "logout": "現在のユーザーをログアウト",
+        "ls": "ディレクトリの内容を一覧表示",
+        "mkdir": "ディレクトリを作成",
+        "open": "アプリ、ファイル、またはアプレットを開く",
+        "pwd": "現在のディレクトリを表示",
+        "rm": "ファイルをゴミ箱に移動",
+        "ryo": "ryoとチャット",
+        "su": "ユーザーを切り替えるか作成",
+        "touch": "空のファイルを作成",
+        "uptime": "システム稼働時間を表示",
+        "vim": "vimエディタでファイルを開く",
+        "whoami": "現在のユーザーを表示"
+      },
+      "description": "コマンドラインインターフェース",
+      "help": {
+        "aiAssistant": {
+          "description": "「ryo <プロンプト>」と入力して、ターミナル内で直接Ryo AIとチャット。",
+          "title": "AIアシスタント"
+        },
+        "basicCommands": {
+          "description": "ls、cd、cat、pwd、clear、touchなどのコマンドを使用してファイルをナビゲートおよび管理。",
+          "title": "基本コマンド"
+        },
+        "commandHistory": {
+          "description": "↑ / ↓矢印キーを押して以前のコマンドを循環し、素早く再実行。",
+          "title": "コマンド履歴"
+        },
+        "fileEditing": {
+          "description": "プロンプトから直接テキストエディット（edit）またはVimスタイルエディタ（vim）で書類を開く。",
+          "title": "ファイル編集"
+        },
+        "navigation": {
+          "description": "Finderと同じ仮想ファイルシステムを、おなじみのUnixコマンドで閲覧。",
+          "title": "ナビゲーション"
+        },
+        "terminalSounds": {
+          "description": "出力、エラー、AI応答の独特なサウンド。表示 ▸ サウンドで切り替え。",
+          "title": "ターミナルサウンド"
+        }
+      },
+      "menu": {
+        "aboutTerminal": "ターミナルについて",
+        "clearTerminal": "ターミナルをクリア",
+        "decreaseFontSize": "フォントサイズを小さく",
+        "increaseFontSize": "フォントサイズを大きく",
+        "muteSounds": "音をミュート",
+        "resetFontSize": "フォントサイズをリセット",
+        "terminalHelp": "ターミナルヘルプ"
+      },
+      "name": "ターミナル",
+      "output": {
+        "addedAndStartedPlaying": "新しい曲を追加して再生を開始しました",
+        "askRyoAnything": "リョウに何でも質問してください。「exit」と入力するとターミナルに戻ります。",
+        "askRyoWithPrompt": "リョウに何でも質問してください。「exit」と入力するとターミナルに戻ります。\n→ あなたのコマンド: {{prompt}}",
+        "chatCleared": "チャットをクリアしました。リョウとのチャットは継続中です。「exit」と入力するとターミナルに戻ります。",
+        "commandNotFound": "コマンドが見つかりません: {{cmd}}。利用可能なコマンドの一覧は「help」と入力してください。",
+        "contentWritten": "コンテンツを書き込みました",
+        "fileCreated": "ファイルを作成しました",
+        "fileEdited": "ファイルを編集しました",
+        "foundApplets": "{{count}}個のアプレットが見つかりました",
+        "foundAppletsPlural": "{{count}}個のアプレットが見つかりました",
+        "foundApplications": "{{count}}個のアプリケーションが見つかりました",
+        "foundApplicationsPlural": "{{count}}個のアプリケーションが見つかりました",
+        "foundDocuments": "{{count}}個のドキュメントが見つかりました",
+        "foundDocumentsPlural": "{{count}}個のドキュメントが見つかりました",
+        "isThinking": "考えています",
+        "lastLogin": "最終ログイン: {{time}}",
+        "listedItems": "項目を一覧表示しました",
+        "multipleMatchesFound": "複数の候補が見つかりました",
+        "noFilesFound": "ファイルが見つかりません",
+        "noItemsFound": "項目が見つかりません",
+        "noSuchDirectory": "cd: {{dir}}: そのようなディレクトリはありません",
+        "openExamples": "例",
+        "openNotFound": "'{{target}}' を開けません: アプリまたはファイルが見つかりません",
+        "opened": "開きました",
+        "openedApp": "{{app}} を開きました",
+        "openedApplet": "アプレットビューアで {{applet}} を開きました",
+        "openedFile": "{{file}} を開きました",
+        "openedFolder": "Finder で {{folder}} を開きました",
+        "pausedIpod": "iPodを一時停止しました",
+        "playingIpod": "iPodを再生中",
+        "playingSong": "曲を再生中",
+        "readFile": "{{fileName}} を読み込みました",
+        "skippedToNextTrack": "次の曲にスキップしました",
+        "skippedToPreviousTrack": "前の曲にスキップしました",
+        "textNotFound": "テキストが見つかりません",
+        "toggledIpodPlayback": "iPod の再生を切り替えました",
+        "typeHelpForCommands": "「help」と入力すると利用可能なコマンドが表示されます",
+        "unknown": "不明",
+        "untitled": "無題"
+      }
+    },
+    "textedit": {
+      "alignCenter": "中央揃え",
+      "alignLeft": "左揃え",
+      "alignRight": "右揃え",
+      "bold": "太字",
+      "bulletList": "箇条書き",
+      "description": "シンプルなリッチテキストエディタ",
+      "dialogs": {
+        "discardChanges": "変更を破棄",
+        "doYouWantToDiscardYourChangesAndCreateANewFile": "変更を破棄して新しいファイルを作成しますか？",
+        "enterANameForYourFile": "ファイル名を入力してください",
+        "enterFilenameToSaveOrDeleteItBeforeClosing": "保存するファイル名を入力するか、閉じる前に削除してください。",
+        "keepNewDocument": "新規ドキュメントを保持",
+        "saveChanges": "変更を保存",
+        "saveFile": "ファイルを保存",
+        "saveYourChangesBeforeClosing": "閉じる前に変更を保存してください。"
+      },
+      "failedToUpdateEditorWithDocumentUpdatedEvent": "ドキュメント更新イベントによるエディターの更新に失敗しました:",
+      "heading1": "見出し1",
+      "heading2": "見出し2",
+      "heading3": "見出し3",
+      "help": {
+        "fileManagement": {
+          "description": "ファイルの作成、開く、保存、エクスポート（HTML、MD、TXT）",
+          "title": "ファイル管理"
+        },
+        "formatting": {
+          "description": "太字、斜体、下線、見出し、配置オプション",
+          "title": "フォーマット"
+        },
+        "listsTasks": {
+          "description": "箇条書き、番号付き、チェックボックスタスクリストを作成",
+          "title": "リストとタスク"
+        },
+        "richEditing": {
+          "description": "テキストの入力、コピー、カット、ペースト、取り消し、やり直しが簡単",
+          "title": "リッチ編集"
+        },
+        "slashCommands": {
+          "description": "/を入力してクイック書式設定（見出し、リスト、テキストスタイル）",
+          "title": "スラッシュコマンド"
+        },
+        "voiceDictation": {
+          "description": "ハンズフリーで書類に直接テキストを入力",
+          "title": "音声入力"
+        }
+      },
+      "italic": "斜体",
+      "menu": {
+        "aboutTextEdit": "テキストエディットについて",
+        "alignCenter": "中央揃え",
+        "alignLeft": "左揃え",
+        "alignRight": "右揃え",
+        "bold": "太字",
+        "bulletList": "箇条書き",
+        "exportAs": "名前を付けて書き出す...",
+        "format": "書式",
+        "heading1": "見出し1",
+        "heading2": "見出し2",
+        "heading3": "見出し3",
+        "html": "HTML",
+        "importFromDevice": "デバイスから読み込む...",
+        "italic": "斜体",
+        "markdown": "Markdown",
+        "newFile": "新規ファイル",
+        "numberedList": "番号付きリスト",
+        "open": "開く...",
+        "plainText": "標準テキスト",
+        "save": "保存",
+        "saveEllipsis": "保存...",
+        "taskList": "タスクリスト",
+        "text": "テキスト",
+        "texteditHelp": "テキストエディットのヘルプ",
+        "underline": "下線"
+      },
+      "name": "テキストエディット",
+      "numberedList": "番号付きリスト",
+      "slashCommands": {
+        "bulletList": {
+          "description": "シンプルな箇条書きリストを作成",
+          "title": "箇条書きリスト"
+        },
+        "heading1": {
+          "description": "大見出し",
+          "title": "見出し1"
+        },
+        "heading2": {
+          "description": "中見出し",
+          "title": "見出し2"
+        },
+        "heading3": {
+          "description": "小見出し",
+          "title": "見出し3"
+        },
+        "numberedList": {
+          "description": "番号付きリストを作成",
+          "title": "番号付きリスト"
+        },
+        "taskList": {
+          "description": "チェックボックス付きチェックリストを作成",
+          "title": "タスクリスト"
+        },
+        "text": {
+          "description": "プレーンテキストで入力開始",
+          "title": "テキスト"
+        }
+      },
+      "speak": "話す",
+      "stopSpeech": "音声停止",
+      "text": "テキスト",
+      "underline": "下線",
+      "untitled": "無題"
+    },
+    "videos": {
+      "description": "動画を視聴",
+      "dialogs": {
+        "addVideoDescription": "YouTube、Vimeo、または動画のURLを入力",
+        "addVideoTitle": "動画を追加",
+        "clearPlaylistDescription": "プレイリスト全体をクリアしてもよろしいですか？この操作は元に戻せません。",
+        "clearPlaylistTitle": "プレイリストをクリア",
+        "failedToLoadSharedVideo": "共有動画の読み込みに失敗しました",
+        "openedSharedVideo": "共有動画を開きました。「",
+        "resetPlaylistDescription": "プレイリストをデフォルトの動画にリセットしてもよろしいですか？これにより、現在のプレイリストが置き換えられます。",
+        "resetPlaylistTitle": "プレイリストをリセット",
+        "toStartPlaying": "」を押して再生を開始します。",
+        "videoId": "動画ID: {{videoId}}",
+        "videoItemType": "動画"
+      },
+      "help": {
+        "addVideo": {
+          "description": "任意のYouTube URLを貼り付けてプレイリストに追加",
+          "title": "動画を追加"
+        },
+        "loop": {
+          "description": "現在の動画またはプレイリスト全体をループ",
+          "title": "ループ"
+        },
+        "playback": {
+          "description": "再生、一時停止、次、前のコントロール",
+          "title": "再生"
+        },
+        "playlist": {
+          "description": "動画プレイリストを管理・整理",
+          "title": "プレイリスト"
+        },
+        "retroUi": {
+          "description": "クラシックなQuickTimeプレーヤーの美学",
+          "title": "レトロUI"
+        },
+        "shuffle": {
+          "description": "プレイリストの順序をランダム化",
+          "title": "シャッフル"
+        }
+      },
+      "menu": {
+        "aboutVideos": "ビデオについて",
+        "addToLibrary": "ライブラリに追加...",
+        "allVideos": "すべてのビデオ",
+        "clearLibrary": "ライブラリを消去...",
+        "controls": "コントロール",
+        "fullScreen": "フルスクリーン",
+        "library": "ライブラリ",
+        "next": "次へ",
+        "openVideo": "ビデオを開く...",
+        "pause": "一時停止",
+        "play": "再生",
+        "previous": "前へ",
+        "repeatAll": "すべてをリピート",
+        "repeatOne": "一曲リピート",
+        "resetLibrary": "ライブラリをリセット...",
+        "shareVideo": "ビデオを共有...",
+        "shuffle": "シャッフル",
+        "unknownArtist": "不明なアーティスト",
+        "videosHelp": "ビデオヘルプ"
+      },
+      "name": "ビデオ",
+      "status": {
+        "add": "追加",
+        "addVideos": "動画を追加",
+        "errorAdding": "追加エラー: {{error}}",
+        "failedToAddVideo": "動画の追加に失敗しました",
+        "failedToProcessVideo": "動画の処理に失敗しました: {{videoId}}",
+        "fullscreen": "全画面",
+        "next": "次へ ⏭",
+        "paused": "一時停止中 ⏸",
+        "play": "再生 ▶",
+        "playing": "▶ {{title}}を再生中",
+        "playlistReset": "プレイリストリセット",
+        "pressToPlay": "⏯ を押して再生",
+        "prev": "前へ⏮",
+        "repeat": "リピート",
+        "repeatingPlaylist": "プレイリストをリピート中",
+        "shuffle": "シャッフル",
+        "shuffleOff": "シャッフルオフ",
+        "shuffleOn": "シャッフルオン",
+        "time": "時間",
+        "title": "タイトル",
+        "toGetStarted": "始めるには",
+        "track": "トラック",
+        "unknownError": "不明なエラー",
+        "videoAdded": "動画を追加しました"
+      }
+    }
+  },
+  "common": {
+    "aboutThisMac": {
+      "builtInMemory": "内蔵メモリ",
+      "clickToToggle": "クリックで切り替え",
+      "description": "このコンピュータのryOSについて",
+      "largestUnusedBlock": "最大の未使用ブロック",
+      "mb": "MB",
+      "system": "システム",
+      "title": "このコンピュータについて",
+      "virtualMemory": "仮想メモリ",
+      "virtualMemoryOff": "オフ"
+    },
+    "activity": {
+      "adding": "追加中",
+      "furigana": "ふりがな",
+      "soramimi": "空耳"
+    },
+    "appMenu": {
+      "aboutApp": "{{appName}}について",
+      "appHelp": "{{appName}} ヘルプ",
+      "fullScreen": "フルスクリーン",
+      "hideApp": "{{appName}}を非表示",
+      "hideOthers": "ほかを非表示",
+      "quitApp": "{{appName}}を終了",
+      "showAll": "すべてを表示"
+    },
+    "appleMenu": {
+      "aboutThisComputer": "このコンピュータについて",
+      "appletStore": "アプレットストア…",
+      "controlPanels": "コントロールパネル…",
+      "createAccount": "アカウントを作成…",
+      "logOut": "{{username}}をログアウト…",
+      "login": "ログイン…",
+      "moreApps": "その他のアプリ…",
+      "moreDocuments": "その他の書類…",
+      "noRecentApps": "最近使ったアプリはありません",
+      "noRecentDocuments": "最近使った書類はありません",
+      "recentItems": "最近使った項目",
+      "softwareUpdate": "ソフトウェア・アップデート…",
+      "systemPreferences": "システム環境設定…"
+    },
+    "auth": {
+      "createAccount": "アカウントを作成",
+      "creatingAccount": "作成中...",
+      "dialogTitle": "ryOSログイン",
+      "logIn": "ログイン",
+      "logOut": "ログアウト",
+      "logOutDescription": "ログアウトしますか？アカウントからサインアウトされます。",
+      "loggingIn": "ログイン中...",
+      "loginDescription": "アカウントにログイン",
+      "password": "パスワード",
+      "setPasswordRequired": "パスワード設定が必要です",
+      "setPasswordRequiredDescription": "アカウントを復元できるように、ログアウトする前にパスワードを設定する必要があります。今すぐパスワードを設定しますか？",
+      "signupDescription": "チャットルームにアクセスし、設定を保存するためにアカウントを作成してください",
+      "username": "ユーザー名"
+    },
+    "colors": {
+      "blue": "青",
+      "green": "緑",
+      "orange": "オレンジ",
+      "pink": "ピンク",
+      "purple": "紫",
+      "yellow": "黄色"
+    },
+    "desktop": {
+      "myComputer": "マイコンピュータ",
+      "setWallpaper": "壁紙を設定…"
+    },
+    "dialog": {
+      "about": "について",
+      "aboutApp": "{{appName}}について",
+      "adding": "追加中...",
+      "cancel": "キャンセル",
+      "close": "閉じる",
+      "confirm": "確認",
+      "delete": "削除",
+      "discardChanges": "変更を破棄",
+      "discardChangesDesc": "変更を破棄して新しいファイルを作成しますか？",
+      "done": "完了",
+      "emoji": {
+        "chooseEmoji": "絵文字を選択",
+        "description": "このサウンドスロットの絵文字を選択",
+        "setEmoji": "絵文字を設定"
+      },
+      "enterFileName": "ファイル名を入力してください",
+      "enterFilenameToSave": "保存するファイル名を入力するか、閉じる前に削除してください。",
+      "help": "ヘルプ",
+      "informationAboutApp": "アプリケーションについての情報",
+      "keepNewDocument": "新規書類を保持",
+      "madeBy": "作成者：",
+      "openInGitHub": "GitHubで開く",
+      "save": "保存",
+      "saveBeforeClosing": "閉じる前に変更を保存してください。",
+      "saveChanges": "変更を保存",
+      "saveFile": "ファイルを保存",
+      "share": {
+        "by": "による",
+        "copyLink": "リンクをコピー",
+        "couldNotCopyToClipboard": "クリップボードにコピーできませんでした。手動で選択してコピーしてください。",
+        "failedToCopyLink": "リンクのコピーに失敗しました",
+        "failedToGenerateShareLink": "{{itemType}} の共有リンクの生成に失敗しました",
+        "from": "から",
+        "generating": "生成中...",
+        "itemTypes": {
+          "app": "アプリ",
+          "applet": "アプレット",
+          "item": "項目",
+          "page": "ページ",
+          "song": "曲"
+        },
+        "linkCopied": "リンクをコピーしました",
+        "linkCopiedToClipboard": "{{itemType}} のリンクをクリップボードにコピーしました",
+        "pleaseTryAgainLater": "後でもう一度お試しください",
+        "qrCode": "QRコード",
+        "shareItem": "{{itemType}}を共有",
+        "shareItemViaLinkOrQrCode": "この {{itemType}} をリンクまたはQRコードで共有",
+        "shareLinkFor": "{{itemType}} の共有リンク",
+        "shareLinkOrScanToOpen": "リンクを共有するか、スキャンしてこの {{itemType}} を開く"
+      },
+      "version": "バージョン",
+      "viewDocs": "ドキュメント",
+      "welcomeTo": "{{appName}}へようこそ"
+    },
+    "dock": {
+      "addToDock": "Dockに追加",
+      "appletStore": "アプレットストア",
+      "applications": "アプリケーション",
+      "folderContents": "フォルダの内容",
+      "hide": "非表示",
+      "minimized": "(最小化)",
+      "newWindow": "新規ウインドウ",
+      "open": "開く",
+      "quit": "終了",
+      "removeFromDock": "Dockから削除",
+      "showAllWindows": "すべてのウインドウを表示",
+      "trash": "ゴミ箱",
+      "turnHidingOff": "「自動的に非表示」をオフにする",
+      "turnHidingOn": "「自動的に非表示」をオンにする",
+      "turnMagnificationOff": "「拡大」機能をオフにする",
+      "turnMagnificationOn": "「拡大」機能をオンにする"
+    },
+    "errors": {
+      "failedToFetchFurigana": "フリガナの取得に失敗しました",
+      "failedToFetchSoramimi": "ソラミミの取得に失敗しました"
+    },
+    "htmlPreview": {
+      "bannerFallbackTitle": "無題のアプレット",
+      "codePreviewTitle": "ryOSコードプレビュー",
+      "codePreviewTitleFullscreen": "ryOSコードプレビュー（フルスクリーン）",
+      "copyHtml": "HTMLコードをコピー",
+      "downloadHtml": "HTMLをダウンロード",
+      "exitFullscreen": "全画面表示を終了",
+      "full": "フル",
+      "maximizePreview": "プレビューを最大化",
+      "minimizePreview": "プレビューを最小化",
+      "saveApplet": "アプレットとして保存",
+      "saveAppletDescription": "アプレット名を入力してください。既存のアプレットは上書きされます。",
+      "split": "分割",
+      "toastOpenAction": "開く",
+      "toastSaveFailed": "アプレットの保存に失敗しました",
+      "toastSaveFailedDescription": "アプレットの保存中にエラーが発生しました。",
+      "toastSaved": "アプレットを保存しました",
+      "toggleCode": "コードの切り替え",
+      "toggleSplitView": "分割表示の切り替え"
+    },
+    "keys": {
+      "enter": "確定"
+    },
+    "loading": {
+      "openingAppletStore": "アプレットストアを開いています...",
+      "openingSharedApplet": "共有アプレットを開いています...",
+      "openingSharedIELink": "共有Internet Explorerリンクを開いています...",
+      "openingSharedIpodTrack": "共有iPodトラックを開いています...",
+      "openingSharedKaraokeTrack": "共有カラオケトラックを開いています...",
+      "openingSharedVideo": "共有ビデオを開いています..."
+    },
+    "menu": {
+      "aboutFinder": "Finderについて",
+      "applications": "アプリケーション",
+      "back": "戻る",
+      "byDate": "日付",
+      "byIcon": "アイコン",
+      "byKind": "種類",
+      "byList": "リスト",
+      "byName": "名前",
+      "bySize": "サイズ",
+      "bySmallIcon": "小さいアイコン",
+      "clear": "クリア",
+      "close": "閉じる",
+      "copy": "コピー",
+      "cut": "カット",
+      "documents": "書類",
+      "edit": "編集",
+      "emptyTrash": "ゴミ箱を空にする...",
+      "file": "ファイル",
+      "finderHelp": "Finderヘルプ",
+      "forward": "進む",
+      "go": "移動",
+      "help": "ヘルプ",
+      "images": "画像",
+      "moveToTrash": "ゴミ箱へ移動",
+      "music": "ミュージック",
+      "newFinderWindow": "新規Finderウィンドウ",
+      "newFolder": "新規フォルダ",
+      "paste": "ペースト",
+      "redo": "やり直す",
+      "selectAll": "すべてを選択",
+      "shareApp": "アプリを共有...",
+      "sites": "サイト",
+      "trash": "ゴミ箱",
+      "undo": "取り消す",
+      "videos": "ビデオ",
+      "view": "表示"
+    },
+    "startMenu": {
+      "aboutThisComputer": "このコンピュータについて",
+      "ryos98": "98",
+      "ryosProfessional": "プロフェッショナル",
+      "start": "スタート"
+    },
+    "swipeInstructions": {
+      "description": "開いているウィンドウ間を移動するには左右にスワイプ",
+      "next": "次へ",
+      "previous": "前へ",
+      "title": "スワイプしてウィンドウを切り替える"
+    },
+    "system": {
+      "debugBootScreenTest": "デバッグ起動画面テスト...",
+      "formatFileSystem": "ファイルシステムをフォーマット",
+      "formatFileSystemDesc": "ファイルシステムをフォーマットしてもよろしいですか？これにより、すべての書類（サンプル書類を除く）、画像、カスタム壁紙が永久に削除されます。フォーマット後、ryOSが再起動します。",
+      "formattingFileSystem": "ファイルシステムをフォーマット中...",
+      "rebooting": "再起動中...",
+      "resetAllSettings": "すべての設定をリセット",
+      "resetAllSettingsDesc": "すべての設定をリセットしてもよろしいですか？これにより、保存されたすべての設定がクリアされ、デフォルト状態に復元されます。リセット後、ryOSが再起動します。",
+      "resettingSystem": "システムをリセット中...",
+      "restoringSystem": "システムを復元中...",
+      "systemRestoring": "システムを復元中...",
+      "updatingToRyOS": "ryOS {{version}} にアップデート中...",
+      "updatingToRyOSWithBuild": "ryOS {{version}} ({{buildNumber}}) にアップデート中..."
+    },
+    "toast": {
+      "alreadyLatestVersion": "最新バージョンです",
+      "couldNotCheckUpdates": "アップデートを確認できませんでした",
+      "failedToCacheAssets": "アセットのキャッシュに失敗しました",
+      "failedToLoadAssetManifest": "アセットマニフェストの読み込みに失敗しました",
+      "files": "ファイル",
+      "noAssetsToCache": "キャッシュするアセットがありません",
+      "reboot": "再起動",
+      "total": "合計",
+      "updateReady": "ryOS {{version}} ({{buildNumber}}) のアップデート準備完了",
+      "updatingAssets": "アセット更新中",
+      "updatingIcons": "アイコン更新中",
+      "updatingSounds": "サウンド更新中",
+      "updatingSystemFiles": "システムファイル更新中"
+    },
+    "window": {
+      "close": "閉じる",
+      "fullscreen": "フルスクリーン",
+      "maximize": "最大化",
+      "minimize": "最小化"
+    }
+  },
+  "components": {
+    "linkPreview": {
+      "addToIpod": "iPodに追加",
+      "openIpod": "iPodを開く",
+      "openKaraoke": "カラオケを開く",
+      "openYouTube": "YouTubeを開く"
+    }
+  },
+  "settings": {
+    "language": {
+      "chineseTraditional": "中文",
+      "description": "ryOSインターフェースの優先言語を選択",
+      "english": "English",
+      "french": "Français",
+      "german": "Deutsch",
+      "italian": "Italiano",
+      "japanese": "日本語",
+      "korean": "한국어",
+      "portuguese": "Português",
+      "russian": "Русский",
+      "spanish": "Español",
+      "title": "言語"
+    }
+  }
+}

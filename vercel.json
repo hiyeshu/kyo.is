@@ -1,0 +1,230 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "bunVersion": "1.x",
+  "devCommand": "bun run dev",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/embed/infinite-mac",
+      "headers": [
+        {
+          "key": "Cross-Origin-Embedder-Policy",
+          "value": "credentialless"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://os.ryo.lu http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "source": "/fonts/:path*",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/wallpapers/tiles/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/wallpapers/photos/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/wallpapers/videos/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/icons/default/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/icons/macosx/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/icons/system7/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/icons/win98/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/icons/xp/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/sounds/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/games/jsdos/:path*",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/zip"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/patterns/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/:path(apple-touch-icon.png|favicon.ico)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/data/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/:path(manifest.json)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/wallpapers/manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/icons/manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/version.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/embed/infinite-mac", "destination": "/embed/infinite-mac.html" },
+    { "source": "/videos/:video", "destination": "/" },
+    { "source": "/ipod/:track", "destination": "/" },
+    { "source": "/karaoke/:track", "destination": "/" },
+    { "source": "/internet-explorer/:code", "destination": "/" },
+    { "source": "/applet-viewer/:code", "destination": "/" },
+    { "source": "/finder", "destination": "/" },
+    { "source": "/soundboard", "destination": "/" },
+    { "source": "/chats", "destination": "/" },
+    { "source": "/textedit", "destination": "/" },
+    { "source": "/paint", "destination": "/" },
+    { "source": "/photo-booth", "destination": "/" },
+    { "source": "/minesweeper", "destination": "/" },
+    { "source": "/videos", "destination": "/" },
+    { "source": "/ipod", "destination": "/" },
+    { "source": "/karaoke", "destination": "/" },
+    { "source": "/applet-viewer", "destination": "/" },
+    { "source": "/synth", "destination": "/" },
+    { "source": "/pc", "destination": "/" },
+    { "source": "/terminal", "destination": "/" },
+    { "source": "/control-panels", "destination": "/" },
+    { "source": "/infinite-mac", "destination": "/" }
+  ],
+  "redirects": [
+    { "source": "/docs", "destination": "/docs/overview", "permanent": false },
+    { "source": "/docs/", "destination": "/docs/overview", "permanent": false },
+    { "source": "/404", "destination": "/", "permanent": false }
+  ]
+}

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File System - ryOS Docs</title>
+  <link rel="icon" href="/icons/mac-192.png">
+  <style>
+    @font-face { font-family: "Geneva"; src: url("/fonts/geneva-12.woff2") format("woff2"); }
+    @font-face { font-family: "Monaco"; src: url("/fonts/monacottf.woff2") format("woff2"); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Geneva", system-ui, sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: #fff;
+      color: #000;
+    }
+    a { color: #00f; }
+    a:hover { text-decoration: none; }
+    code, pre { font-family: "Monaco", monospace; font-size: 11px; }
+    code { background: #f0f0f0; padding: 1px 4px; }
+    pre { background: #f8f8f8; border: 1px solid #ddd; padding: 12px; overflow-x: auto; margin: 12px 0; }
+    pre code { background: none; padding: 0; }
+    
+    /* Layout */
+    .header {
+      position: sticky; top: 0; z-index: 10;
+      background: #fff; border-bottom: 1px solid #ccc;
+      padding: 0 16px; height: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-left img { width: 20px; height: 20px; display: block; }
+    .header-left span { font-weight: bold; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a { text-decoration: none; color: #333; }
+    .header-right a:hover { color: #000; }
+    .header-right .github { display: flex; align-items: center; gap: 4px; }
+    .header-right .launch { background: #000; color: #fff; padding: 4px 12px; }
+    
+    .container { display: flex; max-width: 1100px; margin: 0 auto; }
+    
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      border-right: 1px solid #ccc;
+      padding: 12px;
+      position: sticky; top: 40px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .sidebar a {
+      display: block; padding: 4px 8px; margin: 2px 0;
+      text-decoration: none; color: #333;
+      font-size: 11px;
+    }
+    .sidebar a:hover { background: #f0f0f0; }
+    .sidebar a.active { background: #000; color: #fff; }
+    
+    /* Tree hierarchy styles */
+    .nav-group { margin: 4px 0; }
+    .nav-spacer { width: 8px; flex-shrink: 0; } /* Same width as toggle arrow */
+    .nav-no-toggle { cursor: default; }
+    .nav-toggle {
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; padding: 0; width: 100%;
+      cursor: pointer; text-align: left; font: inherit; color: inherit;
+    }
+    .nav-toggle:hover { background: #f0f0f0; }
+    .nav-toggle svg { flex-shrink: 0; opacity: 0.6; transition: transform 0.2s; }
+    .nav-toggle a { flex: 1; padding: 4px 8px; margin: 0; pointer-events: auto; font-size: 11px; }
+    .nav-children { margin-left: 12px; overflow: hidden; transition: height 0.2s ease-out; }
+    .nav-child { padding-left: 8px !important; font-size: 10px !important; color: #555 !important; }
+    .nav-child:hover { color: #000 !important; }
+    .nav-child.active { color: #fff !important; }
+    
+    .content { flex: 1; padding: 24px 32px; min-width: 0; }
+    
+    /* Typography */
+    h1 { font-size: 18px; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 16px; }
+    hr { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+    h2 { font-size: 14px; margin: 24px 0 12px; }
+    h3 { font-size: 12px; margin: 16px 0 8px; }
+    h4 { font-size: 11px; margin: 12px 0 6px; font-weight: bold; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 8px 20px; }
+    li { margin: 4px 0; }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    th { background: #f0f0f0; font-weight: bold; }
+    
+    /* Mermaid diagrams */
+    pre.mermaid { background: none; border: none; padding: 0; text-align: center; margin: 16px 0; }
+    .mermaid svg { max-width: 100%; height: auto; font-family: "Geneva", system-ui, sans-serif !important; }
+    .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { fill: #f8f8f8 !important; stroke: #ccc !important; }
+    .mermaid .edgeLabel { background: #fff !important; font-size: 10px !important; }
+    .mermaid .label { font-size: 10px !important; }
+    .mermaid .nodeLabel { font-size: 10px !important; }
+    .mermaid .cluster-label { font-size: 10px !important; }
+    .mermaid .messageText { font-size: 10px !important; }
+    .mermaid .actor { font-size: 10px !important; }
+    .mermaid .labelText { font-size: 10px !important; }
+    
+    /* Collapsible details */
+    details { margin: 8px 0; }
+    details summary { 
+      cursor: pointer; 
+      color: #666; 
+      font-size: 11px;
+      padding: 4px 0;
+      user-select: none;
+    }
+    details summary:hover { color: #000; }
+    details[open] summary { margin-bottom: 8px; }
+    details ul { margin-top: 0; }
+    
+    /* Navigation */
+    .nav { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ccc; }
+    .nav a { text-decoration: none; color: #333; }
+    .nav a:hover { color: #000; }
+    
+    /* Mobile menu button */
+    .menu-btn { 
+      display: none; 
+      background: transparent; 
+      border: 0; 
+      padding: 4px; 
+      cursor: pointer; 
+      line-height: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+      color: inherit;
+    }
+    .menu-btn svg { display: block; width: 18px; height: 18px; pointer-events: none; }
+    @media screen and (max-width: 768px) {
+      .menu-btn { 
+        display: -webkit-flex !important;
+        display: flex !important; 
+        -webkit-align-items: center;
+        align-items: center; 
+        -webkit-justify-content: center;
+        justify-content: center;
+      }
+      .header-left img { display: none !important; }
+      .sidebar { 
+        position: fixed; left: -240px; top: 40px; 
+        width: 240px; height: calc(100vh - 40px);
+        background: #fff; z-index: 20;
+        transition: left 0.2s;
+      }
+      .sidebar.open { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit">
+        <img src="/icons/mac-192.png" alt="ryOS" width="20" height="20">
+        <span>ryOS</span>
+      </a>
+      <span style="color:#999">/</span>
+      <span style="color:#666">Docs</span>
+    </div>
+    <div class="header-right">
+      <a href="https://github.com/ryokun6/ryos" target="_blank" class="github">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href="/" class="launch">Launch</a>
+    </div>
+  </header>
+  
+  <div class="container">
+    <nav class="sidebar">
+      <div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/overview" class="">1. Overview</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/architecture" class="nav-child ">1.1 Architecture & Build</a>
+    <a href="/docs/api-architecture" class="nav-child ">1.2 API Architecture</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/apps" class="">2. Apps</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chats" class="nav-child ">2.1 Chats</a>
+    <a href="/docs/internet-explorer" class="nav-child ">2.2 Internet Explorer</a>
+    <a href="/docs/ipod" class="nav-child ">2.3 iPod</a>
+    <a href="/docs/karaoke" class="nav-child ">2.4 Karaoke</a>
+    <a href="/docs/textedit" class="nav-child ">2.5 TextEdit</a>
+    <a href="/docs/finder" class="nav-child ">2.6 Finder</a>
+    <a href="/docs/paint" class="nav-child ">2.7 Paint</a>
+    <a href="/docs/photo-booth" class="nav-child ">2.8 Photo Booth</a>
+    <a href="/docs/terminal" class="nav-child ">2.9 Terminal</a>
+    <a href="/docs/control-panels" class="nav-child ">2.10 Control Panels</a>
+    <a href="/docs/soundboard" class="nav-child ">2.11 Soundboard</a>
+    <a href="/docs/synth" class="nav-child ">2.12 Synth</a>
+    <a href="/docs/videos" class="nav-child ">2.13 Videos</a>
+    <a href="/docs/minesweeper" class="nav-child ">2.14 Minesweeper</a>
+    <a href="/docs/virtual-pc" class="nav-child ">2.15 Virtual PC</a>
+    <a href="/docs/admin" class="nav-child ">2.16 Admin</a>
+    <a href="/docs/applet-store" class="nav-child ">2.17 Applet Store</a>
+    <a href="/docs/stickies" class="nav-child ">2.18 Stickies</a>
+    <a href="/docs/infinite-mac" class="nav-child ">2.19 Infinite Mac</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/application-framework" class="">3. Application Framework</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/window-management" class="nav-child ">3.1 Window Management</a>
+    <a href="/docs/state-management" class="nav-child ">3.2 State Management</a>
+    <a href="/docs/theme-system" class="nav-child ">3.3 Theme System</a>
+    <a href="/docs/hooks-architecture" class="nav-child ">3.4 Hooks Architecture</a>
+    <a href="/docs/component-architecture" class="nav-child ">3.5 Component Architecture</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/ai-system" class="">4. AI System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/file-system" class="active">5. File System</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/audio-system" class="">6. Audio System</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/ui-components" class="">7. UI Components and Shared Systems</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/component-library" class="nav-child ">7.1 Components</a>
+    <a href="/docs/i18n" class="nav-child ">7.2 i18n & Hooks</a>
+  </div>
+</div>
+<div class="nav-group ">
+  <button class="nav-toggle" onclick="toggleNavGroup(this)" aria-expanded="false">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style="transition: transform 0.2s; transform: rotate(0deg);">
+      <path d="M2 0v8l4-4z"/>
+    </svg>
+    <a href="/docs/api-reference" class="">8. API Reference</a>
+  </button>
+  <div class="nav-children" style="display: none;">
+    <a href="/docs/chat-api" class="nav-child ">8.1 Chat API</a>
+    <a href="/docs/song-api" class="nav-child ">8.2 Song API</a>
+    <a href="/docs/media-api" class="nav-child ">8.3 Media API</a>
+    <a href="/docs/auth-api" class="nav-child ">8.4 Auth API</a>
+    <a href="/docs/rooms-api" class="nav-child ">8.5 Rooms API</a>
+    <a href="/docs/messages-api" class="nav-child ">8.6 Messages API</a>
+    <a href="/docs/presence-api" class="nav-child ">8.7 Presence API</a>
+    <a href="/docs/ai-generation-apis" class="nav-child ">8.8 AI Endpoints</a>
+    <a href="/docs/utility-apis" class="nav-child ">8.9 Utility APIs</a>
+    <a href="/docs/api-design-guide" class="nav-child ">8.10 ryOS API Design Guide</a>
+  </div>
+</div>
+<div class="nav-group">
+  <div class="nav-toggle nav-no-toggle">
+    <span class="nav-spacer"></span>
+    <a href="/docs/changelog" class="">9. Changelog</a>
+  </div>
+</div>
+    </nav>
+    
+    <main class="content">
+      <article>
+        <h1>File System</h1>
+<p>Browser-based hierarchical virtual file system with two-layer architecture for metadata and content separation.</p>
+<h2>Two-Layer Architecture</h2>
+<ul><li><strong>Metadata Layer</strong> (Zustand + localStorage): File paths, names, types, UUIDs, timestamps, and status</li></ul><ul><li><strong>Content Layer</strong> (IndexedDB): Actual file content indexed by UUID for efficient storage</li></ul>
+<pre class="mermaid">graph TB
+    subgraph Application["Application Layer"]
+        App[React Components]
+        Hook[useFileSystem Hook]
+    end
+    
+    subgraph Metadata["Metadata Layer"]
+        FilesStore[(useFilesStore)]
+        FinderStore[(useFinderStore)]
+        LocalStorage[(localStorage)]
+    end
+    
+    subgraph Content["Content Layer"]
+        IDB[(IndexedDB)]
+        subgraph Stores["Object Stores"]
+            Docs[documents]
+            Imgs[images]
+            Apps[applets]
+            Trash[trash]
+            Wall[custom_wallpapers]
+        end
+    end
+    
+    App --> Hook
+    Hook --> FilesStore
+    Hook --> FinderStore
+    FilesStore <--> LocalStorage
+    FinderStore <--> LocalStorage
+    Hook -->|"UUID lookup"| IDB
+    IDB --> Stores</pre>
+<h2>Key Stores</h2>
+<table><thead><tr><th>Store</th><th>Purpose</th><th>Persistence</th></tr></thead><tbody><tr><td><code>useFilesStore</code></td><td>File/folder metadata, paths, UUIDs, status</td><td>localStorage</td></tr><tr><td><code>useFinderStore</code></td><td>Finder window instances, navigation history, view preferences</td><td>localStorage</td></tr><tr><td>IndexedDB</td><td>File content (text, images, applets)</td><td>Browser storage</td></tr></tbody></table>
+<h2>Directory Structure</h2>
+<table><thead><tr><th>Path</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>/</code></td><td>Root</td><td>Root directory</td></tr><tr><td><code>/Applications</code></td><td>Virtual</td><td>Apps from registry (non-Finder apps)</td></tr><tr><td><code>/Documents</code></td><td>Physical</td><td>User text documents (.txt, .md)</td></tr><tr><td><code>/Images</code></td><td>Physical</td><td>User images (PNG, JPG, GIF, WebP, BMP)</td></tr><tr><td><code>/Music</code></td><td>Virtual</td><td>iPod library (organized by artist)</td></tr><tr><td><code>/Videos</code></td><td>Virtual</td><td>Video library (organized by artist)</td></tr><tr><td><code>/Sites</code></td><td>Virtual</td><td>Internet Explorer favorites</td></tr><tr><td><code>/Applets</code></td><td>Physical</td><td>HTML applets (.app, .html files)</td></tr><tr><td><code>/Trash</code></td><td>Special</td><td>Deleted items (restorable)</td></tr><tr><td><code>/Desktop</code></td><td>Physical</td><td>Shortcuts and aliases</td></tr></tbody></table>
+<pre class="mermaid">graph TD
+    Root["/"] --> Apps["/Applications<br/>Virtual"]
+    Root --> Docs["/Documents<br/>Physical"]
+    Root --> Imgs["/Images<br/>Physical"]
+    Root --> Music["/Music<br/>Virtual"]
+    Root --> Videos["/Videos<br/>Virtual"]
+    Root --> Sites["/Sites<br/>Virtual"]
+    Root --> Applets["/Applets<br/>Physical"]
+    Root --> Trash["/Trash<br/>Special"]
+    Root --> Desktop["/Desktop<br/>Physical"]
+    
+    Apps -.->|"from appRegistry"| AppReg[(App Registry)]
+    Music -.->|"from useIpodStore"| iPod[(iPod Library)]
+    Videos -.->|"from useVideoStore"| VidLib[(Video Library)]
+    Sites -.->|"from useInternetExplorerStore"| IEFav[(IE Favorites)]
+    
+    Docs -->|"stored in"| IDB[(IndexedDB)]
+    Imgs -->|"stored in"| IDB
+    Applets -->|"stored in"| IDB</pre>
+<h2>File Metadata</h2>
+<pre><code>interface FileSystemItem {
+  // Core properties
+  path: string;           // Full path, unique identifier (e.g., "/Documents/note.md")
+  name: string;           // File/folder name
+  isDirectory: boolean;
+  type?: string;          // File type (markdown, text, png, jpg, html, etc.)
+  icon?: string;          // Icon path or emoji
+  appId?: string;         // Associated application ID
+  
+  // Content reference
+  uuid?: string;          // UUID for IndexedDB content lookup (files only)
+  
+  // File properties
+  size?: number;          // File size in bytes
+  createdAt?: number;     // Creation timestamp
+  modifiedAt?: number;    // Last modified timestamp
+  
+  // Status
+  status: "active" | "trashed";
+  originalPath?: string;  // Path before moving to trash
+  deletedAt?: number;     // When moved to trash
+  
+  // Applet sharing
+  shareId?: string;       // Share ID for shared applets (from Redis)
+  createdBy?: string;     // Creator username
+  storeCreatedAt?: number;
+  
+  // Window dimensions
+  windowWidth?: number;
+  windowHeight?: number;
+  
+  // Alias/shortcut properties
+  aliasTarget?: string;   // Target path or appId
+  aliasType?: "file" | "app";
+  hiddenOnThemes?: OsThemeId[];  // Hide on specific OS themes
+}</code></pre>
+<h2>IndexedDB Storage</h2>
+<p>Database: <code>ryOS</code> (version 7)</p>
+<table><thead><tr><th>Object Store</th><th>Content Type</th><th>Key</th></tr></thead><tbody><tr><td><code>documents</code></td><td>Text files (strings)</td><td>UUID</td></tr><tr><td><code>images</code></td><td>Binary images (Blobs)</td><td>UUID</td></tr><tr><td><code>applets</code></td><td>HTML applet content</td><td>UUID</td></tr><tr><td><code>trash</code></td><td>Deleted file content</td><td>UUID</td></tr><tr><td><code>custom_wallpapers</code></td><td>User wallpapers</td><td>UUID</td></tr></tbody></table>
+<p>Content structure stored in IndexedDB: <pre><code>interface StoredContent {
+  name: string;               // Original filename
+  content: string | Blob;     // File content
+}</code></pre></p>
+<h2>CRUD Operations</h2>
+<h3>File Operations</h3>
+<pre><code>// useFileSystem hook provides these operations
+const {
+  // Navigation
+  currentPath,
+  navigateToPath,
+  navigateUp,
+  navigateBack,
+  navigateForward,
+  
+  // File listing
+  files,
+  isLoading,
+  error,
+  
+  // Selection
+  selectedFile,
+  handleFileSelect,
+  handleFileOpen,
+  
+  // File operations
+  saveFile,        // Create or update file
+  renameFile,      // Rename file/folder
+  createFolder,    // Create new folder
+  moveFile,        // Move file to different folder
+  
+  // Trash operations
+  moveToTrash,
+  restoreFromTrash,
+  emptyTrash,
+  trashItemsCount,
+  
+  // System
+  formatFileSystem,  // Reset entire filesystem
+} = useFileSystem(initialPath, options);</code></pre>
+<h3>Save File Example</h3>
+<pre><code>await saveFile({
+  path: "/Documents/note.md",
+  name: "note.md",
+  content: "# My Note\nContent here",
+  type: "markdown",
+  icon: "/icons/file-text.png",
+});</code></pre>
+<h3>Move to Trash Flow</h3>
+<ol><li>Mark item as <code>status: "trashed"</code> in metadata</li><li>Store <code>originalPath</code> and <code>deletedAt</code> timestamp</li><li>Move content from original store to <code>trash</code> store in IndexedDB</li><li>Update Trash folder icon (<code>trash-full.png</code>)</li></ol>
+<h3>Restore from Trash Flow</h3>
+<ol><li>Reset <code>status</code> to <code>"active"</code>, clear <code>originalPath</code> and <code>deletedAt</code></li><li>Move content back from <code>trash</code> store to original store</li><li>Update Trash folder icon if empty</li></ol>
+<h2>Lazy Loading</h2>
+<p>Default file content is lazy-loaded on first access:</p>
+<pre><code>// Register files for lazy loading during initialization
+registerFilesForLazyLoad(files, items);
+
+// Load content when file is opened
+await ensureFileContentLoaded(filePath, uuid);</code></pre>
+<p>Files with <code>assetPath</code> in <code><a href="https://github.com/ryokun6/ryos/blob/main/public/data/filesystem.js" target="_blank" rel="noopener noreferrer" style="color: #00f; text-decoration: underline;">public/data/filesystem.js</a>on</code> are fetched on-demand, not during app initialization. This improves startup performance.</p>
+<h2>Finder App Integration</h2>
+<h3>Multi-Window Support</h3>
+<p>Each Finder window is an instance with its own state:</p>
+<pre><code>interface FinderInstance {
+  instanceId: string;
+  currentPath: string;
+  navigationHistory: string[];
+  navigationIndex: number;
+  viewType: ViewType;        // "small" | "large" | "list"
+  sortType: SortType;        // "name" | "date" | "size" | "kind"
+  selectedFile: string | null;
+}</code></pre>
+<h3>View Type Preferences</h3>
+<p>Per-path view type preferences persist across sessions:</p>
+<pre><code>// Default view types by path
+getDefaultViewTypeForPath(path) {
+  if (path === "/" || path.startsWith("/Images") || 
+      path.startsWith("/Applications") || path.startsWith("/Applets"))
+    return "large";
+  if (path.startsWith("/Documents") || path.startsWith("/Music"))
+    return "list";
+  return "list";
+}</code></pre>
+<h3>File Type Detection</h3>
+<pre><code>function getFileTypeFromExtension(fileName: string): string {
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  switch (ext) {
+    case "md": return "markdown";
+    case "txt": return "text";
+    case "png": case "jpg": case "gif": case "webp": case "bmp": return ext;
+    case "app": return "application";
+    default: return "unknown";
+  }
+}</code></pre>
+<h2>Supported File Types</h2>
+<table><thead><tr><th>Extension</th><th>Type</th><th>Opens With</th><th>Storage</th></tr></thead><tbody><tr><td><code>.md</code></td><td>Markdown</td><td>TextEdit</td><td>IndexedDB (documents)</td></tr><tr><td><code>.txt</code></td><td>Plain text</td><td>TextEdit</td><td>IndexedDB (documents)</td></tr><tr><td><code>.png</code>, <code>.jpg</code>, <code>.gif</code>, <code>.webp</code>, <code>.bmp</code></td><td>Image</td><td>Paint</td><td>IndexedDB (images)</td></tr><tr><td><code>.app</code>, <code>.html</code></td><td>HTML Applet</td><td>Applet Viewer</td><td>IndexedDB (applets)</td></tr><tr><td><code>.mp3</code></td><td>Audio</td><td>iPod</td><td>Virtual (iPod store)</td></tr><tr><td><code>.mov</code></td><td>Video</td><td>Videos</td><td>Virtual (Video store)</td></tr><tr><td><code>.webloc</code></td><td>Web link</td><td>Internet Explorer</td><td>Virtual (IE store)</td></tr></tbody></table>
+<h2>Desktop Shortcuts</h2>
+<p>Aliases/shortcuts on Desktop:</p>
+<pre><code>// Create alias from context menu or drag
+fileStore.createAlias(
+  targetPath,      // Original file path or app ID
+  aliasName,       // Display name
+  aliasType,       // "file" | "app"
+  targetAppId      // For app shortcuts
+);</code></pre>
+<p>Desktop shortcuts support: <ul><li>App shortcuts (launches the app)</li><li>File shortcuts (opens the target file)</li><li>Theme-specific visibility (<code>hiddenOnThemes</code>)</li></ul></p>
+<h2>Migration System</h2>
+<p>Store version migrations handle schema changes:</p>
+<pre><code>// Version history
+// v5: Added UUID-based content keys
+// v6: Added timestamps (createdAt, modifiedAt)
+// v7: Added file size tracking
+// v8: One-time sync for existing file sizes/timestamps
+// v10: Updated Applets folder icon</code></pre>
+<h2>Events</h2>
+<p>File system changes emit custom events:</p>
+<pre><code>// File saved/updated
+window.dispatchEvent(new CustomEvent("fileUpdated", {
+  detail: { name, path }
+}));
+
+// File renamed
+window.dispatchEvent(new CustomEvent("fileRenamed", {
+  detail: { oldPath, newPath, oldName, newName }
+}));
+
+// File saved (for applets)
+window.dispatchEvent(new CustomEvent("saveFile", {
+  detail: { name, path, content, icon }
+}));</code></pre>
+      </article>
+      
+      <nav class="nav">
+        <a href="/docs/ai-system">← AI System</a>
+        <a href="/docs/audio-system">Audio System →</a>
+      </nav>
+      
+    </main>
+  </div>
+  
+  <script>
+    function toggleNavGroup(button) {
+      const group = button.closest('.nav-group');
+      const children = group.querySelector('.nav-children');
+      const svg = button.querySelector('svg');
+      const isExpanded = group.classList.contains('expanded');
+      
+      if (isExpanded) {
+        group.classList.remove('expanded');
+        children.style.display = 'none';
+        svg.style.transform = 'rotate(0deg)';
+        button.setAttribute('aria-expanded', 'false');
+      } else {
+        group.classList.add('expanded');
+        children.style.display = 'block';
+        svg.style.transform = 'rotate(90deg)';
+        button.setAttribute('aria-expanded', 'true');
+      }
+    }
+    
+    document.addEventListener('click', (e) => {
+      const sidebar = document.querySelector('.sidebar');
+      const menuBtn = document.querySelector('.menu-btn');
+      const clickedMenuBtn = menuBtn && menuBtn.contains(e.target);
+      if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !clickedMenuBtn) {
+        sidebar.classList.remove('open');
+      }
+    });
+  </script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontFamily: '"Geneva", system-ui, sans-serif',
+        fontSize: '10px',
+        primaryColor: '#f0f0f0',
+        primaryBorderColor: '#ccc',
+        primaryTextColor: '#000',
+        lineColor: '#666',
+        secondaryColor: '#f8f8f8',
+        tertiaryColor: '#fff'
+      },
+      flowchart: { curve: 'basis', padding: 8, nodeSpacing: 30, rankSpacing: 30 },
+      sequence: { actorFontSize: 10, messageFontSize: 10, noteFontSize: 10 }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+{
+  "directories": [
+    {
+      "path": "/",
+      "name": "/",
+      "isDirectory": true,
+      "type": "directory",
+      "status": "active"
+    },
+    {
+      "path": "/Applications",
+      "name": "Applications",
+      "isDirectory": true,
+      "type": "directory-virtual",
+      "icon": "/icons/default/applications.png",
+      "status": "active"
+    },
+    {
+      "path": "/Documents",
+      "name": "Documents",
+      "isDirectory": true,
+      "type": "directory",
+      "icon": "/icons/default/documents.png",
+      "status": "active"
+    },
+    {
+      "path": "/Images",
+      "name": "Images",
+      "isDirectory": true,
+      "type": "directory",
+      "icon": "/icons/default/images.png",
+      "status": "active"
+    },
+    {
+      "path": "/Music",
+      "name": "Music",
+      "isDirectory": true,
+      "type": "directory-virtual",
+      "icon": "/icons/default/sounds.png",
+      "status": "active"
+    },
+    {
+      "path": "/Videos",
+      "name": "Videos",
+      "isDirectory": true,
+      "type": "directory-virtual",
+      "icon": "/icons/default/movies.png",
+      "status": "active"
+    },
+    {
+      "path": "/Sites",
+      "name": "Sites",
+      "isDirectory": true,
+      "type": "directory-virtual",
+      "icon": "/icons/default/sites.png",
+      "status": "active"
+    },
+    {
+      "path": "/Applets",
+      "name": "Applets",
+      "isDirectory": true,
+      "type": "directory",
+      "icon": "/icons/default/applets.png",
+      "status": "active"
+    },
+    {
+      "path": "/Trash",
+      "name": "Trash",
+      "isDirectory": true,
+      "type": "directory",
+      "icon": "/icons/default/trash-empty.png",
+      "status": "active"
+    },
+    {
+      "path": "/Desktop",
+      "name": "Desktop",
+      "isDirectory": true,
+      "type": "directory",
+      "icon": "/icons/default/desktop.png",
+      "status": "active"
+    }
+  ],
+  "files": [
+    {
+      "path": "/Documents/README.md",
+      "name": "README.md",
+      "isDirectory": false,
+      "type": "markdown",
+      "icon": "/icons/default/file-text.png",
+      "status": "active",
+      "content": "# ryOS — A Web-Based Agentic AI OS, made with Cursor\n\nA modern web-based desktop environment inspired by classic macOS and Windows, built with React, TypeScript, and AI. Features multiple built-in applications, a familiar desktop interface, and a system-aware AI assistant. Works on all devices—desktop, tablet, and mobile.\n\n## Features\n\n### Desktop Environment\n- Authentic macOS and Windows-style desktop interactions\n- Multi-instance window manager with drag, resize, and minimize\n- Customizable wallpapers (photos, patterns, or videos)\n- System-wide sound effects and AI assistant (Ryo)\n- Virtual file system with local storage persistence and backup/restore\n\n### Themes\n- **System 7** — Classic Mac OS look with top menubar and traffic-light controls\n- **Aqua** — Mac OS X style with modern aesthetics\n- **Windows XP** — Bottom taskbar, Start menu, and classic window controls\n- **Windows 98** — Retro Windows experience with mobile-safe controls\n\n### Built-in Applications\n- **Finder** — File manager with Quick Access, storage info, and smart file detection\n- **TextEdit** — Rich text editor with markdown, slash commands, and multi-window support\n- **MacPaint** — Bitmap graphics editor with drawing tools, patterns, and import/export\n- **Videos** — VCR-style YouTube player with playlist management\n- **Soundboard** — Record and play custom sounds with waveform visualization\n- **Synth** — Virtual synthesizer with multiple waveforms, effects, and MIDI support\n- **Photo Booth** — Camera app with real-time filters and photo gallery\n- **Internet Explorer** — Time Machine that explores web history via Wayback Machine; AI generates sites for years before 1996 or in the future\n- **Chats** — AI chat with Ryo, public/private chat rooms, voice messages, and tool calling\n- **Control Panels** — System preferences: appearance, sounds, backup/restore, and file system management\n- **Minesweeper** — Classic puzzle game\n- **Virtual PC** — DOS emulator for classic games (Doom, SimCity, etc.)\n- **Terminal** — Unix-like CLI with AI integration (`ryo <prompt>`)\n- **iPod** — 1st-gen iPod music player with YouTube import, lyrics, and translation\n- **Applet Store** — Browse, install, and share community-created HTML applets\n\n## Quick Start\n1. Launch apps from the Finder, Desktop, or Apple/Start menu\n2. Drag windows to move, drag edges to resize\n3. Use Control Panels to customize appearance and sounds\n4. Chat with Ryo AI for help or to control apps\n5. Files auto-save to browser storage\n\nVisit https://github.com/ryokun6/ryos for more information."
+    },
+    {
+      "path": "/Documents/Quick Tips.md",
+      "name": "Quick Tips.md",
+      "isDirectory": false,
+      "type": "markdown",
+      "icon": "/icons/default/file-text.png",
+      "status": "active",
+      "content": "# Quick Tips\n\n## Getting Started\n- Launch apps from Finder, Desktop, or Apple/Start menu\n- Multiple apps can run simultaneously with multi-window support\n- Drag windows to move, drag edges to resize, minimize to dock\n- Use Control Panels to customize appearance, sounds, and AI settings\n- Drag apps from Finder to Desktop to create shortcuts\n\n## Finder\n- Browse Documents, Applications, Images, Applets, and Trash\n- Sort by name, kind, size, or date modified\n- Icon and list view options with Quick Access sidebar\n- View storage info and file sizes\n- Move files to Trash and empty when needed\n\n## TextEdit\n- Rich text editing with markdown support\n- Format: bold, italic, underline, lists, headings\n- Slash commands (/) for quick formatting and AI assistance\n- Multi-window support for multiple documents\n- Auto-saves your work to Documents folder\n\n## MacPaint\n- Drawing tools: pencil, brush, spray, eraser, fill\n- Shape tools: rectangle, oval, line, polygon\n- Pattern fills and custom colors\n- Selection, move, copy, paste, and undo/redo\n- Import images and export your creations\n\n## Soundboard\n- Record sounds from microphone with waveform preview\n- Play with clicks or number keys (1-9)\n- Customize with emojis and titles\n- Import/export soundboards as JSON\n\n## Synth\n- Play with on-screen keyboard or computer keys (A-L row)\n- Waveforms: sine, square, sawtooth, triangle, noise\n- Effects: reverb, delay, distortion, filter\n- MIDI keyboard support\n- Save and load custom presets\n\n## Photo Booth\n- Take photos with webcam\n- Real-time filters: sepia, noir, thermal, x-ray, etc.\n- Multi-photo burst mode (4 photos)\n- Photos saved to gallery strip\n\n## Control Panels\n- Change wallpapers (photos, patterns, videos, or custom uploads)\n- Toggle UI sounds, typing synth, and terminal sounds\n- Configure AI model and voice settings\n- Backup and restore all settings and files\n- Format or reset file system\n\n## Internet Explorer\n- Time travel through web history with Wayback Machine\n- AI generates sites for years before 1996 or in the future\n- View archived snapshots by clicking the clock icon\n- Save favorites organized by year\n\n## Chats with Ryo\n- Chat with Ryo AI assistant for help or to control apps\n- Ryo can create applets, edit documents, search the store\n- Join public chat rooms (mention @ryo for AI responses)\n- Push-to-talk voice messages (hold Space)\n- Send 👋 nudge for context-aware tips\n- Ryo becomes a DJ when music is playing in iPod\n\n## Videos\n- VCR-style YouTube player with retro aesthetics\n- Playlist management with shuffle and repeat\n- LCD display with scrolling titles\n- Share videos with shareable links\n\n## Virtual PC\n- DOS emulator for classic games\n- Play Doom, SimCity, Prince of Persia, and more\n- Save and load game states\n- Toggle CRT scanline effects\n\n## Terminal\n- Unix-like commands: ls, cd, cat, mkdir, touch, rm, vim\n- Arrow keys for command history navigation\n- Tab completion for files and commands\n- `ryo <prompt>` to chat with AI directly\n- `open <app>` to launch apps by name\n\n## iPod\n- Import YouTube URLs to build your music library\n- Classic click-wheel navigation and controls\n- Shuffle, repeat, and cover flow modes\n- Time-synced lyrics with translation to any language\n- Gesture controls for fine-tuning lyric timing\n- Fullscreen lyrics view with background video\n- Share tracks with shareable links\n\n## Applet Store\n- Browse and install community-created HTML applets\n- One-click install and automatic updates\n- Create and share your own applets\n- Applets run in sandboxed environment"
+    },
+    {
+      "path": "/Images/steve-jobs.png",
+      "name": "steve-jobs.png",
+      "isDirectory": false,
+      "type": "png",
+      "icon": "/icons/default/image.png",
+      "status": "active",
+      "assetPath": "/assets/images/steve-jobs.png"
+    },
+    {
+      "path": "/Images/susan-kare.png",
+      "name": "susan-kare.png",
+      "isDirectory": false,
+      "type": "png",
+      "icon": "/icons/default/image.png",
+      "status": "active",
+      "assetPath": "/assets/images/susan-kare.png"
+    }
+  ]
+}

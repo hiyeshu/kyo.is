@@ -1,0 +1,1169 @@
+@import url("/fonts/fonts.css");
+@import "./styles/themes.css";
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+/* Additional fonts not in fonts.css */
+@font-face {
+  font-family: "ArkPixel";
+  src: url("/fonts/fusion-pixel-12px-proportional-ja.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@supports not (font: -apple-system-body) {
+  @font-face {
+    font-family: "SerenityOS-Emoji";
+    src: url("/fonts/SerenityOS-Emoji.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+}
+
+@font-face {
+  font-family: "Geneva-9";
+  src: url("/fonts/geneva-9.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 89%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 89%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 89%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 0%;
+    --ring: 0 0% 0%;
+    --radius: 0px;
+    --sat-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --font-geneva-12: "Geneva-12", "ArkPixel", "SerenityOS-Emoji", system-ui;
+    --font-apple-garamond: "AppleGaramond", "Hiragino Mincho ProN", "SerenityOS-Emoji",
+      serif;
+    --font-mondwest: "Mondwest", "ArkPixel", "SerenityOS-Emoji", system-ui;
+    --font-neuebit: "NeueBit", "ArkPixel", "SerenityOS-Emoji", system-ui;
+    --font-monaco: "Monaco", "ArkPixel", "SerenityOS-Emoji", system-ui;
+    --font-jacquard: "Jacquard", "ArkPixel", "SerenityOS-Emoji", system-ui;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 100%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    user-select: none;
+    -webkit-user-select: none;
+    /* Safari-specific: prevent touch callout and tap highlight globally */
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* CJK typography improvements for Chinese and Japanese */
+  html:lang(zh-TW) *,
+  html:lang(ja) * {
+    word-break: auto-phrase;
+    text-autospace: normal;
+  }
+
+  .no-touch-callout {
+    -webkit-touch-callout: none;
+  }
+  html {
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+    /* Disable pull-to-refresh and back gestures on Android Chrome */
+    -webkit-overscroll-behavior: none;
+    -webkit-overscroll-behavior-x: none;
+    -webkit-overscroll-behavior-y: none;
+  }
+  body {
+    @apply bg-background text-foreground;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: "ChicagoKare", "ArkPixel", "SerenityOS-Emoji", system-ui,
+      -apple-system, sans-serif;
+    -webkit-font-smoothing: none;
+    font-smooth: never;
+    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    /* Additional mobile gesture prevention */
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+    -webkit-overscroll-behavior: none;
+    -webkit-overscroll-behavior-x: none;
+    -webkit-overscroll-behavior-y: none;
+    /* Prevent touch scrolling behaviors */
+    touch-action: none;
+    -ms-touch-action: none;
+  }
+}
+
+@keyframes blink_input_opacity_to_prevent_scrolling_when_focus {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.input--focused {
+  animation: blink_input_opacity_to_prevent_scrolling_when_focus 0.01s;
+}
+
+/* Terminal input override styles to prevent XP/98 theme interference */
+input.terminal-input[type="text"] {
+  padding: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-sizing: border-box !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  /* Allow inline styles to control height/line-height for IME alignment */
+  vertical-align: top;
+}
+
+input.terminal-input[type="text"]:focus {
+  outline: none !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Piano key override styles to prevent XP/98 theme button interference */
+button.piano-key {
+  font-size: inherit !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+  outline: none !important;
+  outline-offset: initial !important;
+}
+
+/* Restore borders for piano keys */
+button.piano-key {
+  border: 1px solid #333333 !important;
+}
+
+/* Default: rounded corners for modern themes */
+button.piano-key {
+  border-radius: 0 0 6px 6px !important; /* rounded-b-md equivalent */
+}
+
+/* Square corners for retro themes - using specific override classes */
+button.piano-key.system7-square {
+  border-radius: 0 !important;
+}
+
+button.piano-key:not(:disabled).active,
+button.piano-key:not(:disabled):active {
+  box-shadow: none !important;
+}
+
+button.piano-key.focused,
+button.piano-key:focus {
+  outline: none !important;
+  outline-offset: initial !important;
+}
+
+/* Specifically preserve Tailwind background classes for piano keys - High specificity */
+button.piano-key.bg-black,
+button.piano-key.bg-black.bg-black {
+  background: rgb(0 0 0) !important;
+  background-color: rgb(0 0 0) !important;
+}
+
+button.piano-key.bg-white,
+button.piano-key.bg-white.bg-white {
+  background: rgb(255 255 255) !important;
+  background-color: rgb(255 255 255) !important;
+}
+
+/* Preserve hover states with high specificity */
+button.piano-key.bg-black:hover,
+button.piano-key.bg-black.bg-black:hover {
+  background: rgb(51 51 51) !important; /* #333333 */
+  background-color: rgb(51 51 51) !important;
+}
+
+button.piano-key.bg-white:hover,
+button.piano-key.bg-white.bg-white:hover {
+  background: rgb(245 245 245) !important; /* #f5f5f5 */
+  background-color: rgb(245 245 245) !important;
+}
+
+/* Preserve pressed state with high specificity */
+button.piano-key[class*="bg-[#ff33ff]"],
+button.piano-key.piano-key[class*="bg-[#ff33ff]"] {
+  background: #ff33ff !important;
+  background-color: #ff33ff !important;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-progress-indeterminate {
+  animation: progress-indeterminate 2.5s linear infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    #3b82f6 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  width: 100%;
+}
+
+.animate-progress-indeterminate-reverse {
+  animation: progress-indeterminate-reverse 2.5s linear infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    #3b82f6 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  width: 100%;
+}
+
+@keyframes progress-indeterminate-reverse {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-progress-indeterminate-green {
+  animation: progress-indeterminate 2.5s linear infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    #22c55e 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  width: 100%;
+}
+
+.animate-progress-indeterminate-green-reverse {
+  animation: progress-indeterminate-reverse 2.5s linear infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    #22c55e 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  width: 100%;
+}
+
+.animate-progress-indeterminate-orange {
+  animation: progress-indeterminate 2.5s linear infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    #f97316 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  width: 100%;
+}
+
+.animate-progress-indeterminate-orange-reverse {
+  animation: progress-indeterminate-reverse 2.5s linear infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    #f97316 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  width: 100%;
+}
+
+.animate-progress-indeterminate-yellow {
+  animation: progress-indeterminate 2.5s linear infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    #eab308 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  width: 100%;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(120px);
+  }
+  100% {
+    transform: translateX(-120px);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 2s linear infinite;
+}
+
+@layer utilities {
+  .font-geneva-12 {
+    font-family: "Geneva-12", "ArkPixel", "SerenityOS-Emoji", system-ui,
+      -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  .file-icon-label {
+    font-family: var(--os-font-ui);
+  }
+
+  :root[data-os-theme="system7"] .file-icon-label {
+    font-family: var(--font-geneva-12);
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  .font-apple-garamond {
+    font-family: var(--font-apple-garamond);
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  .font-mondwest {
+    font-family: "Mondwest", "Yu Mincho", "Hiragino Mincho Pro", "Georgia",
+      "Palatino", "Yu Mincho", "Hiragino Mincho Pro", serif;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  .font-neuebit {
+    font-family: "NeueBit", "ArkPixel", "SerenityOS-Emoji", "Helvetica", "Arial",
+      "Hiragino Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  /* Rounded lyrics font utility */
+  /* VAGRounded is the bundled font, with CJK fallbacks for non-Latin characters */
+  .font-lyrics-rounded {
+    font-family: "VAGRounded", "Kosugi Maru", "Hiragino Maru Gothic ProN",
+      "Nanum Gothic", "Yuanti SC", ui-rounded, sans-serif;
+    font-weight: normal;
+    line-height: 1.1;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  /* Serif lyrics font utility (Noto Serif JP/KR) */
+  .font-lyrics-serif {
+    font-family: Charter, "Noto Serif JP", "Noto Serif KR", "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho",
+      "Songti TC", "Songti SC", "SimSun", "Nanum Myeongjo", "AppleMyungjo", "Batang", "Times New Roman", serif;
+    font-weight: 700;
+    line-height: 1.1;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  /* Sans-serif lyrics font utility (default OS typeface) */
+  .font-lyrics-sans {
+    font-family: "Geneva-12", "ArkPixel", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+      "PingFang SC", "Microsoft YaHei", "Apple SD Gothic Neo", "Malgun Gothic",
+      "Nanum Gothic", system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.1;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  /* Serif Red - Japanese classic style (same font as serif but with outline styling) */
+  .font-lyrics-serif-red {
+    font-family: Charter, "Noto Serif JP", "Noto Serif KR", "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho",
+      "Songti TC", "Songti SC", "SimSun", "Nanum Myeongjo", "AppleMyungjo", "Batang", "Times New Roman", serif;
+    font-weight: 700;
+    line-height: 1.1;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  /* Gold Glow - Warm karaoke bar style (uses rounded font) */
+  .font-lyrics-gold-glow {
+    font-family: "VAGRounded", "Kosugi Maru", "Hiragino Maru Gothic ProN",
+      "Nanum Gothic", "Yuanti SC", ui-rounded, sans-serif;
+    font-weight: normal;
+    line-height: 1.1;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  /* Gradient - Modern gradient fill style (uses bold sans-serif) */
+  .font-lyrics-gradient {
+    font-family: "Geneva-12", "ArkPixel", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+      "PingFang SC", "Microsoft YaHei", "Apple SD Gothic Neo", "Malgun Gothic",
+      "Nanum Gothic", system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+    line-height: 1.1;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  /* Animated rainbow for gradient lyrics - rotates hue of both text and glow together */
+  @keyframes lyrics-hue-rotate {
+    from { filter: drop-shadow(0 0 6px rgba(0,255,255,0.5)) drop-shadow(0 0 12px rgba(0,255,255,0.3)) hue-rotate(0deg); }
+    to { filter: drop-shadow(0 0 6px rgba(0,255,255,0.5)) drop-shadow(0 0 12px rgba(0,255,255,0.3)) hue-rotate(360deg); }
+  }
+
+  .lyrics-rainbow-animate {
+    animation: lyrics-hue-rotate 6s linear infinite;
+  }
+
+  /* Karaoke force-font container - enables container queries for responsive sizing */
+  .karaoke-force-font {
+    container-type: inline-size;
+  }
+
+  /* Karaoke lyrics text - uses container query units for window-relative sizing */
+  .karaoke-lyrics-text {
+    font-size: clamp(32px, 8cqw, 96px);
+  }
+
+  /* Fullscreen lyrics text - viewport-relative with max cap */
+  .fullscreen-lyrics-text {
+    font-size: clamp(32px, min(10vw, 10vh), 120px);
+  }
+
+  /* Lyrics translation sizes - proportional to main lyrics */
+  .lyrics-translation-ipod {
+    font-size: 10px;
+    margin-top: 0.2em;
+  }
+
+  /* Karaoke in-window: ~50% of main lyrics (4cqw vs 8cqw) */
+  .lyrics-translation-karaoke {
+    font-size: clamp(14px, 4cqw, 60px);
+    margin-top: 0.2em;
+  }
+
+  /* Fullscreen: ~50% of main lyrics (5vw/5vh vs 10vw/10vh) */
+  .lyrics-translation-fullscreen {
+    font-size: clamp(14px, min(5vw, 5vh), 60px);
+    margin-top: 0.2em;
+  }
+
+  /* Old-school karaoke container needs larger gap between lines due to text-stroke */
+  .lyrics-old-school {
+    gap: clamp(0.5rem, 4cqw, 1.5rem) !important;
+  }
+
+  /* Karaoke status text - scales with container */
+  .karaoke-status-text {
+    font-size: clamp(18px, 5cqmin, 48px);
+  }
+
+  /* Karaoke activity indicator - scales with container */
+  .karaoke-activity-indicator {
+    width: clamp(24px, 6cqmin, 64px) !important;
+    height: clamp(24px, 6cqmin, 64px) !important;
+  }
+
+  .font-monaco,
+  .font-monaco-9 {
+    font-family: "Monaco", "ArkPixel", "SerenityOS-Emoji", monospace;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+
+  .font-jacquard {
+    font-family: "Jacquard", "Yu Mincho", "Hiragino Mincho Pro", "Georgia",
+      "Palatino", serif;
+    -webkit-font-smoothing: antialiased;
+    font-smooth: always;
+  }
+
+  .animate-highlight {
+    animation: highlight-bg-opacity 1.5s ease-in-out infinite;
+  }
+
+  /* Draggable area styles - prevents browser gestures on touch devices */
+  .draggable-area {
+    touch-action: none !important;
+    -ms-touch-action: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    /* Prevent default touch behaviors */
+    -webkit-touch-callout: none !important;
+    /* Disable context menu on long press */
+    -webkit-context-menu-trigger: none !important;
+    /* Prevent text selection highlighting */
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  /* Resize handle styles - ensures proper touch handling */
+  .resize-handle {
+    touch-action: none !important;
+    -ms-touch-action: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
+  /* Preview button reset - removes XP/98 theme button styling for image/canvas preview buttons */
+  button.preview-button {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none;
+    padding: 0 !important;
+    outline: none !important;
+    outline-offset: 0 !important;
+    border-radius: 3px !important;
+    overflow: hidden;
+  }
+
+  button.preview-button:focus,
+  button.preview-button:active,
+  button.preview-button:hover {
+    background-color: transparent !important;
+    outline: none !important;
+  }
+}
+
+@keyframes highlight-bg-opacity {
+  0%,
+  100% {
+    background-color: rgb(254 249 195 / 1); /* bg-yellow-200 */
+  }
+  50% {
+    background-color: rgb(254 249 195 / 0.5); /* bg-yellow-200/50 */
+  }
+}
+
+/* CRT Scanline Effect */
+.crt-effect {
+  position: relative;
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.shimmer {
+  background-image: linear-gradient(
+    90deg,
+    rgba(128, 128, 128, 0.6) 0%,
+    rgba(128, 128, 128, 0.6) 25%,
+    #fff 40%,
+    rgba(128, 128, 128, 0.6) 75%,
+    rgba(128, 128, 128, 0.6) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s infinite linear;
+}
+
+.shimmer-gray {
+  /* Use a gradient suitable for gray text */
+  background-image: linear-gradient(
+    90deg,
+    rgba(128, 128, 128, 0.6) 0%,
+    rgba(128, 128, 128, 0.6) 25%,
+    rgba(0, 0, 0, 1) 40%,
+    rgba(128, 128, 128, 0.6) 75%,
+    rgba(128, 128, 128, 0.6) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s infinite linear;
+}
+
+.crt-effect::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  animation: scanline 10s linear infinite;
+}
+
+#dosbox canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+#dosbox > div > div.absolute.right-10.bottom-10 > div {
+  display: flex;
+  position: absolute;
+  width: 200px;
+  flex-direction: row;
+  color: #ffffff;
+  top: 12px;
+  left: 12px;
+  text-shadow: 0 0 4px #000;
+  font-family: Geneva-12, Geneva, Tahoma, Wtcsans-serif;
+  font-smooth: always;
+  -webkit-font-smoothing: antialiased;
+  font-size: 12px;
+}
+
+#dosbox > div > div.absolute.right-10.bottom-10 > div > svg {
+  display: none;
+}
+
+@keyframes scanline {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+/* Add subtle flicker animation for CRT effect */
+.crt-effect::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0.05;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.05;
+  }
+}
+
+/* Firefox-specific fixes for text editor */
+@-moz-document url-prefix() {
+  .ProseMirror {
+    cursor: text !important;
+  }
+
+  .ProseMirror * {
+    user-select: text !important;
+    -moz-user-select: text !important;
+  }
+
+  .ProseMirror p {
+    line-height: 1.5 !important;
+  }
+}
+
+/* LCD Screen base styling */
+.lcd-screen {
+  position: relative;
+  image-rendering: pixelated;
+}
+
+/* Horizontal scan lines */
+.lcd-scan-lines::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%);
+  background-size: 100% 2px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Glass reflection effect */
+.lcd-reflection {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  pointer-events: none;
+}
+
+/* Subtle LCD flicker animation */
+@keyframes lcd-flicker {
+  0% {
+    opacity: 1;
+  }
+  97% {
+    opacity: 1;
+  }
+  98% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.lcd-screen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  pointer-events: none;
+  z-index: 40; /* Higher z-index to appear above video */
+  animation: lcd-flicker 3s infinite;
+}
+
+/* Apply subtle color fringing on text - typical of LCD displays */
+.lcd-screen .font-chicago {
+  text-shadow: 0.5px 0 0 rgba(255, 0, 0, 0.1), -0.5px 0 0 rgba(0, 0, 255, 0.1),
+    0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+/* Add a subtle video effect when playing */
+.lcd-screen .react-player {
+  filter: brightness(1.05) contrast(1.02) saturate(1.1);
+}
+
+/* Fix 1px gap on right and bottom for video players and iframes */
+.react-player,
+.react-player > div,
+.react-player iframe,
+.react-player video {
+  display: block !important;
+  line-height: 0;
+}
+
+/* Extend react-player to cover 1px gap on right and bottom */
+.react-player {
+  width: calc(100% + 1px) !important;
+  height: calc(100% + 1px) !important;
+}
+
+/* Hide default scrollbars for custom implementation */
+.ipod-menu-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.ipod-menu-container::-webkit-scrollbar {
+  display: none; /* WebKit browsers */
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Safari override: disable SerenityOS-Emoji to fix missing emoji glyphs      */
+/* ------------------------------------------------------------------------- */
+
+@supports (font: -apple-system-body) {
+  /* Safari (both macOS & iOS) uniquely supports the proprietary
+     `-apple-system-body` value in the `font` shorthand. We redeclare the
+     SerenityOS-Emoji font inside this feature query with an empty `src` so
+     Safari falls back to its native Apple Color Emoji set, while other
+     browsers continue to use SerenityOS-Emoji. */
+  @font-face {
+    font-family: "SerenityOS-Emoji";
+    /* Point to a non-existent local font to prevent download */
+    src: local("☃︎");
+    /* Ensure all styles/weights are covered */
+    font-weight: normal;
+    font-style: normal;
+  }
+}
+
+/* Prevent text selection on interactive elements */
+.user-select-none {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Safari-specific selection prevention for interactive UI elements          */
+/* Safari can trigger selection during touch gestures even with user-select: */
+/* none. This class provides comprehensive prevention for all browsers.      */
+/* ------------------------------------------------------------------------- */
+.no-select-all {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+}
+
+/* Force no-select on all descendants as well (Safari fix) */
+.no-select-all * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* Variant with touch-action: none for elements that handle their own gestures */
+.no-select-gesture {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: none !important;
+  -ms-touch-action: none !important;
+}
+
+.no-select-gesture * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* macOS X theme override: disable pixelated rendering for icons and media    */
+/* Ensures smoother interpolation for macOS X while keeping retro themes      */
+/* (system7, win98, xp) pixelated via existing utility classes or inline      */
+/* styles. Uses !important to override Tailwind arbitrary value classes or    */
+/* inline styles that set image-rendering: pixelated.                         */
+/* ------------------------------------------------------------------------- */
+:root[data-os-theme="macosx"] .\[image-rendering\:pixelated\],
+:root[data-os-theme="macosx"] img,
+:root[data-os-theme="macosx"] canvas,
+:root[data-os-theme="macosx"] video {
+  image-rendering: auto !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Sonner toast positioning and animations                                   */
+/* ------------------------------------------------------------------------- */
+
+/* Reduce right margin for right-positioned toasts */
+[data-sonner-toaster][data-x-position="right"] {
+  right: 12px !important;
+}
+
+/* Mobile bottom-positioned toasts: account for dock/taskbar height and safe area */
+@media (max-width: 768px) {
+  [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+  }
+  
+  /* macOS X theme: add dock height (56px) */
+  :root[data-os-theme="macosx"] [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 72px) !important;
+  }
+  
+  /* Windows XP theme: add taskbar height (30px) */
+  :root[data-os-theme="xp"] [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 46px) !important;
+  }
+  
+  /* Windows 98 theme: add taskbar height (30px) */
+  :root[data-os-theme="win98"] [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 46px) !important;
+  }
+}
+
+/* System 7 theme: square corners, black border, drop shadow, smaller body text */
+:root[data-os-theme="system7"] [data-sonner-toast] {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Smaller body text for System 7 toasts */
+:root[data-os-theme="system7"] [data-sonner-toast] .text-sm,
+:root[data-os-theme="system7"] [data-sonner-toast] [data-content] {
+  font-size: 12px !important;
+}
+
+/* Retro button style for System 7 toasts */
+:root[data-os-theme="system7"] [data-sonner-toast] button {
+  font-size: 12px !important;
+  border: 5px solid transparent !important;
+  border-image: url('/assets/button.svg') 30 stretch !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  color: #000 !important;
+}
+
+:root[data-os-theme="system7"] [data-sonner-toast] button:active {
+  border-image: url('/assets/button-default.svg') 60 stretch !important;
+}
+
+
+
+/* Windows XP theme: yellow XP background, no shadows, rounded corners */
+:root[data-os-theme="xp"] [data-sonner-toast] {
+  background: #ECE9D8 !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(0, 0, 0, 0.7) !important;
+  box-shadow: none !important;
+  color: #000 !important;
+}
+
+:root[data-os-theme="xp"] [data-sonner-toast] [data-title],
+:root[data-os-theme="xp"] [data-sonner-toast] [data-description],
+:root[data-os-theme="xp"] [data-sonner-toast] .text-sm,
+:root[data-os-theme="xp"] [data-sonner-toast] [data-content] {
+  color: #000 !important;
+  font-family: "Pixelated MS Sans Serif", "ArkPixel", Tahoma, sans-serif !important;
+  font-size: 11px !important;
+  -webkit-font-smoothing: none !important;
+  font-smooth: never !important;
+}
+
+:root[data-os-theme="xp"] [data-sonner-toast] button {
+  font-family: "Pixelated MS Sans Serif", "ArkPixel", Tahoma, sans-serif !important;
+  font-size: 11px !important;
+  background: #ECE9D8 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #888, inset 2px 2px #dfdfdf !important;
+  color: #000 !important;
+  padding: 4px 12px !important;
+  -webkit-font-smoothing: none !important;
+  font-smooth: never !important;
+}
+
+:root[data-os-theme="xp"] [data-sonner-toast] button:active {
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px #888, inset -2px -2px #dfdfdf !important;
+}
+
+/* Windows 98 theme: silver background, classic beveled 3D effect */
+:root[data-os-theme="win98"] [data-sonner-toast] {
+  background: #C0C0C0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf !important;
+  color: #000 !important;
+}
+
+:root[data-os-theme="win98"] [data-sonner-toast] [data-title],
+:root[data-os-theme="win98"] [data-sonner-toast] [data-description],
+:root[data-os-theme="win98"] [data-sonner-toast] .text-sm,
+:root[data-os-theme="win98"] [data-sonner-toast] [data-content] {
+  color: #000 !important;
+  font-size: 12px !important;
+  -webkit-font-smoothing: none !important;
+  font-smooth: never !important;
+}
+
+:root[data-os-theme="win98"] [data-sonner-toast] button {
+  font-family: "Pixelated MS Sans Serif", "ArkPixel", Tahoma, sans-serif !important;
+  font-size: 11px !important;
+  background: #C0C0C0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf !important;
+  color: #000 !important;
+  padding: 4px 12px !important;
+  -webkit-font-smoothing: none !important;
+  font-smooth: never !important;
+}
+
+:root[data-os-theme="win98"] [data-sonner-toast] button:active {
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px grey, inset -2px -2px #dfdfdf !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Japanese Furigana (Ruby) styling for lyrics display                       */
+/* Override theme font-size rules with high specificity                      */
+/* ------------------------------------------------------------------------- */
+
+ruby.lyrics-furigana {
+  ruby-align: center;
+  ruby-position: over;
+}
+
+/* Move furigana up in rounded/old-school style */
+.font-lyrics-rounded ruby.lyrics-furigana rt {
+  margin-bottom: 0.2em;
+}
+
+/* Word-level highlight container for karaoke-style lyrics animation */
+/* Uses inline-grid to stack dimmed/highlighted layers */
+/* white-space: pre-wrap preserves trailing spaces while allowing text to wrap at container boundaries */
+/* Base padding accommodates glow and descenders; furigana-specific padding applied conditionally via :has() */
+/* Disable visionOS eye-tracking highlight for lyrics click targets */
+.lyrics-word-highlight,
+.lyrics-line-clickable {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lyrics-word-highlight {
+  display: inline-grid;
+  vertical-align: baseline;
+  white-space: pre-wrap;
+  padding: 0.15em 10px 0.35em 10px;
+  margin: -0.15em -10px -0.35em -10px;
+  overflow: visible;
+}
+
+/* Extra top padding when furigana (ruby elements) are present to prevent overlap */
+.lyrics-word-highlight:has(ruby) {
+  padding-top: 0.35em;
+  margin-top: -0.35em;
+}
+
+/* Old-school karaoke (rounded font) needs more top padding for stroke + furigana */
+.font-lyrics-rounded .lyrics-word-highlight:has(ruby) {
+  padding-top: 0.45em;
+  margin-top: -0.45em;
+}
+
+/* Layer positioning - both layers share the same grid cell (1/1) */
+.lyrics-word-layer {
+  grid-area: 1 / 1;
+  overflow: visible;
+}
+
+/* Use !important to override macOS theme's blanket font-size rules */
+/* Inherit opacity and text-shadow from parent lyrics for consistency */
+rt.lyrics-furigana-rt,
+:root[data-os-theme="macosx"] rt.lyrics-furigana-rt,
+:root[data-os-theme="system7"] rt.lyrics-furigana-rt,
+:root[data-os-theme="win98"] rt.lyrics-furigana-rt,
+:root[data-os-theme="xp"] rt.lyrics-furigana-rt {
+  font-size: 50% !important;
+  line-height: 1 !important;
+  font-weight: normal !important;
+  opacity: inherit;
+  text-shadow: inherit;
+  /* Cap height to prevent Safari from adding extra line spacing */
+  max-height: 1em;
+  overflow: visible;
+  /* Move furigana up a bit */
+  transform: translateY(-0.1em);
+  margin-top: 1em;
+}
+
+
+ruby.lyrics-furigana rp {
+  display: none;
+}
+
+/* Bold furigana for serif and sans-serif lyrics fonts */
+.font-lyrics-serif rt.lyrics-furigana-rt,
+.font-lyrics-sans rt.lyrics-furigana-rt {
+  font-weight: 700 !important;
+}
+
+
+/* Korean ruby for rounded font inherits font with matching weight */
+.font-lyrics-rounded rt.lyrics-korean-rt {
+  font-family: inherit !important;
+  font-weight: 700 !important;
+}
+
+/* Korean ruby sizes - match translation sizes for each context */
+/* Karaoke in-window: same as .lyrics-translation-karaoke */
+.karaoke-lyrics-text rt.lyrics-korean-rt {
+  font-size: clamp(14px, 4cqw, 60px) !important;
+}
+
+/* Fullscreen: same as .lyrics-translation-fullscreen */
+.fullscreen-lyrics-text rt.lyrics-korean-rt {
+  font-size: clamp(14px, min(5vw, 5vh), 60px) !important;
+}
+

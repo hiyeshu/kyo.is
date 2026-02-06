@@ -1,0 +1,156 @@
+/* Font Face Declarations */
+
+@font-face {
+  font-family: "ChicagoKare";
+  src: url("/fonts/ChicagoKare-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ArkPixel";
+  src: url("/fonts/fusion-pixel-12px-proportional-ja.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@supports not (font: -apple-system-body) {
+  @font-face {
+    font-family: "SerenityOS-Emoji";
+    src: url("/fonts/SerenityOS-Emoji.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+}
+
+@font-face {
+  font-family: "Geneva-12";
+  src: url("/fonts/geneva-12.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AppleGaramond";
+  src: url("/fonts/AppleGaramond-Light.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Monaco";
+  src: url("/fonts/monacottf.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Mondwest";
+  src: url("/fonts/Mondwest-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Mondwest";
+  src: url("/fonts/Mondwest-Bold.woff2") format("woff2");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueBit";
+  src: url("/fonts/NeueBit-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  font-size: 1.5em;
+}
+
+@font-face {
+  font-family: "NeueBit";
+  src: url("/fonts/NeueBit-Bold.woff2") format("woff2");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Jacquard";
+  src: url("/fonts/Jacquard12-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Apple Garamond";
+  src: url("/fonts/AppleGaramond.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AquaKana";
+  src: url("/fonts/AquaKana.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "LucidaGrande";
+  src: url("/fonts/LucidaGrande.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "LucidaGrande";
+  src: url("/fonts/LucidaGrande-Bold.woff2") format("woff2");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "VAGRounded";
+  src: url("/fonts/VAGRoundedStd-Bold.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pixelated MS Sans Serif";
+  src: url("/fonts/ms_sans_serif.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pixelated MS Sans Serif";
+  src: url("/fonts/ms_sans_serif_bold.woff2") format("woff2");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PerfectDOS";
+  src: url("/fonts/PerfectDOSVGA437Win.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
