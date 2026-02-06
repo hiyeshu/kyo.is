@@ -32,7 +32,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 93%;
     --foreground: 0 0% 0%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 0%;
@@ -134,6 +134,12 @@
     /* Prevent touch scrolling behaviors */
     touch-action: none;
     -ms-touch-action: none;
+  }
+  #root {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
   }
 }
 

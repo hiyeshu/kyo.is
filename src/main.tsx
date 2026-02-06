@@ -4,9 +4,6 @@ import { App } from "./App";
 import { Analytics } from "@vercel/analytics/react";
 import "./index.css";
 import { useThemeStore } from "./stores/useThemeStore";
-import { useLanguageStore } from "./stores/useLanguageStore";
-import { preloadFileSystemData } from "./stores/useFilesStore";
-import { preloadIpodData } from "./stores/useIpodStore";
 import { initPrefetch } from "./utils/prefetch";
 import "./lib/i18n";
 import { primeReactResources } from "./lib/reactResources";
@@ -53,21 +50,13 @@ if (import.meta.hot) {
 }
 
 // ============================================================================
-// PRELOADING - Start fetching JSON data early (non-blocking)
-// These run in parallel before React even mounts
-// ============================================================================
-preloadFileSystemData();
-preloadIpodData();
-
-// ============================================================================
 // PREFETCHING - Cache icons, sounds, and app components after boot
 // This runs during idle time to populate the service worker cache
 // ============================================================================
 initPrefetch();
 
-// Hydrate theme and language from localStorage before rendering
+// Hydrate theme from localStorage before rendering
 useThemeStore.getState().hydrate();
-useLanguageStore.getState().hydrate();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

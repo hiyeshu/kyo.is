@@ -120,8 +120,11 @@ export const appRegistry = {
 
 // ─── 工具函数 ────────────────────────────────────────────────────────────────
 
+const FALLBACK_ICON = "/icons/default/application.png";
+
 export const getAppIconPath = (appId: AppId): string => {
-  const app = appRegistry[appId];
+  const app = appRegistry[appId as keyof typeof appRegistry];
+  if (!app?.icon) return FALLBACK_ICON;
   return typeof app.icon === "string" ? app.icon : app.icon.src;
 };
 

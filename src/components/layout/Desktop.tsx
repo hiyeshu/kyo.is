@@ -11,6 +11,7 @@ import { getTranslatedAppName } from "@/utils/i18n";
 import { useTranslation } from "react-i18next";
 
 interface DesktopStyles {
+  backgroundColor?: string;
   backgroundImage?: string;
   backgroundSize?: string;
   backgroundRepeat?: string;
@@ -106,9 +107,11 @@ export function Desktop({
 
   // ─── Wallpaper style ──────────────────────────────────────────────
   const getWallpaperStyles = (path: string): DesktopStyles => {
-    if (!path || isVideoWallpaper) return {};
+    const fallback = { backgroundColor: "#ececec" };
+    if (!path || isVideoWallpaper) return fallback;
     const isTiled = path.includes("/wallpapers/tiles/");
     return {
+      ...fallback,
       backgroundImage: `url(${path})`,
       backgroundSize: isTiled ? "64px 64px" : "cover",
       backgroundRepeat: isTiled ? "repeat" : "no-repeat",
@@ -304,7 +307,7 @@ function DesktopIcon({
         className={`text-[11px] leading-tight text-center break-words max-w-full px-0.5 rounded ${
           isSelected
             ? "bg-[Highlight] text-[HighlightText]"
-            : "text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_80%)]"
+            : "text-gray-900 [text-shadow:_0_1px_1px_rgb(255_255_255_/_80%)]"
         }`}
       >
         {label}
