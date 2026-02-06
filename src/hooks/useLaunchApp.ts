@@ -28,101 +28,12 @@ export const useLaunchApp = () => {
   const launchApp = (appId: AppId, options?: LaunchAppOptions) => {
     console.log(`[useLaunchApp] Launch event received for ${appId}`, options);
 
-    // Convert initialPath to proper initialData for Finder
+    // Convert initialPath to proper initialData (legacy support)
     let initialData = options?.initialData;
-    if (appId === "finder" && options?.initialPath && !initialData) {
-      initialData = { path: options.initialPath };
-    }
 
-    // Special handling for applet-viewer
-    if (appId === "applet-viewer") {
-      const appletInstances = Object.values(instances).filter(
-        (inst) => inst.appId === "applet-viewer" && inst.isOpen
-      );
-
-      // If launching with content (initialData exists)
-      if (initialData) {
-        const data = initialData as { path?: string; content?: string; shareCode?: string; forceNewInstance?: boolean };
-        
-        // Skip empty instance check if forceNewInstance is true
-        if (!data.forceNewInstance) {
-          // First, check if the same applet (by path or shareCode) is already open
-          if (data.path || data.shareCode) {
-            const existingInstance = appletInstances.find((inst) => {
-              const instData = inst.initialData as
-                | { path?: string; content?: string; shareCode?: string }
-                | undefined;
-              
-              // Check by path if provided
-              if (data.path && instData?.path === data.path) {
-                return true;
-              }
-              
-              // Check by shareCode if provided
-              if (data.shareCode && instData?.shareCode === data.shareCode) {
-                return true;
-              }
-              
-              return false;
-            });
-
-            if (existingInstance) {
-              // Same applet already open, bring it to foreground
-              const identifier = data.path || data.shareCode;
-              console.log(
-                `[useLaunchApp] Applet with ${data.path ? 'path' : 'shareCode'} ${identifier} already open in instance ${existingInstance.instanceId}, bringing to foreground`
-              );
-              bringInstanceToForeground(existingInstance.instanceId);
-              return existingInstance.instanceId;
-            }
-            // If opening a specific applet that's not already open, create a new instance
-            // (don't reuse empty instances for different applets)
-          } else {
-            // Opening applet store (no path, no shareCode) - can reuse empty instance
-            const emptyInstance = appletInstances.find((inst) => {
-              const instData = inst.initialData as
-                | { path?: string; content?: string; shareCode?: string }
-                | undefined;
-              // Empty instance is one without path, content, or shareCode
-              return !instData?.path && !instData?.content && !instData?.shareCode;
-            });
-
-            if (emptyInstance) {
-              // Reuse the empty applet store instance
-              console.log(
-                `[useLaunchApp] Found empty applet store instance ${emptyInstance.instanceId}, reusing`
-              );
-              bringInstanceToForeground(emptyInstance.instanceId);
-              return emptyInstance.instanceId;
-            }
-          }
-        }
-      } else {
-        // Launching empty state - check if there's already an applet store window (empty instance)
-        const appletStoreInstance = appletInstances.find((inst) => {
-          const instData = inst.initialData as
-            | { path?: string; content?: string; shareCode?: string }
-            | undefined;
-          // An applet store window is one without path, content, or shareCode
-          return !instData?.path && !instData?.content && !instData?.shareCode;
-        });
-        
-        if (appletStoreInstance) {
-          // Bring the applet store window to foreground
-          console.log(
-            `[useLaunchApp] Found existing applet store window ${appletStoreInstance.instanceId}, bringing to foreground`
-          );
-          bringInstanceToForeground(appletStoreInstance.instanceId);
-          return appletStoreInstance.instanceId;
-        }
-        
-        // If no applet store window exists, create a new one
-        // (fall through to the launchAppInstance call below)
-        console.log(
-          `[useLaunchApp] No applet store window found, creating new one`
-        );
-      }
-    }
+    // Kyo only has bookmarks app, no special handling needed
+    // All apps use single-window mode by default
+    const multiWindow = options?.multiWindow || false;
 
     // Check if all instances of this app are minimized
     // If so, restore them instead of creating a new instance
@@ -154,13 +65,6 @@ export const useLaunchApp = () => {
         }
       }
     }
-
-    // Always use multi-window for apps that support it
-    const multiWindow =
-      options?.multiWindow ||
-      appId === "finder" ||
-      appId === "textedit" ||
-      appId === "applet-viewer";
 
     // Use the new instance-based launch system
     const instanceId = launchAppInstance(

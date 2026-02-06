@@ -425,9 +425,8 @@ const createUseAppStore = () =>
 
           // (applet-viewer removed)
 
-          // Check if app is lazy (most are, except Finder which is critical)
-          // We can assume non-Finder apps might need loading time
-          const isLazy = appId !== "finder";
+          // Check if app is lazy (all apps in Kyo are lazy-loaded)
+          const isLazy = true;
 
           const instances = {
             ...state.instances,
@@ -469,11 +468,9 @@ const createUseAppStore = () =>
           get().addRecentApp(appId);
           
           // Track recent document if initialData has a path
-          // Skip folders - Finder opens directories, not files
-          // Also skip common system folder paths
+          // Skip folders and directories
           const dataWithPath = initialData as { path?: string; name?: string; icon?: string; isDirectory?: boolean } | undefined;
-          const isFolder = 
-            appId === "finder" || 
+          const isFolder =
             dataWithPath?.isDirectory === true ||
             // Common folder paths that shouldn't be tracked as documents
             dataWithPath?.path === "/" ||
@@ -493,7 +490,7 @@ const createUseAppStore = () =>
               detail: {
                 instanceId: createdId,
                 isOpen: true,
-                isForeground: appId === "finder", // Only finder is foreground immediately
+                isForeground: true, // All apps are foreground when launched
               },
             })
           );
@@ -783,11 +780,7 @@ const createUseAppStore = () =>
           }
         }
         
-        const supportsMultiWindow =
-          multiWindow ||
-          appId === "textedit" ||
-          appId === "finder" ||
-          appId === "applet-viewer";
+        const supportsMultiWindow = multiWindow;
         if (!supportsMultiWindow) {
           const existing = Object.values(state.instances).find(
             (i) => i.appId === appId && i.isOpen
@@ -858,18 +851,7 @@ const createUseAppStore = () =>
               // Exclude launchOrigin from persisted state - restored windows should
               // animate from window center, not from the original icon position
               const { launchOrigin: _, ...instWithoutLaunchOrigin } = inst;
-              
-              // For applet-viewer, exclude content from initialData to prevent localStorage storage
-              if (inst.appId === "applet-viewer" && inst.initialData) {
-                const appletData = inst.initialData as { path?: string; content?: string; shareCode?: string; icon?: string; name?: string };
-                return [id, {
-                  ...instWithoutLaunchOrigin,
-                  initialData: {
-                    ...appletData,
-                    content: "", // Exclude content - it should be loaded from IndexedDB
-                  },
-                }];
-              }
+
               return [id, instWithoutLaunchOrigin];
             })
         ),

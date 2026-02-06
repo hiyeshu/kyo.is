@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 components/layout/WindowFrame 的窗口框架，依赖 components/ui 的 UI 组件，依赖 hooks/useBookmarkBoard 的书签管理逻辑，依赖 stores/useBookmarkStore 的书签状态
  * [OUTPUT]: 对外提供 BookmarkBoardApp 组件，书签应用主界面（书签网格、搜索、添加、编辑、删除、文件夹管理）
- * [POS]: apps/bookmark-board/components/ 的根组件，被 appRegistry 注册和加载，是书签应用的主容器
+ * [POS]: apps/bookmarks/components/ 的根组件，被 appRegistry 注册和加载，是书签应用的主容器
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -163,7 +163,7 @@ export function BookmarkBoardApp({
         title="Bookmark Board"
         onClose={onClose}
         isForeground={isForeground}
-        appId="bookmark-board"
+        appId="bookmarks"
         skipInitialSound={skipInitialSound}
         instanceId={instanceId}
         onNavigateNext={onNavigateNext}
@@ -336,13 +336,13 @@ export function BookmarkBoardApp({
           isOpen={h.helpOpen}
           onOpenChange={h.setHelpOpen}
           helpItems={helpItems}
-          appId="bookmark-board"
+          appId="bookmarks"
         />
         <AboutDialog
           isOpen={h.aboutOpen}
           onOpenChange={h.setAboutOpen}
           metadata={appMetadata}
-          appId="bookmark-board"
+          appId="bookmarks"
         />
         <ConfirmDialog
           isOpen={h.resetDialogOpen}
