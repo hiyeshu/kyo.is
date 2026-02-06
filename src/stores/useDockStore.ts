@@ -1,24 +1,22 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-// Dock item can be an app or a file/applet
+// Dock item can be an app, file/applet, or website link
 export interface DockItem {
-  type: "app" | "file";
-  id: string; // AppId for apps, or unique id for files
+  type: "app" | "file" | "link";
+  id: string; // AppId for apps, or unique id for files/links
   path?: string; // File path for file type items
-  name?: string; // Display name for file items
-  icon?: string; // Custom icon for file items (emoji or path)
+  name?: string; // Display name for file/link items
+  icon?: string; // Custom icon for file items (emoji or path), or favicon URL for links
+  url?: string; // URL for link type items
 }
 
 // Protected items that cannot be removed from dock
-export const PROTECTED_DOCK_ITEMS = new Set(["finder", "__applications__", "__trash__"]);
+export const PROTECTED_DOCK_ITEMS = new Set(["__applications__", "__trash__"]);
 
-// Default pinned items
+// Default pinned items - Kyo is bookmark-focused, start with bookmarks app
 const DEFAULT_PINNED_ITEMS: DockItem[] = [
-  { type: "app", id: "finder" },
-  { type: "app", id: "chats" },
-  { type: "app", id: "internet-explorer" },
-  { type: "app", id: "karaoke" },
+  { type: "app", id: "bookmarks" },
 ];
 
 interface DockStoreState {
@@ -55,6 +53,9 @@ export const useDockStore = create<DockStoreState>()(
           }
           if (item.type === "file" && existing.type === "file") {
             return existing.path === item.path;
+          }
+          if (item.type === "link" && existing.type === "link") {
+            return existing.url === item.url;
           }
           return false;
         });

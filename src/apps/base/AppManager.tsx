@@ -5,13 +5,15 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { AnyApp, AppState } from "./types";
 import { MenuBar } from "@/components/layout/MenuBar";
 import { Desktop } from "@/components/layout/Desktop";
 import { Dock } from "@/components/layout/Dock";
 import { ExposeView } from "@/components/layout/ExposeView";
+import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
+import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { getAppComponent, appRegistry } from "@/config/appRegistry";
 import type { AppId } from "@/config/appRegistry";
 import { useAppStoreShallow } from "@/stores/helpers";
@@ -54,14 +56,14 @@ export function AppManager({ apps }: AppManagerProps) {
   const currentTheme = useThemeStore((state) => state.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   
-  // For Mac/System7 themes, hide the desktop menubar when there's a foreground app
+  // For Mac/System7 themes, always show menubar for Kyo (bookmark-focused)
   // For XP/98, the menubar is actually a taskbar and should always show
-  // Always show menubar in expose mode
-  const hasForegroundApp = !!foregroundInstanceId;
-  const showDesktopMenuBar = isXpTheme || !hasForegroundApp || exposeMode;
+  const showDesktopMenuBar = true;
 
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [isExposeViewOpen, setIsExposeViewOpen] = useState(false);
+  const [isAddWebsiteDialogOpen, setIsAddWebsiteDialogOpen] = useState(false);
+  const [desktopContextMenuPos, setDesktopContextMenuPos] = useState<{ x: number; y: number } | null>(null);
 
 
   // Create legacy-compatible appStates from instances for Desktop component
@@ -384,10 +386,49 @@ export function AppManager({ apps }: AppManagerProps) {
     };
   }, []);
 
+  // Global right-click handler for desktop
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Check if click is on desktop background (not on windows, dock, menubar)
+      const isOnWindow = target.closest('[role="dialog"]') || target.closest('.window-frame');
+      const isOnDock = target.closest('.dock-container') || target.closest('[data-dock]');
+      const isOnMenuBar = target.closest('.menubar') || target.closest('[data-menubar]');
+      const isOnDesktopIcon = target.closest('[data-desktop-icon]');
+
+      // Only handle if clicking on desktop background
+      if (!isOnWindow && !isOnDock && !isOnMenuBar && !isOnDesktopIcon) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDesktopContextMenuPos({ x: e.clientX, y: e.clientY });
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, []);
+
+  // Desktop context menu items
+  const getDesktopContextMenuItems = useCallback((): MenuItem[] => {
+    return [
+      {
+        type: "item",
+        label: "Add Website",
+        onSelect: () => {
+          setDesktopContextMenuPos(null);
+          setIsAddWebsiteDialogOpen(true);
+        },
+      },
+    ];
+  }, []);
+
   return (
     <>
       {/* MenuBar: For XP/Win98, this is the taskbar (always shown).
-          For Mac/System7, hide when a foreground app is loaded since 
+          For Mac/System7, hide when a foreground app is loaded since
           the app renders its own MenuBar. */}
       {showDesktopMenuBar && <MenuBar />}
       {/* macOS Dock */}
@@ -397,8 +438,15 @@ export function AppManager({ apps }: AppManagerProps) {
         if (!instance.isOpen) return null;
 
         const appId = instance.appId as AppId;
-        const zIndex = getZIndexForInstance(instance.instanceId);
         const AppComponent = getAppComponent(appId);
+
+        // Skip invalid app instances (e.g., old app IDs from localStorage)
+        if (!AppComponent) {
+          console.warn(`[AppManager] Skipping invalid app instance: ${appId}`);
+          return null;
+        }
+
+        const zIndex = getZIndexForInstance(instance.instanceId);
 
         return (
           <div
@@ -449,6 +497,17 @@ export function AppManager({ apps }: AppManagerProps) {
       <ExposeView
         isOpen={isExposeViewOpen}
         onClose={() => setIsExposeViewOpen(false)}
+      />
+
+      <AddWebsiteDialog
+        isOpen={isAddWebsiteDialogOpen}
+        onOpenChange={setIsAddWebsiteDialogOpen}
+      />
+
+      <RightClickMenu
+        position={desktopContextMenuPos}
+        onClose={() => setDesktopContextMenuPos(null)}
+        items={getDesktopContextMenuItems()}
       />
     </>
   );

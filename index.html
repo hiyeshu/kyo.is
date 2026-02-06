@@ -8,14 +8,14 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="ryOS" />
+    <meta name="apple-mobile-web-app-title" content="Kyo" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
     />
     <meta
       name="description"
-      content="An AI OS experience, made with Cursor"
+      content="Kyo - Spatial bookmark manager and AI OS"
     />
     <meta name="theme-color" content="#000000" />
     <meta http-equiv="Permissions-Policy" content="camera=(self)" />
@@ -48,37 +48,37 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://os.ryo.lu/" />
-    <meta property="og:title" content="ryOS" />
+    <meta property="og:url" content="https://kyo.is/" />
+    <meta property="og:title" content="Kyo" />
     <meta
       property="og:description"
-      content="An AI OS experience, made with Cursor"
+      content="Kyo - Spatial bookmark manager and AI OS"
     />
-    <meta property="og:image" content="https://os.ryo.lu/icons/mac-512.png" />
-    <meta property="og:site_name" content="ryOS" />
+    <meta property="og:image" content="https://kyo.is/icons/mac-512.png" />
+    <meta property="og:site_name" content="Kyo" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="ryOS" />
+    <meta name="twitter:title" content="Kyo" />
     <meta
       name="twitter:description"
-      content="An AI OS experience, made with Cursor"
+      content="Kyo - Spatial bookmark manager and AI OS"
     />
-    <meta name="twitter:image" content="https://os.ryo.lu/icons/mac-512.png" />
+    <meta name="twitter:image" content="https://kyo.is/icons/mac-512.png" />
 
-    <title>ryOS</title>
+    <title>Kyo</title>
     
     <!-- Stale bundle detection: reload if cached index.html references missing JS bundles -->
     <script>
       (function() {
         // Prevent infinite reload loops - only try once per page load
-        var reloadKey = 'ryos-stale-reload';
+        var reloadKey = 'kyo-stale-reload';
         var lastReload = sessionStorage.getItem(reloadKey);
         var now = Date.now();
-        
+
         // If we reloaded in the last 10 seconds, don't reload again
         if (lastReload && (now - parseInt(lastReload, 10)) < 10000) {
-          console.warn('[ryOS] Recently reloaded for stale bundle, skipping to prevent loop');
+          console.warn('[Kyo] Recently reloaded for stale bundle, skipping to prevent loop');
           return;
         }
         
@@ -96,7 +96,7 @@
             var src = target.src || '';
             // Check if it's our JS bundle from /assets/
             if (src.indexOf('/assets/') !== -1 && src.indexOf('.js') !== -1) {
-              console.error('[ryOS] Bundle failed to load:', src);
+              console.error('[Kyo] Bundle failed to load:', src);
               triggerStaleReload('Script tag error: ' + src);
             }
           }
@@ -133,7 +133,7 @@
           // Only trigger for module errors or asset-specific errors
           // Avoid triggering for general "Failed to fetch" from API calls
           if (isModuleError || isAssetError) {
-            console.error('[ryOS] Module import failed:', message);
+            console.error('[Kyo] Module import failed:', message);
             triggerStaleReload('Module import error: ' + message);
           }
         });
@@ -142,11 +142,11 @@
           if (isReloading) return;
           isReloading = true;
           
-          console.warn('[ryOS] Stale bundle detected, clearing caches and reloading...', reason);
-          
+          console.warn('[Kyo] Stale bundle detected, clearing caches and reloading...', reason);
+
           // Mark that we're reloading to prevent loops
           sessionStorage.setItem(reloadKey, String(Date.now()));
-          
+
           // Clear all caches to ensure fresh assets
           if (window.caches) {
             caches.keys().then(function(names) {
@@ -154,7 +154,7 @@
                 return caches.delete(name);
               }));
             }).then(function() {
-              console.log('[ryOS] Caches cleared');
+              console.log('[Kyo] Caches cleared');
               doReload();
             }).catch(function() {
               doReload();
@@ -170,7 +170,7 @@
             navigator.serviceWorker.getRegistration().then(function(reg) {
               if (reg) {
                 reg.unregister().then(function() {
-                  console.log('[ryOS] Service worker unregistered');
+                  console.log('[Kyo] Service worker unregistered');
                   forceReload();
                 }).catch(function() {
                   forceReload();

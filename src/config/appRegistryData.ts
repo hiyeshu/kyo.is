@@ -5,7 +5,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-export const appIds = ["bookmark-board"] as const;
+export const appIds = ["bookmarks"] as const;
 
 export type AppId = (typeof appIds)[number];
 
@@ -15,7 +15,7 @@ export interface AppBasicInfo {
 }
 
 export const appNames: Record<AppId, string> = {
-  "bookmark-board": "Bookmark Board",
+  "bookmarks": "Bookmarks",
 };
 
 export function getAppBasicInfoList(): AppBasicInfo[] {

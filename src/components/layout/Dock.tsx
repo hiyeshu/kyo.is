@@ -22,6 +22,7 @@ import { useSound, Sounds } from "@/hooks/useSound";
 import type { AppInstance, LaunchOriginRect } from "@/stores/useAppStore";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
+import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { requestCloseWindow } from "@/utils/windowUtils";
 import {
   AnimatePresence,
@@ -608,7 +609,10 @@ function MacDock() {
     x: number;
     y: number;
   } | null>(null);
-  
+
+  // Add website dialog state
+  const [isAddWebsiteDialogOpen, setIsAddWebsiteDialogOpen] = useState(false);
+
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isSwapping, setIsSwapping] = useState(false);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -832,6 +836,15 @@ function MacDock() {
   // Get divider context menu items (dock settings)
   const getDividerContextMenuItems = useCallback((): MenuItem[] => {
     return [
+      {
+        type: "item",
+        label: "Add Website",
+        onSelect: () => {
+          setDividerContextMenuPos(null);
+          setIsAddWebsiteDialogOpen(true);
+        },
+      },
+      { type: "separator" },
       {
         type: "item",
         label: dockHiding ? t("common.dock.turnHidingOff") : t("common.dock.turnHidingOn"),
@@ -2133,13 +2146,82 @@ function MacDock() {
                         baseSize={scaledButtonSize}
                       />
                     );
+                  } else if (item.type === "link") {
+                    // Website link pinned item
+                    const icon = item.icon || "🌐";
+                    const label = item.name || "Website";
+                    const isEmojiIcon = !item.icon?.startsWith("/") && !item.icon?.startsWith("http");
+
+                    elements.push(
+                      <IconButton
+                        key={item.id}
+                        ref={(el) => {
+                          if (el) iconRefsMap.current.set(item.id, el);
+                          else iconRefsMap.current.delete(item.id);
+                        }}
+                        label={label}
+                        icon={icon}
+                        idKey={item.id}
+                        isEmoji={isEmojiIcon}
+                        onClick={() => {
+                          if (item.url) {
+                            window.open(item.url, "_blank", "noopener,noreferrer");
+                          }
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setContextMenu({
+                            x: e.clientX,
+                            y: e.clientY,
+                            items: [
+                              {
+                                label: t("dock.openInNewTab"),
+                                onClick: () => {
+                                  if (item.url) {
+                                    window.open(item.url, "_blank", "noopener,noreferrer");
+                                  }
+                                },
+                              },
+                              {
+                                label: t("dock.copyUrl"),
+                                onClick: () => {
+                                  if (item.url) {
+                                    navigator.clipboard.writeText(item.url);
+                                  }
+                                },
+                              },
+                              { type: "separator" },
+                              {
+                                label: t("dock.removeFromDock"),
+                                onClick: () => removeItem(item.id),
+                              },
+                            ],
+                          });
+                        }}
+                        mouseX={mouseX}
+                        magnifyEnabled={effectiveMagnifyEnabled}
+                        isNew={hasMounted && !seenIdsRef.current.has(item.id)}
+                        isHovered={hoveredId === item.id}
+                        isSwapping={isSwapping}
+                        onHover={() => handleIconHover(item.id)}
+                        onLeave={handleIconLeave}
+                        draggable
+                        onDragStart={(e) => handleItemDragStart(e, item.id, index)}
+                        onDragEnd={(e) => handleItemDragEnd(e, item.id)}
+                        onDragOver={(e) => handleItemDragOver(e, index)}
+                        isDragging={draggingItemId === item.id}
+                        isDraggedOutside={draggingItemId === item.id && isDraggedOutside}
+                        baseSize={scaledButtonSize}
+                      />
+                    );
                   } else {
                     // File/applet pinned item
                     const file = item.path ? fileStore.getItem(item.path) : null;
                     const isEmojiIcon = item.icon && !item.icon.startsWith("/") && !item.icon.startsWith("http") && item.icon.length <= 10;
                     const icon = isEmojiIcon ? item.icon! : (file?.icon || "📦");
                     const label = item.name || item.path?.split("/").pop()?.replace(/\.(app|html)$/i, "") || "Applet";
-                    
+
                     elements.push(
                       <IconButton
                         key={item.id}
@@ -2510,6 +2592,10 @@ function MacDock() {
         }}
         title={t("apps.finder.dialogs.emptyTrash.title")}
         description={t("apps.finder.dialogs.emptyTrash.description")}
+      />
+      <AddWebsiteDialog
+        isOpen={isAddWebsiteDialogOpen}
+        onOpenChange={setIsAddWebsiteDialogOpen}
       />
     </div>
   );

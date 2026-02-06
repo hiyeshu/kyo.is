@@ -5,6 +5,7 @@
 
 AboutDialog.tsx: 关于对话框，显示应用版本、作者、GitHub 链接、许可证
 AboutFinderDialog.tsx: 关于 Finder 对话框，显示 Finder 版本、系统信息
+AddWebsiteDialog.tsx: 添加网站对话框，输入 URL 添加网站链接到 Dock，自动抓取 favicon 和标题
 BootScreen.tsx: 启动屏幕，首次启动欢迎界面、加载动画、启动消息
 ConfirmDialog.tsx: 确认对话框，通用确认弹窗，支持自定义标题、内容、按钮
 HelpDialog.tsx: 帮助对话框，显示应用帮助文档、快捷键、使用指南

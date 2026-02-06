@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Clear Kyo Storage</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 { color: #333; }
+    button {
+      background: #007aff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover { background: #0051d5; }
+    button.danger { background: #ff3b30; }
+    button.danger:hover { background: #d32f2f; }
+    .success { color: #34c759; margin-top: 20px; }
+    .info { background: #e3f2fd; padding: 15px; border-radius: 4px; margin: 15px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧹 Kyo Storage Manager</h1>
+    <div class="info">
+      <strong>Why clear storage?</strong><br>
+      After renaming "Bookmark Board" to "Bookmarks", old data may cause errors.
+      Clearing storage will reset the app to defaults.
+    </div>
+    
+    <button onclick="clearAll()">Clear All Storage</button>
+    <button onclick="clearAppStore()">Clear App Store Only</button>
+    <button onclick="clearDockStore()">Clear Dock Only</button>
+    <button class="danger" onclick="window.location.href='/'">← Back to Kyo</button>
+    
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function showResult(msg, isSuccess = true) {
+      const el = document.getElementById('result');
+      el.innerHTML = `<p class="${isSuccess ? 'success' : 'error'}">${msg}</p>`;
+      if (isSuccess) {
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+      }
+    }
+
+    function clearAll() {
+      localStorage.clear();
+      showResult('✅ All storage cleared! Redirecting...');
+    }
+
+    function clearAppStore() {
+      localStorage.removeItem('ryos:app-store');
+      showResult('✅ App store cleared! Redirecting...');
+    }
+
+    function clearDockStore() {
+      localStorage.removeItem('dock-storage');
+      showResult('✅ Dock storage cleared! Redirecting...');
+    }
+
+    // Show current storage
+    console.log('Current localStorage:', Object.keys(localStorage));
+  </script>
+</body>
+</html>

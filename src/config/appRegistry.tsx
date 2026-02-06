@@ -85,12 +85,12 @@ function createLazyComponent<T = unknown>(
 
 // ─── 懒加载组件 ──────────────────────────────────────────────────────────────
 
-const LazyBookmarkBoardApp = createLazyComponent(
+const LazyBookmarksApp = createLazyComponent(
   () =>
     import(
       "@/apps/bookmark-board/components/BookmarkBoardApp"
     ).then((m) => ({ default: m.BookmarkBoardApp })),
-  "bookmark-board"
+  "bookmarks"
 );
 
 // ─── 元数据 ──────────────────────────────────────────────────────────────────
@@ -103,12 +103,12 @@ import {
 // ─── 注册表 ──────────────────────────────────────────────────────────────────
 
 export const appRegistry = {
-  "bookmark-board": {
-    id: "bookmark-board" as const,
-    name: "Bookmark Board",
+  "bookmarks": {
+    id: "bookmarks" as const,
+    name: "Bookmarks",
     icon: { type: "image" as const, src: bookmarkBoardMetadata.icon },
     description: "Your spatial bookmark manager",
-    component: LazyBookmarkBoardApp,
+    component: LazyBookmarksApp,
     helpItems: bookmarkBoardHelpItems,
     metadata: bookmarkBoardMetadata,
     windowConfig: {
@@ -139,10 +139,23 @@ export const getNonFinderApps = (
 
 export const getAppMetadata = (appId: AppId) => appRegistry[appId].metadata;
 
-export const getAppComponent = (appId: AppId) => appRegistry[appId].component;
+export const getAppComponent = (appId: AppId) => {
+  const app = appRegistry[appId];
+  if (!app) {
+    console.warn(`[appRegistry] App "${appId}" not found`);
+    return null;
+  }
+  return app.component;
+};
 
-export const getWindowConfig = (appId: AppId): WindowConstraints =>
-  appRegistry[appId].windowConfig || defaultWindowConstraints;
+export const getWindowConfig = (appId: AppId): WindowConstraints => {
+  const app = appRegistry[appId];
+  if (!app) {
+    console.warn(`[appRegistry] App "${appId}" not found, using default config`);
+    return defaultWindowConstraints;
+  }
+  return app.windowConfig || defaultWindowConstraints;
+};
 
 export const getMobileWindowSize = (appId: AppId): WindowSize => {
   const config = getWindowConfig(appId);

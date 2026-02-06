@@ -10,6 +10,7 @@ import { AppId, getAppIconPath } from "@/config/appRegistry";
 import { useState, useRef, useCallback } from "react";
 import { useWallpaper } from "@/hooks/useWallpaper";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
+import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
@@ -56,6 +57,7 @@ export function Desktop({
     y: number;
   } | null>(null);
   const [contextMenuAppId, setContextMenuAppId] = useState<string | null>(null);
+  const [isAddWebsiteDialogOpen, setIsAddWebsiteDialogOpen] = useState(false);
 
   const currentTheme = useThemeStore((state) => state.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
@@ -133,7 +135,8 @@ export function Desktop({
   };
 
   // ─── App list (filtered) ──────────────────────────────────────────
-  const displayedApps = apps.sort((a, b) => a.name.localeCompare(b.name));
+  // Kyo is bookmark-focused, no desktop icons needed
+  const displayedApps: AnyApp[] = [];
 
   // ─── Context menu ─────────────────────────────────────────────────
   const getContextMenuItems = (): MenuItem[] => {
@@ -150,7 +153,17 @@ export function Desktop({
         },
       ];
     }
-    return [];
+    // Desktop context menu (blank area)
+    return [
+      {
+        type: "item",
+        label: "Add Website",
+        onSelect: () => {
+          setContextMenuPos(null);
+          setIsAddWebsiteDialogOpen(true);
+        },
+      },
+    ];
   };
 
   return (
@@ -272,6 +285,10 @@ export function Desktop({
           setContextMenuAppId(null);
         }}
         items={getContextMenuItems()}
+      />
+      <AddWebsiteDialog
+        isOpen={isAddWebsiteDialogOpen}
+        onOpenChange={setIsAddWebsiteDialogOpen}
       />
     </div>
   );
