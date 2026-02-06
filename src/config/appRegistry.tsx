@@ -88,7 +88,7 @@ function createLazyComponent<T = unknown>(
 const LazyBookmarksApp = createLazyComponent(
   () =>
     import(
-      "@/apps/bookmark-board/components/BookmarkBoardApp"
+      "@/apps/bookmarks/components/BookmarkBoardApp"
     ).then((m) => ({ default: m.BookmarkBoardApp })),
   "bookmarks"
 );
@@ -98,7 +98,7 @@ const LazyBookmarksApp = createLazyComponent(
 import {
   appMetadata as bookmarkBoardMetadata,
   helpItems as bookmarkBoardHelpItems,
-} from "@/apps/bookmark-board/metadata";
+} from "@/apps/bookmarks/metadata";
 
 // ─── 注册表 ──────────────────────────────────────────────────────────────────
 
