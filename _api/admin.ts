@@ -1,7 +1,14 @@
 /**
+ * [INPUT]: 依赖 Redis 的用户数据存储，依赖 _utils/auth 的认证验证，依赖 _utils/_rate-limit 的速率限制管理，依赖 _utils/_memory 的记忆系统查询
+ * [OUTPUT]: 对外提供 POST /api/admin 端点，管理员操作接口（用户管理、速率限制重置、内存查看、系统监控）
+ * [POS]: _api/ 的管理员专用端点，仅 ryo 用户可访问，是系统管理和监控的入口
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
+/**
  * Admin API endpoints
  * Only accessible by the admin user (ryo)
- * 
+ *
  * Node.js runtime with terminal logging
  */
 

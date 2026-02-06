@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 stores/useAppStore 的应用状态和启动方法，依赖 config/appRegistry 的应用 ID 类型
+ * [OUTPUT]: 对外提供 useLaunchApp hook，应用启动逻辑（启动应用、多实例管理、窗口恢复、前台切换）
+ * [POS]: hooks/ 的应用启动 hook，被 Desktop/Dock/MenuBar 等组件使用，是应用启动的统一入口
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import { useAppStore, LaunchOriginRect } from "@/stores/useAppStore";
 import { AppId } from "@/config/appRegistry";
 

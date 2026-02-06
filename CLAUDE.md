@@ -1,4 +1,84 @@
 
+# Kyo.is — Web-Based Agentic AI OS
+React 19 + TypeScript + Vite + Tailwind CSS + Zustand + Vercel AI SDK + Tauri
+
+<directory>
+_api/ - Vercel 无服务器 API 端点 (15+ 文件: AI 聊天、歌词、翻译、链接预览等)
+src/ - 前端源码 (8 子目录: apps, components, config, hooks, lib, stores, styles, types)
+  apps/ - 应用模块，每个应用独立目录 (bookmark-board, chat, finder, textedit, macpaint...)
+  components/ - 共享 React 组件 (4 子目录: ui, layout, shared, dialogs)
+  config/ - 配置文件 (应用清单、主题、壁纸、音效)
+  hooks/ - 自定义 React Hooks (窗口管理、文件系统、AI 助手)
+  lib/ - 工具库 (i18n、着色器、音频处理)
+  stores/ - Zustand 状态管理 (系统、窗口、文件、用户)
+  styles/ - 全局样式与主题 CSS
+  types/ - TypeScript 类型定义
+public/ - 静态资源 (图标、壁纸、音效、字体)
+src-tauri/ - Tauri 桌面应用配置 (Rust 后端)
+scripts/ - 构建与开发脚本 (图标生成、文档生成、i18n 工具)
+tests/ - 测试套件 (API 测试、功能测试)
+docs/ - 项目文档 (架构、API 参考、开发指南)
+</directory>
+
+<config>
+package.json - 依赖管理，Bun 1.3.5，React 19，50+ 脚本命令
+vite.config.ts - Vite 构建配置，PWA 插件，Vercel 适配器
+tailwind.config.js - Tailwind CSS 配置，自定义主题，动画扩展
+tsconfig.json - TypeScript 编译配置，严格模式
+middleware.ts - Vercel Edge 中间件，路由重写，API 代理
+vercel.json - Vercel 部署配置，无服务器函数，重定向规则
+components.json - shadcn/ui 组件配置
+eslint.config.js - ESLint 规则，React Hooks 检查
+</config>
+
+<architecture>
+数据流: Zustand 全局状态 + React Context 局部状态
+窗口系统: 多实例窗口管理器，拖拽、缩放、最小化、层级控制
+文件系统: 虚拟 FS，IndexedDB 持久化，备份/恢复
+AI 集成: Vercel AI SDK，支持 OpenAI/Anthropic/Google，流式响应
+实时通信: Pusher WebSocket，聊天室、在线状态
+主题系统: System 7 / Aqua / Windows XP / Windows 98，动态切换
+路由: 无路由器，窗口即应用实例，状态驱动 UI
+</architecture>
+
+<tech_stack>
+前端: React 19 + TypeScript + Tailwind CSS + Framer Motion + shadcn/ui
+音频: Tone.js + WaveSurfer.js + Web Audio API
+3D: Three.js (着色器、屏保)
+编辑器: TipTap (富文本) + Monaco (代码)
+状态: Zustand (全局) + React Context (局部)
+存储: IndexedDB + LocalStorage + Upstash Redis
+AI: OpenAI + Anthropic + Google (Vercel AI SDK)
+实时: Pusher (WebSocket)
+构建: Vite + Bun + esbuild
+部署: Vercel (Edge Functions + Serverless)
+桌面: Tauri 2.0 (可选)
+</tech_stack>
+
+<design_constraints>
+1. 窗口系统: 所有应用必须通过 useWindowManager 注册，支持多实例
+2. 文件系统: 使用 useFileSystem hook，禁止直接操作 IndexedDB
+3. 主题: 只使用 CSS 变量，禁止硬编码颜色/间距
+4. 状态管理: 全局状态用 Zustand，局部状态用 useState/useReducer
+5. AI 调用: 统一通过 /api/chat 端点，使用 Vercel AI SDK
+6. 国际化: 所有文本必须通过 i18next，禁止硬编码字符串
+7. 性能: 大型列表使用虚拟滚动，图片懒加载，代码分割
+8. 安全: API 端点验证输入，DOMPurify 清理 HTML，CSP 头部
+</design_constraints>
+
+<development_workflow>
+本地开发: bun run dev:vercel (推荐) 或 bun dev
+构建: bun run build (生成 .vercel/output/)
+预览: bun run preview
+测试: bun test (运行所有测试)
+Lint: bun run lint
+桌面应用: bun run tauri:dev / bun run tauri:build
+国际化: bun run i18n:extract → i18n:sync → i18n:translate
+文档生成: bun run generate:docs
+</development_workflow>
+
+法则: 极简·稳定·导航·版本精确
+
 ---
 
 <identity>

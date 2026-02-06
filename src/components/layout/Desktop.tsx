@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 apps/base/types 的应用类型，依赖 config/appRegistry 的应用配置，依赖 hooks/useWallpaper 的壁纸管理，依赖 hooks/useLongPress 的长按检测，依赖 stores/useThemeStore 的主题状态
+ * [OUTPUT]: 对外提供 Desktop 组件，桌面环境核心（壁纸显示、桌面图标、右键菜单、应用启动）
+ * [POS]: components/layout/ 的桌面组件，被 App.tsx 使用，是桌面环境的主容器
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import { AnyApp } from "@/apps/base/types";
 import { AppId, getAppIconPath } from "@/config/appRegistry";
 import { useState, useRef, useCallback } from "react";

@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 zustand 的 create，依赖 themes/types 的主题类型定义
+ * [OUTPUT]: 对外提供 useThemeStore hook，主题状态管理（当前主题、主题切换、主题水合、遗留 CSS 加载）
+ * [POS]: stores/ 的主题状态管理，被所有组件消费，控制全局主题切换和 CSS 加载
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import { create } from "zustand";
 import { OsThemeId } from "@/themes/types";
 

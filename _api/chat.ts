@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 Vercel AI SDK 的 streamText/smoothStream，依赖 _utils/_aiModels 的模型配置，依赖 _utils/_aiPrompts 的提示词模板，依赖 _utils/_memory 的记忆系统，依赖 _utils/auth 的认证验证，依赖 chat/tools 的工具调用
+ * [OUTPUT]: 对外提供 POST /api/chat 端点，流式 AI 对话响应，支持工具调用、记忆系统、多模型切换
+ * [POS]: _api/ 的核心 AI 聊天端点，被前端 Chats 应用和 AI 助手消费，是系统 AI 能力的中枢
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   streamText,

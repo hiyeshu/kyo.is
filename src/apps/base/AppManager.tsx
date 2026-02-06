@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 React hooks (useEffect/useState)，依赖 apps/base/types 的应用类型，依赖 components/layout 的布局组件，依赖 config/appRegistry 的应用注册表，依赖 stores/useAppStore 的应用状态
+ * [OUTPUT]: 对外提供 AppManager 组件，应用管理器核心（管理所有应用实例、窗口生命周期、层级控制、Exposé 视图）
+ * [POS]: apps/base/ 的应用管理器，被 App.tsx 使用，是所有应用的容器和生命周期管理者
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AnyApp, AppState } from "./types";

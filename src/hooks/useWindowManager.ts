@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 React hooks (useState/useCallback/useRef/useEffect)，依赖 types/types 的窗口类型，依赖 stores/useAppStore 的应用状态，依赖 hooks/useSound 的音效，依赖 config/appRegistry 的窗口配置
+ * [OUTPUT]: 对外提供 useWindowManager hook，窗口管理核心功能（拖拽、缩放、最小化、层级、位置持久化）
+ * [POS]: hooks/ 的核心窗口管理 hook，被所有应用组件使用，是窗口系统的核心逻辑
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
   WindowPosition,

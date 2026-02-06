@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 hooks/useWindowManager 的窗口管理，依赖 hooks/useSound 的音效，依赖 hooks/useVibration 的震动反馈，依赖 config/appRegistry 的窗口配置，依赖 themes 的主题配置，依赖 framer-motion 的动画
+ * [OUTPUT]: 对外提供 WindowFrame 组件，窗口框架容器（标题栏、控制按钮、拖拽、缩放、最小化、Exposé 动画）
+ * [POS]: components/layout/ 的窗口框架组件，被 AppManager 使用，是所有应用窗口的外层容器
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { ResizeType } from "@/types/types";
 import { useSound, Sounds } from "@/hooks/useSound";

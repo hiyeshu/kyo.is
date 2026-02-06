@@ -1,7 +1,7 @@
 /**
- * [INPUT]: WindowFrame, UI 组件, useBookmarkBoard hook, BookmarkBoardMenuBar
- * [OUTPUT]: BookmarkBoardApp 组件
- * [POS]: bookmark-board 的根组件，被 appRegistry 消费
+ * [INPUT]: 依赖 components/layout/WindowFrame 的窗口框架，依赖 components/ui 的 UI 组件，依赖 hooks/useBookmarkBoard 的书签管理逻辑，依赖 stores/useBookmarkStore 的书签状态
+ * [OUTPUT]: 对外提供 BookmarkBoardApp 组件，书签应用主界面（书签网格、搜索、添加、编辑、删除、文件夹管理）
+ * [POS]: apps/bookmark-board/components/ 的根组件，被 appRegistry 注册和加载，是书签应用的主容器
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
