@@ -166,7 +166,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       manifestFilename: "manifest.json",
       includeAssets: [
-        "favicon.ico",
+        "favicon.svg",
+        "frame-8.svg",
         "apple-touch-icon.png",
         "icons/*.png",
         "fonts/*.woff2",

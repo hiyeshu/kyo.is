@@ -495,6 +495,7 @@ const STATIC_ASSETS = [
   // Splash screens
   '/assets/splash/hello.svg',
   '/assets/splash/macos.svg',
+  '/frame-8.svg',
   '/assets/splash/win98.png',
   '/assets/splash/xp.png',
   // Video player controls

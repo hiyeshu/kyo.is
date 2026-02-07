@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dialog";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { cn } from "@/lib/utils";
-import { ThemedIcon } from "@/components/shared/ThemedIcon";
 import { useTranslation } from "react-i18next";
 import { getTranslatedAppName, AppId } from "@/utils/i18n";
 
@@ -42,11 +41,11 @@ export function AboutDialog({
 
   const dialogContent = (
     <div className="flex flex-col items-center justify-center space-y-2 py-8 px-6">
-      <div>
-        <ThemedIcon
-          name={metadata.icon}
-          alt="App Icon"
-          className="w-12 h-12 mx-auto [image-rendering:pixelated]"
+      <div className="w-24 h-24 mx-auto flex items-center justify-center">
+        <img
+          src="/frame-8.svg"
+          alt="Kyo"
+          className="w-full h-full object-contain"
         />
       </div>
       <div

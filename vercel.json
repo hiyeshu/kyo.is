@@ -144,7 +144,7 @@
       ]
     },
     {
-      "source": "/:path(apple-touch-icon.png|favicon.ico)",
+      "source": "/:path(apple-touch-icon.png|favicon.svg)",
       "headers": [
         {
           "key": "Cache-Control",
