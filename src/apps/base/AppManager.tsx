@@ -6,7 +6,6 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
 import type { AnyApp, AppState } from "./types";
 import { MenuBar } from "@/components/layout/MenuBar";
 import { Desktop } from "@/components/layout/Desktop";
@@ -18,7 +17,6 @@ import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { getAppComponent, appRegistry } from "@/config/appRegistry";
 import type { AppId } from "@/config/appRegistry";
 import { useAppStoreShallow } from "@/stores/helpers";
-import { extractCodeFromPath } from "@/utils/sharedUrl";
 import { toast } from "sonner";
 import { requestCloseWindow } from "@/utils/windowUtils";
 
@@ -29,8 +27,6 @@ interface AppManagerProps {
 const BASE_Z_INDEX = 1;
 
 export function AppManager({ apps }: AppManagerProps) {
-  const { t } = useTranslation();
-
   // Instance-based state
   const {
     instances,
@@ -110,201 +106,35 @@ export function AppManager({ apps }: AppManagerProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Process shared URLs and direct app launch paths
+  // Process direct app launch paths (Kyo.is: simplified, no share codes)
   useEffect(() => {
-    const handleUrlNavigation = async () => {
+    const handleUrlNavigation = () => {
       const path = window.location.pathname;
-      console.log("[AppManager] Checking path:", path); // Keep this log for debugging
+      console.log("[AppManager] Checking path:", path);
 
-      const launchAppletViewer = () => {
-        toast.info(t("common.loading.openingAppletStore"));
-
-        setTimeout(() => {
-          const event = new CustomEvent("launchApp", {
-            detail: { appId: "applet-viewer" as AppId },
-          });
-          window.dispatchEvent(event);
-          window.history.replaceState({}, "", "/");
-        }, 100);
-      };
-
-      if (path === "/applet-viewer" || path === "/applet-viewer/") {
-        launchAppletViewer();
-      } else if (path.startsWith("/internet-explorer/")) {
-        const shareCode = extractCodeFromPath(path);
-        if (shareCode) {
-          // Handle shared Internet Explorer URL - Pass code directly
-          console.log("[AppManager] Detected IE share code:", shareCode);
-          toast.info(t("common.loading.openingSharedIELink"));
-
-          // Use setTimeout to ensure the event listener is ready
-          setTimeout(() => {
-            const event = new CustomEvent("launchApp", {
-              detail: {
-                appId: "internet-explorer",
-                initialData: {
-                  shareCode: shareCode,
-                },
-              },
-            });
-            window.dispatchEvent(event);
-            console.log(
-              "[AppManager] Dispatched launchApp event for IE share code.",
-            );
-          }, 0);
-
-          window.history.replaceState({}, "", "/"); // Clean URL
-        }
-      } else if (path.startsWith("/applet-viewer/")) {
-        const shareCode = extractCodeFromPath(path);
-        if (shareCode) {
-          // Handle shared Applet Viewer URL - Pass code directly
-          console.log("[AppManager] Detected applet share code:", shareCode);
-          toast.info(t("common.loading.openingSharedApplet"));
-
-          // Use setTimeout to ensure the event listener is ready
-          setTimeout(() => {
-            const event = new CustomEvent("launchApp", {
-              detail: {
-                appId: "applet-viewer",
-                initialData: {
-                  shareCode: shareCode,
-                  path: "", // Empty path for shared applets
-                  content: "", // Will be fetched from API
-                  icon: undefined, // Will be set from API response
-                  name: undefined, // Will be set from API response
-                },
-              },
-            });
-            window.dispatchEvent(event);
-            console.log(
-              "[AppManager] Dispatched launchApp event for applet share code.",
-            );
-          }, 0);
-
-          window.history.replaceState({}, "", "/"); // Clean URL
-        } else {
-          console.log(
-            "[AppManager] No share code detected for applet viewer path, opening base app.",
-          );
-          launchAppletViewer();
-        }
-      } else if (path.startsWith("/ipod/")) {
-        const videoId = path.substring("/ipod/".length);
-        if (videoId) {
-          console.log("[AppManager] Detected iPod videoId:", videoId);
-          toast.info(t("common.loading.openingSharedIpodTrack"));
-          setTimeout(() => {
-            const event = new CustomEvent("launchApp", {
-              detail: {
-                appId: "ipod",
-                initialData: { videoId },
-              },
-            });
-            window.dispatchEvent(event);
-            console.log(
-              "[AppManager] Dispatched launchApp event for iPod videoId.",
-            );
-          }, 0);
-          window.history.replaceState({}, "", "/"); // Clean URL
-        }
-      } else if (path.startsWith("/listen/")) {
-        const sessionId = path.substring("/listen/".length).split("?")[0]; // Remove query params from sessionId
-        
-        if (sessionId) {
-          console.log("[AppManager] Detected listen session:", sessionId, "app: karaoke");
-          toast.info("Opening live session...");
-          // Use 100ms delay to ensure event listener is ready after store hydration
-          setTimeout(() => {
-            const event = new CustomEvent("launchApp", {
-              detail: {
-                appId: "karaoke",
-                initialData: { listenSessionId: sessionId },
-              },
-            });
-            window.dispatchEvent(event);
-            console.log(
-              `[AppManager] Dispatched launchApp event for listen session in karaoke.`,
-            );
-          }, 100);
-          window.history.replaceState({}, "", "/"); // Clean URL
-        }
-      } else if (path.startsWith("/karaoke/")) {
-        const videoId = path.substring("/karaoke/".length);
-        if (videoId) {
-          console.log("[AppManager] Detected Karaoke videoId:", videoId);
-          toast.info(t("common.loading.openingSharedKaraokeTrack"));
-          setTimeout(() => {
-            const event = new CustomEvent("launchApp", {
-              detail: {
-                appId: "karaoke",
-                initialData: { videoId },
-              },
-            });
-            window.dispatchEvent(event);
-            console.log(
-              "[AppManager] Dispatched launchApp event for Karaoke videoId.",
-            );
-          }, 0);
-          window.history.replaceState({}, "", "/"); // Clean URL
-        }
-      } else if (path.startsWith("/videos/")) {
-        const videoId = path.substring("/videos/".length);
-        if (videoId) {
-          console.log("[AppManager] Detected Videos videoId:", videoId);
-          toast.info(t("common.loading.openingSharedVideo"));
-          setTimeout(() => {
-            const event = new CustomEvent("launchApp", {
-              detail: {
-                appId: "videos",
-                initialData: { videoId },
-              },
-            });
-            window.dispatchEvent(event);
-            console.log(
-              "[AppManager] Dispatched launchApp event for Videos videoId.",
-            );
-          }, 0);
-          window.history.replaceState({}, "", "/"); // Clean URL
-        }
-      } else if (path.startsWith("/") && path.length > 1) {
-        // Handle direct app launch path (e.g., /soundboard)
-        const potentialAppId = path.substring(1) as AppId;
+      // Handle direct app launch path (e.g., /bookmarks, /theme-editor)
+      if (path.startsWith("/") && path.length > 1) {
+        const potentialAppId = path.substring(1).split("/")[0] as AppId;
 
         // Check if it's a valid app ID from the registry
         if (potentialAppId in appRegistry) {
           const appName = appRegistry[potentialAppId]?.name || potentialAppId;
           toast.info(`Launching ${appName}...`);
 
-          // Use a slight delay to ensure the app launch event is caught
           setTimeout(() => {
             const event = new CustomEvent("launchApp", {
               detail: { appId: potentialAppId },
             });
             window.dispatchEvent(event);
-            window.history.replaceState({}, "", "/"); // Clean URL
-          }, 100); // Small delay might help robustness
-        } else {
-          // Optional: Handle invalid app paths if necessary, or just ignore
-          // console.log(`Path ${path} does not correspond to a known app.`);
-          // Maybe redirect to root or show a 404 within the app context
-          // For now, just clean the URL if it wasn't a valid app path or IE code
-          // Update condition: Only clean if it's not a handled share path (we handle cleaning above)
-          // Update condition: Also check for ipod, videos, and applet-viewer paths
-          if (
-            !path.startsWith("/internet-explorer/") &&
-            !path.startsWith("/applet-viewer/") &&
-            !path.startsWith("/ipod/") &&
-            !path.startsWith("/karaoke/") &&
-            !path.startsWith("/videos/")
-          ) {
             window.history.replaceState({}, "", "/");
-          }
+          }, 100);
+        } else {
+          // Unknown path, clean URL
+          window.history.replaceState({}, "", "/");
         }
       }
     };
 
-    // Process URL on initial load
     handleUrlNavigation();
   }, []); // Run only once on mount
 

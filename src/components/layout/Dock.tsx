@@ -11,17 +11,15 @@ import { useThemeStore } from "@/stores/useThemeStore";
 import { useAppStoreShallow } from "@/stores/helpers";
 import { ThemedIcon } from "@/components/shared/ThemedIcon";
 import { AppId, getAppIconPath, appRegistry, getNonFinderApps } from "@/config/appRegistry";
-import { getTranslatedAppName, getTranslatedFolderNameFromName } from "@/utils/i18n";
+import { getTranslatedAppName } from "@/utils/i18n";
 import { useLaunchApp } from "@/hooks/useLaunchApp";
 import { useDockStore, PROTECTED_DOCK_ITEMS, type DockItem } from "@/stores/useDockStore";
-import { useFinderStore } from "@/stores/useFinderStore";
-import { useFilesStore } from "@/stores/useFilesStore";
+import { useBookmarkStore } from "@/stores/useBookmarkStore";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useSound, Sounds } from "@/hooks/useSound";
 import type { AppInstance, LaunchOriginRect } from "@/stores/useAppStore";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
-import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { requestCloseWindow } from "@/utils/windowUtils";
 import {
@@ -46,6 +44,7 @@ interface IconButtonProps {
   idKey: string;
   showIndicator?: boolean;
   isEmoji?: boolean;
+  isBookmark?: boolean; // iOS-style rounded container for bookmark favicons
   onDragOver?: React.DragEventHandler;
   onDrop?: React.DragEventHandler;
   onDragLeave?: React.DragEventHandler;
@@ -175,6 +174,7 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
       showIndicator = false,
       isLoading = false,
       isEmoji = false,
+      isBookmark = false,
       onDragOver,
       onDrop,
       onDragLeave,
@@ -400,7 +400,47 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
               },
             }}
           >
-            {isEmoji ? (
+            {isBookmark ? (
+              // iOS-style bookmark icon: clip favicon to rounded rect, white bg for transparency
+              <div
+                className="select-none"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "22%",
+                  overflow: "hidden",
+                  pointerEvents: "none",
+                  // White background shows through if favicon has transparency
+                  backgroundColor: "#ffffff",
+                  boxShadow: `
+                    0 1px 3px rgba(0,0,0,0.12),
+                    0 1px 2px rgba(0,0,0,0.08)
+                  `,
+                }}
+              >
+                <img
+                  src={icon}
+                  alt={label}
+                  draggable={false}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    pointerEvents: "none",
+                  }}
+                  onError={(e) => {
+                    // Fallback to globe emoji on error
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                    target.parentElement!.innerHTML = "🌐";
+                    target.parentElement!.style.fontSize = `${baseButtonSize * 0.5}px`;
+                    target.parentElement!.style.display = "flex";
+                    target.parentElement!.style.alignItems = "center";
+                    target.parentElement!.style.justifyContent = "center";
+                  }}
+                />
+              </div>
+            ) : isEmoji ? (
               <motion.span
                 className="select-none pointer-events-none flex items-end justify-center"
                 style={{
@@ -569,11 +609,6 @@ function MacDock() {
   const { play: playZoomMinimize } = useSound(Sounds.WINDOW_ZOOM_MINIMIZE);
 
   const launchApp = useLaunchApp();
-  const fileStore = useFilesStore();
-  const trashIcon = useFilesStore(
-    (s) => s.items["/Trash"]?.icon || "/icons/trash-empty.png"
-  );
-  const finderInstances = useFinderStore((s) => s.instances);
   
   // Admin check stub (chats removed)
   const isAdmin = false;
@@ -592,16 +627,13 @@ function MacDock() {
     setMagnification: setDockMagnification,
   } = useDockStore();
   
-  const [isDraggingOverTrash, setIsDraggingOverTrash] = useState(false);
-  const [trashContextMenuPos, setTrashContextMenuPos] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  // Bookmark store for bookmark references in dock
+  const bookmarkStore = useBookmarkStore();
+  
   const [applicationsContextMenuPos, setApplicationsContextMenuPos] = useState<{
     x: number;
     y: number;
   } | null>(null);
-  const [isEmptyTrashDialogOpen, setIsEmptyTrashDialogOpen] = useState(false);
   const dockContainerRef = useRef<HTMLDivElement | null>(null);
   const dockBarRef = useRef<HTMLDivElement | null>(null);
   const iconRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -766,7 +798,7 @@ function MacDock() {
     
     // Don't start timer if dragging or context menu open
     if (draggingItemId || externalDragIndex !== null || 
-        trashContextMenuPos || applicationsContextMenuPos || appContextMenu || dividerContextMenuPos || urlContextMenu) {
+        applicationsContextMenuPos || appContextMenu || dividerContextMenuPos || urlContextMenu) {
       return;
     }
     
@@ -787,7 +819,7 @@ function MacDock() {
         restartAutoHideTimer();
       }
     }, delay);
-  }, [isPhone, dockHiding, draggingItemId, externalDragIndex, trashContextMenuPos, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos, urlContextMenu]);
+  }, [isPhone, dockHiding, draggingItemId, externalDragIndex, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos, urlContextMenu]);
   
   // Restart auto-hide timer when context menus close or dragging ends
   useEffect(() => {
@@ -795,7 +827,7 @@ function MacDock() {
     if (dockHiding && isDockVisible) {
       restartAutoHideTimer();
     }
-  }, [dockHiding, isDockVisible, trashContextMenuPos, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos, urlContextMenu, draggingItemId, externalDragIndex, restartAutoHideTimer]);
+  }, [dockHiding, isDockVisible, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos, urlContextMenu, draggingItemId, externalDragIndex, restartAutoHideTimer]);
   
   // Show dock (called when mouse enters dock zone)
   const showDock = useCallback(() => {
@@ -822,7 +854,7 @@ function MacDock() {
     // Don't hide while dragging
     if (draggingItemId || externalDragIndex !== null) return;
     // Don't hide while context menu is open
-    if (trashContextMenuPos || applicationsContextMenuPos || appContextMenu || dividerContextMenuPos || urlContextMenu) return;
+    if (applicationsContextMenuPos || appContextMenu || dividerContextMenuPos || urlContextMenu) return;
     
     // Clear auto-hide timer
     if (autoHideTimerRef.current) {
@@ -831,7 +863,7 @@ function MacDock() {
     }
     
     setIsDockVisible(false);
-  }, [dockHiding, draggingItemId, externalDragIndex, trashContextMenuPos, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos]);
+  }, [dockHiding, draggingItemId, externalDragIndex, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos]);
 
   // Divider context menu handler
   const handleDividerContextMenu = useCallback((e: React.MouseEvent) => {
@@ -896,12 +928,7 @@ function MacDock() {
   // Use long press hook for divider
   const dividerLongPress = useLongPress(handleDividerLongPress);
 
-  const allItems = useFilesStore((s) => s.items);
-  const trashItems = useMemo(
-    () => Object.values(allItems).filter((item) => item.status === "trashed"),
-    [allItems]
-  );
-  const isTrashEmpty = trashItems.length === 0;
+  // Note: File system (allItems, trashItems, isTrashEmpty) removed in Kyo.is
 
   // Helper to get applet info (icon and name) from instance
   // Note: This function is not used in Kyo (only bookmarks app exists)
@@ -1000,7 +1027,7 @@ function MacDock() {
       const data = JSON.parse(jsonData);
       console.log("[Dock] Drop data:", data);
       
-      const { path, name, appId, aliasType, aliasTarget } = data;
+      const { appId, aliasType, aliasTarget } = data;
       
       // Determine what to add to dock
       let newItem: DockItem | null = null;
@@ -1013,25 +1040,7 @@ function MacDock() {
       else if (appId) {
         newItem = { type: "app", id: appId };
       }
-      // Case 3: Application from /Applications/ path
-      else if (path && path.startsWith("/Applications/")) {
-        const appFile = fileStore.getItem(path);
-        if (appFile?.appId) {
-          newItem = { type: "app", id: appFile.appId };
-        }
-      }
-      // Case 4: Applet file (.app or .html)
-      else if (path && (path.endsWith(".app") || path.endsWith(".html"))) {
-        const file = fileStore.getItem(path);
-        const fileName = path.split("/").pop()?.replace(/\.(app|html)$/i, "") || name;
-        newItem = {
-          type: "file",
-          id: `file-${path}`,
-          path,
-          name: fileName,
-          icon: file?.icon,
-        };
-      }
+      // Note: Cases 3-4 (file system paths) removed - Kyo.is has no file system
       
       console.log("[Dock] Adding item:", newItem, "at index:", dropIndex);
       
@@ -1042,7 +1051,7 @@ function MacDock() {
     } catch (err) {
       console.warn("[Dock] Failed to handle drop:", err);
     }
-  }, [externalDragIndex, pinnedItems.length, fileStore, addDockItem, isExternalDrag]);
+  }, [externalDragIndex, pinnedItems.length, addDockItem, isExternalDrag]);
   
   // Handle internal dock item drag start
   const handleItemDragStart = useCallback((e: React.DragEvent, itemId: string, index: number) => {
@@ -1243,12 +1252,11 @@ function MacDock() {
     }
   }, [addDockItem, pinnedItems.length]);
 
-  // Compute open apps and individual applet instances
+  // Compute open apps (no applet instances in Kyo)
   const openItems = useMemo(() => {
     const items: Array<{
-      type: "app" | "applet";
+      type: "app";
       appId: AppId;
-      instanceId?: string;
       sortKey: number;
     }> = [];
 
@@ -1261,26 +1269,13 @@ function MacDock() {
         openByApp[i.appId].push(i);
       });
 
-    // For each app, either add individual applet instances or a single app entry
+    // Add a single entry for each open app
     Object.entries(openByApp).forEach(([appId, instancesList]) => {
-      if (appId === "applet-viewer") {
-        // Add each applet instance separately
-        instancesList.forEach((inst) => {
-          items.push({
-            type: "applet",
-            appId: inst.appId as AppId,
-            instanceId: inst.instanceId,
-            sortKey: inst.createdAt || 0,
-          });
-        });
-      } else {
-        // Add a single entry for this app
-        items.push({
-          type: "app",
-          appId: appId as AppId,
-          sortKey: instancesList[0]?.createdAt ?? 0,
-        });
-      }
+      items.push({
+        type: "app",
+        appId: appId as AppId,
+        sortKey: instancesList[0]?.createdAt ?? 0,
+      });
     });
 
     // Sort by creation time to keep a stable order
@@ -1362,24 +1357,7 @@ function MacDock() {
     [instanceOrder, instances, bringInstanceToForeground, restoreInstance, launchApp]
   );
 
-  // Finder-specific: bring existing to foreground, otherwise launch one
-  // Note: Finder doesn't exist in Kyo, these functions are no-ops
-  const focusOrLaunchFinder = useCallback(
-    (_initialPath?: string, _launchOrigin?: LaunchOriginRect) => {
-      // Finder not available in Kyo
-      console.warn("Finder is not available in Kyo");
-    },
-    []
-  );
-
-  // Focus a Finder window already at targetPath (or its subpath); otherwise launch new Finder at targetPath
-  const focusFinderAtPathOrLaunch = useCallback(
-    (_targetPath: string, _initialData?: unknown, _launchOrigin?: LaunchOriginRect) => {
-      // Finder not available in Kyo
-      console.warn("Finder is not available in Kyo");
-    },
-    []
-  );
+  // Note: Finder removed in Kyo.is - Applications click triggers context menu instead
 
   // Generate context menu items for an app
   const getAppContextMenuItems = useCallback(
@@ -1529,171 +1507,54 @@ function MacDock() {
       
       return items;
     },
-    [instances, finderInstances, getAppletInfo, restoreInstance, bringInstanceToForeground, minimizeInstance, closeAppInstance, playZoomMinimize, launchApp, pinnedItems, removeDockItem, addDockItem]
+    [instances, getAppletInfo, restoreInstance, bringInstanceToForeground, minimizeInstance, closeAppInstance, playZoomMinimize, launchApp, pinnedItems, removeDockItem, addDockItem]
   );
 
-  // Generate context menu items for a folder shortcut
+  // Generate context menu items for Applications folder
+  // Note: Kyo.is only supports Applications virtual folder, not file system
   const getFolderContextMenuItems = useCallback(
-    (folderPath: string, isTrash: boolean = false): MenuItem[] => {
+    (folderPath: string, _isTrash: boolean = false): MenuItem[] => {
       const items: MenuItem[] = [];
       
-      // Handle virtual directories
-      let sortedItems: Array<{
-        name: string;
-        path: string;
-        isDirectory: boolean;
-        appId?: AppId;
-        aliasType?: "file" | "app" | "directory";
-        aliasTarget?: string;
-        icon?: string;
-      }> = [];
-      
-      if (folderPath === "/Applications") {
-        // Applications is a virtual directory - get apps from registry
-        const apps = getNonFinderApps(isAdmin);
-        sortedItems = apps.map((app) => ({
-          name: app.name,
-          path: `/Applications/${app.name}`,
-          isDirectory: false,
-          appId: app.id,
-          aliasType: "app" as const,
-          aliasTarget: app.id,
-          icon: app.icon,
-        })).sort((a, b) => a.name.localeCompare(b.name));
-      } else {
-        // Regular directory - get items from file store
-        const folderItems = fileStore.getItemsInPath(folderPath);
-        sortedItems = folderItems.map((item) => {
-          let icon: string | undefined;
-          
-          // Get icon for the item
-          if (item.aliasType === "app" && item.aliasTarget) {
-            // App alias - get icon from app registry
-            icon = getAppIconPath(item.aliasTarget as AppId);
-          } else if (item.aliasType === "file" && item.aliasTarget) {
-            // File alias - get icon from target file
-            const targetFile = fileStore.getItem(item.aliasTarget);
-            icon = targetFile?.icon || "/icons/default/file.png";
-          } else if (item.isDirectory) {
-            // Directory - use folder icon
-            icon = item.icon || "/icons/directory.png";
-          } else if (item.icon) {
-            // Use stored icon
-            icon = item.icon;
-          } else {
-            // Default file icon
-            icon = "/icons/default/file.png";
-          }
-          
-          return {
-            name: item.name,
-            path: item.path,
-            isDirectory: item.isDirectory,
-            appId: item.appId as AppId | undefined,
-            aliasType: item.aliasType,
-            aliasTarget: item.aliasTarget,
-            icon,
-          };
-        }).sort((a, b) => {
-          if (a.isDirectory && !b.isDirectory) return -1;
-          if (!a.isDirectory && b.isDirectory) return 1;
-          return a.name.localeCompare(b.name);
-        });
+      // Only Applications folder is supported in Kyo.is
+      if (folderPath !== "/Applications") {
+        return items;
       }
       
-      // Add "Open" option
-      items.push({
-        type: "item",
-        label: t("common.dock.open"),
-        onSelect: () => {
-          focusFinderAtPathOrLaunch(folderPath);
-          if (isTrash) {
-            setTrashContextMenuPos(null);
-          } else {
-            setApplicationsContextMenuPos(null);
-          }
-        },
-      });
+      // Get apps from registry
+      const apps = getNonFinderApps(isAdmin);
+      const sortedApps = apps
+        .map((app) => ({
+          name: app.name,
+          appId: app.id,
+          icon: app.icon,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
       
-      // Add separator if there are items
-      if (sortedItems.length > 0) {
-        items.push({ type: "separator" });
+      // Add separator if there are apps
+      if (sortedApps.length > 0) {
+        // Create submenu items for apps
+        const submenuItems: MenuItem[] = sortedApps.map((app) => ({
+          type: "item" as const,
+          label: getTranslatedAppName(app.appId),
+          icon: app.icon,
+          onSelect: () => {
+            focusOrLaunchApp(app.appId);
+            setApplicationsContextMenuPos(null);
+          },
+        }));
         
-        // Create submenu items for folder contents
-        const submenuItems: MenuItem[] = sortedItems.map((item) => {
-          let displayName = item.name;
-          
-          // For directories, use translated folder name
-          if (item.isDirectory) {
-            displayName = getTranslatedFolderNameFromName(item.name);
-          } else if (item.aliasType === "app" && item.aliasTarget) {
-            // For app aliases, use translated app name
-            displayName = getTranslatedAppName(item.aliasTarget as AppId);
-          } else if (item.appId) {
-            // For Applications folder apps, use translated app name
-            displayName = getTranslatedAppName(item.appId);
-          } else {
-            // Remove file extension for display
-            displayName = item.name.replace(/\.[^/.]+$/, "");
-          }
-          
-          return {
-            type: "item",
-            label: displayName,
-            icon: item.icon,
-            onSelect: () => {
-              if (item.isDirectory) {
-                // Folders not supported in Kyo
-                console.warn("Folder navigation not supported in Kyo");
-              } else if (item.appId) {
-                // Launch app (from Applications folder)
-                focusOrLaunchApp(item.appId);
-              } else if (item.aliasType === "app" && item.aliasTarget) {
-                // Launch app
-                const appId = item.aliasTarget as AppId;
-                focusOrLaunchApp(appId);
-              } else if (item.aliasType === "file" && item.aliasTarget) {
-                // File aliases not supported in Kyo
-                console.warn("File aliases not supported in Kyo");
-              } else {
-                // Regular files not supported in Kyo
-                console.warn("File operations not supported in Kyo");
-              }
-              // Close the context menu
-              if (isTrash) {
-                setTrashContextMenuPos(null);
-              } else {
-                setApplicationsContextMenuPos(null);
-              }
-            },
-          };
-        });
-        
-        // Add submenu with folder contents
+        // Add apps as submenu
         items.push({
           type: "submenu",
-          label: t("common.dock.folderContents") || "Folder Contents",
+          label: t("common.dock.folderContents") || "Applications",
           items: submenuItems,
-        });
-      }
-      
-      // For Trash, add separator and Empty Trash option
-      if (isTrash) {
-        items.push({ type: "separator" });
-        items.push({
-          type: "item",
-          label: t("apps.finder.contextMenu.emptyTrash"),
-          onSelect: () => {
-            setIsEmptyTrashDialogOpen(true);
-            setTrashContextMenuPos(null);
-          },
-          disabled: isTrashEmpty,
         });
       }
       
       return items;
     },
-    [fileStore, focusFinderAtPathOrLaunch, focusOrLaunchFinder, focusOrLaunchApp, isTrashEmpty, t, getTranslatedAppName, getTranslatedFolderNameFromName, isAdmin]
+    [focusOrLaunchApp, t, getTranslatedAppName, isAdmin]
   );
 
   // Handle app context menu
@@ -1791,11 +1652,8 @@ function MacDock() {
   const allVisibleIds = useMemo(() => {
     const ids = [
       ...pinnedItems.map(item => item.id),
-      ...openItems.map((item) =>
-        item.type === "applet" ? item.instanceId! : item.appId
-      ),
+      ...openItems.map((item) => item.appId),
       "__applications__",
-      "__trash__",
     ];
     return ids;
   }, [pinnedItems, openItems]);
@@ -1877,14 +1735,14 @@ function MacDock() {
             if (dockHiding) {
               hideDock();
             }
-            if (effectiveMagnifyEnabled && !trashContextMenuPos && !appContextMenu && !urlContextMenu) {
+            if (effectiveMagnifyEnabled && !appContextMenu && !urlContextMenu) {
               mouseX.set(Infinity);
               handleIconLeave();
             }
           }}
           onMouseMove={(e) => {
             // Update mouse position for magnification
-            if (effectiveMagnifyEnabled && !trashContextMenuPos && !appContextMenu && !urlContextMenu) {
+            if (effectiveMagnifyEnabled && !appContextMenu && !urlContextMenu) {
               mouseX.set(e.clientX);
             }
             // Restart auto-hide timer on mouse movement (desktop fallback, throttled)
@@ -1974,11 +1832,17 @@ function MacDock() {
                         baseSize={scaledButtonSize}
                       />
                     );
-                  } else if (item.type === "link") {
-                    // Website link pinned item
-                    const icon = item.icon || "🌐";
-                    const label = item.name || "Website";
-                    const isEmojiIcon = !item.icon?.startsWith("/") && !item.icon?.startsWith("http");
+                  } else if (item.type === "bookmark") {
+                    // Bookmark reference from bookmarkStore
+                    const bookmark = bookmarkStore.getBookmarkById(item.id);
+                    if (!bookmark) {
+                      // Bookmark was deleted, skip rendering
+                      return;
+                    }
+                    
+                    const icon = bookmark.favicon || "🌐";
+                    const label = bookmark.title;
+                    const hasFaviconUrl = Boolean(bookmark.favicon?.startsWith("http"));
 
                     elements.push(
                       <IconButton
@@ -1990,41 +1854,41 @@ function MacDock() {
                         label={label}
                         icon={icon}
                         idKey={item.id}
-                        isEmoji={isEmojiIcon}
+                        isBookmark={hasFaviconUrl}
+                        isEmoji={!hasFaviconUrl}
                         onClick={() => {
-                          if (item.url) {
-                            window.open(item.url, "_blank", "noopener,noreferrer");
-                          }
+                          window.open(bookmark.url, "_blank", "noopener,noreferrer");
                         }}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          
+                          const containerRect = dockContainerRef.current?.getBoundingClientRect();
+                          const x = containerRect ? e.clientX - containerRect.left : e.clientX;
+                          const y = containerRect ? e.clientY - containerRect.top : e.clientY;
+                          
                           setUrlContextMenu({
-                            x: e.clientX,
-                            y: e.clientY,
+                            x,
+                            y,
                             items: [
                               {
                                 type: "item",
-                                label: t("dock.openInNewTab"),
+                                label: t("common.dock.openInNewTab"),
                                 onSelect: () => {
-                                  if (item.url) {
-                                    window.open(item.url, "_blank", "noopener,noreferrer");
-                                  }
+                                  window.open(bookmark.url, "_blank", "noopener,noreferrer");
                                 },
                               },
                               {
                                 type: "item",
-                                label: t("dock.copyUrl"),
+                                label: t("common.dock.copyUrl"),
                                 onSelect: () => {
-                                  if (item.url) {
-                                    navigator.clipboard.writeText(item.url);
-                                  }
+                                  navigator.clipboard.writeText(bookmark.url);
                                 },
                               },
                               { type: "separator" },
                               {
                                 type: "item",
-                                label: t("dock.removeFromDock"),
+                                label: t("common.dock.removeFromDock"),
                                 onSelect: () => removeDockItem(item.id),
                               },
                             ],
@@ -2046,56 +1910,8 @@ function MacDock() {
                         baseSize={scaledButtonSize}
                       />
                     );
-                  } else {
-                    // File/applet pinned item
-                    const file = item.path ? fileStore.getItem(item.path) : null;
-                    const isEmojiIcon = item.icon && !item.icon.startsWith("/") && !item.icon.startsWith("http") && item.icon.length <= 10;
-                    const icon = isEmojiIcon ? item.icon! : (file?.icon || "📦");
-                    const label = item.name || item.path?.split("/").pop()?.replace(/\.(app|html)$/i, "") || "Applet";
-
-                    elements.push(
-                      <IconButton
-                        key={item.id}
-                        ref={(el) => {
-                          if (el) iconRefsMap.current.set(item.id, el);
-                          else iconRefsMap.current.delete(item.id);
-                        }}
-                        label={label}
-                        icon={icon}
-                        idKey={item.id}
-                        isEmoji={isEmojiIcon || (!item.icon?.startsWith("/") && !item.icon?.startsWith("http"))}
-                        onClick={(e) => {
-                          if (item.path) {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const launchOrigin: LaunchOriginRect = {
-                              x: rect.left,
-                              y: rect.top,
-                              width: rect.width,
-                              height: rect.height,
-                            };
-                            launchApp("applet-viewer", {
-                              initialData: { path: item.path },
-                              launchOrigin,
-                            });
-                          }
-                        }}
-                        mouseX={mouseX}
-                        magnifyEnabled={effectiveMagnifyEnabled}
-                        isNew={hasMounted && !seenIdsRef.current.has(item.id)}
-                        isHovered={hoveredId === item.id}
-                        isSwapping={isSwapping}
-                        onHover={() => handleIconHover(item.id)}
-                        onLeave={handleIconLeave}
-                        draggable
-                        onDragStart={(e) => handleItemDragStart(e, item.id, index)}
-                        onDragEnd={(e) => handleItemDragEnd(e, item.id)}
-                        onDragOver={(e) => handleItemDragOver(e, index)}
-                        isDragging={draggingItemId === item.id}
-                        isDraggedOutside={draggingItemId === item.id && isDraggedOutside}
-                        baseSize={scaledButtonSize}
-                      />
-                    );
                   }
+                  // Note: link type removed - all website links are now bookmarks
                 });
                 
                 // Add spacer at end if dropping after all items
@@ -2121,72 +1937,35 @@ function MacDock() {
                 />
               )}
 
-              {/* Open apps and applet instances dynamically (excluding pinned) */}
+              {/* Open apps dynamically (excluding pinned) */}
               {openItems.map((item) => {
-                if (item.type === "applet" && item.instanceId) {
-                  // Render individual applet instance
-                  const instance = instances[item.instanceId];
-                  if (!instance) return null;
-
-                  const { icon, label, isEmoji } = getAppletInfo(instance);
-                  return (
-                    <IconButton
-                      key={item.instanceId}
-                      label={label}
-                      icon={icon}
-                      idKey={item.instanceId}
-                      onClick={(_e) => {
-                        // If minimized, restore it; otherwise just bring to foreground
-                        if (instance.isMinimized) {
-                          restoreInstance(item.instanceId!);
-                        } else {
-                          bringInstanceToForeground(item.instanceId!);
-                        }
-                      }}
-                      onContextMenu={(e) => handleAppContextMenu(e, "applet-viewer", item.instanceId)}
-                      showIndicator
-                      isLoading={instance.isLoading}
-                      isEmoji={isEmoji}
-                      mouseX={mouseX}
-                      magnifyEnabled={effectiveMagnifyEnabled}
-                      isNew={hasMounted && !seenIdsRef.current.has(item.instanceId!)}
-                      isHovered={hoveredId === item.instanceId}
-                      isSwapping={isSwapping}
-                      onHover={() => handleIconHover(item.instanceId!)}
-                      onLeave={handleIconLeave}
-                      baseSize={scaledButtonSize}
-                    />
-                  );
-                } else {
-                  // Render regular app
-                  const icon = getAppIconPath(item.appId);
-                  const label = getTranslatedAppName(item.appId);
-                  const isLoading = Object.values(instances).some(
-                    (i) => i.appId === item.appId && i.isOpen && i.isLoading
-                  );
-                  return (
-                    <IconButton
-                      key={item.appId}
-                      label={label}
-                      icon={icon}
-                      idKey={item.appId}
-                      onClick={(_e) => focusMostRecentInstanceOfApp(item.appId)}
-                      onContextMenu={(e) => handleAppContextMenu(e, item.appId)}
-                      showIndicator
-                      isLoading={isLoading}
-                      mouseX={mouseX}
-                      magnifyEnabled={effectiveMagnifyEnabled}
-                      isNew={hasMounted && !seenIdsRef.current.has(item.appId)}
-                      isHovered={hoveredId === item.appId}
-                      isSwapping={isSwapping}
-                      onHover={() => handleIconHover(item.appId)}
-                      onLeave={handleIconLeave}
-                      draggable
-                      onDragStart={(e) => handleNonPinnedDragStart(e, item.appId)}
-                      baseSize={scaledButtonSize}
-                    />
-                  );
-                }
+                const icon = getAppIconPath(item.appId);
+                const label = getTranslatedAppName(item.appId);
+                const isLoading = Object.values(instances).some(
+                  (i) => i.appId === item.appId && i.isOpen && i.isLoading
+                );
+                return (
+                  <IconButton
+                    key={item.appId}
+                    label={label}
+                    icon={icon}
+                    idKey={item.appId}
+                    onClick={(_e) => focusMostRecentInstanceOfApp(item.appId)}
+                    onContextMenu={(e) => handleAppContextMenu(e, item.appId)}
+                    showIndicator
+                    isLoading={isLoading}
+                    mouseX={mouseX}
+                    magnifyEnabled={effectiveMagnifyEnabled}
+                    isNew={hasMounted && !seenIdsRef.current.has(item.appId)}
+                    isHovered={hoveredId === item.appId}
+                    isSwapping={isSwapping}
+                    onHover={() => handleIconHover(item.appId)}
+                    onLeave={handleIconLeave}
+                    draggable
+                    onDragStart={(e) => handleNonPinnedDragStart(e, item.appId)}
+                    baseSize={scaledButtonSize}
+                  />
+                );
               })}
 
               {/* Divider between open apps and Applications/Trash */}
@@ -2227,19 +2006,7 @@ function MacDock() {
                     label={t("common.dock.applications")}
                     icon="/icons/default/applications.png"
                     idKey="__applications__"
-                    onClick={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const launchOrigin: LaunchOriginRect = {
-                        x: rect.left,
-                        y: rect.top,
-                        width: rect.width,
-                        height: rect.height,
-                      };
-                      focusFinderAtPathOrLaunch("/Applications", {
-                        path: "/Applications",
-                        viewType: "large",
-                      }, launchOrigin);
-                    }}
+                    onClick={handleApplicationsContextMenu}
                     onContextMenu={handleApplicationsContextMenu}
                     mouseX={mouseX}
                     magnifyEnabled={effectiveMagnifyEnabled}
@@ -2253,104 +2020,7 @@ function MacDock() {
                 );
               })()}
 
-              {/* Trash (right side) */}
-              {(() => {
-                const handleTrashDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
-                  // Check if this is a desktop shortcut being dragged
-                  // We can't use getData in dragOver, so check types instead
-                  const types = Array.from(e.dataTransfer.types);
-                  if (types.includes("application/json")) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.dataTransfer.dropEffect = "move";
-                    setIsDraggingOverTrash(true);
-                  }
-                };
-
-                const handleTrashDrop = (e: React.DragEvent<HTMLButtonElement>) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsDraggingOverTrash(false);
-
-                  try {
-                    const data = e.dataTransfer.getData("application/json");
-                    if (data) {
-                      const parsed = JSON.parse(data);
-                      // Only handle desktop shortcuts
-                      if (parsed.path && parsed.path.startsWith("/Desktop/")) {
-                        // Move shortcut to trash
-                        fileStore.removeItem(parsed.path);
-                      }
-                    }
-                  } catch (err) {
-                    console.warn("[Dock] Failed to handle trash drop:", err);
-                  }
-                };
-
-                const handleTrashDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsDraggingOverTrash(false);
-                };
-
-                const handleTrashContextMenu = (
-                  e: React.MouseEvent<HTMLButtonElement>
-                ) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-
-                  const containerRect =
-                    dockContainerRef.current?.getBoundingClientRect();
-                  if (!containerRect) {
-                    setTrashContextMenuPos({ x: e.clientX, y: e.clientY });
-                    return;
-                  }
-
-                  setTrashContextMenuPos({
-                    x: e.clientX - containerRect.left,
-                    y: e.clientY - containerRect.top,
-                  });
-                };
-
-                return (
-                  <motion.div
-                    animate={{
-                      scale: isDraggingOverTrash ? 1.2 : 1,
-                      opacity: isDraggingOverTrash ? 0.7 : 1,
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <IconButton
-                      key="__trash__"
-                      label={t("common.dock.trash")}
-                      icon={trashIcon}
-                      idKey="__trash__"
-                      onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const launchOrigin: LaunchOriginRect = {
-                          x: rect.left,
-                          y: rect.top,
-                          width: rect.width,
-                          height: rect.height,
-                        };
-                        focusFinderAtPathOrLaunch("/Trash", undefined, launchOrigin);
-                      }}
-                      onDragOver={handleTrashDragOver}
-                      onDrop={handleTrashDrop}
-                      onDragLeave={handleTrashDragLeave}
-                      onContextMenu={handleTrashContextMenu}
-                      mouseX={mouseX}
-                      magnifyEnabled={effectiveMagnifyEnabled}
-                      isNew={hasMounted && !seenIdsRef.current.has("__trash__")}
-                      isHovered={hoveredId === "__trash__"}
-                      isSwapping={isSwapping}
-                      onHover={() => handleIconHover("__trash__")}
-                      onLeave={handleIconLeave}
-                      baseSize={scaledButtonSize}
-                    />
-                  </motion.div>
-                );
-              })()}
+              {/* Note: Trash removed in Kyo.is (no file system) */}
             </AnimatePresence>
           </LayoutGroup>
         </motion.div>
@@ -2378,14 +2048,6 @@ function MacDock() {
         />
       )}
       
-      <RightClickMenu
-        items={getFolderContextMenuItems("/Trash", true)}
-        position={trashContextMenuPos}
-        onClose={() => {
-          setTrashContextMenuPos(null);
-          mouseX.set(Infinity);
-        }}
-      />
       <RightClickMenu
         items={getFolderContextMenuItems("/Applications", false)}
         position={applicationsContextMenuPos}
@@ -2424,16 +2086,7 @@ function MacDock() {
           }}
         />
       )}
-      <ConfirmDialog
-        isOpen={isEmptyTrashDialogOpen}
-        onOpenChange={setIsEmptyTrashDialogOpen}
-        onConfirm={() => {
-          fileStore.emptyTrash();
-          setIsEmptyTrashDialogOpen(false);
-        }}
-        title={t("apps.finder.dialogs.emptyTrash.title")}
-        description={t("apps.finder.dialogs.emptyTrash.description")}
-      />
+      {/* Note: Empty Trash dialog removed in Kyo.is (no file system) */}
       <AddWebsiteDialog
         isOpen={isAddWebsiteDialogOpen}
         onOpenChange={setIsAddWebsiteDialogOpen}

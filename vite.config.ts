@@ -172,9 +172,9 @@ export default defineConfig({
         "fonts/*.woff2",
       ],
       manifest: {
-        name: "ryOS",
-        short_name: "ryOS",
-        description: "An AI OS experience, made with Cursor",
+        name: "Kyo",
+        short_name: "Kyo",
+        description: "Personal web portal and bookmark launcher",
         theme_color: "#000000",
         background_color: "#000000",
         display: "standalone",
@@ -213,23 +213,8 @@ export default defineConfig({
           /^\/404/,  // Don't intercept 404 redirects
           /^\/docs(\/|$)/,  // Documentation pages - serve static HTML files directly (including /docs root redirect)
           // App routes handled by middleware for OG preview links
-          // These need to reach the middleware first, then redirect to ?_ryo=1
-          /^\/finder$/,
-          /^\/soundboard$/,
-          /^\/internet-explorer(\/|$)/,
-          /^\/chats$/,
-          /^\/textedit$/,
-          /^\/paint$/,
-          /^\/photo-booth$/,
-          /^\/minesweeper$/,
-          /^\/videos(\/|$)/,
-          /^\/ipod(\/|$)/,
-          /^\/karaoke(\/|$)/,
-          /^\/synth$/,
-          /^\/pc$/,
-          /^\/terminal$/,
-          /^\/applet-viewer(\/|$)/,
-          /^\/control-panels$/,
+          /^\/bookmarks$/,
+          /^\/theme-editor$/,
         ],
         // Enable navigation fallback to precached index.html for offline support
         // This ensures the app can start when offline by serving the cached shell

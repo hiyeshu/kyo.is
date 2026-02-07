@@ -212,7 +212,7 @@ export const useDisplaySettingsStore = create<DisplaySettingsState>()(
       setHtmlPreviewSplit: (v) => set({ htmlPreviewSplit: v }),
     }),
     {
-      name: "ryos:display-settings",
+      name: "kyo:display-settings",
       version: STORE_VERSION,
       partialize: (state) => ({
         displayMode: state.displayMode,

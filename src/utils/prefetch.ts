@@ -21,8 +21,8 @@ import i18n from "@/lib/i18n";
 import { getApiUrl, isTauri } from "@/utils/platform";
 
 // Storage key for manifest timestamp (for cache invalidation)
-const MANIFEST_KEY = 'ryos:manifest-timestamp';
-const LEGACY_MANIFEST_KEY = 'ryos-manifest-timestamp';
+const MANIFEST_KEY = 'kyo:manifest-timestamp';
+const LEGACY_MANIFEST_KEY = 'ryos:manifest-timestamp'; // Migration from ryOS
 
 // Periodic update check interval (5 minutes)
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -70,9 +70,9 @@ function storeVersion(version: string, buildNumber: string, buildTime?: string):
 async function reloadPage(version?: string, buildNumber?: string): Promise<void> {
   // Set boot message to show boot screen after reload
   if (version && buildNumber) {
-    setNextBootMessage(i18n.t("common.system.updatingToRyOSWithBuild", { version, buildNumber }));
+    setNextBootMessage(i18n.t("common.system.updatingToKyoWithBuild", { version, buildNumber }));
   } else if (version) {
-    setNextBootMessage(i18n.t("common.system.updatingToRyOS", { version }));
+    setNextBootMessage(i18n.t("common.system.updatingToKyo", { version }));
   } else {
     setNextBootMessage(i18n.t("common.system.rebooting"));
   }
@@ -272,7 +272,7 @@ async function checkAndUpdate(isManual: boolean = false): Promise<void> {
     if (isManual) {
       const stored = getStoredVersion();
       toast.success('Already running the latest version', {
-        description: stored.version ? `ryOS ${stored.version} (${stored.buildNumber})` : undefined,
+        description: stored.version ? `Kyo ${stored.version} (${stored.buildNumber})` : undefined,
       });
     }
     return;
@@ -326,7 +326,7 @@ export async function forceRefreshCache(): Promise<void> {
   // If already on latest version, just show success message without reboot
   if (!isNewVersion) {
     toast.success('Already running the latest version', {
-      description: stored.version ? `ryOS ${stored.version} (${stored.buildNumber})` : undefined,
+      description: stored.version ? `Kyo ${stored.version} (${stored.buildNumber})` : undefined,
     });
     return;
   }
@@ -789,7 +789,7 @@ export function initPrefetch(): void {
     window.history.replaceState({}, '', url.toString());
     // Clear the stale reload flag since we successfully loaded fresh content
     try {
-      sessionStorage.removeItem('ryos-stale-reload');
+      sessionStorage.removeItem('kyo-stale-reload');
     } catch {
       // sessionStorage might not be available
     }

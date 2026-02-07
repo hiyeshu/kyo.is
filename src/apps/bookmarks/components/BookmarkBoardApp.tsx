@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 components/layout/WindowFrame 的窗口框架，依赖 components/ui 的 UI 组件，依赖 hooks/useBookmarkBoard 的书签管理逻辑，依赖 stores/useBookmarkStore 的书签状态
- * [OUTPUT]: 对外提供 BookmarkBoardApp 组件，书签应用主界面（书签网格、搜索、添加、编辑、删除、文件夹管理）
- * [POS]: apps/bookmarks/components/ 的根组件，被 appRegistry 注册和加载，是书签应用的主容器
+ * [INPUT]: 依赖 components/layout/WindowFrame, components/ui, hooks/useBookmarkBoard, stores/useBookmarkStore
+ * [OUTPUT]: 对外提供 BookmarkBoardApp 组件
+ * [POS]: apps/bookmarks/components/ 的根组件，书签应用主容器
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -17,49 +17,69 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { MagnifyingGlass, Plus, X } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { HelpDialog } from "@/components/dialogs/HelpDialog";
 import { AboutDialog } from "@/components/dialogs/AboutDialog";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
+import { RightClickMenu, type MenuItem } from "@/components/ui/right-click-menu";
 import { appMetadata, helpItems } from "../metadata";
 import { BookmarkBoardMenuBar } from "./BookmarkBoardMenuBar";
 import { useBookmarkBoard } from "../hooks/useBookmarkBoard";
 import { isFolder, type Bookmark, type BookmarkFolder } from "@/stores/useBookmarkStore";
+import { useDockStore } from "@/stores/useDockStore";
+import { useTranslation } from "react-i18next";
 
 // ─── 书签卡片 ────────────────────────────────────────────────────────────────
 
 function BookmarkCard({
   bm,
   onClick,
-  onRemove,
+  onContextMenu,
+  onDragStart,
+  onDragOver,
+  onDragEnter,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
+  isDragging,
+  isDragOver,
 }: {
   bm: Bookmark;
   onClick: () => void;
-  onRemove?: () => void;
+  onContextMenu: (e: React.MouseEvent) => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragEnter: (e: React.DragEvent) => void;
+  onDragLeave: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
+  isDragOver: boolean;
 }) {
   return (
     <div
-      className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-black/5 cursor-pointer group relative transition-colors"
+      className={`flex flex-col items-center gap-1 p-2 rounded-lg cursor-pointer group relative transition-all
+        ${isDragging ? "opacity-50 scale-95" : "hover:bg-black/5"}
+        ${isDragOver ? "ring-2 ring-blue-500 ring-offset-1" : ""}
+      `}
       onClick={onClick}
+      onContextMenu={onContextMenu}
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
       title={bm.url}
     >
-      {onRemove && (
-        <button
-          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-neutral-400/80 text-white text-[10px] leading-none opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-500"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        >
-          <X size={8} weight="bold" />
-        </button>
-      )}
       <div className="w-10 h-10 rounded-lg bg-white/80 border border-black/10 flex items-center justify-center shadow-sm">
         {bm.favicon ? (
           <img
             src={bm.favicon}
             alt=""
             className="w-5 h-5"
+            draggable={false}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
             }}
@@ -79,46 +99,44 @@ function BookmarkCard({
 
 function FolderSection({
   folder,
-  onOpen,
-  onRemoveBookmark,
-  onRemoveFolder,
-  onAddToFolder,
+  h,
 }: {
   folder: BookmarkFolder;
-  onOpen: (url: string) => void;
-  onRemoveBookmark: (url: string, folderTitle: string) => void;
-  onRemoveFolder: (title: string) => void;
-  onAddToFolder: (folderTitle: string) => void;
+  h: ReturnType<typeof useBookmarkBoard>;
 }) {
   return (
     <div className="mb-3">
-      <div className="flex items-center gap-1.5 mb-1.5 px-1 group/folder">
-        <span className="text-[10px] font-geneva-12 font-medium text-black/40 uppercase tracking-wider">
+      <div 
+        className="flex items-center gap-1.5 mb-1.5 px-1 group/folder"
+        onContextMenu={(e) => h.openContextMenu(e, folder)}
+      >
+        <span className="text-[10px] font-geneva-12 font-medium text-black/40 uppercase tracking-wider cursor-default">
           {folder.title}
         </span>
         <div className="flex-1 h-px bg-black/8" />
         <button
           className="text-[10px] text-black/30 hover:text-black/60 opacity-0 group-hover/folder:opacity-100 transition-opacity"
-          onClick={() => onAddToFolder(folder.title)}
+          onClick={() => h.openAddDialog(folder.id)}
           title="Add to folder"
         >
           <Plus size={10} weight="bold" />
         </button>
-        <button
-          className="text-[10px] text-black/30 hover:text-red-500 opacity-0 group-hover/folder:opacity-100 transition-opacity"
-          onClick={() => onRemoveFolder(folder.title)}
-          title="Delete folder"
-        >
-          <X size={10} weight="bold" />
-        </button>
       </div>
       <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-1">
-        {folder.bookmarks.map((bm) => (
+        {folder.bookmarks.map((bm, index) => (
           <BookmarkCard
-            key={bm.url}
+            key={bm.id}
             bm={bm}
-            onClick={() => onOpen(bm.url)}
-            onRemove={() => onRemoveBookmark(bm.url, folder.title)}
+            onClick={() => h.openBookmark(bm.url)}
+            onContextMenu={(e) => h.openContextMenu(e, bm, folder.id)}
+            onDragStart={(e) => h.handleDragStart(e, bm, index, folder.id)}
+            onDragOver={(e) => h.handleDragOver(e, index)}
+            onDragEnter={h.handleDragEnter}
+            onDragLeave={h.handleDragLeave}
+            onDrop={(e) => h.handleDrop(e, index, folder.id)}
+            onDragEnd={h.handleDragEnd}
+            isDragging={h.draggedItem?.item.id === bm.id}
+            isDragOver={h.dragOverIndex === index && h.draggedItem?.folderId === folder.id}
           />
         ))}
       </div>
@@ -137,7 +155,84 @@ export function BookmarkBoardApp({
   onNavigateNext,
   onNavigatePrevious,
 }: AppProps<unknown>) {
+  const { t } = useTranslation();
   const h = useBookmarkBoard();
+  const addDockItem = useDockStore((s) => s.addItem);
+
+  // ─── 右键菜单项 ─────────────────────────────────────────────────────────────
+  const getContextMenuItems = (): MenuItem[] => {
+    if (!h.contextMenu) return [];
+    const { item } = h.contextMenu;
+
+    if (isFolder(item)) {
+      // 文件夹右键菜单
+      return [
+        {
+          type: "item",
+          label: t("bookmarks.addBookmark", "Add Bookmark"),
+          icon: "➕",
+          onSelect: () => {
+            h.openAddDialog(item.id);
+            h.closeContextMenu();
+          },
+        },
+        { type: "separator" },
+        {
+          type: "item",
+          label: t("common.menu.delete", "Delete"),
+          icon: "🗑️",
+          onSelect: () => {
+            h.removeFolder(item.id);
+            h.closeContextMenu();
+          },
+        },
+      ];
+    }
+
+    // 书签右键菜单
+    return [
+      {
+        type: "item",
+        label: t("bookmarks.openInNewTab", "Open in New Tab"),
+        onSelect: () => {
+          h.openBookmark(item.url);
+          h.closeContextMenu();
+        },
+      },
+      { type: "separator" },
+      {
+        type: "item",
+        label: t("common.menu.edit", "Edit"),
+        icon: "✏️",
+        onSelect: () => {
+          h.openEditDialog(item);
+          h.closeContextMenu();
+        },
+      },
+      {
+        type: "item",
+        label: t("bookmarks.addToDock", "Add to Dock"),
+        icon: "📌",
+        onSelect: () => {
+          addDockItem({
+            type: "bookmark",
+            id: item.id,
+          });
+          h.closeContextMenu();
+        },
+      },
+      { type: "separator" },
+      {
+        type: "item",
+        label: t("common.menu.delete", "Delete"),
+        icon: "🗑️",
+        onSelect: () => {
+          h.removeBookmark(item.id);
+          h.closeContextMenu();
+        },
+      },
+    ];
+  };
 
   const menuBar = (
     <BookmarkBoardMenuBar
@@ -159,6 +254,20 @@ export function BookmarkBoardApp({
   return (
     <>
       {!h.isXpTheme && isForeground && menuBar}
+      
+      {/* 右键菜单：使用 fixed 定位容器，全局坐标 */}
+      {h.contextMenu && (
+        <div className="fixed inset-0 z-[9999]" style={{ pointerEvents: "none" }}>
+          <div style={{ pointerEvents: "auto", position: "relative", width: "100%", height: "100%" }}>
+            <RightClickMenu
+              items={getContextMenuItems()}
+              position={{ x: h.contextMenu.x, y: h.contextMenu.y }}
+              onClose={h.closeContextMenu}
+            />
+          </div>
+        </div>
+      )}
+      
       <WindowFrame
         title="Bookmark Board"
         onClose={onClose}
@@ -204,12 +313,20 @@ export function BookmarkBoardApp({
             {/* 顶层书签 */}
             {topLevel.length > 0 && (
               <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-1 mb-3">
-                {topLevel.map((bm) => (
+                {topLevel.map((bm, index) => (
                   <BookmarkCard
-                    key={bm.url}
+                    key={bm.id}
                     bm={bm}
                     onClick={() => h.openBookmark(bm.url)}
-                    onRemove={() => h.removeBookmark(bm.url)}
+                    onContextMenu={(e) => h.openContextMenu(e, bm)}
+                    onDragStart={(e) => h.handleDragStart(e, bm, index)}
+                    onDragOver={(e) => h.handleDragOver(e, index)}
+                    onDragEnter={h.handleDragEnter}
+                    onDragLeave={h.handleDragLeave}
+                    onDrop={(e) => h.handleDrop(e, index)}
+                    onDragEnd={h.handleDragEnd}
+                    isDragging={h.draggedItem?.item.id === bm.id}
+                    isDragOver={h.dragOverIndex === index && !h.draggedItem?.folderId}
                   />
                 ))}
               </div>
@@ -218,12 +335,9 @@ export function BookmarkBoardApp({
             {/* 文件夹 */}
             {folders.map((folder) => (
               <FolderSection
-                key={folder.title}
+                key={folder.id}
                 folder={folder}
-                onOpen={h.openBookmark}
-                onRemoveBookmark={h.removeBookmark}
-                onRemoveFolder={h.removeFolder}
-                onAddToFolder={(t) => h.openAddDialog(t)}
+                h={h}
               />
             ))}
 
@@ -326,14 +440,14 @@ export function BookmarkBoardApp({
                     </Label>
                     <select
                       id="bm-folder"
-                      value={h.addFolder || ""}
-                      onChange={(e) => h.setAddFolder(e.target.value || undefined)}
+                      value={h.addFolderId || ""}
+                      onChange={(e) => h.setAddFolderId(e.target.value || undefined)}
                       className="w-full h-8 px-2 text-xs rounded border border-black/20 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                     >
                       <option value="">No folder</option>
                       {h.folders.map((f) => (
-                        <option key={f} value={f}>
-                          {f}
+                        <option key={f.id} value={f.id}>
+                          {f.title}
                         </option>
                       ))}
                     </select>
@@ -359,6 +473,56 @@ export function BookmarkBoardApp({
                 </DialogFooter>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── 编辑书签对话框 ──────────────────────────────── */}
+        <Dialog open={h.editDialogOpen} onOpenChange={h.setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[380px]">
+            <DialogHeader>
+              <DialogTitle className="text-sm">Edit Bookmark</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <div className="space-y-1">
+                <Label htmlFor="edit-url" className="text-[11px] text-black/50">
+                  URL
+                </Label>
+                <Input
+                  id="edit-url"
+                  value={h.editUrl}
+                  onChange={(e) => h.setEditUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="text-xs h-8"
+                  onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="edit-title" className="text-[11px] text-black/50">
+                  Name
+                </Label>
+                <Input
+                  id="edit-title"
+                  value={h.editTitle}
+                  onChange={(e) => h.setEditTitle(e.target.value)}
+                  placeholder="Page title"
+                  className="text-xs h-8"
+                  onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => h.setEditDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button size="sm" onClick={h.submitEdit} disabled={!h.editUrl.trim()}>
+                Save
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 

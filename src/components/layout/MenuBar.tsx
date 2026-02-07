@@ -17,12 +17,8 @@ import {
   MenubarContent,
   MenubarItem,
   MenubarSeparator,
-  MenubarCheckboxItem,
 } from "@/components/ui/menubar";
-import { HelpDialog } from "@/components/dialogs/HelpDialog";
 import { AboutDialog } from "@/components/dialogs/AboutDialog";
-import { ShareItemDialog } from "@/components/dialogs/ShareItemDialog";
-import { generateAppShareUrl } from "@/utils/sharedUrl";
 import { StartMenu } from "./StartMenu";
 import { useAppStoreShallow, useAudioSettingsStoreShallow, useDisplaySettingsStoreShallow } from "@/stores/helpers";
 import { Slider } from "@/components/ui/slider";
@@ -46,32 +42,14 @@ const getAppName = (appId: string): string => {
   return getTranslatedAppName(appId as AppId);
 };
 
-const finderHelpItems = [
-  {
-    icon: "🔍",
-    title: "Browse Files",
-    description: "Navigate through your files and folders",
-  },
-  {
-    icon: "📁",
-    title: "Create Folders",
-    description: "Organize your files with new folders",
-  },
-  {
-    icon: "🗑️",
-    title: "Delete Files",
-    description: "Remove unwanted files and folders",
-  },
-];
-
-const finderMetadata = {
-  name: "Finder",
+const kyoMetadata = {
+  name: "Kyo",
   version: "1.0.0",
   creator: {
-    name: "Ryo Lu",
-    url: "https://ryo.lu",
+    name: "Kyo",
+    url: "https://kyo.is",
   },
-  github: "https://github.com/ryokun6/ryos",
+  github: "https://github.com/anomalyco/kyo.is",
   icon: "/icons/mac.png",
 };
 
@@ -406,12 +384,10 @@ function Clock({ enableExposeToggle = false }: ClockProps) {
   );
 }
 
-// Finder App Menu for desktop (macOS X theme only, when no app is active)
-function FinderAppMenu() {
+// Kyo App Menu for desktop (macOS X theme only, when no app is active)
+function KyoAppMenu() {
   const { t } = useTranslation();
-  const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   const {
     instances,
@@ -422,9 +398,6 @@ function FinderAppMenu() {
     minimizeInstance: s.minimizeInstance,
     restoreInstance: s.restoreInstance,
   }));
-
-  // Get translated Finder name
-  const translatedFinderName = getTranslatedAppName("finder");
 
   // Check if there are any minimized instances
   const hasMinimizedInstances = Object.values(instances).some(
@@ -456,23 +429,15 @@ function FinderAppMenu() {
           className="text-md px-2 py-1 border-none focus-visible:ring-0 app-menu-trigger"
           style={{ fontWeight: "bold" }}
         >
-          {translatedFinderName}
+          Kyo
         </MenubarTrigger>
         <MenubarContent align="start" sideOffset={1} className="px-0">
-          {/* About Finder */}
+          {/* About Kyo */}
           <MenubarItem
             onClick={() => setIsAboutDialogOpen(true)}
             className="text-md h-6 px-3"
           >
-            {t("common.appMenu.aboutApp", { appName: translatedFinderName })}
-          </MenubarItem>
-
-          {/* Share App */}
-          <MenubarItem
-            onSelect={() => setIsShareDialogOpen(true)}
-            className="text-md h-6 px-3"
-          >
-            {t("common.menu.shareApp")}
+            {t("common.appMenu.aboutApp", { appName: "Kyo" })}
           </MenubarItem>
 
           <MenubarSeparator className="h-[2px] bg-black my-1" />
@@ -497,30 +462,11 @@ function FinderAppMenu() {
         </MenubarContent>
       </MenubarMenu>
 
-      {/* Help Dialog */}
-      <HelpDialog
-        isOpen={isHelpDialogOpen}
-        onOpenChange={setIsHelpDialogOpen}
-        appId="finder"
-        helpItems={finderHelpItems}
-      />
-
       {/* About Dialog */}
       <AboutDialog
         isOpen={isAboutDialogOpen}
         onOpenChange={setIsAboutDialogOpen}
-        metadata={finderMetadata}
-        appId="finder"
-      />
-
-      {/* Share Dialog */}
-      <ShareItemDialog
-        isOpen={isShareDialogOpen}
-        onClose={() => setIsShareDialogOpen(false)}
-        itemType="App"
-        itemIdentifier="finder"
-        title="Finder"
-        generateShareUrl={generateAppShareUrl}
+        metadata={kyoMetadata}
       />
     </>
   );
@@ -528,262 +474,10 @@ function FinderAppMenu() {
 
 function DefaultMenuItems() {
   const { t } = useTranslation();
-  const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
-
-  const handleLaunchFinder = (_path: string) => {
-    // Finder not available in Kyo
-    console.warn("Finder is not available in Kyo");
-  };
 
   return (
     <>
-      {/* File Menu */}
-      <MenubarMenu>
-        <MenubarTrigger className="text-md px-2 py-1 border-none focus-visible:ring-0">
-          {t("common.menu.file")}
-        </MenubarTrigger>
-        <MenubarContent align="start" sideOffset={1} className="px-0">
-          <MenubarItem
-            onClick={() => handleLaunchFinder("/")}
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.newFinderWindow")}
-          </MenubarItem>
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.newFolder")}
-          </MenubarItem>
-          <MenubarSeparator className="h-[2px] bg-black my-1" />
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t("apps.finder.menu.moveToTrash")}
-          </MenubarItem>
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t("apps.finder.menu.emptyTrash")}
-          </MenubarItem>
-          <MenubarSeparator className="h-[2px] bg-black my-1" />
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("common.menu.close")}
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
-
-      {/* Edit Menu */}
-      <MenubarMenu>
-        <MenubarTrigger className="text-md px-2 py-1 border-none focus-visible:ring-0">
-          {t("common.menu.edit")}
-        </MenubarTrigger>
-        <MenubarContent align="start" sideOffset={1} className="px-0">
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("common.menu.undo")}
-          </MenubarItem>
-          <MenubarSeparator className="h-[2px] bg-black my-1" />
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("common.menu.cut")}
-          </MenubarItem>
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("common.menu.copy")}
-          </MenubarItem>
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("common.menu.paste")}
-          </MenubarItem>
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("common.menu.clear")}
-          </MenubarItem>
-          <MenubarSeparator className="h-[2px] bg-black my-1" />
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("common.menu.selectAll")}
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
-
-      {/* View Menu */}
-      <MenubarMenu>
-        <MenubarTrigger className="text-md px-2 py-1 border-none focus-visible:ring-0">
-          {t("common.menu.view")}
-        </MenubarTrigger>
-        <MenubarContent align="start" sideOffset={1} className="px-0">
-          <MenubarCheckboxItem
-            checked={false}
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.bySmallIcon")}
-          </MenubarCheckboxItem>
-          <MenubarCheckboxItem
-            checked={true}
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.byIcon")}
-          </MenubarCheckboxItem>
-          <MenubarCheckboxItem
-            checked={false}
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.byList")}
-          </MenubarCheckboxItem>
-          <MenubarSeparator className="h-[2px] bg-black my-1" />
-          <MenubarCheckboxItem
-            checked={true}
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.byName")}
-          </MenubarCheckboxItem>
-          <MenubarCheckboxItem
-            checked={false}
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.byDate")}
-          </MenubarCheckboxItem>
-          <MenubarCheckboxItem
-            checked={false}
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.bySize")}
-          </MenubarCheckboxItem>
-          <MenubarCheckboxItem
-            checked={false}
-            disabled
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.byKind")}
-          </MenubarCheckboxItem>
-        </MenubarContent>
-      </MenubarMenu>
-
-      {/* Go Menu */}
-      <MenubarMenu>
-        <MenubarTrigger className="text-md px-2 py-1 border-none focus-visible:ring-0">
-          {t("common.menu.go")}
-        </MenubarTrigger>
-        <MenubarContent align="start" sideOffset={1} className="px-0">
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t("apps.finder.menu.back")}
-          </MenubarItem>
-          <MenubarItem
-            disabled
-            className="text-md h-6 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t("apps.finder.menu.forward")}
-          </MenubarItem>
-          <MenubarSeparator className="h-[2px] bg-black my-1" />
-          <MenubarItem
-            onClick={() => handleLaunchFinder("/Applications")}
-            className="text-md h-6 px-3 flex items-center gap-2"
-          >
-            <ThemedIcon
-              name="applications.png"
-              alt={t("common.menu.applications")}
-              className="w-4 h-4 [image-rendering:pixelated]"
-            />
-            {t("common.menu.applications")}
-          </MenubarItem>
-          <MenubarItem
-            onClick={() => handleLaunchFinder("/Documents")}
-            className="text-md h-6 px-3 flex items-center gap-2"
-          >
-            <ThemedIcon
-              name="documents.png"
-              alt={t("common.menu.documents")}
-              className="w-4 h-4 [image-rendering:pixelated]"
-            />
-            {t("common.menu.documents")}
-          </MenubarItem>
-          <MenubarItem
-            onClick={() => handleLaunchFinder("/Images")}
-            className="text-md h-6 px-3 flex items-center gap-2"
-          >
-            <ThemedIcon
-              name="images.png"
-              alt={t("common.menu.images")}
-              className="w-4 h-4 [image-rendering:pixelated]"
-            />
-            {t("common.menu.images")}
-          </MenubarItem>
-          <MenubarItem
-            onClick={() => handleLaunchFinder("/Music")}
-            className="text-md h-6 px-3 flex items-center gap-2"
-          >
-            <ThemedIcon
-              name="sounds.png"
-              alt={t("common.menu.music")}
-              className="w-4 h-4 [image-rendering:pixelated]"
-            />
-            {t("common.menu.music")}
-          </MenubarItem>
-          <MenubarItem
-            onClick={() => handleLaunchFinder("/Sites")}
-            className="text-md h-6 px-3 flex items-center gap-2"
-          >
-            <ThemedIcon
-              name="sites.png"
-              alt={t("common.menu.sites")}
-              className="w-4 h-4 [image-rendering:pixelated]"
-            />
-            {t("common.menu.sites")}
-          </MenubarItem>
-          <MenubarItem
-            onClick={() => handleLaunchFinder("/Videos")}
-            className="text-md h-6 px-3 flex items-center gap-2"
-          >
-            <ThemedIcon
-              name="movies.png"
-              alt={t("common.menu.videos")}
-              className="w-4 h-4 [image-rendering:pixelated]"
-            />
-            {t("common.menu.videos")}
-          </MenubarItem>
-          <MenubarItem
-            onClick={() => handleLaunchFinder("/Trash")}
-            className="text-md h-6 px-3 flex items-center gap-2"
-          >
-            <ThemedIcon
-              name="trash-empty.png"
-              alt={t("common.menu.trash")}
-              className="w-4 h-4 [image-rendering:pixelated]"
-            />
-            {t("common.menu.trash")}
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
-
       {/* Help Menu */}
       <MenubarMenu>
         <MenubarTrigger className="text-md px-2 py-1 border-none focus-visible:ring-0">
@@ -791,32 +485,18 @@ function DefaultMenuItems() {
         </MenubarTrigger>
         <MenubarContent align="start" sideOffset={1} className="px-0">
           <MenubarItem
-            onClick={() => setIsHelpDialogOpen(true)}
-            className="text-md h-6 px-3"
-          >
-            {t("apps.finder.menu.finderHelp")}
-          </MenubarItem>
-          <MenubarSeparator className="h-[2px] bg-black my-1" />
-          <MenubarItem
             onClick={() => setIsAboutDialogOpen(true)}
             className="text-md h-6 px-3"
           >
-            {t("apps.finder.menu.aboutFinder")}
+            {t("common.appMenu.aboutApp", { appName: "Kyo" })}
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
 
-      <HelpDialog
-        isOpen={isHelpDialogOpen}
-        onOpenChange={setIsHelpDialogOpen}
-        appId="finder"
-        helpItems={finderHelpItems}
-      />
       <AboutDialog
         isOpen={isAboutDialogOpen}
         onOpenChange={setIsAboutDialogOpen}
-        metadata={finderMetadata}
-        appId="finder"
+        metadata={kyoMetadata}
       />
     </>
   );
@@ -1434,9 +1114,9 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
               instanceId={foregroundInstance.instanceId}
             />
           )}
-          {/* Finder App Menu - shown in macOS X theme when no app is active (desktop) */}
+          {/* Kyo App Menu - shown in macOS X theme when no app is active (desktop) */}
           {currentTheme === "macosx" && !hasActiveApp && (
-            <FinderAppMenu />
+            <KyoAppMenu />
           )}
           {hasActiveApp && children ? children : <DefaultMenuItems />}
         </Menubar>

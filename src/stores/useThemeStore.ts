@@ -59,9 +59,9 @@ async function ensureLegacyCss(theme: OsThemeId) {
 }
 
 // Storage keys
-const THEME_KEY = "ryos:theme";
-const LEGACY_THEME_KEY = "os_theme";
-const SYNC_WALLPAPER_KEY = "ryos:theme-sync-wallpaper";
+const THEME_KEY = "kyo:theme";
+const LEGACY_THEME_KEY = "ryos:theme"; // Migration from ryOS
+const SYNC_WALLPAPER_KEY = "kyo:theme-sync-wallpaper";
 
 /**
  * 切换壁纸（延迟导入避免循环依赖）

@@ -2401,6 +2401,8 @@
       "open": "開啟",
       "quit": "結束",
       "removeFromDock": "從 Dock 移除",
+      "openInNewTab": "在新分頁開啟",
+      "copyUrl": "複製網址",
       "showAllWindows": "顯示所有視窗",
       "trash": "垃圾桶",
       "turnHidingOff": "關閉自動隱藏",

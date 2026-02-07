@@ -2401,6 +2401,8 @@
       "open": "開く",
       "quit": "終了",
       "removeFromDock": "Dockから削除",
+      "openInNewTab": "新規タブで開く",
+      "copyUrl": "URLをコピー",
       "showAllWindows": "すべてのウインドウを表示",
       "trash": "ゴミ箱",
       "turnHidingOff": "「自動的に非表示」をオフにする",

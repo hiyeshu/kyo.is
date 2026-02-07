@@ -13,6 +13,7 @@ import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { useBookmarkStore, isFolder, type Bookmark } from "@/stores/useBookmarkStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
 import { getTranslatedAppName } from "@/utils/i18n";
@@ -61,8 +62,19 @@ export function Desktop({
 
   const currentTheme = useThemeStore((state) => state.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
+  const isMacTheme = currentTheme === "macosx";
   const isTauriApp =
     typeof window !== "undefined" && "__TAURI__" in window;
+
+  // ─── Bookmarks for desktop (non-macOS themes) ──────────────────────
+  const bookmarkStore = useBookmarkStore();
+  const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(null);
+  const [contextMenuBookmark, setContextMenuBookmark] = useState<Bookmark | null>(null);
+
+  // Get top-level bookmarks (not in folders) for desktop display
+  const desktopBookmarks = !isMacTheme
+    ? (bookmarkStore.items.filter((item) => !isFolder(item)) as Bookmark[])
+    : [];
 
   // ─── Video wallpaper playback ─────────────────────────────────────
   const resumeVideoPlayback = useCallback(async () => {
@@ -135,11 +147,48 @@ export function Desktop({
   };
 
   // ─── App list (filtered) ──────────────────────────────────────────
-  // Kyo is bookmark-focused, no desktop icons needed
-  const displayedApps: AnyApp[] = [];
+  // Non-macOS themes: show bookmarks app on desktop
+  // macOS theme: bookmarks is in the Dock, no desktop icons needed
+  const displayedApps: AnyApp[] = isMacTheme 
+    ? [] 
+    : _apps.filter(app => app.id === "bookmarks");
 
   // ─── Context menu ─────────────────────────────────────────────────
   const getContextMenuItems = (): MenuItem[] => {
+    // Bookmark context menu
+    if (contextMenuBookmark) {
+      return [
+        {
+          type: "item",
+          label: t("common.dock.openInNewTab", "Open in New Tab"),
+          onSelect: () => {
+            window.open(contextMenuBookmark.url, "_blank", "noopener,noreferrer");
+            setContextMenuPos(null);
+            setContextMenuBookmark(null);
+          },
+        },
+        {
+          type: "item",
+          label: t("common.dock.copyUrl", "Copy URL"),
+          onSelect: () => {
+            navigator.clipboard.writeText(contextMenuBookmark.url);
+            setContextMenuPos(null);
+            setContextMenuBookmark(null);
+          },
+        },
+        { type: "separator" },
+        {
+          type: "item",
+          label: t("common.menu.delete", "Delete"),
+          onSelect: () => {
+            bookmarkStore.removeBookmark(contextMenuBookmark.id);
+            setContextMenuPos(null);
+            setContextMenuBookmark(null);
+          },
+        },
+      ];
+    }
+    // App context menu
     if (contextMenuAppId) {
       return [
         {
@@ -168,12 +217,13 @@ export function Desktop({
 
   return (
     <div
-      className="absolute inset-0 min-h-screen h-full z-[-1] desktop-background"
+      className="absolute inset-0 min-h-screen h-full z-0 desktop-background"
       onClick={onClick}
       onContextMenu={(e) => {
         e.preventDefault();
         setContextMenuPos({ x: e.clientX, y: e.clientY });
         setContextMenuAppId(null);
+        setContextMenuBookmark(null);
       }}
       style={finalStyles}
       {...longPressHandlers}
@@ -214,12 +264,13 @@ export function Desktop({
 
       {/* Desktop icons */}
       <div
-        className={`flex flex-col relative z-[1] ${
+        className={`flex flex-col relative z-10 ${
           isXpTheme ? "items-start pt-2" : "items-end pt-8"
         }`}
         style={
           isXpTheme
             ? {
+                pointerEvents: "auto",
                 height:
                   "calc(100% - (30px + var(--sat-safe-area-bottom) + 48px))",
                 paddingTop: isTauriApp ? 36 : undefined,
@@ -228,6 +279,7 @@ export function Desktop({
                 paddingBottom: "env(safe-area-inset-bottom, 0px)",
               }
             : {
+                pointerEvents: "auto",
                 height: "calc(100% - 2rem)",
                 padding: "1rem",
                 paddingTop: "2rem",
@@ -245,15 +297,18 @@ export function Desktop({
               : "flex flex-col flex-wrap-reverse justify-start content-start h-full gap-y-2 gap-x-px"
           }
         >
+          {/* App icons */}
           {displayedApps.map((app) => (
             <DesktopIcon
               key={app.id}
               label={getTranslatedAppName(app.id as AppId)}
               icon={getAppIconPath(app.id as AppId)}
               isSelected={selectedAppId === app.id}
+              theme={currentTheme}
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedAppId(app.id);
+                setSelectedBookmarkId(null);
               }}
               onDoubleClick={(e) => {
                 e.stopPropagation();
@@ -271,7 +326,36 @@ export function Desktop({
                 e.stopPropagation();
                 setContextMenuPos({ x: e.clientX, y: e.clientY });
                 setContextMenuAppId(app.id);
+                setContextMenuBookmark(null);
                 setSelectedAppId(app.id);
+              }}
+            />
+          ))}
+          
+          {/* Bookmark icons (non-macOS themes only) */}
+          {desktopBookmarks.map((bm) => (
+            <BookmarkDesktopIcon
+              key={bm.id}
+              bookmark={bm}
+              isSelected={selectedBookmarkId === bm.id}
+              theme={currentTheme}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedBookmarkId(bm.id);
+                setSelectedAppId(null);
+              }}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                window.open(bm.url, "_blank", "noopener,noreferrer");
+                setSelectedBookmarkId(null);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setContextMenuPos({ x: e.clientX, y: e.clientY });
+                setContextMenuBookmark(bm);
+                setContextMenuAppId(null);
+                setSelectedBookmarkId(bm.id);
               }}
             />
           ))}
@@ -283,6 +367,7 @@ export function Desktop({
         onClose={() => {
           setContextMenuPos(null);
           setContextMenuAppId(null);
+          setContextMenuBookmark(null);
         }}
         items={getContextMenuItems()}
       />
@@ -290,6 +375,121 @@ export function Desktop({
         isOpen={isAddWebsiteDialogOpen}
         onOpenChange={setIsAddWebsiteDialogOpen}
       />
+    </div>
+  );
+}
+
+// ─── Bookmark desktop icon ───────────────────────────────────────────
+
+function BookmarkDesktopIcon({
+  bookmark,
+  isSelected,
+  onClick,
+  onDoubleClick,
+  onContextMenu,
+  theme,
+}: {
+  bookmark: Bookmark;
+  isSelected: boolean;
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
+  theme: string;
+}) {
+  const isXpTheme = theme === "xp" || theme === "win98";
+  const isSystem7 = theme === "system7";
+
+  return (
+    <div
+      data-desktop-icon="true"
+      className={`flex flex-col items-center justify-start w-[72px] cursor-default select-none`}
+      onClick={onClick}
+      onDoubleClick={onDoubleClick}
+      onContextMenu={onContextMenu}
+    >
+      {/* Icon container - style varies by theme */}
+      <div className="w-10 h-10 flex items-center justify-center mb-0.5 relative">
+        {isXpTheme ? (
+          // XP/Win98: Classic Windows IE-style icon
+          bookmark.favicon ? (
+            <img
+              src={bookmark.favicon}
+              alt=""
+              className="w-8 h-8 object-contain"
+              draggable={false}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/icons/xp/ie-site.png";
+              }}
+            />
+          ) : (
+            <img
+              src="/icons/xp/ie-site.png"
+              alt=""
+              className="w-8 h-8 object-contain"
+              draggable={false}
+            />
+          )
+        ) : isSystem7 ? (
+          // System 7: Simple black & white style
+          <div className="w-8 h-8 border border-black bg-white flex items-center justify-center">
+            {bookmark.favicon ? (
+              <img
+                src={bookmark.favicon}
+                alt=""
+                className="w-6 h-6 object-contain"
+                style={{ filter: "grayscale(100%)" }}
+                draggable={false}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                  (e.target as HTMLImageElement).parentElement!.innerHTML = "🌐";
+                }}
+              />
+            ) : (
+              <span className="text-sm">🌐</span>
+            )}
+          </div>
+        ) : (
+          // Default/Aqua: Modern rounded style
+          <div
+            className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden"
+            style={{
+              boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)",
+            }}
+          >
+            {bookmark.favicon ? (
+              <img
+                src={bookmark.favicon}
+                alt=""
+                className="w-full h-full object-cover"
+                draggable={false}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                  (e.target as HTMLImageElement).parentElement!.innerHTML = "🌐";
+                }}
+              />
+            ) : (
+              <span className="text-lg">🌐</span>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Label - style varies by theme */}
+      <span
+        className={`text-[11px] leading-tight text-center break-words max-w-full px-0.5 rounded ${
+          isSelected
+            ? "bg-[Highlight] text-[HighlightText]"
+            : isXpTheme
+            ? "text-white [text-shadow:_1px_1px_1px_rgb(0_0_0_/_90%)]"
+            : isSystem7
+            ? "text-black"
+            : "text-gray-900 [text-shadow:_0_1px_1px_rgb(255_255_255_/_80%)]"
+        }`}
+        style={isXpTheme ? { fontFamily: '"Pixelated MS Sans Serif", Arial', fontSize: '11px' } : undefined}
+      >
+        {bookmark.title}
+      </span>
     </div>
   );
 }
@@ -303,6 +503,7 @@ function DesktopIcon({
   onClick,
   onDoubleClick,
   onContextMenu,
+  theme,
 }: {
   label: string;
   icon: string;
@@ -310,7 +511,10 @@ function DesktopIcon({
   onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
+  theme: string;
 }) {
+  const isXpTheme = theme === "xp" || theme === "win98";
+  
   return (
     <div
       data-desktop-icon="true"
@@ -331,8 +535,11 @@ function DesktopIcon({
         className={`text-[11px] leading-tight text-center break-words max-w-full px-0.5 rounded ${
           isSelected
             ? "bg-[Highlight] text-[HighlightText]"
+            : isXpTheme
+            ? "text-white [text-shadow:_1px_1px_1px_rgb(0_0_0_/_90%)]"
             : "text-gray-900 [text-shadow:_0_1px_1px_rgb(255_255_255_/_80%)]"
         }`}
+        style={isXpTheme ? { fontFamily: '"Pixelated MS Sans Serif", Arial', fontSize: '11px' } : undefined}
       >
         {label}
       </span>

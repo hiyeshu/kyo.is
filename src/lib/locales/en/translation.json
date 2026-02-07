@@ -132,6 +132,8 @@
       "folderContents": "Folder Contents",
       "removeFromDock": "Remove from Dock",
       "addToDock": "Add to Dock",
+      "openInNewTab": "Open in New Tab",
+      "copyUrl": "Copy URL",
       "turnHidingOn": "Turn Hiding On",
       "turnHidingOff": "Turn Hiding Off",
       "turnMagnificationOn": "Turn Magnification On",

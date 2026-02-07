@@ -1,6 +1,6 @@
-// Utility helpers for IndexedDB operations used across ryOS
+// Utility helpers for IndexedDB operations used across Kyo
 
-const DB_NAME = "ryOS";
+const DB_NAME = "Kyo";
 const DB_VERSION = 7; // Force APPLETS store creation
 
 export const STORES = {

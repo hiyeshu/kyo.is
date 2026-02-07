@@ -4,15 +4,17 @@
 ## 成员清单
 
 helpers.ts: Zustand 浅比较辅助函数，优化 store 订阅性能，避免不必要的重渲染
-useAppStore.ts: 应用管理核心状态，窗口实例、最近应用、最近文档、启动动画、AI 模型选择、首次启动标记，持久化到 localStorage
+useAppStore.ts: 应用管理核心状态，窗口实例、最近应用、AI 模型选择，存储键 kyo:app-store
 useAudioSettingsStore.ts: 音频设置状态，系统音效开关、音量控制，持久化
 useBookmarkStore.ts: 书签管理状态，书签列表、分类、拖拽排序、导入导出，持久化
-useDisplaySettingsStore.ts: 显示设置状态，显示模式（桌面/平板/手机）、壁纸、屏保、动画开关，持久化
+useDisplaySettingsStore.ts: 显示设置状态，显示模式、壁纸、屏保，存储键 kyo:display-settings
 useDockStore.ts: Dock 栏状态，固定应用列表、拖拽排序、显示/隐藏，持久化
-useFilesStore.ts: 文件系统状态，虚拟文件树、当前目录、选中文件，持久化到 IndexedDB
-useFinderStore.ts: Finder 应用状态，视图模式、排序方式、侧边栏展开，持久化
-useThemeStore.ts: 主题状态，当前主题（system7/aqua/xp/win98）、暗色模式、主题切换，持久化
-useCustomThemeStore.ts: 自定义主题状态，基于 themeSchema 管理用户自定义主题，编辑器临时状态，主题导入导出，持久化
+useThemeStore.ts: 主题状态，当前主题，存储键 kyo:theme 和 kyo:theme-sync-wallpaper
+useCustomThemeStore.ts: 自定义主题状态，基于 themeSchema 管理用户自定义主题，编辑器临时状态
+
+## 已删除文件（Phase 1 清理）
+- useFilesStore.ts (文件系统，Kyo 无文件系统)
+- useFinderStore.ts (Finder 应用，Kyo 无 Finder)
 
 ## 依赖关系
 - 依赖 Zustand 状态管理库
@@ -29,5 +31,6 @@ useCustomThemeStore.ts: 自定义主题状态，基于 themeSchema 管理用户�
 5. 避免在 store 中存储派生状态，使用 useMemo 计算
 6. 异步操作放在 actions 中，不要在 reducer 中执行
 7. Store 之间避免循环依赖，保持单向数据流
+8. localStorage 键统一使用 `kyo:` 前缀
 
 [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md

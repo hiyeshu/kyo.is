@@ -1,6 +1,6 @@
 /**
- * [INPUT]: 依赖 @/components/ui/dialog 对话框组件，依赖 @/stores/useDockStore Dock 状态管理，依赖 react 的 useState
- * [OUTPUT]: 对外提供 AddWebsiteDialog 组件，用于添加网站链接到 Dock
+ * [INPUT]: 依赖 @/components/ui/dialog, @/stores/useDockStore, @/stores/useBookmarkStore
+ * [OUTPUT]: 对外提供 AddWebsiteDialog 组件，用于添加网站到书签并固定到 Dock
  * [POS]: components/dialogs/ 的网站添加对话框，被 Dock 组件调用
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useDockStore } from "@/stores/useDockStore";
+import { useBookmarkStore } from "@/stores/useBookmarkStore";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
@@ -32,7 +33,8 @@ export function AddWebsiteDialog({
 }: AddWebsiteDialogProps) {
   const { t } = useTranslation();
   const currentTheme = useThemeStore((state) => state.current);
-  const addItem = useDockStore((state) => state.addItem);
+  const addDockItem = useDockStore((state) => state.addItem);
+  const addBookmark = useBookmarkStore((state) => state.addBookmark);
 
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +46,6 @@ export function AddWebsiteDialog({
   const getFaviconUrl = (websiteUrl: string): string => {
     try {
       const urlObj = new URL(websiteUrl);
-      // 使用 Google Favicon Service
       return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`;
     } catch {
       return "";
@@ -84,20 +85,27 @@ export function AddWebsiteDialog({
       const faviconUrl = getFaviconUrl(normalizedUrl);
       const title = getWebsiteTitle(normalizedUrl);
 
-      const success = addItem({
-        type: "link",
-        id: `link-${Date.now()}`,
-        name: title,
-        url: normalizedUrl,
-        icon: faviconUrl,
-      });
+      // 1. 创建书签
+      const bookmarkId = addBookmark(title, normalizedUrl, faviconUrl);
 
-      if (success) {
-        setUrl("");
-        onOpenChange(false);
-      } else {
-        setErrorMessage("This website is already in your Dock");
+      // 2. macOS 主题：同时添加到 Dock
+      if (isMacTheme) {
+        const success = addDockItem({
+          type: "bookmark",
+          id: bookmarkId,
+        });
+
+        if (!success) {
+          // 书签已添加，但 Dock 里已存在（不是错误）
+          setUrl("");
+          onOpenChange(false);
+          return;
+        }
       }
+
+      // 成功
+      setUrl("");
+      onOpenChange(false);
     } catch (error) {
       setErrorMessage("Invalid URL. Please enter a valid website address.");
     } finally {
@@ -122,7 +130,10 @@ export function AddWebsiteDialog({
         }}
         id="dialog-description"
       >
-        Enter a website URL to add to your Dock
+        {isMacTheme 
+          ? "Enter a website URL to add to your Dock"
+          : "Enter a website URL to add to your Desktop"
+        }
       </p>
       <Input
         autoFocus
@@ -196,7 +207,7 @@ export function AddWebsiteDialog({
               fontSize: isXpTheme ? "11px" : undefined,
             }}
           >
-            {isLoading ? "Adding..." : "Add to Dock"}
+            {isLoading ? "Adding..." : isMacTheme ? "Add to Dock" : "Add to Desktop"}
           </Button>
         </div>
       </DialogFooter>

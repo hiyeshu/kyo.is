@@ -1,14 +1,29 @@
+/**
+ * [INPUT]: zustand + zustand/middleware(persist), useBookmarkStore
+ * [OUTPUT]: useDockStore, DockItem
+ * [POS]: Dock 栏状态，固定应用列表、书签引用，被 Dock 组件消费
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { useBookmarkStore } from "./useBookmarkStore";
 
-// Dock item can be an app, file/applet, or website link
+// Dock item types:
+// - app: 应用快捷方式
+// - bookmark: 书签引用（从 useBookmarkStore 读取数据）
 export interface DockItem {
-  type: "app" | "file" | "link";
-  id: string; // AppId for apps, or unique id for files/links
-  path?: string; // File path for file type items
-  name?: string; // Display name for file/link items
-  icon?: string; // Custom icon for file items (emoji or path), or favicon URL for links
-  url?: string; // URL for link type items
+  type: "app" | "bookmark";
+  id: string; // AppId for apps, bookmarkId for bookmarks
+}
+
+// Legacy link type for migration
+interface LegacyDockItem {
+  type: "app" | "bookmark" | "link";
+  id: string;
+  name?: string;
+  icon?: string;
+  url?: string;
 }
 
 // Protected items that cannot be removed from dock
@@ -46,19 +61,8 @@ export const useDockStore = create<DockStoreState>()(
       addItem: (item: DockItem, insertIndex?: number) => {
         const { pinnedItems } = get();
         
-        // Check for duplicates
-        const exists = pinnedItems.some((existing) => {
-          if (item.type === "app" && existing.type === "app") {
-            return existing.id === item.id;
-          }
-          if (item.type === "file" && existing.type === "file") {
-            return existing.path === item.path;
-          }
-          if (item.type === "link" && existing.type === "link") {
-            return existing.url === item.url;
-          }
-          return false;
-        });
+        // Check for duplicates by id (works for all types)
+        const exists = pinnedItems.some((existing) => existing.id === item.id);
 
         if (exists) {
           return false;
@@ -66,10 +70,8 @@ export const useDockStore = create<DockStoreState>()(
 
         set((state) => {
           const newItems = [...state.pinnedItems];
-          // Ensure Finder stays at position 0 - insert at minimum position 1
-          const minIndex = newItems[0]?.id === "finder" ? 1 : 0;
           const index = insertIndex !== undefined 
-            ? Math.max(minIndex, Math.min(insertIndex, newItems.length))
+            ? Math.max(0, Math.min(insertIndex, newItems.length))
             : newItems.length;
           newItems.splice(index, 0, item);
           return { pinnedItems: newItems };
@@ -94,18 +96,6 @@ export const useDockStore = create<DockStoreState>()(
       reorderItems: (fromIndex: number, toIndex: number) => {
         set((state) => {
           const newItems = [...state.pinnedItems];
-          const movedItem = newItems[fromIndex];
-          
-          // Don't allow moving Finder (always stays at position 0)
-          if (movedItem?.id === "finder") {
-            return state;
-          }
-          
-          // Don't allow moving items to position 0 (Finder's spot)
-          if (toIndex === 0 && newItems[0]?.id === "finder") {
-            return state;
-          }
-          
           const [removed] = newItems.splice(fromIndex, 1);
           if (removed) {
             newItems.splice(toIndex, 0, removed);
@@ -137,9 +127,38 @@ export const useDockStore = create<DockStoreState>()(
       },
     }),
     {
-      name: "dock-storage",
+      name: "kyo:dock-storage",
+      version: 2,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persisted, version) => {
+        const state = persisted as { pinnedItems?: LegacyDockItem[] };
+        
+        if (version < 2 && state.pinnedItems) {
+          // Migrate link items to bookmarks
+          const bookmarkStore = useBookmarkStore.getState();
+          const migratedItems: DockItem[] = [];
+          
+          for (const item of state.pinnedItems) {
+            if (item.type === "link" && item.url) {
+              // Create bookmark from link
+              const bookmarkId = bookmarkStore.addBookmark(
+                item.name || "Website",
+                item.url,
+                item.icon
+              );
+              // Add bookmark reference to dock
+              migratedItems.push({ type: "bookmark", id: bookmarkId });
+            } else if (item.type === "app" || item.type === "bookmark") {
+              // Keep as-is
+              migratedItems.push({ type: item.type, id: item.id });
+            }
+          }
+          
+          state.pinnedItems = migratedItems as LegacyDockItem[];
+        }
+        
+        return persisted as DockStoreState;
+      },
     }
   )
 );
-

@@ -2401,6 +2401,8 @@
       "open": "Abrir",
       "quit": "Salir",
       "removeFromDock": "Quitar del Dock",
+      "openInNewTab": "Abrir en Nueva Pestaña",
+      "copyUrl": "Copiar URL",
       "showAllWindows": "Mostrar Todas las Ventanas",
       "trash": "Papelera",
       "turnHidingOff": "Desactivar ocultación automática",

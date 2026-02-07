@@ -820,7 +820,7 @@ const createUseAppStore = () =>
       },
       }),
       {
-        name: "ryos:app-store",
+        name: "kyo:app-store",
         version: CURRENT_APP_STORE_VERSION,
         partialize: (state): Partial<AppStoreState> => ({
         // Core app/window state

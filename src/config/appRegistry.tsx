@@ -114,11 +114,7 @@ import {
 } from "@/apps/theme-editor/metadata";
 
 // ─── 注册表 ──────────────────────────────────────────────────────────────────
-
-const stubWindowConfig = {
-  defaultSize: { width: 600, height: 460 },
-  minSize: { width: 360, height: 300 },
-} as WindowConstraints;
+// Kyo.is: Only 2 apps (Finder and Applet Viewer removed)
 
 export const appRegistry = {
   "bookmarks": {
@@ -133,26 +129,6 @@ export const appRegistry = {
       defaultSize: { width: 600, height: 460 },
       minSize: { width: 360, height: 300 },
     } as WindowConstraints,
-  },
-  "finder": {
-    id: "finder" as const,
-    name: "Finder",
-    icon: { type: "image" as const, src: "/icons/finder.png" },
-    description: "File browser",
-    component: LazyBookmarksApp,
-    helpItems: bookmarkBoardHelpItems,
-    metadata: bookmarkBoardMetadata,
-    windowConfig: stubWindowConfig,
-  },
-  "applet-viewer": {
-    id: "applet-viewer" as const,
-    name: "Applet Viewer",
-    icon: { type: "image" as const, src: "/icons/default/application.png" },
-    description: "View applets",
-    component: LazyBookmarksApp,
-    helpItems: bookmarkBoardHelpItems,
-    metadata: bookmarkBoardMetadata,
-    windowConfig: stubWindowConfig,
   },
   "theme-editor": {
     id: "theme-editor" as const,
