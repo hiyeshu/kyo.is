@@ -1,101 +1,147 @@
-# ryOS — A Web-Based Agentic AI OS, made with Cursor
+[English](./README.md) | [中文](./README.zh-CN.md)
 
-A modern web-based desktop environment inspired by classic macOS and Windows, built with React, TypeScript, and AI. Features multiple built-in applications, a familiar desktop interface, and a system-aware AI assistant. Works on all devices—desktop, tablet, and mobile.
+# 💻 Kyo.is
 
-**[Read ryOS Docs](https://os.ryo.lu/docs)** — Architecture, API reference, and developer guides
+**Your browser is your desktop.**
+
+Kyo.is is a personal web portal where links become your operating system. In a world where CLI and AI compress every entry point—where Notion, Figma, ChatGPT are all just URLs—you don't need to download anything anymore. You just need a place to put them.
+
+**[Live Demo → kyo.is](https://kyo.is)**
+
+---
+
+## Philosophy
+
+### Defocus as Entry Point
+
+The moment you open your browser should feel like coming home, not clocking in. Kyo.is embraces blur, stillness, and negative space. It's not a productivity dashboard. It's a room you live in.
+
+### Link as Universal Container
+
+A link can hold anything—a tool, a document, a video, an AI assistant. When everything becomes a link, the browser becomes the OS, and your homepage becomes your desktop.
+
+### Information Emerges Through Use
+
+Information doesn't enter your mind through compression and retrieval. It grows through organizing, using, and wanting. Your desire to save a link *is* the meaning of that link.
+
+---
+
+## What Kyo.is is NOT
+
+| | Kyo.is | Cubox |
+|--|--------|-------|
+| **Metaphor** | Room | Warehouse |
+| **Core action** | Live with | Capture & retrieve |
+| **Psychology** | "It's here when I need it" | "I saved it but haven't read it" |
+
+| | Kyo.is | iTab |
+|--|--------|------|
+| **Content** | Only what you choose | External feeds |
+| **Information flow** | You → Desktop | World → You |
+| **Changes when** | Only when you change it | Every day (trending updates) |
+
+> Cubox asks: "Where did you save that?"  
+> iTab asks: "What's trending today?"  
+> **Kyo.is asks: "What do you want on your desk?"**
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│  Layer 1: Surface — What you see            │
+│  Wallpaper + Dock + Quick Access            │
+│  ← This is your "desktop"                   │
+├─────────────────────────────────────────────┤
+│  Layer 2: Portal — What you trigger         │
+│  ⌘K — The only entry point you need         │
+│  ← This is your "command center"            │
+├─────────────────────────────────────────────┤
+│  Layer 3: Depth — Where you go deep         │
+│  Chat / Notes / Custom Applets              │
+│  ← This is your "private space"             │
+└─────────────────────────────────────────────┘
+```
+
+---
 
 ## Features
 
-### Desktop Environment
+### Surface Layer
+- 🖼️ **Wallpapers** — Static & video wallpapers with blur effects
+- 🎯 **Dock** — macOS-style dock for your most-used links
+- ✨ **Glassmorphism** — Frosted glass UI
 
-- Authentic macOS and Windows-style desktop interactions
-- Multi-instance window manager with drag, resize, and minimize
-- Customizable wallpapers (photos, patterns, or videos)
-- System-wide sound effects and AI assistant (Ryo)
-- Virtual file system with local storage persistence and backup/restore
+### Portal Layer
+- ⌨️ **⌘K** — The only entry point you need
+- 🔖 **Bookmarks** — Your links, your way
+- 🖱️ **Drag & Drop** — Arrange your digital space
 
-### Themes
+### Depth Layer *(Coming Soon)*
+- 💬 **Personal AI** — Understands your link collection, not generic chat
+- 📝 **Quick Notes** — Markdown notes on your desktop
 
-- **System 7** — Classic Mac OS look with top menubar and traffic-light controls
-- **Aqua** — Mac OS X style with modern aesthetics
-- **Windows XP** — Bottom taskbar, Start menu, and classic window controls
-- **Windows 98** — Retro Windows experience with mobile-safe controls
+---
 
-### Built-in Applications
-
-- **Finder** — File manager with Quick Access, storage info, and smart file detection
-- **TextEdit** — Rich text editor with markdown, slash commands, and multi-window support
-- **MacPaint** — Bitmap graphics editor with drawing tools, patterns, and import/export
-- **Videos** — VCR-style YouTube player with playlist management
-- **Soundboard** — Record and play custom sounds with waveform visualization
-- **Synth** — Virtual synthesizer with multiple waveforms, effects, and MIDI support
-- **Photo Booth** — Camera app with real-time filters and photo gallery
-- **Internet Explorer** — Time Machine that explores web history via Wayback Machine; AI generates sites for years before 1996 or in the future
-- **Chats** — AI chat with Ryo, public/private chat rooms, voice messages, and tool calling
-- **Control Panels** — System preferences: appearance, sounds, backup/restore, and file system management
-- **Minesweeper** — Classic puzzle game
-- **Virtual PC** — DOS emulator for classic games (Doom, SimCity, etc.)
-- **Infinite Mac** — Classic Mac OS emulators (System 1.0 to Mac OS X 10.4) via Infinite Mac
-- **Terminal** — Unix-like CLI with AI integration (`ryo <prompt>`)
-- **iPod** — 1st-gen iPod music player with YouTube import, lyrics, and translation
-- **Applet Store** — Browse, install, and share community-created HTML applets
-- **Stickies** — Sticky notes for quick reminders
-
-## Quick Start
-
-1. Launch apps from the Finder, Desktop, or Apple/Start menu
-2. Drag windows to move, drag edges to resize
-3. Use Control Panels to customize appearance and sounds
-4. Chat with Ryo AI for help or to control apps
-5. Files auto-save to browser storage
-
-## Project Structure
+## Roadmap
 
 ```
-├── _api/             # Vercel API endpoints (AI, chat, lyrics, etc.)
-├── api/              # Local dev only: symlink to _api (created by dev:vercel; gitignored)
-├── public/           # Static assets (icons, wallpapers, sounds, fonts)
-├── src/
-│   ├── apps/         # Individual app modules
-│   ├── components/   # Shared React components (ui, dialogs, layout)
-│   ├── config/       # Configuration files
-│   ├── contexts/     # React context providers
-│   ├── hooks/        # Custom React hooks
-│   ├── lib/          # Libraries and utilities
-│   ├── stores/       # Zustand state management
-│   ├── styles/       # CSS and styling
-│   └── types/        # TypeScript definitions
+Phase 1: Foundation (Current)
+├── Clean up legacy code
+├── PWA optimization
+├── Enhanced bookmarks: drag-sort, edit, import
+└── ⌘K upgrade
+
+Phase 2: Personal Portal
+├── Quick Links mode: bookmark grid on desktop
+├── Link preview on hover
+├── Dock enhancement
+└── Mobile-first layout
+
+Phase 3: Private Space
+├── Personal AI: search bookmarks, summarize links
+├── Quick Notes
+└── Applet framework
 ```
+
+---
 
 ## Tech Stack
 
-- **Frontend:** React 19, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion
-- **Audio:** Tone.js, WaveSurfer.js
-- **3D:** Three.js (shaders)
-- **Text Editor:** TipTap
+- **Framework:** React 19, TypeScript, Vite
+- **Styling:** Tailwind CSS, shadcn/ui, Framer Motion
 - **State:** Zustand
-- **Storage:** IndexedDB, LocalStorage, Redis (Upstash)
-- **AI:** OpenAI, Anthropic, Google via Vercel AI SDK
-- **Real-time:** Pusher
-- **Build:** Vite, Bun
+- **Storage:** IndexedDB, LocalStorage
+- **AI:** Vercel AI SDK
+- **Audio:** Tone.js
 - **Deployment:** Vercel
 
-## Scripts
+---
+
+## Development
 
 ```bash
-bun dev              # Start development server
-bun run build        # Build for production
-bun run lint         # Run ESLint
-bun run preview      # Preview production build
-bun run dev:vercel   # Run with Vercel dev server (recommended); ensures api -> _api for local dev only
+bun install
+bun run dev
+bun run build
 ```
 
-For local development only: `bun run dev:vercel` creates an `api` → `_api` symlink so Vercel dev serves your API routes (Vercel looks for `api/`). The symlink is gitignored and not used in production.
+---
+
+## Why "Kyo"?
+
+鏡 (kyō) — mirror.
+
+Your digital space should reflect you, not the world's noise.
+
+---
 
 ## License
 
-AGPL-3.0 — See [LICENSE](LICENSE) for details.
+AGPL-3.0 — See [LICENSE](./LICENSE)
 
-## Contributing
+---
 
-Contributions welcome! Please submit a Pull Request.
+*Information doesn't enter your mind through compression.*  
+*It grows through organizing, using, and wanting.*
