@@ -468,7 +468,8 @@ function BookmarkDesktopIcon({
               <img
                 src={bookmark.favicon}
                 alt=""
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
+                style={{ imageRendering: "-webkit-optimize-contrast" }}
                 draggable={false}
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";

@@ -425,7 +425,8 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
                   style={{
                     width: "100%",
                     height: "100%",
-                    objectFit: "cover",
+                    objectFit: "contain",
+                    imageRendering: "-webkit-optimize-contrast",
                     pointerEvents: "none",
                   }}
                   onError={(e) => {

@@ -78,7 +78,8 @@ function BookmarkCard({
           <img
             src={bm.favicon}
             alt=""
-            className="w-5 h-5"
+            className="w-5 h-5 object-contain"
+            style={{ imageRendering: "-webkit-optimize-contrast" }}
             draggable={false}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
@@ -379,7 +380,8 @@ export function BookmarkBoardApp({
                     <img
                       src={h.previewFavicon}
                       alt=""
-                      className="w-8 h-8"
+                      className="w-8 h-8 object-contain"
+                      style={{ imageRendering: "-webkit-optimize-contrast" }}
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
                       }}
