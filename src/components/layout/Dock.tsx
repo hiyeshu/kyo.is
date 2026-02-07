@@ -33,6 +33,13 @@ import {
   type MotionValue,
 } from "framer-motion";
 
+/** Dock 图标放大显示，将 Google favicon 的 sz 提升到 256 避免书签图标发糊 */
+const DOCK_FAVICON_SZ = 256;
+function faviconUrlForDock(faviconUrl: string): string {
+  if (!faviconUrl?.startsWith("http")) return faviconUrl;
+  return faviconUrl.replace(/\bsz=\d+\b/, `sz=${DOCK_FAVICON_SZ}`);
+}
+
 const MAX_SCALE = 2.3; // peak multiplier at cursor center
 const DISTANCE = 140; // px range where magnification is applied
 const BASE_BUTTON_SIZE = 48; // px (w-12)
@@ -1841,7 +1848,10 @@ function MacDock() {
                       return;
                     }
                     
-                    const icon = bookmark.favicon || "🌐";
+                    const rawIcon = bookmark.favicon || "🌐";
+                    const icon = bookmark.favicon?.startsWith("http")
+                      ? faviconUrlForDock(bookmark.favicon)
+                      : rawIcon;
                     const label = bookmark.title;
                     const hasFaviconUrl = Boolean(bookmark.favicon?.startsWith("http"));
 
