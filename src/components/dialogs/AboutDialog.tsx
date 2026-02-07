@@ -43,7 +43,7 @@ export function AboutDialog({
     <div className="flex flex-col items-center justify-center space-y-2 py-8 px-6">
       <div className="w-24 h-24 mx-auto flex items-center justify-center">
         <img
-          src="/frame-8.svg"
+          src="/favicon.svg"
           alt="Kyo"
           className="w-full h-full object-contain"
         />
