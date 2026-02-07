@@ -431,22 +431,29 @@ function BookmarkDesktopIcon({
             />
           )
         ) : isSystem7 ? (
-          // System 7: Simple black & white style
-          <div className="w-8 h-8 border border-black bg-white flex items-center justify-center">
+          // System 7: Black & white classic Mac style
+          <div 
+            className="w-8 h-8 border border-black bg-white flex items-center justify-center overflow-hidden"
+            style={{ filter: "grayscale(100%)" }}
+          >
             {bookmark.favicon ? (
               <img
                 src={bookmark.favicon}
                 alt=""
                 className="w-6 h-6 object-contain"
-                style={{ filter: "grayscale(100%)" }}
                 draggable={false}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                  (e.target as HTMLImageElement).parentElement!.innerHTML = "🌐";
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/icons/default/internet.png";
                 }}
               />
             ) : (
-              <span className="text-sm">🌐</span>
+              <img
+                src="/icons/default/internet.png"
+                alt=""
+                className="w-6 h-6 object-contain"
+                draggable={false}
+              />
             )}
           </div>
         ) : (
