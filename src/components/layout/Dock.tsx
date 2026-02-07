@@ -538,8 +538,8 @@ const Divider = forwardRef<HTMLDivElement, DividerProps>(
   }
 );
 
-// Apps that support multi-window
-const MULTI_WINDOW_APPS: AppId[] = ["textedit", "finder", "applet-viewer"];
+// Apps that support multi-window (Kyo only has bookmarks, single-window by default)
+const MULTI_WINDOW_APPS: AppId[] = [];
 
 function MacDock() {
   const { t } = useTranslation();

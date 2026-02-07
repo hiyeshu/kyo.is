@@ -98,10 +98,8 @@ export function HelpDialog({
       ? `https://os.ryo.lu/docs/${docName}`
       : "https://os.ryo.lu/docs";
 
-    launchApp("internet-explorer", {
-      url: docsUrl,
-      year: "current",
-    });
+    // Open docs in new tab (Kyo doesn't have a browser app)
+    window.open(docsUrl, "_blank", "noopener,noreferrer");
     onOpenChange(false);
   };
 

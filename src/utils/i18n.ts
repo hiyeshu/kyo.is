@@ -1,47 +1,11 @@
 import i18n from "@/lib/i18n";
 import { useThemeStore } from "@/stores/useThemeStore";
-
-export type AppId =
-  | "finder"
-  | "soundboard"
-  | "internet-explorer"
-  | "chats"
-  | "textedit"
-  | "paint"
-  | "photo-booth"
-  | "minesweeper"
-  | "videos"
-  | "ipod"
-  | "karaoke"
-  | "synth"
-  | "pc"
-  | "terminal"
-  | "applet-viewer"
-  | "control-panels"
-  | "admin"
-  | "stickies"
-  | "infinite-mac";
+import { type AppId } from "@/config/appRegistry";
 
 /**
- * Get translated app name with theme-awareness
- * For certain apps (like control-panels), the name changes based on theme:
- * - macOS X: "System Preferences"
- * - System 7, Windows 98, Windows XP: "Control Panels"
+ * Get translated app name
  */
 export function getTranslatedAppName(appId: AppId): string {
-  const currentTheme = useThemeStore.getState().current;
-  
-  // Theme-specific app names
-  if (appId === "control-panels") {
-    if (currentTheme === "macosx") {
-      const macKey = `apps.${appId}.nameForMacosX`;
-      const macTranslated = i18n.t(macKey);
-      if (macTranslated !== macKey) {
-        return macTranslated;
-      }
-    }
-  }
-  
   const key = `apps.${appId}.name`;
   const translated = i18n.t(key);
   // If translation doesn't exist, return the key (fallback)

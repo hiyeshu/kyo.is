@@ -15,11 +15,11 @@ import { useAppStoreShallow } from "@/stores/helpers";
 import { appRegistry, type AppId } from "@/config/appRegistry";
 import { getTranslatedAppName } from "@/utils/i18n";
 
-// Apps that support multiple windows
-const MULTI_INSTANCE_APPS: AppId[] = ["textedit", "finder", "applet-viewer"];
+// Apps that support multiple windows (Kyo only has bookmarks, single-window)
+const MULTI_INSTANCE_APPS: AppId[] = [];
 
-// Apps that support fullscreen mode
-const FULLSCREEN_APPS: AppId[] = ["ipod", "karaoke", "videos", "pc"];
+// Apps that support fullscreen mode (none in Kyo currently)
+const FULLSCREEN_APPS: AppId[] = [];
 
 interface AppMenuProps {
   appId: AppId;
