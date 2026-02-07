@@ -147,7 +147,7 @@ export function useBookmarkBoard() {
     } catch { /* noop */ }
 
     const finalTitle = title || hostname;
-    const favicon = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+    const favicon = `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
 
     store.addBookmark(finalTitle, fullUrl, favicon, addFolderId);
     setAddDialogOpen(false);
@@ -182,7 +182,7 @@ export function useBookmarkBoard() {
     store.updateBookmark(editingBookmark.id, {
       title: title || hostname,
       url: fullUrl,
-      favicon: `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`,
+      favicon: `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`,
     });
     
     setEditDialogOpen(false);

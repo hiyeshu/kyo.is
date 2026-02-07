@@ -13,7 +13,7 @@ import { persist } from "zustand/middleware";
 const generateId = () => crypto.randomUUID();
 
 const fav = (domain: string) =>
-  `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 
 // ─── 数据模型 ───────────────────────────────────────────────────────────────
 
