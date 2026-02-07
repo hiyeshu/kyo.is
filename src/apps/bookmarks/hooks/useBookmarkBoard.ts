@@ -5,13 +5,30 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   useBookmarkStore,
   isFolder,
   type Bookmark,
 } from "@/stores/useBookmarkStore";
 import { useThemeStore } from "@/stores/useThemeStore";
+
+// ─── 获取网页标题 ─────────────────────────────────────────────────────────────
+
+async function fetchPageTitle(url: string): Promise<string | null> {
+  try {
+    // 尝试用 allorigins 代理绕过 CORS
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return null;
+    
+    const html = await res.text();
+    const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    return match ? match[1].trim() : null;
+  } catch {
+    return null;
+  }
+}
 
 export function useBookmarkBoard() {
   const store = useBookmarkStore();
@@ -47,6 +64,26 @@ export function useBookmarkBoard() {
   const [addTitle, setAddTitle] = useState("");
   const [addUrl, setAddUrl] = useState("");
   const [addFolder, setAddFolder] = useState<string | undefined>(undefined);
+  const [isFetchingTitle, setIsFetchingTitle] = useState(false);
+
+  // 所有文件夹列表
+  const folders = useMemo(
+    () => store.items.filter(isFolder).map((f) => f.title),
+    [store.items]
+  );
+
+  // 预览 favicon URL
+  const previewFavicon = useMemo(() => {
+    const url = addUrl.trim();
+    if (!url) return null;
+    const fullUrl = url.startsWith("http") ? url : `https://${url}`;
+    try {
+      const hostname = new URL(fullUrl).hostname;
+      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+    } catch {
+      return null;
+    }
+  }, [addUrl]);
 
   const openAddDialog = useCallback((folderTitle?: string) => {
     setAddTitle("");
@@ -54,6 +91,41 @@ export function useBookmarkBoard() {
     setAddFolder(folderTitle);
     setAddDialogOpen(true);
   }, []);
+
+  // 当 URL 变化时，自动获取网页标题
+  useEffect(() => {
+    if (!addDialogOpen || !addUrl.trim()) return;
+    
+    const url = addUrl.trim();
+    const fullUrl = url.startsWith("http") ? url : `https://${url}`;
+    
+    // 验证 URL 格式
+    try {
+      new URL(fullUrl);
+    } catch {
+      return;
+    }
+
+    // 如果用户已经手动输入了标题，不覆盖
+    if (addTitle.trim()) return;
+
+    const controller = new AbortController();
+    setIsFetchingTitle(true);
+
+    fetchPageTitle(fullUrl)
+      .then((title) => {
+        if (!controller.signal.aborted && title) {
+          setAddTitle(title);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsFetchingTitle(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [addUrl, addDialogOpen, addTitle]);
 
   const submitBookmark = useCallback(() => {
     const url = addUrl.trim();
@@ -128,8 +200,12 @@ export function useBookmarkBoard() {
     addUrl,
     setAddUrl,
     addFolder,
+    setAddFolder,
     openAddDialog,
     submitBookmark,
+    isFetchingTitle,
+    folders,
+    previewFavicon,
 
     // 打开
     openBookmark,

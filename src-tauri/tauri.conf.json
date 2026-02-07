@@ -1,7 +1,7 @@
 {
-  "productName": "ryOS",
-  "version": "1.0.1",
-  "identifier": "lu.ryo.os",
+  "productName": "Kyo",
+  "version": "1.0.0",
+  "identifier": "is.kyo.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -42,10 +42,10 @@
     ],
     "resources": [],
     "externalBin": [],
-    "copyright": "Copyright Ryo Lu",
+    "copyright": "Copyright Kyo",
     "category": "Utility",
-    "shortDescription": "An AI OS experience",
-    "longDescription": "An AI OS experience, made with Cursor",
+    "shortDescription": "Web-Based Agentic AI OS",
+    "longDescription": "Kyo.is - A web-based agentic AI operating system experience",
     "macOS": {
       "minimumSystemVersion": "10.13",
       "infoPlist": "./Info.plist",

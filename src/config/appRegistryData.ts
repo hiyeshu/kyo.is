@@ -5,7 +5,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-export const appIds = ["bookmarks", "finder", "applet-viewer"] as const;
+export const appIds = ["bookmarks", "finder", "applet-viewer", "theme-editor"] as const;
 
 export type AppId = (typeof appIds)[number];
 
@@ -18,6 +18,7 @@ export const appNames: Record<AppId, string> = {
   "bookmarks": "Bookmarks",
   "finder": "Finder",
   "applet-viewer": "Applet Viewer",
+  "theme-editor": "Theme Editor",
 };
 
 export function getAppBasicInfoList(): AppBasicInfo[] {

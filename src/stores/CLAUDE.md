@@ -12,6 +12,7 @@ useDockStore.ts: Dock 栏状态，固定应用列表、拖拽排序、显示/隐
 useFilesStore.ts: 文件系统状态，虚拟文件树、当前目录、选中文件，持久化到 IndexedDB
 useFinderStore.ts: Finder 应用状态，视图模式、排序方式、侧边栏展开，持久化
 useThemeStore.ts: 主题状态，当前主题（system7/aqua/xp/win98）、暗色模式、主题切换，持久化
+useCustomThemeStore.ts: 自定义主题状态，基于 themeSchema 管理用户自定义主题，编辑器临时状态，主题导入导出，持久化
 
 ## 依赖关系
 - 依赖 Zustand 状态管理库

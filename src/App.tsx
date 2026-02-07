@@ -101,7 +101,11 @@ export function App() {
   // Show download toast for macOS users when new desktop version is available
   // For web: show on first visit and updates
   // For Tauri: only show on updates (not first time)
+  // TODO: 启用桌面版下载提示时，删除下面的 return
   useEffect(() => {
+    // 暂时禁用，等发布桌面版后再启用
+    return;
+
     const isMacOS = navigator.platform.toLowerCase().includes("mac");
     const isInTauri = isTauri();
 
@@ -115,7 +119,7 @@ export function App() {
         // Mark as seen immediately so dismissing the toast won't show it again
         setLastSeenDesktopVersion(result.version);
         // New version available - show update toast (both web and Tauri)
-        toast(`ryOS ${result.version} for Mac is available`, {
+        toast(`Kyo ${result.version} for Mac is available`, {
           id: 'desktop-update',
           icon: <DownloadSimple className="h-4 w-4" weight="bold" />,
           duration: Infinity,
@@ -123,7 +127,7 @@ export function App() {
             label: "Download",
             onClick: () => {
               window.open(
-                `https://github.com/ryokun6/ryos/releases/download/v${result.version}/ryOS_${result.version}_aarch64.dmg`,
+                `https://github.com/hiyeshu/kyo.is/releases/download/v${result.version}/Kyo_${result.version}_aarch64.dmg`,
                 "_blank"
               );
             },
@@ -133,7 +137,7 @@ export function App() {
         // Mark as seen immediately so dismissing the toast won't show it again
         setLastSeenDesktopVersion(result.version);
         // First time user on web - show initial download toast (not in Tauri)
-        toast("ryOS is available as a Mac app", {
+        toast("Kyo is available as a Mac app", {
           id: 'desktop-update',
           icon: <DownloadSimple className="h-4 w-4" weight="bold" />,
           duration: Infinity,
@@ -141,7 +145,7 @@ export function App() {
             label: "Download",
             onClick: () => {
               window.open(
-                `https://github.com/ryokun6/ryos/releases/download/v${result.version}/ryOS_${result.version}_aarch64.dmg`,
+                `https://github.com/hiyeshu/kyo.is/releases/download/v${result.version}/Kyo_${result.version}_aarch64.dmg`,
                 "_blank"
               );
             },

@@ -337,10 +337,21 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
                 x: "-50%",
                 transition: { duration: isSwapping ? 0 : 0.15 }
               }}
-              className="absolute bottom-full mb-3 left-1/2 px-3 py-1 bg-neutral-800 text-white/90 text-sm font-medium rounded-full shadow-xl whitespace-nowrap pointer-events-none z-50"
+              className="absolute bottom-full mb-3 left-1/2 px-3 py-1 text-sm font-medium rounded-full shadow-xl whitespace-nowrap pointer-events-none z-50"
+              style={{
+                background: "var(--os-color-dock-tooltip-bg)",
+                color: "var(--os-color-dock-tooltip-text)",
+                borderRadius: "var(--os-metrics-dock-radius)",
+              }}
             >
               {label}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 w-[10px] h-[5px] bg-neutral-800" style={{ clipPath: "polygon(50% 100%, 0% 0%, 100% 0%)" }} />
+              <div 
+                className="absolute top-full left-1/2 -translate-x-1/2 w-[10px] h-[5px]" 
+                style={{ 
+                  clipPath: "polygon(50% 100%, 0% 0%, 100% 0%)",
+                  background: "var(--os-color-dock-tooltip-bg)",
+                }} 
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -432,7 +443,7 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
                 borderLeft: "4px solid transparent",
                 borderRight: "4px solid transparent",
                 borderTop: "0",
-                borderBottom: "4px solid #000",
+                borderBottom: "4px solid var(--os-color-dock-indicator)",
                 filter: "none",
               }}
             />
@@ -528,7 +539,7 @@ const Divider = forwardRef<HTMLDivElement, DividerProps>(
           style={{
             width: isDropTarget ? 4 : baseWidth,
             height: "100%",
-            backgroundColor: isDropTarget ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.2)",
+            backgroundColor: isDropTarget ? "var(--os-color-dock-border)" : "var(--os-color-dock-divider)",
             borderRadius: 2,
             transition: "width 0.15s ease, background-color 0.15s ease",
           }}
@@ -1826,15 +1837,17 @@ function MacDock() {
           }}
           style={{
             pointerEvents: isDockVisible ? "auto" : "none",
-            background: "rgba(248, 248, 248, 0.75)",
+            background: "var(--os-color-dock-bg)",
             backgroundImage: "var(--os-pinstripe-menubar)",
-            border: "none",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            border: "1px solid var(--os-color-dock-border)",
+            boxShadow: "var(--os-color-dock-shadow)",
+            backdropFilter: "blur(var(--os-dock-blur))",
+            WebkitBackdropFilter: "blur(var(--os-dock-blur))",
             height: scaledDockHeight,
             padding: scaledPadding,
             maxWidth: "min(92vw, 980px)",
             transformOrigin: "center bottom",
-            borderRadius: "0px",
+            borderRadius: "var(--os-metrics-dock-radius)",
             overflowX: isPhone ? "auto" : "visible",
             overflowY: "visible",
             WebkitOverflowScrolling: isPhone ? "touch" : undefined,

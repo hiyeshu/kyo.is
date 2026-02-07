@@ -250,53 +250,115 @@ export function BookmarkBoardApp({
 
         {/* ── 添加书签对话框 ──────────────────────────────── */}
         <Dialog open={h.addDialogOpen} onOpenChange={h.setAddDialogOpen}>
-          <DialogContent className="sm:max-w-[360px]">
-            <DialogHeader>
-              <DialogTitle className="text-sm">
-                Add Bookmark{h.addFolder ? ` to "${h.addFolder}"` : ""}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 py-2">
-              <div className="space-y-1">
-                <Label htmlFor="bm-url" className="text-xs">
-                  URL
-                </Label>
-                <Input
-                  id="bm-url"
-                  value={h.addUrl}
-                  onChange={(e) => h.setAddUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="text-xs"
-                  onKeyDown={(e) => e.key === "Enter" && h.submitBookmark()}
-                  autoFocus
-                />
+          <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden">
+            <div className="flex">
+              {/* 左侧预览区 */}
+              <div
+                className="w-[120px] shrink-0 flex items-center justify-center border-r border-black/10"
+                style={{
+                  backgroundColor: "var(--os-color-window-bg, #f5f5f5)",
+                  backgroundImage: "var(--os-pinstripe-window)",
+                }}
+              >
+                <div className="w-16 h-16 rounded-xl bg-white/80 border border-black/10 flex items-center justify-center shadow-sm">
+                  {h.previewFavicon ? (
+                    <img
+                      src={h.previewFavicon}
+                      alt=""
+                      className="w-8 h-8"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <span className="text-2xl opacity-30">🌐</span>
+                  )}
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="bm-title" className="text-xs">
-                  Title (optional)
-                </Label>
-                <Input
-                  id="bm-title"
-                  value={h.addTitle}
-                  onChange={(e) => h.setAddTitle(e.target.value)}
-                  placeholder="My Bookmark"
-                  className="text-xs"
-                  onKeyDown={(e) => e.key === "Enter" && h.submitBookmark()}
-                />
+
+              {/* 右侧表单区 */}
+              <div className="flex-1 p-4">
+                <DialogHeader className="pb-3">
+                  <DialogTitle className="text-sm font-medium">
+                    Add Bookmark
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-3">
+                  {/* URL */}
+                  <div className="space-y-1">
+                    <Label htmlFor="bm-url" className="text-[11px] text-black/50">
+                      URL
+                    </Label>
+                    <Input
+                      id="bm-url"
+                      value={h.addUrl}
+                      onChange={(e) => h.setAddUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="text-xs h-8"
+                      onKeyDown={(e) => e.key === "Enter" && h.submitBookmark()}
+                      autoFocus
+                    />
+                  </div>
+
+                  {/* 名称 */}
+                  <div className="space-y-1">
+                    <Label htmlFor="bm-title" className="text-[11px] text-black/50">
+                      Name
+                      {h.isFetchingTitle && (
+                        <span className="ml-1 text-black/30">(loading...)</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="bm-title"
+                      value={h.addTitle}
+                      onChange={(e) => h.setAddTitle(e.target.value)}
+                      placeholder={h.isFetchingTitle ? "Fetching title..." : "Page title"}
+                      className="text-xs h-8"
+                      onKeyDown={(e) => e.key === "Enter" && h.submitBookmark()}
+                    />
+                  </div>
+
+                  {/* 文件夹选择 */}
+                  <div className="space-y-1">
+                    <Label htmlFor="bm-folder" className="text-[11px] text-black/50">
+                      Folder
+                    </Label>
+                    <select
+                      id="bm-folder"
+                      value={h.addFolder || ""}
+                      onChange={(e) => h.setAddFolder(e.target.value || undefined)}
+                      className="w-full h-8 px-2 text-xs rounded border border-black/20 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    >
+                      <option value="">No folder</option>
+                      {h.folders.map((f) => (
+                        <option key={f} value={f}>
+                          {f}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 按钮 */}
+                <DialogFooter className="pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => h.setAddDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={h.submitBookmark}
+                    disabled={!h.addUrl.trim()}
+                  >
+                    Add
+                  </Button>
+                </DialogFooter>
               </div>
             </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => h.setAddDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button size="sm" onClick={h.submitBookmark}>
-                Add
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
 

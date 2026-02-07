@@ -4,7 +4,8 @@
 ## 成员清单
 
 index.ts: 主题导出入口，统一导出所有主题配置
-types.ts: 主题类型定义，Theme、ThemeConfig、ThemeColors、ThemeStyles
+types.ts: 主题类型定义，Theme、ThemeConfig、ThemeColors、ThemeStyles、OsThemeId
+themeSchema.ts: 主题变量 Schema，定义 10 组 CSS 变量（Window/Titlebar/TrafficLights/Menubar/Dock/Selection/Buttons/Typography/Inputs/Scrollbar），预设皮肤（Aqua/System7/Luna/Classic），导入导出工具函数
 system7.ts: System 7 主题配置，经典 Mac OS 7 风格，黑白界面、芝加哥字体
 macosx.ts: Mac OS X 主题配置，Aqua 风格，半透明、阴影、圆角
 xp.ts: Windows XP 主题配置，Luna 风格，蓝绿色、圆角按钮、任务栏
@@ -12,6 +13,8 @@ win98.ts: Windows 98 主题配置，经典 Windows 风格，灰色、方形按�
 
 ## 依赖关系
 - 被 @/stores/useThemeStore 使用
+- 被 @/stores/useCustomThemeStore 使用（themeSchema）
+- 被 @/apps/theme-editor 使用（THEME_SCHEMA, PRESET_SKINS）
 - 被 @/components/layout 布局组件使用
 - 被 CSS 变量系统消费
 

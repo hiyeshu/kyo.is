@@ -172,6 +172,14 @@ export function AppleMenu() {
 
           <MenubarSeparator className="h-[2px] bg-black my-1" />
 
+          {/* Theme Editor */}
+          <MenubarItem
+            onClick={() => handleAppClick("theme-editor")}
+            className="text-md h-6 px-3"
+          >
+            {t("common.appleMenu.themeEditor", "Theme Editor")}
+          </MenubarItem>
+
           {/* System Preferences / Control Panels */}
           <MenubarItem
             onClick={handleSystemPreferences}

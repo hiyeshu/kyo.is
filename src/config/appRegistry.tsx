@@ -93,12 +93,25 @@ const LazyBookmarksApp = createLazyComponent<unknown>(
   "bookmarks"
 );
 
+const LazyThemeEditorApp = createLazyComponent<unknown>(
+  () =>
+    import(
+      "@/apps/theme-editor/components/ThemeEditorApp"
+    ).then((m) => ({ default: m.ThemeEditorApp })),
+  "theme-editor"
+);
+
 // ─── 元数据 ──────────────────────────────────────────────────────────────────
 
 import {
   appMetadata as bookmarkBoardMetadata,
   helpItems as bookmarkBoardHelpItems,
 } from "@/apps/bookmarks/metadata";
+
+import {
+  appMetadata as themeEditorMetadata,
+  helpItems as themeEditorHelpItems,
+} from "@/apps/theme-editor/metadata";
 
 // ─── 注册表 ──────────────────────────────────────────────────────────────────
 
@@ -140,6 +153,19 @@ export const appRegistry = {
     helpItems: bookmarkBoardHelpItems,
     metadata: bookmarkBoardMetadata,
     windowConfig: stubWindowConfig,
+  },
+  "theme-editor": {
+    id: "theme-editor" as const,
+    name: "Theme Editor",
+    icon: { type: "image" as const, src: "/icons/default/palette.png" },
+    description: "Customize your theme",
+    component: LazyThemeEditorApp,
+    helpItems: themeEditorHelpItems,
+    metadata: themeEditorMetadata,
+    windowConfig: {
+      defaultSize: { width: 680, height: 520 },
+      minSize: { width: 600, height: 450 },
+    } as WindowConstraints,
   },
 } as const;
 

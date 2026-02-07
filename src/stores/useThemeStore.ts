@@ -1,16 +1,20 @@
 /**
- * [INPUT]: 依赖 zustand 的 create，依赖 themes/types 的主题类型定义
- * [OUTPUT]: 对外提供 useThemeStore hook，主题状态管理（当前主题、主题切换、主题水合、遗留 CSS 加载）
+ * [INPUT]: 依赖 zustand 的 create，依赖 themes/types 的主题类型定义，依赖 themeSchema 壁纸配置
+ * [OUTPUT]: 对外提供 useThemeStore hook，主题状态管理（当前主题、主题切换、壁纸联动、遗留 CSS 加载）
  * [POS]: stores/ 的主题状态管理，被所有组件消费，控制全局主题切换和 CSS 加载
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { create } from "zustand";
 import { OsThemeId } from "@/themes/types";
+import { getThemeDefaultWallpaper, type PresetSkinId } from "@/themes/themeSchema";
 
 interface ThemeState {
   current: OsThemeId;
-  setTheme: (theme: OsThemeId) => void;
+  /** 是否在切换主题时同步切换壁纸 */
+  syncWallpaper: boolean;
+  setTheme: (theme: OsThemeId, options?: { syncWallpaper?: boolean }) => void;
+  setSyncWallpaper: (sync: boolean) => void;
   hydrate: () => void;
 }
 
@@ -57,21 +61,49 @@ async function ensureLegacyCss(theme: OsThemeId) {
 // Storage keys
 const THEME_KEY = "ryos:theme";
 const LEGACY_THEME_KEY = "os_theme";
+const SYNC_WALLPAPER_KEY = "ryos:theme-sync-wallpaper";
 
-const createThemeStore = () => create<ThemeState>((set) => ({
+/**
+ * 切换壁纸（延迟导入避免循环依赖）
+ */
+async function switchWallpaper(themeId: PresetSkinId) {
+  const wallpaper = getThemeDefaultWallpaper(themeId);
+  // 动态导入 displaySettingsStore 避免循环依赖
+  const { useDisplaySettingsStore } = await import("./useDisplaySettingsStore");
+  useDisplaySettingsStore.getState().setWallpaper(wallpaper);
+}
+
+const createThemeStore = () => create<ThemeState>((set, get) => ({
   current: "macosx",
-  setTheme: (theme) => {
+  syncWallpaper: true, // 默认开启壁纸联动
+
+  setTheme: (theme, options) => {
     set({ current: theme });
     localStorage.setItem(THEME_KEY, theme);
     // Clean up legacy key
     localStorage.removeItem(LEGACY_THEME_KEY);
     document.documentElement.dataset.osTheme = theme;
     ensureLegacyCss(theme);
-    // Note: No need to invalidate icon cache on theme switch.
-    // Theme switching changes the icon PATH (e.g., /icons/default/ → /icons/macosx/),
-    // and the service worker caches each path separately.
+    
+    // 壁纸联动：如果启用且未显式禁用
+    const shouldSyncWallpaper = options?.syncWallpaper ?? get().syncWallpaper;
+    if (shouldSyncWallpaper) {
+      switchWallpaper(theme as PresetSkinId);
+    }
   },
+
+  setSyncWallpaper: (sync) => {
+    set({ syncWallpaper: sync });
+    localStorage.setItem(SYNC_WALLPAPER_KEY, String(sync));
+  },
+
   hydrate: () => {
+    // 恢复壁纸同步设置
+    const savedSync = localStorage.getItem(SYNC_WALLPAPER_KEY);
+    if (savedSync !== null) {
+      set({ syncWallpaper: savedSync === "true" });
+    }
+    
     // Try new key first, fall back to legacy
     let saved = localStorage.getItem(THEME_KEY) as OsThemeId | null;
     if (!saved) {

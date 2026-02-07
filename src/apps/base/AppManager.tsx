@@ -13,6 +13,7 @@ import { Desktop } from "@/components/layout/Desktop";
 import { Dock } from "@/components/layout/Dock";
 import { ExposeView } from "@/components/layout/ExposeView";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
+import { CommandPalette } from "@/components/dialogs/CommandPalette";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { getAppComponent, appRegistry } from "@/config/appRegistry";
 import type { AppId } from "@/config/appRegistry";
@@ -56,6 +57,7 @@ export function AppManager({ apps }: AppManagerProps) {
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [isExposeViewOpen, setIsExposeViewOpen] = useState(false);
   const [isAddWebsiteDialogOpen, setIsAddWebsiteDialogOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [desktopContextMenuPos, setDesktopContextMenuPos] = useState<{ x: number; y: number } | null>(null);
 
 
@@ -365,9 +367,14 @@ export function AppManager({ apps }: AppManagerProps) {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // F3 key to toggle Expose view (Mission Control)
-      if (e.key === "F3" || (e.key === "f" && e.metaKey)) {
+      if (e.key === "F3") {
         e.preventDefault();
         setIsExposeViewOpen((prev) => !prev);
+      }
+      // ⌘F / Ctrl+F to toggle Command Palette (hijack browser find)
+      if (e.key === "f" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
       }
     };
 
@@ -500,6 +507,12 @@ export function AppManager({ apps }: AppManagerProps) {
         position={desktopContextMenuPos}
         onClose={() => setDesktopContextMenuPos(null)}
         items={getDesktopContextMenuItems()}
+      />
+
+      {/* Command Palette - ⌘F to search bookmarks */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onOpenChange={setIsCommandPaletteOpen}
       />
     </>
   );

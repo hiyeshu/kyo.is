@@ -26,6 +26,17 @@
   --os-metrics-titlebar-height: 1.5rem;
   --os-metrics-menubar-height: 28px;
   --os-window-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
+  /* Dock */
+  --os-color-dock-bg: rgba(255, 255, 255, 0.6);
+  --os-color-dock-border: rgba(0, 0, 0, 0.3);
+  --os-color-dock-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --os-color-dock-indicator: #000000;
+  --os-color-dock-tooltip-bg: #262626;
+  --os-color-dock-tooltip-text: rgba(255, 255, 255, 0.9);
+  --os-color-dock-divider: rgba(0, 0, 0, 0.2);
+  --os-metrics-dock-radius: 0px;
+  --os-metrics-dock-icon-size: 48px;
+  --os-dock-blur: 0px;
 }
 
 /* System 7 Theme */
@@ -57,6 +68,17 @@
   --os-metrics-titlebar-height: 1.5rem;
   --os-metrics-menubar-height: 30px;
   --os-window-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
+  /* Dock - System 7 style: white with black border, no blur */
+  --os-color-dock-bg: #ffffff;
+  --os-color-dock-border: #000000;
+  --os-color-dock-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.5);
+  --os-color-dock-indicator: #000000;
+  --os-color-dock-tooltip-bg: #ffffff;
+  --os-color-dock-tooltip-text: #000000;
+  --os-color-dock-divider: #000000;
+  --os-metrics-dock-radius: 0px;
+  --os-metrics-dock-icon-size: 48px;
+  --os-dock-blur: 0px;
 }
 
 /* Inactive selection palette for background windows (System 7) */
@@ -139,6 +161,17 @@
     rgba(255, 255, 255, 0.55) 1.5px,
     rgba(255, 255, 255, 0.55) 4px
   );
+  /* Dock - macOS Aqua style: frosted glass with blur */
+  --os-color-dock-bg: rgba(248, 248, 248, 0.75);
+  --os-color-dock-border: rgba(255, 255, 255, 0.5);
+  --os-color-dock-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --os-color-dock-indicator: #000000;
+  --os-color-dock-tooltip-bg: rgba(30, 30, 30, 0.95);
+  --os-color-dock-tooltip-text: rgba(255, 255, 255, 0.9);
+  --os-color-dock-divider: rgba(0, 0, 0, 0.15);
+  --os-metrics-dock-radius: 0px;
+  --os-metrics-dock-icon-size: 48px;
+  --os-dock-blur: 20px;
 }
 
 /* Shared toolbar texture utility. Uses variables defined by the active theme. */
@@ -179,6 +212,17 @@
   --os-metrics-titlebar-height: 1.375rem;
   --os-metrics-menubar-height: 30px;
   --os-window-shadow: none;
+  /* Dock - Windows 98 Taskbar style: gray with 3D borders */
+  --os-color-dock-bg: #c0c0c0;
+  --os-color-dock-border: #808080;
+  --os-color-dock-shadow: inset -1px -1px #000000, inset 1px 1px #ffffff;
+  --os-color-dock-indicator: #000080;
+  --os-color-dock-tooltip-bg: #ffffcc;
+  --os-color-dock-tooltip-text: #000000;
+  --os-color-dock-divider: #808080;
+  --os-metrics-dock-radius: 0px;
+  --os-metrics-dock-icon-size: 32px;
+  --os-dock-blur: 0px;
 }
 
 /* Inactive selection palette for background windows (Windows 98) */
@@ -232,6 +276,17 @@
   --os-metrics-titlebar-height: 1.875rem;
   --os-metrics-menubar-height: 30px;
   --os-window-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  /* Dock - Windows XP Taskbar style: Luna blue gradient */
+  --os-color-dock-bg: linear-gradient(to bottom, #3168d5, #4993e6, #3168d5);
+  --os-color-dock-border: #0a246a;
+  --os-color-dock-shadow: 0 -1px 3px rgba(0, 0, 0, 0.2);
+  --os-color-dock-indicator: #90ee90;
+  --os-color-dock-tooltip-bg: #ffffcc;
+  --os-color-dock-tooltip-text: #000000;
+  --os-color-dock-divider: rgba(255, 255, 255, 0.3);
+  --os-metrics-dock-radius: 0px;
+  --os-metrics-dock-icon-size: 32px;
+  --os-dock-blur: 0px;
 }
 
 /* Inactive selection palette for background windows (Windows XP) */
