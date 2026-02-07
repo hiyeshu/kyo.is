@@ -79,7 +79,7 @@ export function AddWebsiteDialog({
 
     try {
       const normalizedUrl = normalizeUrl(url);
-      const urlObj = new URL(normalizedUrl);
+      new URL(normalizedUrl); // validate URL
 
       const faviconUrl = getFaviconUrl(normalizedUrl);
       const title = getWebsiteTitle(normalizedUrl);

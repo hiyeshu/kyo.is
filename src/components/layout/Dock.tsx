@@ -558,7 +558,6 @@ function MacDock() {
   const { play: playZoomMinimize } = useSound(Sounds.WINDOW_ZOOM_MINIMIZE);
 
   const launchApp = useLaunchApp();
-  const files = useFilesStore((s) => s.items);
   const fileStore = useFilesStore();
   const trashIcon = useFilesStore(
     (s) => s.items["/Trash"]?.icon || "/icons/trash-empty.png"
@@ -608,6 +607,13 @@ function MacDock() {
   const [dividerContextMenuPos, setDividerContextMenuPos] = useState<{
     x: number;
     y: number;
+  } | null>(null);
+
+  // URL/link item context menu (open in new tab, copy, remove from dock)
+  const [urlContextMenu, setUrlContextMenu] = useState<{
+    x: number;
+    y: number;
+    items: MenuItem[];
   } | null>(null);
 
   // Add website dialog state
@@ -749,7 +755,7 @@ function MacDock() {
     
     // Don't start timer if dragging or context menu open
     if (draggingItemId || externalDragIndex !== null || 
-        trashContextMenuPos || applicationsContextMenuPos || appContextMenu || dividerContextMenuPos) {
+        trashContextMenuPos || applicationsContextMenuPos || appContextMenu || dividerContextMenuPos || urlContextMenu) {
       return;
     }
     
@@ -770,7 +776,7 @@ function MacDock() {
         restartAutoHideTimer();
       }
     }, delay);
-  }, [isPhone, dockHiding, draggingItemId, externalDragIndex, trashContextMenuPos, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos]);
+  }, [isPhone, dockHiding, draggingItemId, externalDragIndex, trashContextMenuPos, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos, urlContextMenu]);
   
   // Restart auto-hide timer when context menus close or dragging ends
   useEffect(() => {
@@ -778,7 +784,7 @@ function MacDock() {
     if (dockHiding && isDockVisible) {
       restartAutoHideTimer();
     }
-  }, [dockHiding, isDockVisible, trashContextMenuPos, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos, draggingItemId, externalDragIndex, restartAutoHideTimer]);
+  }, [dockHiding, isDockVisible, trashContextMenuPos, applicationsContextMenuPos, appContextMenu, dividerContextMenuPos, urlContextMenu, draggingItemId, externalDragIndex, restartAutoHideTimer]);
   
   // Show dock (called when mouse enters dock zone)
   const showDock = useCallback(() => {
@@ -805,7 +811,7 @@ function MacDock() {
     // Don't hide while dragging
     if (draggingItemId || externalDragIndex !== null) return;
     // Don't hide while context menu is open
-    if (trashContextMenuPos || applicationsContextMenuPos || appContextMenu || dividerContextMenuPos) return;
+    if (trashContextMenuPos || applicationsContextMenuPos || appContextMenu || dividerContextMenuPos || urlContextMenu) return;
     
     // Clear auto-hide timer
     if (autoHideTimerRef.current) {
@@ -1526,7 +1532,7 @@ function MacDock() {
         path: string;
         isDirectory: boolean;
         appId?: AppId;
-        aliasType?: "file" | "app";
+        aliasType?: "file" | "app" | "directory";
         aliasTarget?: string;
         icon?: string;
       }> = [];
@@ -1858,14 +1864,14 @@ function MacDock() {
             if (dockHiding) {
               hideDock();
             }
-            if (effectiveMagnifyEnabled && !trashContextMenuPos && !appContextMenu) {
+            if (effectiveMagnifyEnabled && !trashContextMenuPos && !appContextMenu && !urlContextMenu) {
               mouseX.set(Infinity);
               handleIconLeave();
             }
           }}
           onMouseMove={(e) => {
             // Update mouse position for magnification
-            if (effectiveMagnifyEnabled && !trashContextMenuPos && !appContextMenu) {
+            if (effectiveMagnifyEnabled && !trashContextMenuPos && !appContextMenu && !urlContextMenu) {
               mouseX.set(e.clientX);
             }
             // Restart auto-hide timer on mouse movement (desktop fallback, throttled)
@@ -1980,21 +1986,23 @@ function MacDock() {
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setContextMenu({
+                          setUrlContextMenu({
                             x: e.clientX,
                             y: e.clientY,
                             items: [
                               {
+                                type: "item",
                                 label: t("dock.openInNewTab"),
-                                onClick: () => {
+                                onSelect: () => {
                                   if (item.url) {
                                     window.open(item.url, "_blank", "noopener,noreferrer");
                                   }
                                 },
                               },
                               {
+                                type: "item",
                                 label: t("dock.copyUrl"),
-                                onClick: () => {
+                                onSelect: () => {
                                   if (item.url) {
                                     navigator.clipboard.writeText(item.url);
                                   }
@@ -2002,8 +2010,9 @@ function MacDock() {
                               },
                               { type: "separator" },
                               {
+                                type: "item",
                                 label: t("dock.removeFromDock"),
-                                onClick: () => removeItem(item.id),
+                                onSelect: () => removeDockItem(item.id),
                               },
                             ],
                           });
@@ -2388,6 +2397,16 @@ function MacDock() {
           position={dividerContextMenuPos}
           onClose={() => {
             setDividerContextMenuPos(null);
+            mouseX.set(Infinity);
+          }}
+        />
+      )}
+      {urlContextMenu && (
+        <RightClickMenu
+          items={urlContextMenu.items}
+          position={{ x: urlContextMenu.x, y: urlContextMenu.y }}
+          onClose={() => {
+            setUrlContextMenu(null);
             mouseX.set(Infinity);
           }}
         />

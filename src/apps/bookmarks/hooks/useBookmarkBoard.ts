@@ -8,7 +8,6 @@
 import { useState, useCallback, useMemo } from "react";
 import {
   useBookmarkStore,
-  DEFAULT_ITEMS,
   isFolder,
   type Bookmark,
 } from "@/stores/useBookmarkStore";

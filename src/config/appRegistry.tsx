@@ -102,6 +102,11 @@ import {
 
 // ─── 注册表 ──────────────────────────────────────────────────────────────────
 
+const stubWindowConfig = {
+  defaultSize: { width: 600, height: 460 },
+  minSize: { width: 360, height: 300 },
+} as WindowConstraints;
+
 export const appRegistry = {
   "bookmarks": {
     id: "bookmarks" as const,
@@ -115,6 +120,26 @@ export const appRegistry = {
       defaultSize: { width: 600, height: 460 },
       minSize: { width: 360, height: 300 },
     } as WindowConstraints,
+  },
+  "finder": {
+    id: "finder" as const,
+    name: "Finder",
+    icon: { type: "image" as const, src: "/icons/finder.png" },
+    description: "File browser",
+    component: LazyBookmarksApp,
+    helpItems: bookmarkBoardHelpItems,
+    metadata: bookmarkBoardMetadata,
+    windowConfig: stubWindowConfig,
+  },
+  "applet-viewer": {
+    id: "applet-viewer" as const,
+    name: "Applet Viewer",
+    icon: { type: "image" as const, src: "/icons/default/application.png" },
+    description: "View applets",
+    component: LazyBookmarksApp,
+    helpItems: bookmarkBoardHelpItems,
+    metadata: bookmarkBoardMetadata,
+    windowConfig: stubWindowConfig,
   },
 } as const;
 

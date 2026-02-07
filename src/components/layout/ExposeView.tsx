@@ -6,11 +6,9 @@ import { useAppStoreShallow } from "@/stores/helpers";
 import { getAppIconPath } from "@/config/appRegistry";
 import { getTranslatedAppName } from "@/utils/i18n";
 import { ThemedIcon } from "@/components/shared/ThemedIcon";
-import { useFilesStore } from "@/stores/useFilesStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useSound, Sounds } from "@/hooks/useSound";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import type { AppInstance } from "@/stores/useAppStore";
 import {
   calculateExposeGrid,
   getExposeCellCenter,
@@ -24,7 +22,7 @@ interface ExposeViewProps {
 }
 
 export function ExposeView({ isOpen, onClose }: ExposeViewProps) {
-  const { t } = useTranslation();
+  useTranslation();
   const {
     instances,
     setExposeMode,
@@ -37,7 +35,6 @@ export function ExposeView({ isOpen, onClose }: ExposeViewProps) {
     restoreInstance: state.restoreInstance,
   }));
 
-  const files = useFilesStore((s) => s.items);
   const currentTheme = useThemeStore((state) => state.current);
   const isMacOSXTheme = currentTheme === "macosx";
   const isMobile = useIsMobile();
@@ -74,17 +71,6 @@ export function ExposeView({ isOpen, onClose }: ExposeViewProps) {
     }
   }, [isOpen, prevIsOpen, playOpenSound, playCloseSound]);
 
-  // Helper to get applet info (stub — applets removed, not used in Kyo)
-  const getAppletInfo = useCallback(
-    (_instance: AppInstance) => {
-      return {
-        icon: "📦",
-        label: "App",
-        isEmoji: true
-      };
-    },
-    []
-  );
 
   // Handle window selection (called from AppManager)
   const handleWindowSelect = useCallback(

@@ -43,7 +43,7 @@ interface DesktopProps {
  * 简化版桌面 — 壁纸 + 应用图标，去掉了 Finder 文件系统依赖
  */
 export function Desktop({
-  apps,
+  apps: _apps,
   toggleApp,
   onClick,
   desktopStyles,

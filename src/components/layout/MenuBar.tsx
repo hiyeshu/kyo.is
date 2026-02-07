@@ -23,7 +23,6 @@ import { HelpDialog } from "@/components/dialogs/HelpDialog";
 import { AboutDialog } from "@/components/dialogs/AboutDialog";
 import { ShareItemDialog } from "@/components/dialogs/ShareItemDialog";
 import { generateAppShareUrl } from "@/utils/sharedUrl";
-import { useLaunchApp } from "@/hooks/useLaunchApp";
 import { StartMenu } from "./StartMenu";
 import { useAppStoreShallow, useAudioSettingsStoreShallow, useDisplaySettingsStoreShallow } from "@/stores/helpers";
 import { Slider } from "@/components/ui/slider";
@@ -34,8 +33,6 @@ import { getAppIconPath, appRegistry } from "@/config/appRegistry";
 import type { AppId } from "@/config/appRegistry";
 import type { AnyApp } from "@/apps/base/types";
 import { ThemedIcon } from "@/components/shared/ThemedIcon";
-import { useFilesStore } from "@/stores/useFilesStore";
-import type { AppInstance } from "@/stores/useAppStore";
 import { useOffline } from "@/hooks/useOffline";
 import { WifiSlash } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -531,7 +528,6 @@ function FinderAppMenu() {
 
 function DefaultMenuItems() {
   const { t } = useTranslation();
-  const launchApp = useLaunchApp();
   const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
 
@@ -832,7 +828,6 @@ function VolumeControl() {
     setMasterVolume: s.setMasterVolume,
   }));
   const { play: playVolumeChangeSound } = useSound(Sounds.VOLUME_CHANGE);
-  const launchApp = useLaunchApp();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const currentTheme = useThemeStore((state) => state.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
@@ -932,15 +927,6 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
   
   // Check if on phone (must be called before any early returns)
   const isPhone = useIsPhone();
-
-  // Helper to get applet info (applets removed — stub, not used in Kyo)
-  const getAppletInfo = (_instance: AppInstance) => {
-    return {
-      icon: "📦",
-      label: "App",
-      isEmoji: true
-    };
-  };
 
   // Tauri fullscreen detection (must be declared before any early returns)
   const isTauriApp = isTauri();

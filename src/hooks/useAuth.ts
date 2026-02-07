@@ -41,7 +41,7 @@ export function useAuth() {
     setVerifyUsernameInput: () => {},
     isVerifyingToken: false,
     verifyError: null as string | null,
-    handleVerifyTokenSubmit: async () => {},
+    handleVerifyTokenSubmit: async (_password: string, _isLogin?: boolean) => {},
 
     // Password management
     checkHasPassword: async () => false,

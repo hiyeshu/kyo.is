@@ -20,7 +20,6 @@ import { useAppStoreShallow } from "@/stores/helpers";
 import { extractCodeFromPath } from "@/utils/sharedUrl";
 import { toast } from "sonner";
 import { requestCloseWindow } from "@/utils/windowUtils";
-import { useThemeStore } from "@/stores/useThemeStore";
 
 interface AppManagerProps {
   apps: AnyApp[];
@@ -39,7 +38,6 @@ export function AppManager({ apps }: AppManagerProps) {
     bringInstanceToForeground,
     navigateToNextInstance,
     navigateToPreviousInstance,
-    foregroundInstanceId,
     exposeMode,
   } = useAppStoreShallow((state) => ({
     instances: state.instances,
@@ -48,14 +46,9 @@ export function AppManager({ apps }: AppManagerProps) {
     bringInstanceToForeground: state.bringInstanceToForeground,
     navigateToNextInstance: state.navigateToNextInstance,
     navigateToPreviousInstance: state.navigateToPreviousInstance,
-    foregroundInstanceId: state.foregroundInstanceId,
     exposeMode: state.exposeMode,
   }));
 
-  // Get current theme to determine if we should show the desktop menubar
-  const currentTheme = useThemeStore((state) => state.current);
-  const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  
   // For Mac/System7 themes, always show menubar for Kyo (bookmark-focused)
   // For XP/98, the menubar is actually a taskbar and should always show
   const showDesktopMenuBar = true;
@@ -472,8 +465,7 @@ export function AppManager({ apps }: AppManagerProps) {
               className="pointer-events-auto"
               helpItems={apps.find((app) => app.id === appId)?.helpItems}
               skipInitialSound={isInitialMount}
-              // @ts-expect-error - Dynamic component system with different initialData types per app
-              initialData={instance.initialData}
+              initialData={instance.initialData as unknown}
               instanceId={instance.instanceId}
               title={instance.title}
               onNavigateNext={() => navigateToNextInstance(instance.instanceId)}

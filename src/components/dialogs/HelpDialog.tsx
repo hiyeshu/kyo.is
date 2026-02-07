@@ -10,7 +10,6 @@ import { useThemeStore } from "@/stores/useThemeStore";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { getTranslatedAppName, type AppId } from "@/utils/i18n";
-import { useAppStore } from "@/stores/useAppStore";
 
 // Map appId to doc URL path (Kyo only has bookmarks)
 const APP_DOC_NAMES: Partial<Record<AppId, string>> = {
