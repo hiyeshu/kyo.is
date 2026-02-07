@@ -1035,20 +1035,24 @@ function MacDock() {
       const data = JSON.parse(jsonData);
       console.log("[Dock] Drop data:", data);
       
-      const { appId, aliasType, aliasTarget } = data;
+      const { appId, aliasType, aliasTarget, type, bookmarkId } = data;
       
       // Determine what to add to dock
       let newItem: DockItem | null = null;
       
-      // Case 1: App alias from desktop shortcuts (aliasType === "app")
-      if (aliasType === "app" && aliasTarget) {
+      // Case 1: Bookmark from bookmark board
+      if (type === "bookmark" && bookmarkId) {
+        newItem = { type: "bookmark", id: bookmarkId };
+      }
+      // Case 2: App alias from desktop shortcuts (aliasType === "app")
+      else if (aliasType === "app" && aliasTarget) {
         newItem = { type: "app", id: aliasTarget };
       }
-      // Case 2: Direct app ID (from Applications folder files)
+      // Case 3: Direct app ID (from Applications folder files)
       else if (appId) {
         newItem = { type: "app", id: appId };
       }
-      // Note: Cases 3-4 (file system paths) removed - Kyo.is has no file system
+      // Note: File system paths removed - Kyo.is has no file system
       
       console.log("[Dock] Adding item:", newItem, "at index:", dropIndex);
       

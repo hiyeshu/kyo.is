@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useDockStore } from "@/stores/useDockStore";
-import { useBookmarkStore } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, getFaviconUrl as getBookmarkFaviconUrl } from "@/stores/useBookmarkStore";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
@@ -46,7 +46,8 @@ export function AddWebsiteDialog({
   const getFaviconUrl = (websiteUrl: string): string => {
     try {
       const urlObj = new URL(websiteUrl);
-      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`;
+      // 根据用户地区自动选择 favicon 服务
+      return getBookmarkFaviconUrl(urlObj.hostname);
     } catch {
       return "";
     }

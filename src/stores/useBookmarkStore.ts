@@ -12,8 +12,55 @@ import { persist } from "zustand/middleware";
 
 const generateId = () => crypto.randomUUID();
 
-const fav = (domain: string) =>
-  `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+// ─── Favicon 服务选择 ─────────────────────────────────────────────────────────
+// 根据用户地理位置选择最快的 favicon 服务
+// 国内: cccyun (快) | 国外: Google (快)
+
+const FAVICON_REGION_KEY = "kyo:favicon-region";
+
+// 检测用户是否在中国（通过 IP 检测 API）
+async function detectRegion(): Promise<"cn" | "global"> {
+  try {
+    // 先检查缓存
+    const cached = localStorage.getItem(FAVICON_REGION_KEY);
+    if (cached === "cn" || cached === "global") return cached;
+    
+    // 用 Cloudflare 的 /cdn-cgi/trace 检测，免费且快
+    const res = await fetch("https://cloudflare.com/cdn-cgi/trace", { 
+      signal: AbortSignal.timeout(3000) 
+    });
+    const text = await res.text();
+    const locMatch = text.match(/loc=(\w+)/);
+    const region = locMatch?.[1] === "CN" ? "cn" : "global";
+    
+    // 缓存结果
+    localStorage.setItem(FAVICON_REGION_KEY, region);
+    return region;
+  } catch {
+    // 检测失败默认用国际线路
+    return "global";
+  }
+}
+
+// 同步获取 favicon URL（使用缓存的地区设置）
+function getFaviconUrl(domain: string): string {
+  const cached = localStorage.getItem(FAVICON_REGION_KEY);
+  if (cached === "cn") {
+    return `https://favicon.cccyun.cc/${domain}`;
+  }
+  // 国际线路用 Google
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+}
+
+// 初始化地区检测（在模块加载时执行一次）
+if (typeof window !== "undefined") {
+  detectRegion();
+}
+
+// 导出给其他模块使用
+export { getFaviconUrl };
+
+const fav = (domain: string) => getFaviconUrl(domain);
 
 // ─── 数据模型 ───────────────────────────────────────────────────────────────
 
@@ -253,11 +300,12 @@ export const useBookmarkStore = create<BookmarkStore>()(
     }),
     {
       name: "kyo:bookmark-store",
-      version: 2, // 版本升级，因为数据结构变了
+      version: 3, // v3: 迁移 favicon URL 从 Google 到 cccyun
       migrate: (persisted, version) => {
+        const old = persisted as { items?: BoardItem[] };
+        
         // 从 v1 迁移：给旧数据加 id
         if (version < 2) {
-          const old = persisted as { items?: BoardItem[] };
           if (old.items) {
             old.items = old.items.map((item) => {
               if (isFolder(item)) {
@@ -277,6 +325,51 @@ export const useBookmarkStore = create<BookmarkStore>()(
             });
           }
         }
+        
+        // 从 v2 迁移：把旧 favicon URL 换成根据地区选择的服务
+        if (version < 3) {
+          const migrateFavicon = (favicon?: string): string | undefined => {
+            if (!favicon) return favicon;
+            // 匹配 Google favicon API URL
+            const googleMatch = favicon.match(/google\.com\/s2\/favicons\?domain=([^&]+)/);
+            if (googleMatch) {
+              const domain = googleMatch[1];
+              return getFaviconUrl(domain);
+            }
+            // 匹配 DuckDuckGo favicon API URL (以防中间版本用过)
+            const ddgMatch = favicon.match(/icons\.duckduckgo\.com\/ip3\/([^.]+\.?[^/]*?)\.ico/);
+            if (ddgMatch) {
+              const domain = ddgMatch[1];
+              return getFaviconUrl(domain);
+            }
+            // 匹配 cccyun favicon URL (国外用户需要换成 Google)
+            const cccyunMatch = favicon.match(/favicon\.cccyun\.cc\/(.+)/);
+            if (cccyunMatch) {
+              const domain = cccyunMatch[1];
+              return getFaviconUrl(domain);
+            }
+            return favicon;
+          };
+          
+          if (old.items) {
+            old.items = old.items.map((item) => {
+              if (isFolder(item)) {
+                return {
+                  ...item,
+                  bookmarks: item.bookmarks.map((b) => ({
+                    ...b,
+                    favicon: migrateFavicon(b.favicon),
+                  })),
+                };
+              }
+              return {
+                ...item,
+                favicon: migrateFavicon((item as Bookmark).favicon),
+              } as Bookmark;
+            });
+          }
+        }
+        
         return persisted as BookmarkStore;
       },
     }

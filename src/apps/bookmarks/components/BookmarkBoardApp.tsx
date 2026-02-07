@@ -5,6 +5,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
+import { useRef } from "react";
 import { AppProps } from "../../base/types";
 import { WindowFrame } from "@/components/layout/WindowFrame";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ function BookmarkCard({
   bm,
   onClick,
   onContextMenu,
+  onLongPress,
   onDragStart,
   onDragOver,
   onDragEnter,
@@ -47,6 +49,7 @@ function BookmarkCard({
   bm: Bookmark;
   onClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
+  onLongPress: (e: React.TouchEvent) => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragEnter: (e: React.DragEvent) => void;
@@ -56,6 +59,39 @@ function BookmarkCard({
   isDragging: boolean;
   isDragOver: boolean;
 }) {
+  // 长按检测
+  const longPressTimerRef = useRef<number | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    longPressTimerRef.current = window.setTimeout(() => {
+      onLongPress(e);
+      longPressTimerRef.current = null;
+    }, 500);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPosRef.current || !longPressTimerRef.current) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+    // 移动超过 10px 则取消长按
+    if (dx > 10 || dy > 10) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+  
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    touchStartPosRef.current = null;
+  };
+
   return (
     <div
       className={`flex flex-col items-center gap-1 p-2 rounded-lg cursor-pointer group relative transition-all
@@ -64,6 +100,10 @@ function BookmarkCard({
       `}
       onClick={onClick}
       onContextMenu={onContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -130,6 +170,15 @@ function FolderSection({
             bm={bm}
             onClick={() => h.openBookmark(bm.url)}
             onContextMenu={(e) => h.openContextMenu(e, bm, folder.id)}
+            onLongPress={(e) => {
+              // 模拟右键菜单位置
+              const touch = e.touches[0];
+              h.openContextMenu(
+                { preventDefault: () => {}, stopPropagation: () => {}, clientX: touch.clientX, clientY: touch.clientY } as unknown as React.MouseEvent,
+                bm,
+                folder.id
+              );
+            }}
             onDragStart={(e) => h.handleDragStart(e, bm, index, folder.id)}
             onDragOver={(e) => h.handleDragOver(e, index)}
             onDragEnter={h.handleDragEnter}
@@ -320,6 +369,14 @@ export function BookmarkBoardApp({
                     bm={bm}
                     onClick={() => h.openBookmark(bm.url)}
                     onContextMenu={(e) => h.openContextMenu(e, bm)}
+                    onLongPress={(e) => {
+                      // 模拟右键菜单位置
+                      const touch = e.touches[0];
+                      h.openContextMenu(
+                        { preventDefault: () => {}, stopPropagation: () => {}, clientX: touch.clientX, clientY: touch.clientY } as unknown as React.MouseEvent,
+                        bm
+                      );
+                    }}
                     onDragStart={(e) => h.handleDragStart(e, bm, index)}
                     onDragOver={(e) => h.handleDragOver(e, index)}
                     onDragEnter={h.handleDragEnter}

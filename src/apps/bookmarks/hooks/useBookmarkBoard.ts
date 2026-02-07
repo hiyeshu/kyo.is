@@ -9,6 +9,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   useBookmarkStore,
   isFolder,
+  getFaviconUrl,
   type Bookmark,
   type BookmarkFolder,
   type BoardItem,
@@ -82,14 +83,14 @@ export function useBookmarkBoard() {
     [store.items]
   );
 
-  // 预览 favicon URL
+  // 预览 favicon URL - 根据用户地区自动选择服务
   const previewFavicon = useMemo(() => {
     const url = addUrl.trim();
     if (!url) return null;
     const fullUrl = url.startsWith("http") ? url : `https://${url}`;
     try {
       const hostname = new URL(fullUrl).hostname;
-      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+      return getFaviconUrl(hostname);
     } catch {
       return null;
     }
@@ -147,7 +148,8 @@ export function useBookmarkBoard() {
     } catch { /* noop */ }
 
     const finalTitle = title || hostname;
-    const favicon = `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
+    // 根据用户地区自动选择 favicon 服务
+    const favicon = getFaviconUrl(hostname);
 
     store.addBookmark(finalTitle, fullUrl, favicon, addFolderId);
     setAddDialogOpen(false);
@@ -182,7 +184,8 @@ export function useBookmarkBoard() {
     store.updateBookmark(editingBookmark.id, {
       title: title || hostname,
       url: fullUrl,
-      favicon: `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`,
+      // 根据用户地区自动选择 favicon 服务
+      favicon: getFaviconUrl(hostname),
     });
     
     setEditDialogOpen(false);
@@ -223,8 +226,17 @@ export function useBookmarkBoard() {
 
   const handleDragStart = useCallback((e: React.DragEvent, item: BoardItem, index: number, folderId?: string) => {
     setDraggedItem({ item, index, folderId });
-    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.effectAllowed = "copyMove";
     e.dataTransfer.setData("text/plain", item.id);
+    
+    // 设置 JSON 数据，让 Dock 能识别这是书签拖拽
+    if (!isFolder(item)) {
+      e.dataTransfer.setData("application/json", JSON.stringify({
+        type: "bookmark",
+        bookmarkId: item.id,
+      }));
+    }
+    
     // 设置拖拽图像
     if (e.currentTarget instanceof HTMLElement) {
       e.dataTransfer.setDragImage(e.currentTarget, 24, 24);

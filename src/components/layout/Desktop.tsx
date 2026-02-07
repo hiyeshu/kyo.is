@@ -18,6 +18,7 @@ import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
 import { getTranslatedAppName } from "@/utils/i18n";
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface DesktopStyles {
   backgroundColor?: string;
@@ -65,6 +66,7 @@ export function Desktop({
   const isMacTheme = currentTheme === "macosx";
   const isTauriApp =
     typeof window !== "undefined" && "__TAURI__" in window;
+  const isMobile = useIsMobile();
 
   // ─── Bookmarks for desktop (non-macOS themes) ──────────────────────
   const bookmarkStore = useBookmarkStore();
@@ -339,15 +341,25 @@ export function Desktop({
               bookmark={bm}
               isSelected={selectedBookmarkId === bm.id}
               theme={currentTheme}
+              isMobile={isMobile}
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedBookmarkId(bm.id);
-                setSelectedAppId(null);
+                // Mobile: single tap opens bookmark; Desktop: single click selects
+                if (isMobile) {
+                  window.open(bm.url, "_blank", "noopener,noreferrer");
+                  setSelectedBookmarkId(null);
+                } else {
+                  setSelectedBookmarkId(bm.id);
+                  setSelectedAppId(null);
+                }
               }}
               onDoubleClick={(e) => {
                 e.stopPropagation();
-                window.open(bm.url, "_blank", "noopener,noreferrer");
-                setSelectedBookmarkId(null);
+                // Desktop: double click opens bookmark
+                if (!isMobile) {
+                  window.open(bm.url, "_blank", "noopener,noreferrer");
+                  setSelectedBookmarkId(null);
+                }
               }}
               onContextMenu={(e) => {
                 e.preventDefault();
@@ -388,6 +400,7 @@ function BookmarkDesktopIcon({
   onDoubleClick,
   onContextMenu,
   theme,
+  isMobile,
 }: {
   bookmark: Bookmark;
   isSelected: boolean;
@@ -395,28 +408,37 @@ function BookmarkDesktopIcon({
   onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
   theme: string;
+  isMobile: boolean;
 }) {
   const isXpTheme = theme === "xp" || theme === "win98";
   const isSystem7 = theme === "system7";
 
+  // Mobile: larger icons for better touch targets (48-56px)
+  // Desktop: standard 40px container, 32px icon
+  const containerSize = isMobile ? "w-14 h-14" : "w-10 h-10";
+  const iconSize = isMobile ? "w-12 h-12" : "w-8 h-8";
+  const iconSizeSmall = isMobile ? "w-10 h-10" : "w-6 h-6";
+  const iconWidth = isMobile ? "w-[80px]" : "w-[72px]";
+
   return (
     <div
       data-desktop-icon="true"
-      className={`flex flex-col items-center justify-start w-[72px] cursor-default select-none`}
+      className={`flex flex-col items-center justify-start ${iconWidth} cursor-default select-none`}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
-      {/* Icon container - style varies by theme */}
-      <div className="w-10 h-10 flex items-center justify-center mb-0.5 relative">
+      {/* Icon container - style varies by theme, size varies by device */}
+      <div className={`${containerSize} flex items-center justify-center mb-0.5 relative`}>
         {isXpTheme ? (
           // XP/Win98: Classic Windows IE-style icon
           bookmark.favicon ? (
             <img
               src={bookmark.favicon}
               alt=""
-              className="w-8 h-8 object-contain"
+              className={`${iconSize} object-contain`}
               draggable={false}
+              loading="lazy"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = "/icons/xp/ie-site.png";
@@ -426,22 +448,23 @@ function BookmarkDesktopIcon({
             <img
               src="/icons/xp/ie-site.png"
               alt=""
-              className="w-8 h-8 object-contain"
+              className={`${iconSize} object-contain`}
               draggable={false}
             />
           )
         ) : isSystem7 ? (
           // System 7: Black & white classic Mac style
           <div 
-            className="w-8 h-8 border border-black bg-white flex items-center justify-center overflow-hidden"
+            className={`${iconSize} border border-black bg-white flex items-center justify-center overflow-hidden`}
             style={{ filter: "grayscale(100%)" }}
           >
             {bookmark.favicon ? (
               <img
                 src={bookmark.favicon}
                 alt=""
-                className="w-6 h-6 object-contain"
+                className={`${iconSizeSmall} object-contain`}
                 draggable={false}
+                loading="lazy"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = "/icons/default/internet.png";
@@ -451,7 +474,7 @@ function BookmarkDesktopIcon({
               <img
                 src="/icons/default/internet.png"
                 alt=""
-                className="w-6 h-6 object-contain"
+                className={`${iconSizeSmall} object-contain`}
                 draggable={false}
               />
             )}
@@ -459,7 +482,7 @@ function BookmarkDesktopIcon({
         ) : (
           // Default/Aqua: Modern rounded style
           <div
-            className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden"
+            className={`${iconSize} rounded-lg bg-white flex items-center justify-center overflow-hidden`}
             style={{
               boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)",
             }}
@@ -471,13 +494,14 @@ function BookmarkDesktopIcon({
                 className="w-full h-full object-contain"
                 style={{ imageRendering: "-webkit-optimize-contrast" }}
                 draggable={false}
+                loading="lazy"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                   (e.target as HTMLImageElement).parentElement!.innerHTML = "🌐";
                 }}
               />
             ) : (
-              <span className="text-lg">🌐</span>
+              <span className={isMobile ? "text-2xl" : "text-lg"}>🌐</span>
             )}
           </div>
         )}
@@ -485,7 +509,7 @@ function BookmarkDesktopIcon({
       
       {/* Label - style varies by theme */}
       <span
-        className={`text-[11px] leading-tight text-center break-words max-w-full px-0.5 rounded ${
+        className={`${isMobile ? "text-xs" : "text-[11px]"} leading-tight text-center break-words max-w-full px-0.5 rounded ${
           isSelected
             ? "bg-[Highlight] text-[HighlightText]"
             : isXpTheme
@@ -494,7 +518,7 @@ function BookmarkDesktopIcon({
             ? "text-black"
             : "text-gray-900 [text-shadow:_0_1px_1px_rgb(255_255_255_/_80%)]"
         }`}
-        style={isXpTheme ? { fontFamily: '"Pixelated MS Sans Serif", Arial', fontSize: '11px' } : undefined}
+        style={isXpTheme ? { fontFamily: '"Pixelated MS Sans Serif", Arial', fontSize: isMobile ? '12px' : '11px' } : undefined}
       >
         {bookmark.title}
       </span>
