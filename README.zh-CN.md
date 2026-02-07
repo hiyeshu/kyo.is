@@ -8,6 +8,8 @@ Kyo.is 是一个个人网页入口，链接即操作系统。在 CLI 和 AI 将�
 
 **[在线体验 → kyo.is](https://kyo.is)**
 
+> 项目源自 [ryokun6/ryos](https://github.com/ryokun6/ryos) — A Web-Based Agentic AI OS
+
 ---
 
 ## 产品哲学
