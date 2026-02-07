@@ -183,17 +183,17 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "/icons/mac-192.png",
+            src: "/apple-touch-icon.png?v=2",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/icons/mac-512.png",
+            src: "/apple-touch-icon.png?v=2",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "/icons/mac-512.png",
+            src: "/apple-touch-icon.png?v=2",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
