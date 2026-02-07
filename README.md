@@ -2,7 +2,7 @@
 
 # 💻 Kyo.is
 
-**Your browser is your desktop.**
+**Your bookmark is your desktop.**
 
 Kyo.is is a personal web portal where links become your operating system. In a world where CLI and AI compress every entry point—where Notion, Figma, ChatGPT are all just URLs—you don't need to download anything anymore. You just need a place to put them.
 
