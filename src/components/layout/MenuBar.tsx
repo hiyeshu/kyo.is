@@ -1135,13 +1135,11 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
 
                 const isForeground = instanceId === foregroundInstanceId;
                 const isMinimized = instance.isMinimized ?? false;
-                const isApplet = instance.appId === "applet-viewer";
-                
-                // Get icon and label based on app type
-                const appletInfo = isApplet ? getAppletInfo(instance) : null;
-                const displayIcon = appletInfo?.icon || getAppIconPath(instance.appId);
-                const displayLabel = appletInfo?.label || instance.title || getAppName(instance.appId);
-                const isEmoji = appletInfo?.isEmoji || false;
+
+                // Get icon and label (Kyo only has bookmarks, no special handling needed)
+                const displayIcon = getAppIconPath(instance.appId);
+                const displayLabel = instance.title || getAppName(instance.appId);
+                const isEmoji = false;
 
                 return (
                   <motion.button
@@ -1325,14 +1323,12 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
                   {overflowTaskbarIds.map((instanceId) => {
                     const instance = instances[instanceId];
                     if (!instance || !instance.isOpen) return null;
-                    
+
                     const isMinimized = instance.isMinimized ?? false;
-                    const isApplet = instance.appId === "applet-viewer";
-                    const appletInfo = isApplet ? getAppletInfo(instance) : null;
-                    const displayIcon = appletInfo?.icon || getAppIconPath(instance.appId);
-                    const displayLabel = appletInfo?.label || instance.title || getAppName(instance.appId);
-                    const isEmoji = appletInfo?.isEmoji || false;
-                    
+                    const displayIcon = getAppIconPath(instance.appId);
+                    const displayLabel = instance.title || getAppName(instance.appId);
+                    const isEmoji = false;
+
                     return (
                       <DropdownMenuItem
                         key={instanceId}

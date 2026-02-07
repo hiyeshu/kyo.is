@@ -1,6 +1,7 @@
 import i18n from "@/lib/i18n";
-import { useThemeStore } from "@/stores/useThemeStore";
 import { type AppId } from "@/config/appRegistry";
+
+export type { AppId };
 
 /**
  * Get translated app name
@@ -88,26 +89,8 @@ export function getTranslatedHelpItems(appId: AppId): Array<{
   title: string;
   description: string;
 }> {
-  const helpKeys: Record<AppId, string[]> = {
-    finder: ["browseNavigate", "fileManagement", "viewSort", "quickAccess", "storageInfo", "trash"],
-    soundboard: ["recordSlot", "keyboardPlay", "waveformView", "customizeSlot", "multipleBoards", "importExport"],
-    "internet-explorer": ["browseWeb", "travelThroughTime", "historyReimagined", "saveFavorites", "exploreTimeNodes", "shareJourney"],
-    chats: ["chatWithRyo", "createEditFiles", "controlApps", "joinChatRooms", "pushToTalk", "nudgeDjMode"],
-    textedit: ["richEditing", "formatting", "listsTasks", "fileManagement", "voiceDictation", "slashCommands"],
-    paint: ["drawingTools", "colors", "undo", "saving", "patterns", "filters"],
-    "photo-booth": ["takingPhoto", "quickSnaps", "applyingEffects", "viewingPhotos", "downloadingPhotos", "switchingCameras"],
-    minesweeper: ["desktopControls", "mobileControls", "gameRules", "timerCounter", "restart"],
-    videos: ["addVideo", "playback", "loop", "shuffle", "playlist", "retroUi"],
-    ipod: ["addSongs", "wheelNavigation", "playbackControls", "syncedLyrics", "playbackModes", "displayFullscreen"],
-    karaoke: ["addSearchSongs", "syncLyricsTiming", "styleLayout", "syncedWithIpod", "worksWithChats", "keyboardShortcuts"],
-    synth: ["virtualKeyboard", "controlsPanel", "presets", "waveform3d", "effects", "midiInput"],
-    pc: ["pcEmulator", "keyboardControls", "mouseCapture", "fullscreenMode", "saveStates", "aspectRatio"],
-    terminal: ["basicCommands", "navigation", "commandHistory", "aiAssistant", "fileEditing", "terminalSounds"],
-    "applet-viewer": ["appletStore", "createWithRyosChat", "viewApplets", "shareApplets", "openFromFinder", "keepUpdated"],
-    "control-panels": ["appearance", "sounds", "aiModel", "shaderEffects", "backupRestore", "system"],
-    admin: ["adminAccess", "userManagement", "roomManagement", "statistics"],
-    stickies: ["createNote", "colors", "deleteNote", "autoSave"],
-    "infinite-mac": ["classicMacEmulator", "selectSystem", "pauseResume", "backToSystems"],
+  const helpKeys: Partial<Record<AppId, string[]>> = {
+    bookmarks: ["addBookmark", "organize", "search", "folders", "import", "export"],
   };
 
   const keys = helpKeys[appId] || [];

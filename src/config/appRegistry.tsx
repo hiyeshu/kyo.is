@@ -85,7 +85,7 @@ function createLazyComponent<T = unknown>(
 
 // ─── 懒加载组件 ──────────────────────────────────────────────────────────────
 
-const LazyBookmarksApp = createLazyComponent(
+const LazyBookmarksApp = createLazyComponent<unknown>(
   () =>
     import(
       "@/apps/bookmarks/components/BookmarkBoardApp"
