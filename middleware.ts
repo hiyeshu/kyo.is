@@ -81,7 +81,7 @@ export default async function middleware(request: Request) {
   }
 
   // Default values
-  let imageUrl = `${baseUrl}/apple-touch-icon.png?v=2`;
+  let imageUrl = `${baseUrl}/apple-touch-icon.png?v=3`;
   let title = "Kyo";
   let description = "Personal web portal and bookmark launcher";
   let matched = false;
