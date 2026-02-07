@@ -535,8 +535,9 @@ function DefaultMenuItems() {
   const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
 
-  const handleLaunchFinder = (path: string) => {
-    launchApp("finder", { initialPath: path });
+  const handleLaunchFinder = (_path: string) => {
+    // Finder not available in Kyo
+    console.warn("Finder is not available in Kyo");
   };
 
   return (
@@ -886,9 +887,8 @@ function VolumeControl() {
           size="icon"
           className="mt-2 h-6 w-6 text-md border-none focus-visible:ring-0"
           onClick={() => {
-            launchApp("control-panels", {
-              initialData: { defaultTab: "sound" },
-            });
+            // Control panels not available in Kyo
+            console.warn("Control panels not available in Kyo");
             setIsDropdownOpen(false);
           }}
         >
@@ -933,44 +933,13 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
   // Check if on phone (must be called before any early returns)
   const isPhone = useIsPhone();
 
-  // Get file system items for applet icons (stub store returns {})
-  const files = useFilesStore((s) => s.items);
-
-  // Helper to get applet info (applets removed — stub)
+  // Helper to get applet info (applets removed — stub, not used in Kyo)
   const getAppletInfo = (_instance: AppInstance) => {
-    const file = undefined as undefined;
-
-    // Get filename from path for label
-    const getFileName = (path: string): string => {
-      const parts = path.split("/");
-      const fileName = parts[parts.length - 1];
-      return fileName.replace(/\.(html|app)$/i, "");
+    return {
+      icon: "📦",
+      label: "App",
+      isEmoji: true
     };
-
-    const label = path ? getFileName(path) : "Applet Store";
-
-    // Check if the file icon is an emoji (not a file path)
-    const fileIcon = file?.icon;
-    const isEmojiIcon =
-      fileIcon &&
-      !fileIcon.startsWith("/") &&
-      !fileIcon.startsWith("http") &&
-      fileIcon.length <= 10;
-
-    // If no path (applet store), use the applet viewer icon
-    // Otherwise, use file icon if emoji, or fallback to package emoji
-    let icon: string;
-    let isEmoji: boolean;
-    if (!path) {
-      // Applet store - use app icon
-      icon = getAppIconPath("applet-viewer");
-      isEmoji = false;
-    } else {
-      icon = isEmojiIcon ? fileIcon : "📦";
-      isEmoji = true;
-    }
-
-    return { icon, label, isEmoji };
   };
 
   // Tauri fullscreen detection (must be declared before any early returns)

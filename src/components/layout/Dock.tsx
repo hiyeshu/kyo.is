@@ -887,43 +887,16 @@ function MacDock() {
   const isTrashEmpty = trashItems.length === 0;
 
   // Helper to get applet info (icon and name) from instance
+  // Note: This function is not used in Kyo (only bookmarks app exists)
   const getAppletInfo = useCallback(
     (_instance: AppInstance) => {
-      const file = undefined as undefined;
-
-      // Get filename from path for label
-      const getFileName = (path: string): string => {
-        const parts = path.split("/");
-        const fileName = parts[parts.length - 1];
-        return fileName.replace(/\.(html|app)$/i, "");
+      return {
+        icon: "📦",
+        label: "App",
+        isEmoji: true
       };
-
-      const label = path ? getFileName(path) : t("common.dock.appletStore");
-
-      // Check if the file icon is an emoji (not a file path)
-      const fileIcon = file?.icon;
-      const isEmojiIcon =
-        fileIcon &&
-        !fileIcon.startsWith("/") &&
-        !fileIcon.startsWith("http") &&
-        fileIcon.length <= 10;
-
-      // If no path (applet store), use the applet viewer icon
-      // Otherwise, use file icon if emoji, or fallback to package emoji
-      let icon: string;
-      let isEmoji: boolean;
-      if (!path) {
-        // Applet store - use app icon
-        icon = getAppIconPath("applet-viewer");
-        isEmoji = false;
-      } else {
-        icon = isEmojiIcon ? fileIcon : "📦";
-        isEmoji = true;
-      }
-
-      return { icon, label, isEmoji };
     },
-    [files]
+    []
   );
 
   // Pinned apps on the left side (from dock store)
@@ -1373,78 +1346,22 @@ function MacDock() {
   );
 
   // Finder-specific: bring existing to foreground, otherwise launch one
+  // Note: Finder doesn't exist in Kyo, these functions are no-ops
   const focusOrLaunchFinder = useCallback(
-    (initialPath?: string, launchOrigin?: LaunchOriginRect) => {
-      // First, restore all minimized Finder instances
-      let hasMinimized = false;
-      let lastRestoredId: string | null = null;
-      Object.values(instances).forEach((inst) => {
-        if (inst.appId === "finder" && inst.isOpen && inst.isMinimized) {
-          restoreInstance(inst.instanceId);
-          hasMinimized = true;
-          lastRestoredId = inst.instanceId;
-        }
-      });
-      
-      // If we restored any, bring the last one to foreground
-      if (hasMinimized && lastRestoredId) {
-        bringInstanceToForeground(lastRestoredId);
-        return;
-      }
-      
-      // Try focusing existing Finder instance
-      for (let i = instanceOrder.length - 1; i >= 0; i--) {
-        const id = instanceOrder[i];
-        const inst = instances[id];
-        if (inst && inst.appId === "finder" && inst.isOpen) {
-          bringInstanceToForeground(id);
-          return;
-        }
-      }
-      // None open; launch new Finder instance (multi-window supported by hook)
-      if (initialPath) launchApp("finder", { initialPath, launchOrigin });
-      else launchApp("finder", { initialPath: "/", launchOrigin });
+    (_initialPath?: string, _launchOrigin?: LaunchOriginRect) => {
+      // Finder not available in Kyo
+      console.warn("Finder is not available in Kyo");
     },
-    [instances, instanceOrder, bringInstanceToForeground, restoreInstance, launchApp]
+    []
   );
 
   // Focus a Finder window already at targetPath (or its subpath); otherwise launch new Finder at targetPath
   const focusFinderAtPathOrLaunch = useCallback(
-    (targetPath: string, initialData?: unknown, launchOrigin?: LaunchOriginRect) => {
-      for (let i = instanceOrder.length - 1; i >= 0; i--) {
-        const id = instanceOrder[i];
-        const inst = instances[id];
-        if (inst && inst.appId === "finder" && inst.isOpen) {
-          const fi = finderInstances[id];
-          if (
-            fi &&
-            (fi.currentPath === targetPath ||
-              fi.currentPath.startsWith(targetPath + "/"))
-          ) {
-            // If minimized, restore it; otherwise just bring to foreground
-            if (inst.isMinimized) {
-              restoreInstance(id);
-            } else {
-              bringInstanceToForeground(id);
-            }
-            return;
-          }
-        }
-      }
-      launchApp("finder", {
-        initialPath: targetPath,
-        initialData: initialData,
-        launchOrigin,
-      });
+    (_targetPath: string, _initialData?: unknown, _launchOrigin?: LaunchOriginRect) => {
+      // Finder not available in Kyo
+      console.warn("Finder is not available in Kyo");
     },
-    [
-      instanceOrder,
-      instances,
-      finderInstances,
-      bringInstanceToForeground,
-      restoreInstance,
-      launchApp,
-    ]
+    []
   );
 
   // Generate context menu items for an app

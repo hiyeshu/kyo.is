@@ -74,44 +74,16 @@ export function ExposeView({ isOpen, onClose }: ExposeViewProps) {
     }
   }, [isOpen, prevIsOpen, playOpenSound, playCloseSound]);
 
-  // Helper to get applet info (stub — applets removed)
+  // Helper to get applet info (stub — applets removed, not used in Kyo)
   const getAppletInfo = useCallback(
     (_instance: AppInstance) => {
-      const file = undefined as undefined;
-
-      // Get filename from path for label
-      const getFileName = (filePath: string): string => {
-        const parts = filePath.split("/");
-        const fileName = parts[parts.length - 1];
-        return fileName.replace(/\.(html|app)$/i, "");
+      return {
+        icon: "📦",
+        label: "App",
+        isEmoji: true
       };
-
-      const label = path ? getFileName(path) : t("common.dock.appletStore");
-
-      // Check if the file icon is an emoji (not a file path)
-      const fileIcon = file?.icon;
-      const isEmojiIcon =
-        fileIcon &&
-        !fileIcon.startsWith("/") &&
-        !fileIcon.startsWith("http") &&
-        fileIcon.length <= 10;
-
-      // If no path (applet store), use the applet viewer icon
-      // Otherwise, use file icon if emoji, or fallback to package emoji
-      let icon: string;
-      let isEmoji: boolean;
-      if (!path) {
-        // Applet store - use app icon
-        icon = getAppIconPath("applet-viewer");
-        isEmoji = false;
-      } else {
-        icon = isEmojiIcon ? fileIcon : "📦";
-        isEmoji = true;
-      }
-
-      return { icon, label, isEmoji };
     },
-    [files]
+    []
   );
 
   // Handle window selection (called from AppManager)
@@ -190,16 +162,13 @@ export function ExposeView({ isOpen, onClose }: ExposeViewProps) {
             transition={{ duration: 0.3, delay: 0.1 }}
           >
             {openInstances.map((instance, index) => {
-              const isApplet = instance.appId === "applet-viewer";
-              const appletInfo = isApplet ? getAppletInfo(instance) : null;
-              const displayIcon =
-                appletInfo?.icon || getAppIconPath(instance.appId);
+              // Kyo only has bookmarks, no special handling needed
+              const displayIcon = getAppIconPath(instance.appId);
               const displayLabel =
-                appletInfo?.label ||
                 instance.title ||
                 instance.displayTitle ||
                 getTranslatedAppName(instance.appId);
-              const isEmoji = appletInfo?.isEmoji || false;
+              const isEmoji = false;
 
               const cellCenter = getExposeCellCenter(
                 index,

@@ -136,7 +136,7 @@ export function BookmarkBoardApp({
   instanceId,
   onNavigateNext,
   onNavigatePrevious,
-}: AppProps) {
+}: AppProps<unknown>) {
   const h = useBookmarkBoard();
 
   const menuBar = (
