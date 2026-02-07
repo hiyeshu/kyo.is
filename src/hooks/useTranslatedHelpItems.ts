@@ -14,7 +14,6 @@ export function useTranslatedHelpItems(
 
   const helpKeys: Partial<Record<AppId, string[]>> = {
     bookmarks: ["addBookmark", "organize", "search", "folders", "import", "export"],
-    finder: ["browse", "organize", "search", "folders", "import", "export"],
   };
 
   return useMemo(() => {
