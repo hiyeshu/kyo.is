@@ -1380,11 +1380,7 @@ function MacDock() {
           type: "item",
           label: t("common.dock.open"),
           onSelect: () => {
-            if (appId === "finder") {
-              launchApp("finder", { initialPath: "/" });
-            } else {
-              launchApp(appId);
-            }
+            launchApp(appId);
           },
         });
         
@@ -1406,91 +1402,14 @@ function MacDock() {
         return items;
       }
       
-      // For applet-viewer with a specific instance, only show that applet's menu
-      if (appId === "applet-viewer" && specificInstanceId) {
-        const instance = instances[specificInstanceId];
-        if (instance) {
-          // Single applet instance - show its window
-          const { label } = getAppletInfo(instance);
-          const isForeground = !!(instance.isForeground && !instance.isMinimized);
-          items.push({
-            type: "checkbox",
-            label: `${label}${instance.isMinimized ? ` ${t("common.dock.minimized")}` : ""}`,
-            checked: isForeground,
-            onSelect: () => {
-              if (instance.isMinimized) {
-                restoreInstance(specificInstanceId);
-              }
-              bringInstanceToForeground(specificInstanceId);
-            },
-          });
-          
-          items.push({ type: "separator" });
-          
-          // Show All Windows (Expose View)
-          items.push({
-            type: "item",
-            label: t("common.dock.showAllWindows"),
-            onSelect: () => {
-              // Trigger Expose View
-              window.dispatchEvent(new CustomEvent("toggleExposeView"));
-            },
-          });
-          
-          // Hide
-          items.push({
-            type: "item",
-            label: t("common.dock.hide"),
-            onSelect: () => {
-              playZoomMinimize();
-              minimizeInstance(specificInstanceId);
-            },
-            disabled: instance.isMinimized,
-          });
-          
-          // Quit
-          items.push({
-            type: "item",
-            label: t("common.dock.quit"),
-            onSelect: () => {
-              // If minimized, close directly without animation/sound (window isn't visible)
-              if (instance.isMinimized) {
-                closeAppInstance(specificInstanceId);
-              } else {
-                requestCloseWindow(specificInstanceId);
-              }
-            },
-          });
-          
-          return items;
-        }
-      }
-      
+
       // List existing windows if any
       if (appInstances.length > 0) {
         appInstances.forEach((inst) => {
           let windowLabel = inst.displayTitle || inst.title || appRegistry[appId]?.name || appId;
-          
-          // For Finder, show the current path with localized folder name
-          if (appId === "finder") {
-            const finderState = finderInstances[inst.instanceId];
-            if (finderState?.currentPath) {
-              if (finderState.currentPath === "/") {
-                // Root path - use localized "Macintosh HD"
-                windowLabel = t("apps.finder.window.macintoshHd");
-              } else {
-                const pathParts = finderState.currentPath.split("/");
-                const lastSegment = pathParts[pathParts.length - 1] || "";
-                try {
-                  const decodedName = decodeURIComponent(lastSegment);
-                  windowLabel = getTranslatedFolderNameFromName(decodedName);
-                } catch {
-                  windowLabel = getTranslatedFolderNameFromName(lastSegment);
-                }
-              }
-            }
-          }
-          
+
+          // Kyo only has bookmarks, no special path handling needed
+
           const isForeground = !!(inst.isForeground && !inst.isMinimized);
           items.push({
             type: "checkbox",
@@ -1514,11 +1433,7 @@ function MacDock() {
           type: "item",
           label: t("common.dock.newWindow"),
           onSelect: () => {
-            if (appId === "finder") {
-              launchApp("finder", { initialPath: "/" });
-            } else {
-              launchApp(appId);
-            }
+            launchApp(appId);
           },
         });
         
@@ -1711,40 +1626,21 @@ function MacDock() {
             icon: item.icon,
             onSelect: () => {
               if (item.isDirectory) {
-                // Open folder in Finder
-                focusFinderAtPathOrLaunch(item.path);
+                // Folders not supported in Kyo
+                console.warn("Folder navigation not supported in Kyo");
               } else if (item.appId) {
                 // Launch app (from Applications folder)
-                const appId = item.appId;
-                if (appId === "finder") {
-                  focusOrLaunchFinder("/");
-                } else {
-                  focusOrLaunchApp(appId);
-                }
+                focusOrLaunchApp(item.appId);
               } else if (item.aliasType === "app" && item.aliasTarget) {
                 // Launch app
                 const appId = item.aliasTarget as AppId;
-                if (appId === "finder") {
-                  focusOrLaunchFinder("/");
-                } else {
-                  focusOrLaunchApp(appId);
-                }
+                focusOrLaunchApp(appId);
               } else if (item.aliasType === "file" && item.aliasTarget) {
-                // Open file alias - resolve target and open
-                const targetFile = fileStore.getItem(item.aliasTarget);
-                if (targetFile) {
-                  if (targetFile.isDirectory) {
-                    focusFinderAtPathOrLaunch(targetFile.path);
-                  } else {
-                    // For files, open in Finder at the file's location
-                    const parentPath = item.aliasTarget.substring(0, item.aliasTarget.lastIndexOf("/"));
-                    focusFinderAtPathOrLaunch(parentPath || "/");
-                  }
-                }
+                // File aliases not supported in Kyo
+                console.warn("File aliases not supported in Kyo");
               } else {
-                // Regular file - open in Finder at the file's location
-                const parentPath = item.path.substring(0, item.path.lastIndexOf("/"));
-                focusFinderAtPathOrLaunch(parentPath || "/");
+                // Regular files not supported in Kyo
+                console.warn("File operations not supported in Kyo");
               }
               // Close the context menu
               if (isTrash) {
@@ -2038,11 +1934,7 @@ function MacDock() {
                             width: rect.width,
                             height: rect.height,
                           };
-                          if (appId === "finder") {
-                            focusOrLaunchFinder("/", launchOrigin);
-                          } else {
-                            focusOrLaunchApp(appId, undefined, launchOrigin);
-                          }
+                          focusOrLaunchApp(appId, undefined, launchOrigin);
                         }}
                         onContextMenu={(e) => handleAppContextMenu(e, appId)}
                         showIndicator={isOpen}

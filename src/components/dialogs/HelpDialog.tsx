@@ -12,10 +12,9 @@ import { useTranslation } from "react-i18next";
 import { getTranslatedAppName, type AppId } from "@/utils/i18n";
 import { useAppStore } from "@/stores/useAppStore";
 
-// Map appId to doc URL path (most are same, but some have different names)
+// Map appId to doc URL path (Kyo only has bookmarks)
 const APP_DOC_NAMES: Partial<Record<AppId, string>> = {
-  pc: "virtual-pc",
-  "applet-viewer": "applet-store",
+  bookmarks: "bookmarks",
 };
 
 interface HelpCardProps {
@@ -86,7 +85,6 @@ export function HelpDialog({
   const currentTheme = useThemeStore((state) => state.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   const isMacTheme = currentTheme === "macosx";
-  const launchApp = useAppStore((state) => state.launchApp);
 
   // Use localized app name if appId is provided, otherwise fall back to appName
   const displayAppName = appId ? getTranslatedAppName(appId) : appName || "";
