@@ -8,8 +8,6 @@ Kyo.is is a personal web portal where links become your operating system. In a w
 
 **[Live Demo → kyo.is](https://kyo.is)**
 
-> Forked from [ryokun6/ryos](https://github.com/ryokun6/ryos) — A Web-Based Agentic AI OS
-
 ---
 
 ## Philosophy
@@ -142,6 +140,8 @@ Your digital space should reflect you, not the world's noise.
 ## License
 
 AGPL-3.0 — See [LICENSE](./LICENSE)
+
+This project is forked from [ryokun6/ryos](https://github.com/ryokun6/ryos) — A Web-Based Agentic AI OS
 
 ---
 
