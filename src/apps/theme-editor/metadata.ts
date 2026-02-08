@@ -6,10 +6,10 @@
  */
 
 export const appMetadata = {
-  id: "theme-editor",
+  name: "Theme Editor",
   version: "1.0",
   creator: { name: "Kyo", url: "https://kyo.is" },
-  github: "https://github.com/hiyeshu/kyo.is",
+  github: "https://github.com/mrhyeshu/kyo.is",
   icon: "/icons/default/palette.png",
 };
 

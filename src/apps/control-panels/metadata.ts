@@ -6,12 +6,13 @@
  */
 
 export const appMetadata = {
-  id: "control-panels",
+  name: "System Preferences",
   version: "1.0.0",
   creator: {
     name: "Kyo",
     url: "https://kyo.is",
   },
+  github: "https://github.com/mrhyeshu/kyo.is",
   description: "Configure wallpaper, sound, and system settings",
   icon: "/icons/default/control-panels/appearance-manager/preferences.png",
 };
