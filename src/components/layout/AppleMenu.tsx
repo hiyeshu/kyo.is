@@ -122,7 +122,7 @@ export function AppleMenu() {
   };
 
   const handleSystemPreferences = () => {
-    // Control Panels removed
+    launchApp("control-panels");
   };
 
   const handleAppletStore = () => {
@@ -177,15 +177,15 @@ export function AppleMenu() {
             onClick={() => handleAppClick("theme-editor")}
             className="text-md h-6 px-3"
           >
-            {t("common.appleMenu.themeEditor", "Theme Editor")}
+            {t("apps.theme-editor.name")}
           </MenubarItem>
 
-          {/* System Preferences / Control Panels */}
+          {/* System Preferences */}
           <MenubarItem
             onClick={handleSystemPreferences}
             className="text-md h-6 px-3"
           >
-            {isMacOsxTheme ? t("common.appleMenu.systemPreferences") : t("common.appleMenu.controlPanels")}
+            {t("apps.control-panels.name")}
           </MenubarItem>
 
           {/* Applet Store */}

@@ -2096,15 +2096,12 @@
       }
     },
     "control-panels": {
-      "name": "Control Panels",
-      "nameForMacosX": "System Preferences",
+      "name": "System Preferences",
       "description": "System settings",
       "menu": {
         "app": "App",
-        "controlPanelsHelp": "Control Panels Help",
-        "controlPanelsHelpForMacosX": "System Preferences Help",
-        "aboutControlPanels": "About Control Panels",
-        "aboutControlPanelsForMacosX": "About System Preferences"
+        "help": "System Preferences Help",
+        "about": "About System Preferences"
       },
       "masterVolume": "Master Volume",
       "master": "Master",
@@ -2134,6 +2131,14 @@
       "themeDescription": "Changes the appearance of windows, menus, and controls",
       "select": "Select",
       "uiSounds": "UI Sounds",
+      "uiSoundsDescription": "Play sounds for button clicks and interactions",
+      "syncWallpaper": "Sync Wallpaper",
+      "syncWallpaperDescription": "Change wallpaper when switching themes",
+      "backupDownloaded": "Backup downloaded",
+      "invalidBackupFile": "Invalid backup file",
+      "backupRestoredReloading": "Backup restored. Reloading...",
+      "failedToParseBackup": "Failed to parse backup file",
+      "settingsResetReloading": "All settings reset. Reloading...",
       "terminalIeAmbientSynth": "Synth",
       "chatSynth": "Chat Synth",
       "selectAPreset": "Select a preset",
@@ -2235,6 +2240,26 @@
           "description": "Reset preferences or format the virtual file system"
         }
       }
+    },
+    "theme-editor": {
+      "name": "Theme Editor",
+      "base": "Base",
+      "loadSavedTheme": "Load saved theme...",
+      "reset": "Reset",
+      "delete": "Delete",
+      "save": "Save",
+      "update": "Update",
+      "import": "Import",
+      "export": "Export",
+      "modified": "modified",
+      "saveTheme": "Save Theme",
+      "updateTheme": "Update Theme",
+      "themeName": "Theme name",
+      "importTheme": "Import Theme",
+      "chooseJsonFile": "Choose JSON File",
+      "orPasteBelow": "or paste JSON below",
+      "invalidThemeJson": "Invalid theme JSON format",
+      "cancel": "Cancel"
     },
     "stickies": {
       "name": "Stickies",

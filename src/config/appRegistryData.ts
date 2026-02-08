@@ -5,8 +5,8 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-// Kyo.is only has 2 apps (Finder and Applet Viewer removed)
-export const appIds = ["bookmarks", "theme-editor"] as const;
+// Kyo.is apps (Finder and Applet Viewer removed)
+export const appIds = ["bookmarks", "theme-editor", "control-panels"] as const;
 
 export type AppId = (typeof appIds)[number];
 
@@ -18,6 +18,7 @@ export interface AppBasicInfo {
 export const appNames: Record<AppId, string> = {
   "bookmarks": "Bookmarks",
   "theme-editor": "Theme Editor",
+  "control-panels": "System Preferences",
 };
 
 export function getAppBasicInfoList(): AppBasicInfo[] {

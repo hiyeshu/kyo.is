@@ -752,8 +752,7 @@
       "minute": "분",
       "minutes": "분",
       "mono": "모노",
-      "name": "제어판",
-      "nameForMacosX": "시스템 환경설정",
+      "name": "시스템 환경설정",
       "openai": "OpenAI",
       "openaiVoice": "OpenAI 음성",
       "patterns": "패턴",
@@ -816,7 +815,9 @@
       "ttsVoice": "TTS 음성",
       "ui": "UI",
       "uiSounds": "UI 소리",
-      "uiVolume": "UI 음량"
+      "uiVolume": "UI 음량",
+      "syncWallpaper": "배경화면 동기화",
+      "syncWallpaperDescription": "테마 변경 시 배경화면도 변경"
     },
     "finder": {
       "contextMenu": {
@@ -1827,6 +1828,26 @@
       "name": "사운드보드",
       "newSoundboardDefault": "새로운 사운드보드",
       "soundboards": "사운드보드"
+    },
+    "theme-editor": {
+      "name": "테마 에디터",
+      "base": "기본",
+      "loadSavedTheme": "저장된 테마 불러오기...",
+      "reset": "초기화",
+      "delete": "삭제",
+      "save": "저장",
+      "update": "업데이트",
+      "import": "가져오기",
+      "export": "낳아내기",
+      "modified": "수정됨",
+      "saveTheme": "테마 저장",
+      "updateTheme": "테마 업데이트",
+      "themeName": "테마 이름",
+      "importTheme": "테마 가져오기",
+      "chooseJsonFile": "JSON 파일 선택",
+      "orPasteBelow": "또는 아래에 JSON 붙여넣기",
+      "invalidThemeJson": "잘못된 테마 JSON 형식",
+      "cancel": "취소"
     },
     "stickies": {
       "description": "빠른 알림을 위한 스티커 메모",

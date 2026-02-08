@@ -752,8 +752,7 @@
       "minute": "分",
       "minutes": "分",
       "mono": "モノラル",
-      "name": "コントロールパネル",
-      "nameForMacosX": "システム環境設定",
+      "name": "システム環境設定",
       "openai": "OpenAI",
       "openaiVoice": "OpenAI 音声",
       "patterns": "パターン",
@@ -816,7 +815,9 @@
       "ttsVoice": "TTS 音声",
       "ui": "UI",
       "uiSounds": "UI サウンド",
-      "uiVolume": "UI 音量"
+      "uiVolume": "UI 音量",
+      "syncWallpaper": "壁紙を同期",
+      "syncWallpaperDescription": "テーマ切替時に壁紙も変更"
     },
     "finder": {
       "contextMenu": {
@@ -1827,6 +1828,26 @@
       "name": "サウンドボード",
       "newSoundboardDefault": "新規サウンドボード",
       "soundboards": "サウンドボード"
+    },
+    "theme-editor": {
+      "name": "テーマエディタ",
+      "base": "ベース",
+      "loadSavedTheme": "保存したテーマを読み込む...",
+      "reset": "リセット",
+      "delete": "削除",
+      "save": "保存",
+      "update": "更新",
+      "import": "インポート",
+      "export": "エクスポート",
+      "modified": "変更済み",
+      "saveTheme": "テーマを保存",
+      "updateTheme": "テーマを更新",
+      "themeName": "テーマ名",
+      "importTheme": "テーマをインポート",
+      "chooseJsonFile": "JSONファイルを選択",
+      "orPasteBelow": "または下にJSONを貼り付け",
+      "invalidThemeJson": "無効なテーマJSON形式",
+      "cancel": "キャンセル"
     },
     "stickies": {
       "description": "ちょっとした付箋",

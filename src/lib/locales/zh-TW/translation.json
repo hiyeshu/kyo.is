@@ -752,8 +752,7 @@
       "minute": "分鐘",
       "minutes": "分鐘",
       "mono": "黑白",
-      "name": "控制台",
-      "nameForMacosX": "系統偏好設定",
+      "name": "系統偏好設定",
       "openai": "OpenAI",
       "openaiVoice": "OpenAI 語音",
       "patterns": "樣式",
@@ -816,7 +815,15 @@
       "ttsVoice": "TTS 語音",
       "ui": "使用者介面",
       "uiSounds": "UI 音效",
-      "uiVolume": "使用者介面音量"
+      "uiSoundsDescription": "按下按鈕和互動時播放音效",
+      "uiVolume": "使用者介面音量",
+      "syncWallpaper": "同步桌布",
+      "syncWallpaperDescription": "切換主題時自動更換桌布",
+      "backupDownloaded": "備份已下載",
+      "invalidBackupFile": "無效的備份檔案",
+      "backupRestoredReloading": "備份已還原，正在重新載入...",
+      "failedToParseBackup": "無法解析備份檔案",
+      "settingsResetReloading": "所有設定已重設，正在重新載入..."
     },
     "finder": {
       "contextMenu": {
@@ -1827,6 +1834,26 @@
       "name": "音效板",
       "newSoundboardDefault": "新增音效板",
       "soundboards": "音效板"
+    },
+    "theme-editor": {
+      "name": "主題編輯器",
+      "base": "基礎",
+      "loadSavedTheme": "載入已儲存主題...",
+      "reset": "重設",
+      "delete": "刪除",
+      "save": "儲存",
+      "update": "更新",
+      "import": "匯入",
+      "export": "匯出",
+      "modified": "已修改",
+      "saveTheme": "儲存主題",
+      "updateTheme": "更新主題",
+      "themeName": "主題名稱",
+      "importTheme": "匯入主題",
+      "chooseJsonFile": "選擇 JSON 檔案",
+      "orPasteBelow": "或在下方貼上 JSON",
+      "invalidThemeJson": "無效的主題 JSON 格式",
+      "cancel": "取消"
     },
     "stickies": {
       "description": "用於快速提醒的便利貼",

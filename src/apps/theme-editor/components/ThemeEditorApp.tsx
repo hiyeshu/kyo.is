@@ -1,11 +1,12 @@
 /**
- * [INPUT]: useCustomThemeStore, THEME_SCHEMA, PRESET_SKINS, WindowFrame, UI 组件
+ * [INPUT]: useCustomThemeStore, THEME_SCHEMA, WindowFrame, Select, UI 组件
  * [OUTPUT]: ThemeEditorApp 组件
- * [POS]: 主题编辑器主界面，Expert Mode 可视化编辑所有 CSS 变量
+ * [POS]: 主题编辑器主界面，使用 Select 下拉切换变量分组
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { useState, useMemo, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { AppProps } from "@/apps/base/types";
 import { WindowFrame } from "@/components/layout/WindowFrame";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -23,29 +31,16 @@ import {
 import { HelpDialog } from "@/components/dialogs/HelpDialog";
 import { AboutDialog } from "@/components/dialogs/AboutDialog";
 import { appMetadata, helpItems } from "../metadata";
-import {
-  useCustomThemeStore,
-  THEME_SCHEMA,
-  PRESET_SKINS,
-} from "@/stores/useCustomThemeStore";
-import type { ThemeVariable, ThemeVariableGroup } from "@/themes/themeSchema";
-import {
-  FloppyDisk,
-  ArrowCounterClockwise,
-  Trash,
-  CaretDown,
-  CaretRight,
-  Export,
-  DownloadSimple,
-  Swatches,
-  X,
-} from "@phosphor-icons/react";
+import { useCustomThemeStore, THEME_SCHEMA } from "@/stores/useCustomThemeStore";
+import { useThemeStore } from "@/stores/useThemeStore";
+import { themes as systemThemes } from "@/themes";
+import type { ThemeVariable } from "@/themes/themeSchema";
+import { Export, DownloadSimple, X } from "@phosphor-icons/react";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 变量编辑控件
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** 颜色选择器 */
 function ColorControl({
   value,
   onChange,
@@ -59,8 +54,6 @@ function ColorControl({
   isCustomized: boolean;
 }) {
   const strValue = String(value);
-  
-  // 简单的 rgba/rgb → hex 转换（用于 color input）
   const hexValue = useMemo(() => {
     if (strValue.startsWith("#")) return strValue.slice(0, 7);
     if (strValue.startsWith("rgba") || strValue.startsWith("rgb")) {
@@ -85,14 +78,10 @@ function ColorControl({
         value={strValue}
         onChange={(e) => onChange(e.target.value)}
         className="text-[11px] h-7 flex-1 font-mono"
-        placeholder="#000000 or rgba(...)"
+        placeholder="#000000"
       />
       {isCustomized && (
-        <button
-          onClick={onReset}
-          className="text-black/40 hover:text-black/70 shrink-0"
-          title="Reset to default"
-        >
+        <button onClick={onReset} className="text-black/40 hover:text-black/70 shrink-0" title="Reset">
           <X size={12} />
         </button>
       )}
@@ -100,7 +89,6 @@ function ColorControl({
   );
 }
 
-/** 渐变/纹理输入（textarea） */
 function PatternControl({
   value,
   onChange,
@@ -114,22 +102,13 @@ function PatternControl({
   isCustomized: boolean;
 }) {
   const strValue = String(value);
-
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-2">
-        {/* 预览方块 */}
-        <div
-          className="w-7 h-7 rounded border border-black/20 shrink-0"
-          style={{ background: strValue }}
-        />
+        <div className="w-7 h-7 rounded border border-black/20 shrink-0" style={{ background: strValue }} />
         <div className="flex-1" />
         {isCustomized && (
-          <button
-            onClick={onReset}
-            className="text-black/40 hover:text-black/70 shrink-0"
-            title="Reset to default"
-          >
+          <button onClick={onReset} className="text-black/40 hover:text-black/70 shrink-0" title="Reset">
             <X size={12} />
           </button>
         )}
@@ -138,13 +117,12 @@ function PatternControl({
         value={strValue}
         onChange={(e) => onChange(e.target.value)}
         className="text-[10px] h-16 font-mono resize-none"
-        placeholder="linear-gradient(...) or repeating-linear-gradient(...)"
+        placeholder="linear-gradient(...)"
       />
     </div>
   );
 }
 
-/** 数值滑块 */
 function NumberControl({
   variable,
   value,
@@ -158,7 +136,6 @@ function NumberControl({
   onReset: () => void;
   isCustomized: boolean;
 }) {
-  // 从字符串中提取数字（如 "7px" → 7）
   const numValue = useMemo(() => {
     if (typeof value === "number") return value;
     const match = String(value).match(/[\d.]+/);
@@ -171,7 +148,6 @@ function NumberControl({
   const step = variable.step ?? 1;
 
   const handleChange = (num: number) => {
-    // 如果变量类型是 pixels 且有 unit，输出带单位的字符串
     if (variable.type === "pixels" && unit) {
       onChange(`${num}${unit}`);
     } else {
@@ -181,23 +157,10 @@ function NumberControl({
 
   return (
     <div className="flex items-center gap-2">
-      <Slider
-        value={[numValue]}
-        onValueChange={([v]) => handleChange(v)}
-        min={min}
-        max={max}
-        step={step}
-        className="flex-1"
-      />
-      <span className="text-[11px] text-black/50 w-14 text-right font-mono">
-        {numValue}{unit}
-      </span>
+      <Slider value={[numValue]} onValueChange={([v]) => handleChange(v)} min={min} max={max} step={step} className="flex-1" />
+      <span className="text-[11px] text-black/50 w-14 text-right font-mono">{numValue}{unit}</span>
       {isCustomized && (
-        <button
-          onClick={onReset}
-          className="text-black/40 hover:text-black/70 shrink-0"
-          title="Reset to default"
-        >
+        <button onClick={onReset} className="text-black/40 hover:text-black/70 shrink-0" title="Reset">
           <X size={12} />
         </button>
       )}
@@ -205,43 +168,6 @@ function NumberControl({
   );
 }
 
-/** 字体输入 */
-function FontControl({
-  value,
-  onChange,
-  onReset,
-  isCustomized,
-}: {
-  variable: ThemeVariable;
-  value: string | number;
-  onChange: (value: string) => void;
-  onReset: () => void;
-  isCustomized: boolean;
-}) {
-  const strValue = String(value);
-
-  return (
-    <div className="flex items-center gap-2">
-      <Input
-        value={strValue}
-        onChange={(e) => onChange(e.target.value)}
-        className="text-[11px] h-7 flex-1 font-mono"
-        placeholder="Font family stack..."
-      />
-      {isCustomized && (
-        <button
-          onClick={onReset}
-          className="text-black/40 hover:text-black/70 shrink-0"
-          title="Reset to default"
-        >
-          <X size={12} />
-        </button>
-      )}
-    </div>
-  );
-}
-
-/** 阴影输入（文本） */
 function ShadowControl({
   value,
   onChange,
@@ -255,36 +181,24 @@ function ShadowControl({
   isCustomized: boolean;
 }) {
   const strValue = String(value);
-
   return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-2">
-        {/* 阴影预览 */}
-        <div
-          className="w-7 h-7 rounded bg-white border border-black/10 shrink-0"
-          style={{ boxShadow: strValue }}
-        />
-        <Input
-          value={strValue}
-          onChange={(e) => onChange(e.target.value)}
-          className="text-[11px] h-7 flex-1 font-mono"
-          placeholder="0 0 10px rgba(0,0,0,0.3)"
-        />
-        {isCustomized && (
-          <button
-            onClick={onReset}
-            className="text-black/40 hover:text-black/70 shrink-0"
-            title="Reset to default"
-          >
-            <X size={12} />
-          </button>
-        )}
-      </div>
+    <div className="flex items-center gap-2">
+      <div className="w-7 h-7 rounded bg-white border border-black/10 shrink-0" style={{ boxShadow: strValue }} />
+      <Input
+        value={strValue}
+        onChange={(e) => onChange(e.target.value)}
+        className="text-[11px] h-7 flex-1 font-mono"
+        placeholder="0 0 10px rgba(0,0,0,0.3)"
+      />
+      {isCustomized && (
+        <button onClick={onReset} className="text-black/40 hover:text-black/70 shrink-0" title="Reset">
+          <X size={12} />
+        </button>
+      )}
     </div>
   );
 }
 
-/** 根据变量类型选择对应控件 */
 function VariableControl({
   variable,
   value,
@@ -300,135 +214,28 @@ function VariableControl({
 }) {
   switch (variable.type) {
     case "color":
-      return (
-        <ColorControl
-          variable={variable}
-          value={value}
-          onChange={onChange}
-          onReset={onReset}
-          isCustomized={isCustomized}
-        />
-      );
+      return <ColorControl variable={variable} value={value} onChange={onChange} onReset={onReset} isCustomized={isCustomized} />;
     case "gradient":
     case "pattern":
-      return (
-        <PatternControl
-          variable={variable}
-          value={value}
-          onChange={onChange}
-          onReset={onReset}
-          isCustomized={isCustomized}
-        />
-      );
+      return <PatternControl variable={variable} value={value} onChange={onChange} onReset={onReset} isCustomized={isCustomized} />;
     case "number":
     case "pixels":
     case "percentage":
-      return (
-        <NumberControl
-          variable={variable}
-          value={value}
-          onChange={onChange}
-          onReset={onReset}
-          isCustomized={isCustomized}
-        />
-      );
-    case "font":
-      return (
-        <FontControl
-          variable={variable}
-          value={value}
-          onChange={onChange}
-          onReset={onReset}
-          isCustomized={isCustomized}
-        />
-      );
+      return <NumberControl variable={variable} value={value} onChange={onChange} onReset={onReset} isCustomized={isCustomized} />;
     case "shadow":
-      return (
-        <ShadowControl
-          variable={variable}
-          value={value}
-          onChange={onChange}
-          onReset={onReset}
-          isCustomized={isCustomized}
-        />
-      );
+      return <ShadowControl variable={variable} value={value} onChange={onChange} onReset={onReset} isCustomized={isCustomized} />;
     default:
       return (
-        <Input
-          value={String(value)}
-          onChange={(e) => onChange(e.target.value)}
-          className="text-[11px] h-7"
-        />
+        <div className="flex items-center gap-2">
+          <Input value={String(value)} onChange={(e) => onChange(e.target.value)} className="text-[11px] h-7 flex-1" />
+          {isCustomized && (
+            <button onClick={onReset} className="text-black/40 hover:text-black/70 shrink-0" title="Reset">
+              <X size={12} />
+            </button>
+          )}
+        </div>
       );
   }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 变量分组面板
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function VariableGroupPanel({
-  group,
-  getVariableValue,
-  isVariableCustomized,
-  updateVariable,
-  resetVariable,
-  defaultOpen = false,
-}: {
-  group: ThemeVariableGroup;
-  getVariableValue: (key: string) => string | number;
-  isVariableCustomized: (key: string) => boolean;
-  updateVariable: (key: string, value: string | number) => void;
-  resetVariable: (key: string) => void;
-  defaultOpen?: boolean;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  
-  // 统计该组有多少自定义项
-  const customizedCount = useMemo(() => {
-    return group.variables.filter(v => isVariableCustomized(v.key)).length;
-  }, [group.variables, isVariableCustomized]);
-
-  return (
-    <div className="border-b border-black/5">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 w-full py-2 px-1 hover:bg-black/5 rounded transition-colors text-left"
-      >
-        {isOpen ? <CaretDown size={12} /> : <CaretRight size={12} />}
-        <span className="text-[12px] font-medium">{group.label}</span>
-        {customizedCount > 0 && (
-          <span className="text-[10px] bg-black/10 px-1.5 rounded">
-            {customizedCount} modified
-          </span>
-        )}
-        {group.description && (
-          <span className="text-[10px] text-black/40 ml-auto">{group.description}</span>
-        )}
-      </button>
-      {isOpen && (
-        <div className="space-y-3 pl-4 pb-3 pt-1">
-          {group.variables.map((v) => (
-            <div key={v.key} className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Label className="text-[11px] text-black/70">{v.label}</Label>
-                {v.description && (
-                  <span className="text-[10px] text-black/40">({v.description})</span>
-                )}
-              </div>
-              <VariableControl
-                variable={v}
-                value={getVariableValue(v.key)}
-                onChange={(val) => updateVariable(v.key, val)}
-                onReset={() => resetVariable(v.key)}
-                isCustomized={isVariableCustomized(v.key)}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -444,14 +251,14 @@ export function ThemeEditorApp({
   onNavigateNext,
   onNavigatePrevious,
 }: AppProps) {
+  const { t } = useTranslation();
+
   const {
-    themes,
-    editorBaseTheme,
+    themes: customThemes,
     editingThemeId,
     updateVariable,
     resetVariable,
     resetEditor,
-    applyPresetSkin,
     saveAsNewTheme,
     updateExistingTheme,
     deleteTheme,
@@ -462,6 +269,8 @@ export function ThemeEditorApp({
     importTheme,
   } = useCustomThemeStore();
 
+  const currentTheme = useThemeStore((s) => s.current);
+
   const [helpOpen, setHelpOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -469,11 +278,17 @@ export function ThemeEditorApp({
   const [themeName, setThemeName] = useState("");
   const [importJson, setImportJson] = useState("");
   const [importError, setImportError] = useState("");
-  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 当前选中的变量分组
+  const [selectedGroup, setSelectedGroup] = useState(THEME_SCHEMA.groups[0]?.id ?? "window");
+  const activeGroup = useMemo(
+    () => THEME_SCHEMA.groups.find((g) => g.id === selectedGroup) ?? THEME_SCHEMA.groups[0],
+    [selectedGroup]
+  );
+
   // ─────────────────────────────────────────────────────────────────────────────
-  // 操作处理
+  // Handlers
   // ─────────────────────────────────────────────────────────────────────────────
 
   const handleSave = useCallback(() => {
@@ -493,11 +308,9 @@ export function ThemeEditorApp({
 
   const handleExport = useCallback(() => {
     const name = editingThemeId
-      ? themes.find(t => t.id === editingThemeId)?.name ?? "Custom Theme"
+      ? customThemes.find(t => t.id === editingThemeId)?.name ?? "Custom Theme"
       : "Custom Theme";
     const json = exportTheme(name);
-    
-    // 下载文件
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -505,7 +318,7 @@ export function ThemeEditorApp({
     a.download = `${name.replace(/\s+/g, "_")}.theme.json`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [editingThemeId, themes, exportTheme]);
+  }, [editingThemeId, customThemes, exportTheme]);
 
   const handleImport = useCallback(async () => {
     setImportError("");
@@ -521,7 +334,6 @@ export function ThemeEditorApp({
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
     const reader = new FileReader();
     reader.onload = (evt) => {
       const content = evt.target?.result as string;
@@ -532,18 +344,18 @@ export function ThemeEditorApp({
 
   const openSaveDialog = useCallback(() => {
     const existingName = editingThemeId
-      ? themes.find(t => t.id === editingThemeId)?.name ?? ""
+      ? customThemes.find(t => t.id === editingThemeId)?.name ?? ""
       : "";
     setThemeName(existingName);
     setSaveDialogOpen(true);
-  }, [editingThemeId, themes]);
+  }, [editingThemeId, customThemes]);
 
   if (!isWindowOpen) return null;
 
   return (
     <>
       <WindowFrame
-        title="Theme Editor"
+        title={t("apps.theme-editor.name", "Theme Editor")}
         onClose={onClose}
         isForeground={isForeground}
         appId="theme-editor"
@@ -552,227 +364,154 @@ export function ThemeEditorApp({
         onNavigateNext={onNavigateNext}
         onNavigatePrevious={onNavigatePrevious}
       >
-        <div className="flex flex-col h-full">
-          {/* ═══════════════════════════════════════════════════════════════════
-              顶部工具栏
-              ═══════════════════════════════════════════════════════════════════ */}
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-black/10 bg-white/50">
-            {/* 预设皮肤选择 */}
-            <div className="flex items-center gap-1">
-              <Swatches size={14} className="text-black/50" />
-              <span className="text-[11px] text-black/50">Preset:</span>
-              <div className="flex gap-1">
-                {PRESET_SKINS.map((skin) => (
-                  <button
-                    key={skin.id}
-                    onClick={() => applyPresetSkin(skin.id)}
-                    title={skin.description}
-                    className={`px-2 py-1 text-[10px] rounded border transition-colors ${
-                      editorBaseTheme === skin.id
-                        ? "bg-black text-white border-black"
-                        : "bg-white border-black/20 hover:border-black/40"
-                    }`}
-                  >
-                    {skin.name}
-                  </button>
+        <div className="flex flex-col h-full w-full p-4 pt-2">
+          {/* 顶部：分组选择器 + 当前主题 */}
+          <div className="flex items-center gap-3 mb-3">
+            <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+              <SelectTrigger className="flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {THEME_SCHEMA.groups.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.label}
+                  </SelectItem>
                 ))}
-              </div>
+              </SelectContent>
+            </Select>
+            <div className="text-[11px] text-black/50 whitespace-nowrap">
+              {t("apps.theme-editor.base")}: <span className="font-medium">{systemThemes[currentTheme]?.name ?? currentTheme}</span>
             </div>
-
-            <div className="flex-1" />
-
-            {/* 导入导出 */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setImportDialogOpen(true)}
-              className="h-6 px-2 text-[10px]"
-            >
-              <DownloadSimple size={12} className="mr-1" />
-              Import
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleExport}
-              className="h-6 px-2 text-[10px]"
-            >
-              <Export size={12} className="mr-1" />
-              Export
-            </Button>
           </div>
 
-          {/* ═══════════════════════════════════════════════════════════════════
-              主内容区：变量分组列表
-              ═══════════════════════════════════════════════════════════════════ */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-1">
-            {THEME_SCHEMA.groups.map((group, idx) => (
-              <VariableGroupPanel
-                key={group.id}
-                group={group}
-                getVariableValue={getVariableValue}
-                isVariableCustomized={isVariableCustomized}
-                updateVariable={updateVariable}
-                resetVariable={resetVariable}
-                defaultOpen={idx === 0} // 第一组默认展开
-              />
+          {/* 变量列表 */}
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+            {activeGroup.variables.map((v) => (
+              <div key={v.key} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Label className="text-[11px]">{v.label}</Label>
+                  {isVariableCustomized(v.key) && (
+                    <span className="text-[9px] bg-black/10 px-1 rounded">{t("apps.theme-editor.modified")}</span>
+                  )}
+                </div>
+                <VariableControl
+                  variable={v}
+                  value={getVariableValue(v.key)}
+                  onChange={(val) => updateVariable(v.key, val)}
+                  onReset={() => resetVariable(v.key)}
+                  isCustomized={isVariableCustomized(v.key)}
+                />
+              </div>
             ))}
           </div>
 
-          {/* ═══════════════════════════════════════════════════════════════════
-              底部操作栏
-              ═══════════════════════════════════════════════════════════════════ */}
-          <div className="flex items-center gap-2 px-3 py-2 border-t border-black/10 bg-white/50">
-            {/* 已保存的主题 */}
-            {themes.length > 0 && (
-              <div className="flex items-center gap-1 overflow-x-auto max-w-[200px]">
-                {themes.map((t) => (
-                  <div
-                    key={t.id}
-                    className={`group flex items-center gap-1 px-2 py-1 text-[10px] rounded border cursor-pointer transition-colors whitespace-nowrap ${
-                      editingThemeId === t.id
-                        ? "bg-black text-white border-black"
-                        : "bg-white border-black/20 hover:border-black/40"
-                    }`}
-                    onClick={() => handleLoadTheme(t.id)}
-                  >
-                    <span>{t.name}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteTheme(t.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 hover:text-red-400"
-                    >
-                      <Trash size={10} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* 底部操作栏 */}
+          <div className="flex flex-col gap-3 pt-3 border-t border-black/10">
+            {/* 主题管理行：加载 + 导入导出 */}
+            <div className="flex gap-2">
+              {customThemes.length > 0 ? (
+                <Select
+                  value={editingThemeId ?? ""}
+                  onValueChange={(id) => id && handleLoadTheme(id)}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder={t("apps.theme-editor.loadSavedTheme")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customThemes.map((theme) => (
+                      <SelectItem key={theme.id} value={theme.id}>
+                        {theme.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="flex-1" />
+              )}
+              <Button variant="retro" onClick={() => setImportDialogOpen(true)}>
+                <DownloadSimple size={14} />
+              </Button>
+              <Button variant="retro" onClick={handleExport}>
+                <Export size={14} />
+              </Button>
+            </div>
 
-            <div className="flex-1" />
-
-            {/* 操作按钮 */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetEditor}
-              className="h-7 text-[11px]"
-            >
-              <ArrowCounterClockwise size={12} className="mr-1" />
-              Reset
-            </Button>
-            <Button
-              size="sm"
-              onClick={openSaveDialog}
-              className="h-7 text-[11px]"
-            >
-              <FloppyDisk size={12} className="mr-1" />
-              {editingThemeId ? "Update" : "Save"}
-            </Button>
+            {/* 操作行：左侧次要操作，右侧主要操作 */}
+            <div className="flex gap-2">
+              <Button variant="retro" onClick={resetEditor}>
+                {t("apps.theme-editor.reset")}
+              </Button>
+              {editingThemeId && (
+                <Button variant="retro" onClick={() => deleteTheme(editingThemeId)}>
+                  {t("apps.theme-editor.delete")}
+                </Button>
+              )}
+              <div className="flex-1" />
+              <Button variant="retro" onClick={openSaveDialog}>
+                {editingThemeId ? t("apps.theme-editor.update") : t("apps.theme-editor.save")}
+              </Button>
+            </div>
           </div>
         </div>
       </WindowFrame>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          保存对话框
-          ═══════════════════════════════════════════════════════════════════════ */}
+      {/* 保存对话框 */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent className="sm:max-w-[320px]">
           <DialogHeader>
             <DialogTitle className="text-sm">
-              {editingThemeId ? "Update Theme" : "Save Theme"}
+              {editingThemeId ? t("apps.theme-editor.updateTheme") : t("apps.theme-editor.saveTheme")}
             </DialogTitle>
           </DialogHeader>
           <div className="py-2">
             <Input
               value={themeName}
               onChange={(e) => setThemeName(e.target.value)}
-              placeholder="Theme name"
+              placeholder={t("apps.theme-editor.themeName")}
               className="text-xs"
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
               autoFocus
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setSaveDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={handleSave} disabled={!themeName.trim()}>
-              {editingThemeId ? "Update" : "Save"}
+            <Button variant="retro" onClick={() => setSaveDialogOpen(false)}>{t("apps.theme-editor.cancel")}</Button>
+            <Button variant="retro" onClick={handleSave} disabled={!themeName.trim()}>
+              {editingThemeId ? t("apps.theme-editor.update") : t("apps.theme-editor.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          导入对话框
-          ═══════════════════════════════════════════════════════════════════════ */}
+      {/* 导入对话框 */}
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle className="text-sm">Import Theme</DialogTitle>
+            <DialogTitle className="text-sm">{t("apps.theme-editor.importTheme")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                onChange={handleFileImport}
-                className="hidden"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full text-[11px]"
-              >
-                <DownloadSimple size={12} className="mr-1" />
-                Choose JSON File
-              </Button>
-            </div>
-            <div className="text-center text-[10px] text-black/40">or paste JSON below</div>
+            <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileImport} className="hidden" />
+            <Button variant="retro" onClick={() => fileInputRef.current?.click()} className="w-full">
+              {t("apps.theme-editor.chooseJsonFile")}
+            </Button>
+            <div className="text-center text-[10px] text-black/40">{t("apps.theme-editor.orPasteBelow")}</div>
             <Textarea
               value={importJson}
-              onChange={(e) => {
-                setImportJson(e.target.value);
-                setImportError("");
-              }}
+              onChange={(e) => { setImportJson(e.target.value); setImportError(""); }}
               placeholder='{"name": "My Theme", "values": {...}}'
               className="text-[10px] h-32 font-mono"
             />
-            {importError && (
-              <p className="text-[11px] text-red-500">{importError}</p>
-            )}
+            {importError && <p className="text-[11px] text-red-500">{t("apps.theme-editor.invalidThemeJson")}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={handleImport} disabled={!importJson.trim()}>
-              Import
-            </Button>
+            <Button variant="retro" onClick={() => setImportDialogOpen(false)}>{t("apps.theme-editor.cancel")}</Button>
+            <Button variant="retro" onClick={handleImport} disabled={!importJson.trim()}>{t("apps.theme-editor.import")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          帮助和关于对话框
-          ═══════════════════════════════════════════════════════════════════════ */}
-      <HelpDialog
-        isOpen={helpOpen}
-        onOpenChange={setHelpOpen}
-        helpItems={helpItems}
-        appId="theme-editor"
-      />
-      <AboutDialog
-        isOpen={aboutOpen}
-        onOpenChange={setAboutOpen}
-        metadata={appMetadata}
-        appId="theme-editor"
-      />
+      {/* Help/About */}
+      <HelpDialog isOpen={helpOpen} onOpenChange={setHelpOpen} helpItems={helpItems} appId="theme-editor" />
+      <AboutDialog isOpen={aboutOpen} onOpenChange={setAboutOpen} metadata={appMetadata} appId="theme-editor" />
     </>
   );
 }

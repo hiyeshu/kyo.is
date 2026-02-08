@@ -6,7 +6,7 @@
  */
 
 export const appMetadata = {
-  name: "Theme Editor",
+  id: "theme-editor",
   version: "1.0",
   creator: { name: "Kyo", url: "https://kyo.is" },
   github: "https://github.com/hiyeshu/kyo.is",

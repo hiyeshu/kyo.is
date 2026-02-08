@@ -101,6 +101,14 @@ const LazyThemeEditorApp = createLazyComponent<unknown>(
   "theme-editor"
 );
 
+const LazyControlPanelsApp = createLazyComponent<unknown>(
+  () =>
+    import(
+      "@/apps/control-panels/components/ControlPanelsApp"
+    ).then((m) => ({ default: m.ControlPanelsApp })),
+  "control-panels"
+);
+
 // ─── 元数据 ──────────────────────────────────────────────────────────────────
 
 import {
@@ -113,8 +121,13 @@ import {
   helpItems as themeEditorHelpItems,
 } from "@/apps/theme-editor/metadata";
 
+import {
+  appMetadata as controlPanelsMetadata,
+  helpItems as controlPanelsHelpItems,
+} from "@/apps/control-panels/metadata";
+
 // ─── 注册表 ──────────────────────────────────────────────────────────────────
-// Kyo.is: Only 2 apps (Finder and Applet Viewer removed)
+// Kyo.is apps (Finder and Applet Viewer removed)
 
 export const appRegistry = {
   "bookmarks": {
@@ -141,6 +154,19 @@ export const appRegistry = {
     windowConfig: {
       defaultSize: { width: 680, height: 520 },
       minSize: { width: 600, height: 450 },
+    } as WindowConstraints,
+  },
+  "control-panels": {
+    id: "control-panels" as const,
+    name: "System Preferences",
+    icon: { type: "image" as const, src: controlPanelsMetadata.icon },
+    description: "Configure wallpaper, sound, and system settings",
+    component: LazyControlPanelsApp,
+    helpItems: controlPanelsHelpItems,
+    metadata: controlPanelsMetadata,
+    windowConfig: {
+      defaultSize: { width: 540, height: 480 },
+      minSize: { width: 480, height: 400 },
     } as WindowConstraints,
   },
 } as const;

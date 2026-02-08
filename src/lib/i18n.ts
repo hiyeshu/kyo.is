@@ -6,12 +6,6 @@ import enTranslation from "./locales/en/translation.json";
 import zhTWTranslation from "./locales/zh-TW/translation.json";
 import jaTranslation from "./locales/ja/translation.json";
 import koTranslation from "./locales/ko/translation.json";
-import frTranslation from "./locales/fr/translation.json";
-import deTranslation from "./locales/de/translation.json";
-import esTranslation from "./locales/es/translation.json";
-import ptTranslation from "./locales/pt/translation.json";
-import itTranslation from "./locales/it/translation.json";
-import ruTranslation from "./locales/ru/translation.json";
 
 const resources = {
   en: {
@@ -26,27 +20,9 @@ const resources = {
   ko: {
     translation: koTranslation,
   },
-  fr: {
-    translation: frTranslation,
-  },
-  de: {
-    translation: deTranslation,
-  },
-  es: {
-    translation: esTranslation,
-  },
-  pt: {
-    translation: ptTranslation,
-  },
-  it: {
-    translation: itTranslation,
-  },
-  ru: {
-    translation: ruTranslation,
-  },
 };
 
-export const SUPPORTED_LANGUAGES = ["en", "zh-TW", "ja", "ko", "fr", "de", "es", "pt", "it", "ru"] as const;
+export const SUPPORTED_LANGUAGES = ["en", "zh-TW", "ja", "ko"] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 /**
@@ -180,10 +156,24 @@ i18n
 // Set initial HTML lang attribute for CSS :lang() selectors
 document.documentElement.lang = initialLanguage;
 
-// Sync i18n language when store changes
+// ═══════════════════════════════════════════════════════════════════════════════
+// 语言标签 - 单一真相源，用于 UI 显示
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
+  en: "English",
+  "zh-TW": "中文",
+  ja: "日本語",
+  ko: "한국어",
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 语言切换 - 同时更新 i18n、localStorage、HTML lang 属性
+// ═══════════════════════════════════════════════════════════════════════════════
+
 export const changeLanguage = (language: string) => {
   i18n.changeLanguage(language);
-  // Update HTML lang attribute for CSS :lang() selectors
+  localStorage.setItem(LANGUAGE_KEY, language);
   document.documentElement.lang = language;
 };
 
