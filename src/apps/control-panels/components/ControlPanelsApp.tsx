@@ -146,9 +146,7 @@ export function ControlPanelsApp({
   const setDebugMode = useDisplaySettingsStore((s) => s.setDebugMode);
 
   // ─── Window Title ────────────────────────────────────────────────────────────
-  const windowTitle = isMacOSXTheme
-    ? t("apps.control-panels.nameForMacosX")
-    : t("apps.control-panels.name");
+  const windowTitle = t("apps.control-panels.name");
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
   const handleBackup = () => {
