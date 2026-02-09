@@ -132,8 +132,8 @@ export function AddWebsiteDialog({
         id="dialog-description"
       >
         {isMacTheme 
-          ? "Enter a website URL to add to your Dock"
-          : "Enter a website URL to add to your Desktop"
+          ? t("common.desktop.addWebsiteDescDock", "輸入網站網址以新增至 Dock")
+          : t("common.desktop.addWebsiteDescDesktop", "輸入網站網址以新增至桌面")
         }
       </p>
       <Input
@@ -146,7 +146,7 @@ export function AddWebsiteDialog({
             handleSubmit();
           }
         }}
-        placeholder="example.com or https://example.com"
+        placeholder="example.com"
         className={cn(
           "shadow-none",
           isXpTheme
@@ -208,7 +208,11 @@ export function AddWebsiteDialog({
               fontSize: isXpTheme ? "11px" : undefined,
             }}
           >
-            {isLoading ? "Adding..." : isMacTheme ? "Add to Dock" : "Add to Desktop"}
+            {isLoading 
+              ? t("common.loading", "新增中...") 
+              : isMacTheme 
+                ? t("common.desktop.addToDock", "加入 Dock") 
+                : t("common.desktop.addToDesktop", "加入桌面")}
           </Button>
         </div>
       </DialogFooter>
@@ -224,22 +228,22 @@ export function AddWebsiteDialog({
       >
         {isXpTheme ? (
           <>
-            <DialogHeader>Add Website</DialogHeader>
+            <DialogHeader>{t("common.desktop.addWebsite", "新增網站")}</DialogHeader>
             <div className="window-body">{dialogContent}</div>
           </>
         ) : currentTheme === "macosx" ? (
           <>
-            <DialogHeader>Add Website</DialogHeader>
+            <DialogHeader>{t("common.desktop.addWebsite", "新增網站")}</DialogHeader>
             {dialogContent}
           </>
         ) : (
           <>
             <DialogHeader>
               <DialogTitle className="font-normal text-[16px]">
-                Add Website
+                {t("common.desktop.addWebsite", "新增網站")}
               </DialogTitle>
               <DialogDescription className="sr-only">
-                Enter a website URL to add to your Dock
+                {t("common.desktop.addWebsiteDescDock", "輸入網站網址以新增至 Dock")}
               </DialogDescription>
             </DialogHeader>
             {dialogContent}

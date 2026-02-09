@@ -7,7 +7,7 @@
 
 import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
-import { useBookmarkStore, isFolder, type Bookmark } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, isFolder, getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -213,45 +213,43 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
               {t("common.search.noResults", "No bookmarks found")}
             </Command.Empty>
 
-            {filteredBookmarks.map((bm) => (
-              <Command.Item
-                key={bm.url}
-                value={`${bm.title} ${bm.url}`}
-                onSelect={() => handleSelect(bm.url)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 cursor-pointer",
-                  "data-[selected=true]:text-white"
-                )}
-                style={{
-                  borderRadius: isMacTheme ? "5px" : "2px",
-                  fontSize: isMacTheme ? "13px" : isXpTheme ? "11px" : "12px",
-                  fontFamily: isMacTheme
-                    ? "var(--os-font-ui)"
-                    : isXpTheme
-                    ? '"Pixelated MS Sans Serif", Arial'
-                    : "var(--os-font-ui, Geneva)",
-                }}
-              >
-                {/* Favicon */}
-                {bm.favicon ? (
-                  <img
-                    src={bm.favicon}
-                    alt=""
-                    className="w-4 h-4 shrink-0"
-                    style={{ borderRadius: "3px" }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div
-                    className="w-4 h-4 shrink-0"
+              {filteredBookmarks.map((bm) => {
+                const iconInfo = getBookmarkIconInfo(bm);
+                return (
+                  <Command.Item
+                    key={bm.url}
+                    value={`${bm.title} ${bm.url}`}
+                    onSelect={() => handleSelect(bm.url)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                      "data-[selected=true]:text-white"
+                    )}
                     style={{
-                      borderRadius: "3px",
-                      backgroundColor: "rgba(0, 0, 0, 0.1)",
+                      borderRadius: isMacTheme ? "5px" : "2px",
+                      fontSize: isMacTheme ? "13px" : isXpTheme ? "11px" : "12px",
+                      fontFamily: isMacTheme
+                        ? "var(--os-font-ui)"
+                        : isXpTheme
+                        ? '"Pixelated MS Sans Serif", Arial'
+                        : "var(--os-font-ui, Geneva)",
                     }}
-                  />
-                )}
+                  >
+                    {/* Icon - 单一真相源 */}
+                    {iconInfo.isEmoji ? (
+                      <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
+                        {iconInfo.value}
+                      </span>
+                    ) : (
+                      <img
+                        src={iconInfo.value}
+                        alt=""
+                        className="w-4 h-4 shrink-0 object-contain"
+                        style={{ borderRadius: "3px" }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/icons/default/internet.png";
+                        }}
+                      />
+                    )}
 
                 {/* Title & URL */}
                 <div className="flex-1 min-w-0">
@@ -281,9 +279,10 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
                   >
                     {bm.folderTitle}
                   </span>
-                )}
-              </Command.Item>
-            ))}
+                    )}
+                  </Command.Item>
+                );
+              })}
           </Command.List>
 
           {/* Footer */}
@@ -300,10 +299,10 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
               fontFamily: isMacTheme ? "var(--os-font-ui)" : undefined,
             }}
           >
-            <span>{filteredBookmarks.length} bookmarks</span>
+            <span>{t("apps.bookmarks.countBookmarks", "{{count}} 個書籤", { count: filteredBookmarks.length })}</span>
             <div className="flex items-center gap-3">
-              <span>↵ Open</span>
-              <span>ESC Close</span>
+              <span>↵ {t("common.action.open", "開啟")}</span>
+              <span>ESC {t("common.action.close", "關閉")}</span>
             </div>
           </div>
         </Command>

@@ -146,7 +146,7 @@ export const appRegistry = {
   "theme-editor": {
     id: "theme-editor" as const,
     name: "Theme Editor",
-    icon: { type: "image" as const, src: "/icons/default/palette.png" },
+    icon: { type: "image" as const, src: themeEditorMetadata.icon },
     description: "Customize your theme",
     component: LazyThemeEditorApp,
     helpItems: themeEditorHelpItems,

@@ -13,6 +13,7 @@ import {
   type Bookmark,
   type BookmarkFolder,
   type BoardItem,
+  type BookmarkIcon,
 } from "@/stores/useBookmarkStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 
@@ -160,11 +161,14 @@ export function useBookmarkBoard() {
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editUrl, setEditUrl] = useState("");
+  const [editIcon, setEditIcon] = useState<BookmarkIcon | undefined>(undefined);
 
   const openEditDialog = useCallback((bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
     setEditTitle(bookmark.title);
     setEditUrl(bookmark.url);
+    // 初始化图标状态
+    setEditIcon(bookmark.icon || { type: "favicon", value: bookmark.favicon || "" });
     setEditDialogOpen(true);
   }, []);
 
@@ -184,13 +188,15 @@ export function useBookmarkBoard() {
     store.updateBookmark(editingBookmark.id, {
       title: title || hostname,
       url: fullUrl,
-      // 根据用户地区自动选择 favicon 服务
-      favicon: getFaviconUrl(hostname),
+      // 保存新的图标配置
+      icon: editIcon,
+      // 兼容旧版：同时更新 favicon 字段
+      favicon: editIcon?.type === "favicon" ? getFaviconUrl(hostname) : editingBookmark.favicon,
     });
     
     setEditDialogOpen(false);
     setEditingBookmark(null);
-  }, [editingBookmark, editTitle, editUrl, store]);
+  }, [editingBookmark, editTitle, editUrl, editIcon, store]);
 
   // ─── 打开书签 ──────────────────────────────────────────────────────────────
   const openBookmark = useCallback((url: string) => {
@@ -358,6 +364,8 @@ export function useBookmarkBoard() {
     setEditTitle,
     editUrl,
     setEditUrl,
+    editIcon,
+    setEditIcon,
     openEditDialog,
     submitEdit,
 

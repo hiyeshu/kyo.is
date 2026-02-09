@@ -126,6 +126,7 @@ export function Desktop({
     const touch = e.touches[0];
     setContextMenuPos({ x: touch.clientX, y: touch.clientY });
     setContextMenuAppId(null);
+    setContextMenuBookmark(null);
   });
 
   // ─── Wallpaper style ──────────────────────────────────────────────
@@ -208,9 +209,8 @@ export function Desktop({
     return [
       {
         type: "item",
-        label: "Add Website",
+        label: t("common.desktop.addWebsite", "Add Website"),
         onSelect: () => {
-          setContextMenuPos(null);
           setIsAddWebsiteDialogOpen(true);
         },
       },

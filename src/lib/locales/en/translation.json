@@ -1,5 +1,13 @@
 {
   "common": {
+    "action": {
+      "open": "Open",
+      "close": "Close"
+    },
+    "search": {
+      "bookmarks": "Search bookmarks...",
+      "noResults": "No bookmarks found"
+    },
     "loading": {
       "default": "Loading..."
     },
@@ -117,7 +125,12 @@
     },
     "desktop": {
       "setWallpaper": "Set Wallpaper…",
-      "myComputer": "My Computer"
+      "myComputer": "My Computer",
+      "addWebsite": "Add Website",
+      "addWebsiteDescDock": "Enter a website URL to add to your Dock",
+      "addWebsiteDescDesktop": "Enter a website URL to add to your Desktop",
+      "addToDock": "Add to Dock",
+      "addToDesktop": "Add to Desktop"
     },
     "dock": {
       "open": "Open",
@@ -2260,6 +2273,42 @@
       "orPasteBelow": "or paste JSON below",
       "invalidThemeJson": "Invalid theme JSON format",
       "cancel": "Cancel"
+    },
+    "bookmarks": {
+      "name": "Bookmark Board",
+      "search": "Search bookmarks...",
+      "countBookmarks": "{{count}} bookmarks",
+      "addBookmark": "Add Bookmark",
+      "editBookmark": "Edit Bookmark",
+      "newFolder": "New Folder",
+      "openInNewTab": "Open in New Tab",
+      "addToDock": "Add to Dock",
+      "url": "URL",
+      "bookmarkName": "Name",
+      "pageTitle": "Page title",
+      "fetchingTitle": "Fetching title...",
+      "folder": "Folder",
+      "folderName": "Folder name",
+      "noFolder": "No folder",
+      "icon": "Icon",
+      "add": "Add",
+      "create": "Create",
+      "noResults": "No results",
+      "noBookmarksYet": "No bookmarks yet",
+      "addFirstBookmark": "Add your first bookmark",
+      "iconPicker": {
+        "auto": "Auto",
+        "upload": "Upload",
+        "emoji": "Emoji",
+        "autoFetched": "Auto-fetched",
+        "chooseImage": "Choose image",
+        "changeImage": "Change image",
+        "imageSizeLimit": "PNG, JPG up to 100KB"
+      },
+      "menu": {
+        "help": "Bookmark Board Help",
+        "about": "About Bookmark Board"
+      }
     },
     "stickies": {
       "name": "Stickies",

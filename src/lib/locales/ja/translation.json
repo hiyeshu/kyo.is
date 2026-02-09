@@ -1849,6 +1849,42 @@
       "invalidThemeJson": "無効なテーマJSON形式",
       "cancel": "キャンセル"
     },
+    "bookmarks": {
+      "name": "ブックマークボード",
+      "search": "ブックマークを検索...",
+      "countBookmarks": "{{count}} 件のブックマーク",
+      "addBookmark": "ブックマークを追加",
+      "editBookmark": "ブックマークを編集",
+      "newFolder": "新規フォルダ",
+      "openInNewTab": "新しいタブで開く",
+      "addToDock": "Dockに追加",
+      "url": "URL",
+      "bookmarkName": "名前",
+      "pageTitle": "ページタイトル",
+      "fetchingTitle": "タイトルを取得中...",
+      "folder": "フォルダ",
+      "folderName": "フォルダ名",
+      "noFolder": "フォルダなし",
+      "icon": "アイコン",
+      "add": "追加",
+      "create": "作成",
+      "noResults": "結果なし",
+      "noBookmarksYet": "まだブックマークがありません",
+      "addFirstBookmark": "最初のブックマークを追加",
+      "iconPicker": {
+        "auto": "自動",
+        "upload": "アップロード",
+        "emoji": "絵文字",
+        "autoFetched": "自動取得",
+        "chooseImage": "画像を選択",
+        "changeImage": "画像を変更",
+        "imageSizeLimit": "PNG, JPG 最大100KB"
+      },
+      "menu": {
+        "help": "ブックマークボードヘルプ",
+        "about": "ブックマークボードについて"
+      }
+    },
     "stickies": {
       "description": "ちょっとした付箋",
       "empty": {
@@ -2289,6 +2325,14 @@
     }
   },
   "common": {
+    "action": {
+      "open": "開く",
+      "close": "閉じる"
+    },
+    "search": {
+      "bookmarks": "ブックマークを検索...",
+      "noResults": "ブックマークが見つかりません"
+    },
     "aboutThisMac": {
       "builtInMemory": "内蔵メモリ",
       "clickToToggle": "クリックで切り替え",
@@ -2354,7 +2398,12 @@
     },
     "desktop": {
       "myComputer": "マイコンピュータ",
-      "setWallpaper": "壁紙を設定…"
+      "setWallpaper": "壁紙を設定…",
+      "addWebsite": "ウェブサイトを追加",
+      "addWebsiteDescDock": "DockにウェブサイトのURLを入力してください",
+      "addWebsiteDescDesktop": "デスクトップにウェブサイトのURLを入力してください",
+      "addToDock": "Dockに追加",
+      "addToDesktop": "デスクトップに追加"
     },
     "dialog": {
       "about": "について",

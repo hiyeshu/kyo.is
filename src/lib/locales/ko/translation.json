@@ -1849,6 +1849,42 @@
       "invalidThemeJson": "잘못된 테마 JSON 형식",
       "cancel": "취소"
     },
+    "bookmarks": {
+      "name": "북마크 보드",
+      "search": "북마크 검색...",
+      "countBookmarks": "{{count}}개의 북마크",
+      "addBookmark": "북마크 추가",
+      "editBookmark": "북마크 편집",
+      "newFolder": "새 폴더",
+      "openInNewTab": "새 탭에서 열기",
+      "addToDock": "Dock에 추가",
+      "url": "URL",
+      "bookmarkName": "이름",
+      "pageTitle": "페이지 제목",
+      "fetchingTitle": "제목 가져오는 중...",
+      "folder": "폴더",
+      "folderName": "폴더 이름",
+      "noFolder": "폴더 없음",
+      "icon": "아이콘",
+      "add": "추가",
+      "create": "만들기",
+      "noResults": "결과 없음",
+      "noBookmarksYet": "아직 북마크가 없습니다",
+      "addFirstBookmark": "첫 북마크 추가",
+      "iconPicker": {
+        "auto": "자동",
+        "upload": "업로드",
+        "emoji": "이모지",
+        "autoFetched": "자동 가져오기",
+        "chooseImage": "이미지 선택",
+        "changeImage": "이미지 변경",
+        "imageSizeLimit": "PNG, JPG 최대 100KB"
+      },
+      "menu": {
+        "help": "북마크 보드 도움말",
+        "about": "북마크 보드 정보"
+      }
+    },
     "stickies": {
       "description": "빠른 알림을 위한 스티커 메모",
       "empty": {
@@ -2289,6 +2325,14 @@
     }
   },
   "common": {
+    "action": {
+      "open": "열기",
+      "close": "닫기"
+    },
+    "search": {
+      "bookmarks": "북마크 검색...",
+      "noResults": "북마크를 찾을 수 없습니다"
+    },
     "aboutThisMac": {
       "builtInMemory": "내장 메모리",
       "clickToToggle": "클릭하여 전환",
@@ -2354,7 +2398,12 @@
     },
     "desktop": {
       "myComputer": "내 컴퓨터",
-      "setWallpaper": "배경화면 설정…"
+      "setWallpaper": "배경화면 설정…",
+      "addWebsite": "웹사이트 추가",
+      "addWebsiteDescDock": "Dock에 추가할 웹사이트 URL을 입력하세요",
+      "addWebsiteDescDesktop": "바탕 화면에 추가할 웹사이트 URL을 입력하세요",
+      "addToDock": "Dock에 추가",
+      "addToDesktop": "바탕 화면에 추가"
     },
     "dialog": {
       "about": "정보",

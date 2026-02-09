@@ -64,11 +64,20 @@ const fav = (domain: string) => getFaviconUrl(domain);
 
 // ─── 数据模型 ───────────────────────────────────────────────────────────────
 
+// 图标类型：自动获取网站图标 | 自定义上传 | Emoji
+export type IconType = "favicon" | "custom" | "emoji";
+
+export interface BookmarkIcon {
+  type: IconType;
+  value: string; // favicon: URL | custom: base64 data URL | emoji: emoji字符
+}
+
 export interface Bookmark {
   id: string;
   title: string;
   url: string;
-  favicon?: string;
+  favicon?: string; // 保留兼容性
+  icon?: BookmarkIcon; // 新的图标配置
 }
 
 export interface BookmarkFolder {
@@ -84,6 +93,54 @@ export const isFolder = (item: BoardItem): item is BookmarkFolder =>
 
 export const isBookmark = (item: BoardItem): item is Bookmark =>
   !("bookmarks" in item);
+
+// ─── 图标信息（单一真相源） ─────────────────────────────────────────────────────
+
+export interface BookmarkIconInfo {
+  type: "favicon" | "emoji" | "custom";
+  value: string; // URL | emoji字符 | indexeddb://id
+  isEmoji: boolean;
+  isCustom: boolean;
+  isFavicon: boolean;
+}
+
+/**
+ * 获取书签图标信息（单一真相源）
+ * 所有需要渲染书签图标的地方都应该调用这个函数
+ */
+export function getBookmarkIconInfo(bookmark: Bookmark): BookmarkIconInfo {
+  const icon = bookmark.icon;
+  
+  if (icon) {
+    return {
+      type: icon.type,
+      value: icon.value,
+      isEmoji: icon.type === "emoji",
+      isCustom: icon.type === "custom",
+      isFavicon: icon.type === "favicon",
+    };
+  }
+  
+  // 兼容旧数据：使用 favicon 字段
+  if (bookmark.favicon) {
+    return {
+      type: "favicon",
+      value: bookmark.favicon,
+      isEmoji: false,
+      isCustom: false,
+      isFavicon: true,
+    };
+  }
+  
+  // 默认：emoji 地球
+  return {
+    type: "emoji",
+    value: "🌐",
+    isEmoji: true,
+    isCustom: false,
+    isFavicon: false,
+  };
+}
 
 // ─── 创建带 ID 的书签 ─────────────────────────────────────────────────────────
 
@@ -128,7 +185,7 @@ interface BookmarkStore {
 
   // 基础 CRUD
   addBookmark: (title: string, url: string, favicon?: string, folderId?: string) => string; // 返回新书签 ID
-  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon">>) => void;
+  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon">>) => void;
   removeBookmark: (id: string) => void;
   
   // 文件夹

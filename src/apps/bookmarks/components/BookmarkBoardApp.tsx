@@ -27,8 +27,12 @@ import { appMetadata, helpItems } from "../metadata";
 import { BookmarkBoardMenuBar } from "./BookmarkBoardMenuBar";
 import { useBookmarkBoard } from "../hooks/useBookmarkBoard";
 import { isFolder, type Bookmark, type BookmarkFolder } from "@/stores/useBookmarkStore";
+import { IconPicker } from "./IconPicker";
+import { BookmarkIconDisplay } from "./BookmarkIconDisplay";
 import { useDockStore } from "@/stores/useDockStore";
 import { useTranslation } from "react-i18next";
+import { useThemeStore } from "@/stores/useThemeStore";
+import { cn } from "@/lib/utils";
 
 // ─── 书签卡片 ────────────────────────────────────────────────────────────────
 
@@ -114,20 +118,7 @@ function BookmarkCard({
       title={bm.url}
     >
       <div className="w-10 h-10 rounded-lg bg-white/80 border border-black/10 flex items-center justify-center shadow-sm">
-        {bm.favicon ? (
-          <img
-            src={bm.favicon}
-            alt=""
-            className="w-5 h-5 object-contain"
-            style={{ imageRendering: "-webkit-optimize-contrast" }}
-            draggable={false}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : (
-          <span className="text-lg">🌐</span>
-        )}
+        <BookmarkIconDisplay bookmark={bm} size="sm" />
       </div>
       <span className="text-[10px] text-center truncate w-full font-geneva-12 leading-tight opacity-80">
         {bm.title}
@@ -208,6 +199,9 @@ export function BookmarkBoardApp({
   const { t } = useTranslation();
   const h = useBookmarkBoard();
   const addDockItem = useDockStore((s) => s.addItem);
+  const currentTheme = useThemeStore((s) => s.current);
+  const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
+  const isMacTheme = currentTheme === "macosx";
 
   // ─── 右键菜单项 ─────────────────────────────────────────────────────────────
   const getContextMenuItems = (): MenuItem[] => {
@@ -243,7 +237,7 @@ export function BookmarkBoardApp({
     return [
       {
         type: "item",
-        label: t("bookmarks.openInNewTab", "Open in New Tab"),
+        label: t("apps.bookmarks.openInNewTab", "在新分頁中開啟"),
         onSelect: () => {
           h.openBookmark(item.url);
           h.closeContextMenu();
@@ -252,7 +246,7 @@ export function BookmarkBoardApp({
       { type: "separator" },
       {
         type: "item",
-        label: t("common.menu.edit", "Edit"),
+        label: t("common.menu.edit", "編輯"),
         icon: "✏️",
         onSelect: () => {
           h.openEditDialog(item);
@@ -261,7 +255,7 @@ export function BookmarkBoardApp({
       },
       {
         type: "item",
-        label: t("bookmarks.addToDock", "Add to Dock"),
+        label: t("apps.bookmarks.addToDock", "加入 Dock"),
         icon: "📌",
         onSelect: () => {
           addDockItem({
@@ -274,7 +268,7 @@ export function BookmarkBoardApp({
       { type: "separator" },
       {
         type: "item",
-        label: t("common.menu.delete", "Delete"),
+        label: t("common.menu.delete", "刪除"),
         icon: "🗑️",
         onSelect: () => {
           h.removeBookmark(item.id);
@@ -319,7 +313,7 @@ export function BookmarkBoardApp({
       )}
       
       <WindowFrame
-        title="Bookmark Board"
+        title={t("apps.bookmarks.name", "Bookmark Board")}
         onClose={onClose}
         isForeground={isForeground}
         appId="bookmarks"
@@ -332,7 +326,7 @@ export function BookmarkBoardApp({
         <div className="flex flex-col h-full w-full">
           {/* ── 搜索栏 ────────────────────────────────────── */}
           <div
-            className={`flex items-center gap-2 px-3 py-1.5 ${
+            className={`flex items-center px-2 py-1.5 ${
               h.isXpTheme
                 ? "border-b border-[#919b9c]"
                 : h.currentTheme === "system7"
@@ -340,21 +334,22 @@ export function BookmarkBoardApp({
                 : "border-b border-black/10"
             }`}
           >
-            <MagnifyingGlass size={13} className="text-black/30 shrink-0" />
-            <Input
-              value={h.searchQuery}
-              onChange={(e) => h.setSearchQuery(e.target.value)}
-              placeholder="Search bookmarks..."
-              className="flex-1 !text-[11px] border-none shadow-none bg-transparent focus-visible:ring-0 h-6 px-0"
-            />
+            <div className="flex items-center flex-1 gap-1 px-1.5 py-0.5 rounded bg-black/[0.03]">
+              <MagnifyingGlass size={12} className="text-black/30 shrink-0" />
+              <Input
+                value={h.searchQuery}
+                onChange={(e) => h.setSearchQuery(e.target.value)}
+                placeholder={t("apps.bookmarks.search", "Search bookmarks...")}
+                className="flex-1 !text-[11px] border-none shadow-none bg-transparent focus-visible:ring-0 h-5 px-0"
+              />
+            </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0"
+              className="h-6 w-6 shrink-0 ml-1"
               onClick={() => h.openAddDialog()}
-              title="Add bookmark"
             >
-              <Plus size={13} />
+              <Plus size={14} />
             </Button>
           </div>
 
@@ -403,7 +398,9 @@ export function BookmarkBoardApp({
             {topLevel.length === 0 && folders.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-black/30 gap-2">
                 <span className="text-sm font-geneva-12">
-                  {h.searchQuery ? "No results" : "No bookmarks yet"}
+                  {h.searchQuery 
+                    ? t("apps.bookmarks.noResults", "沒有結果") 
+                    : t("apps.bookmarks.noBookmarksYet", "尚無書籤")}
                 </span>
                 {!h.searchQuery && (
                   <Button
@@ -412,7 +409,7 @@ export function BookmarkBoardApp({
                     className="text-xs"
                     onClick={() => h.openAddDialog()}
                   >
-                    Add your first bookmark
+                    {t("apps.bookmarks.addFirstBookmark", "新增第一個書籤")}
                   </Button>
                 )}
               </div>
@@ -422,7 +419,10 @@ export function BookmarkBoardApp({
 
         {/* ── 添加书签对话框 ──────────────────────────────── */}
         <Dialog open={h.addDialogOpen} onOpenChange={h.setAddDialogOpen}>
-          <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden">
+          <DialogContent 
+            className={cn("sm:max-w-[420px] p-0 gap-0 overflow-hidden", isXpTheme && "p-0")}
+            style={isXpTheme ? { fontSize: "11px" } : undefined}
+          >
             <div className="flex">
               {/* 左侧预览区 */}
               <div
@@ -450,25 +450,39 @@ export function BookmarkBoardApp({
               </div>
 
               {/* 右侧表单区 */}
-              <div className="flex-1 p-4">
+              <div className={isXpTheme ? "flex-1 p-2 px-4" : "flex-1 p-4"}>
                 <DialogHeader className="pb-3">
-                  <DialogTitle className="text-sm font-medium">
-                    Add Bookmark
+                  <DialogTitle 
+                    className={cn(
+                      "text-sm font-medium",
+                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                    )}
+                  >
+                    {t("apps.bookmarks.addBookmark", "新增書籤")}
                   </DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-3">
                   {/* URL */}
                   <div className="space-y-1">
-                    <Label htmlFor="bm-url" className="text-[11px] text-black/50">
-                      URL
+                    <Label 
+                      htmlFor="bm-url" 
+                      className={cn(
+                        "text-[11px] text-black/50",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                      )}
+                    >
+                      {t("apps.bookmarks.url", "網址")}
                     </Label>
                     <Input
                       id="bm-url"
                       value={h.addUrl}
                       onChange={(e) => h.setAddUrl(e.target.value)}
                       placeholder="https://example.com"
-                      className="text-xs h-8"
+                      className={cn(
+                        "text-xs h-8",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                      )}
                       onKeyDown={(e) => e.key === "Enter" && h.submitBookmark()}
                       autoFocus
                     />
@@ -476,34 +490,52 @@ export function BookmarkBoardApp({
 
                   {/* 名称 */}
                   <div className="space-y-1">
-                    <Label htmlFor="bm-title" className="text-[11px] text-black/50">
-                      Name
+                    <Label 
+                      htmlFor="bm-title" 
+                      className={cn(
+                        "text-[11px] text-black/50",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                      )}
+                    >
+                      {t("apps.bookmarks.bookmarkName", "名稱")}
                       {h.isFetchingTitle && (
-                        <span className="ml-1 text-black/30">(loading...)</span>
+                        <span className="ml-1 text-black/30">({t("common.loading", "載入中...")})</span>
                       )}
                     </Label>
                     <Input
                       id="bm-title"
                       value={h.addTitle}
                       onChange={(e) => h.setAddTitle(e.target.value)}
-                      placeholder={h.isFetchingTitle ? "Fetching title..." : "Page title"}
-                      className="text-xs h-8"
+                      placeholder={h.isFetchingTitle ? t("apps.bookmarks.fetchingTitle", "正在取得標題...") : t("apps.bookmarks.pageTitle", "頁面標題")}
+                      className={cn(
+                        "text-xs h-8",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                      )}
                       onKeyDown={(e) => e.key === "Enter" && h.submitBookmark()}
                     />
                   </div>
 
                   {/* 文件夹选择 */}
                   <div className="space-y-1">
-                    <Label htmlFor="bm-folder" className="text-[11px] text-black/50">
-                      Folder
+                    <Label 
+                      htmlFor="bm-folder" 
+                      className={cn(
+                        "text-[11px] text-black/50",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                      )}
+                    >
+                      {t("apps.bookmarks.folder", "檔案夾")}
                     </Label>
                     <select
                       id="bm-folder"
                       value={h.addFolderId || ""}
                       onChange={(e) => h.setAddFolderId(e.target.value || undefined)}
-                      className="w-full h-8 px-2 text-xs rounded border border-black/20 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className={cn(
+                        "w-full h-8 px-2 text-xs rounded border border-black/20 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                      )}
                     >
-                      <option value="">No folder</option>
+                      <option value="">{t("apps.bookmarks.noFolder", "無檔案夾")}</option>
                       {h.folders.map((f) => (
                         <option key={f.id} value={f.id}>
                           {f.title}
@@ -514,20 +546,29 @@ export function BookmarkBoardApp({
                 </div>
 
                 {/* 按钮 */}
-                <DialogFooter className="pt-4">
+                <DialogFooter className="pt-4 gap-1">
                   <Button
-                    variant="outline"
+                    variant={isMacTheme ? "secondary" : "retro"}
                     size="sm"
                     onClick={() => h.setAddDialogOpen(false)}
+                    className={cn(
+                      !isMacTheme && "h-7",
+                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                    )}
                   >
-                    Cancel
+                    {t("common.dialog.cancel", "取消")}
                   </Button>
                   <Button
+                    variant={isMacTheme ? "default" : "retro"}
                     size="sm"
                     onClick={h.submitBookmark}
                     disabled={!h.addUrl.trim()}
+                    className={cn(
+                      !isMacTheme && "h-7",
+                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                    )}
                   >
-                    Add
+                    {t("apps.bookmarks.add", "新增")}
                   </Button>
                 </DialogFooter>
               </div>
@@ -537,80 +578,192 @@ export function BookmarkBoardApp({
 
         {/* ── 编辑书签对话框 ──────────────────────────────── */}
         <Dialog open={h.editDialogOpen} onOpenChange={h.setEditDialogOpen}>
-          <DialogContent className="sm:max-w-[380px]">
+          <DialogContent 
+            className={cn("sm:max-w-[420px] p-0 gap-0 overflow-hidden", isXpTheme && "p-0")}
+            style={isXpTheme ? { fontSize: "11px" } : undefined}
+          >
             <DialogHeader>
-              <DialogTitle className="text-sm">Edit Bookmark</DialogTitle>
+              <DialogTitle 
+                className={cn(
+                  "text-sm font-medium",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
+              >
+                {t("apps.bookmarks.editBookmark", "編輯書籤")}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-3 py-2">
-              <div className="space-y-1">
-                <Label htmlFor="edit-url" className="text-[11px] text-black/50">
-                  URL
-                </Label>
-                <Input
-                  id="edit-url"
-                  value={h.editUrl}
-                  onChange={(e) => h.setEditUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="text-xs h-8"
-                  onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
-                />
+
+            <div className="flex">
+              {/* 左侧预览区 */}
+              <div
+                className="w-[100px] shrink-0 flex items-center justify-center border-r border-black/10"
+                style={{
+                  backgroundColor: "var(--os-color-window-bg, #f5f5f5)",
+                  backgroundImage: "var(--os-pinstripe-window)",
+                }}
+              >
+                <div className="w-16 h-16 rounded-xl bg-white/80 border border-black/10 flex items-center justify-center shadow-sm">
+                  <BookmarkIconDisplay 
+                    bookmark={{ 
+                      id: "preview", 
+                      title: h.editTitle, 
+                      url: h.editUrl, 
+                      icon: h.editIcon 
+                    }} 
+                    size="lg" 
+                  />
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="edit-title" className="text-[11px] text-black/50">
-                  Name
-                </Label>
-                <Input
-                  id="edit-title"
-                  value={h.editTitle}
-                  onChange={(e) => h.setEditTitle(e.target.value)}
-                  placeholder="Page title"
-                  className="text-xs h-8"
-                  onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
-                  autoFocus
-                />
+
+              {/* 右侧表单区 */}
+              <div className={isXpTheme ? "flex-1 p-2 px-4" : "flex-1 p-4"}>
+                <div className="space-y-3">
+                  {/* URL */}
+                  <div className="space-y-1">
+                    <Label 
+                      htmlFor="edit-url" 
+                      className={cn(
+                        "text-[11px] text-black/50",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                      )}
+                    >
+                      {t("apps.bookmarks.url", "網址")}
+                    </Label>
+                    <Input
+                      id="edit-url"
+                      value={h.editUrl}
+                      onChange={(e) => h.setEditUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className={cn(
+                        "text-xs h-8",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                      )}
+                      onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
+                    />
+                  </div>
+                  {/* Name */}
+                  <div className="space-y-1">
+                    <Label 
+                      htmlFor="edit-title" 
+                      className={cn(
+                        "text-[11px] text-black/50",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                      )}
+                    >
+                      {t("apps.bookmarks.bookmarkName", "名稱")}
+                    </Label>
+                    <Input
+                      id="edit-title"
+                      value={h.editTitle}
+                      onChange={(e) => h.setEditTitle(e.target.value)}
+                      placeholder={t("apps.bookmarks.pageTitle", "頁面標題")}
+                      className={cn(
+                        "text-xs h-8",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                      )}
+                      onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
+                    />
+                  </div>
+                  {/* Icon Picker */}
+                  <div className="space-y-1">
+                    <Label 
+                      className={cn(
+                        "text-[11px] text-black/50",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                      )}
+                    >
+                      {t("apps.bookmarks.icon", "圖示")}
+                    </Label>
+                    <IconPicker
+                      url={h.editUrl}
+                      value={h.editIcon}
+                      onChange={h.setEditIcon}
+                    />
+                  </div>
+                </div>
+
+                {/* 按钮 */}
+                <DialogFooter className="pt-4 gap-1">
+                  <Button
+                    variant={isMacTheme ? "secondary" : "retro"}
+                    size="sm"
+                    onClick={() => h.setEditDialogOpen(false)}
+                    className={cn(
+                      !isMacTheme && "h-7",
+                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                    )}
+                  >
+                    {t("common.dialog.cancel", "取消")}
+                  </Button>
+                  <Button 
+                    variant={isMacTheme ? "default" : "retro"}
+                    size="sm" 
+                    onClick={h.submitEdit} 
+                    disabled={!h.editUrl.trim()}
+                    className={cn(
+                      !isMacTheme && "h-7",
+                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                    )}
+                  >
+                    {t("common.dialog.save", "儲存")}
+                  </Button>
+                </DialogFooter>
               </div>
             </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => h.setEditDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button size="sm" onClick={h.submitEdit} disabled={!h.editUrl.trim()}>
-                Save
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* ── 新建文件夹对话框 ────────────────────────────── */}
         <Dialog open={h.folderDialogOpen} onOpenChange={h.setFolderDialogOpen}>
-          <DialogContent className="sm:max-w-[320px]">
+          <DialogContent 
+            className={cn("sm:max-w-[320px]", isXpTheme && "p-0 overflow-hidden")}
+            style={isXpTheme ? { fontSize: "11px" } : undefined}
+          >
             <DialogHeader>
-              <DialogTitle className="text-sm">New Folder</DialogTitle>
+              <DialogTitle 
+                className={cn(
+                  "text-sm",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
+              >
+                {t("apps.bookmarks.newFolder", "新增檔案夾")}
+              </DialogTitle>
             </DialogHeader>
-            <div className="py-2">
+            <div className={isXpTheme ? "p-2 px-4" : "py-2"}>
               <Input
                 value={h.folderName}
                 onChange={(e) => h.setFolderName(e.target.value)}
-                placeholder="Folder name"
-                className="text-xs"
+                placeholder={t("apps.bookmarks.folderName", "檔案夾名稱")}
+                className={cn(
+                  "text-xs",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
                 onKeyDown={(e) => e.key === "Enter" && h.submitFolder()}
                 autoFocus
               />
             </div>
-            <DialogFooter>
+            <DialogFooter className={isXpTheme ? "p-2 px-4 pt-0 gap-1" : "gap-1"}>
               <Button
-                variant="outline"
+                variant={isMacTheme ? "secondary" : "retro"}
                 size="sm"
                 onClick={() => h.setFolderDialogOpen(false)}
+                className={cn(
+                  !isMacTheme && "h-7",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
               >
-                Cancel
+                {t("common.dialog.cancel", "取消")}
               </Button>
-              <Button size="sm" onClick={h.submitFolder}>
-                Create
+              <Button 
+                variant={isMacTheme ? "default" : "retro"}
+                size="sm" 
+                onClick={h.submitFolder}
+                className={cn(
+                  !isMacTheme && "h-7",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
+              >
+                {t("apps.bookmarks.create", "建立")}
               </Button>
             </DialogFooter>
           </DialogContent>

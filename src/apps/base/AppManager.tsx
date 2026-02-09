@@ -19,6 +19,7 @@ import type { AppId } from "@/config/appRegistry";
 import { useAppStoreShallow } from "@/stores/helpers";
 import { toast } from "sonner";
 import { requestCloseWindow } from "@/utils/windowUtils";
+import { useTranslation } from "react-i18next";
 
 interface AppManagerProps {
   apps: AnyApp[];
@@ -27,6 +28,8 @@ interface AppManagerProps {
 const BASE_Z_INDEX = 1;
 
 export function AppManager({ apps }: AppManagerProps) {
+  const { t } = useTranslation();
+  
   // Instance-based state
   const {
     instances,
@@ -246,14 +249,13 @@ export function AppManager({ apps }: AppManagerProps) {
     return [
       {
         type: "item",
-        label: "Add Website",
+        label: t("common.desktop.addWebsite", "Add Website"),
         onSelect: () => {
-          setDesktopContextMenuPos(null);
           setIsAddWebsiteDialogOpen(true);
         },
       },
     ];
-  }, []);
+  }, [t]);
 
   return (
     <>

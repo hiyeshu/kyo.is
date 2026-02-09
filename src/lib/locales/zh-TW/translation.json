@@ -1855,6 +1855,42 @@
       "invalidThemeJson": "無效的主題 JSON 格式",
       "cancel": "取消"
     },
+    "bookmarks": {
+      "name": "書籤板",
+      "search": "搜尋書籤...",
+      "countBookmarks": "{{count}} 個書籤",
+      "addBookmark": "新增書籤",
+      "editBookmark": "編輯書籤",
+      "newFolder": "新增檔案夾",
+      "openInNewTab": "在新分頁開啟",
+      "addToDock": "加入 Dock",
+      "url": "網址",
+      "bookmarkName": "名稱",
+      "pageTitle": "頁面標題",
+      "fetchingTitle": "正在取得標題...",
+      "folder": "檔案夾",
+      "folderName": "檔案夾名稱",
+      "noFolder": "無檔案夾",
+      "icon": "圖示",
+      "add": "新增",
+      "create": "建立",
+      "noResults": "沒有結果",
+      "noBookmarksYet": "尚無書籤",
+      "addFirstBookmark": "新增第一個書籤",
+      "iconPicker": {
+        "auto": "自動",
+        "upload": "上傳",
+        "emoji": "符號",
+        "autoFetched": "自動取得",
+        "chooseImage": "選擇圖片",
+        "changeImage": "更換圖片",
+        "imageSizeLimit": "PNG, JPG 最大 100KB"
+      },
+      "menu": {
+        "help": "書籤板說明",
+        "about": "關於書籤板"
+      }
+    },
     "stickies": {
       "description": "用於快速提醒的便利貼",
       "empty": {
@@ -2295,6 +2331,14 @@
     }
   },
   "common": {
+    "action": {
+      "open": "開啟",
+      "close": "關閉"
+    },
+    "search": {
+      "bookmarks": "搜尋書籤...",
+      "noResults": "找不到書籤"
+    },
     "aboutThisMac": {
       "builtInMemory": "內建記憶體",
       "clickToToggle": "按一下以切換",
@@ -2360,7 +2404,12 @@
     },
     "desktop": {
       "myComputer": "我的電腦",
-      "setWallpaper": "設定背景圖片…"
+      "setWallpaper": "設定背景圖片…",
+      "addWebsite": "新增網站",
+      "addWebsiteDescDock": "輸入網站網址以新增至 Dock",
+      "addWebsiteDescDesktop": "輸入網站網址以新增至桌面",
+      "addToDock": "加入 Dock",
+      "addToDesktop": "加入桌面"
     },
     "dialog": {
       "about": "關於",

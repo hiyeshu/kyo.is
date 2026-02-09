@@ -14,7 +14,7 @@ import { AppId, getAppIconPath, appRegistry, getNonFinderApps } from "@/config/a
 import { getTranslatedAppName } from "@/utils/i18n";
 import { useLaunchApp } from "@/hooks/useLaunchApp";
 import { useDockStore, PROTECTED_DOCK_ITEMS, type DockItem } from "@/stores/useDockStore";
-import { useBookmarkStore } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, getBookmarkIconInfo } from "@/stores/useBookmarkStore";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useSound, Sounds } from "@/hooks/useSound";
@@ -895,9 +895,8 @@ function MacDock() {
     return [
       {
         type: "item",
-        label: "Add Website",
+        label: t("common.desktop.addWebsite", "Add Website"),
         onSelect: () => {
-          setDividerContextMenuPos(null);
           setIsAddWebsiteDialogOpen(true);
         },
       },
@@ -1852,12 +1851,15 @@ function MacDock() {
                       return;
                     }
                     
-                    const rawIcon = bookmark.favicon || "🌐";
-                    const icon = bookmark.favicon?.startsWith("http")
-                      ? faviconUrlForDock(bookmark.favicon)
-                      : rawIcon;
+                    // 使用单一真相源获取图标信息
+                    const iconInfo = getBookmarkIconInfo(bookmark);
+                    // favicon URL 需要放大尺寸参数，custom/emoji 直接用
+                    const icon = iconInfo.isFavicon && iconInfo.value.startsWith("http")
+                      ? faviconUrlForDock(iconInfo.value)
+                      : iconInfo.value;
                     const label = bookmark.title;
-                    const hasFaviconUrl = Boolean(bookmark.favicon?.startsWith("http"));
+                    // 是否需要 iOS 风格容器（favicon URL 或 custom base64 图片）
+                    const isImageIcon = iconInfo.isFavicon || iconInfo.isCustom;
 
                     elements.push(
                       <IconButton
@@ -1869,8 +1871,8 @@ function MacDock() {
                         label={label}
                         icon={icon}
                         idKey={item.id}
-                        isBookmark={hasFaviconUrl}
-                        isEmoji={!hasFaviconUrl}
+                        isBookmark={isImageIcon}
+                        isEmoji={iconInfo.isEmoji}
                         onClick={() => {
                           window.open(bookmark.url, "_blank", "noopener,noreferrer");
                         }}

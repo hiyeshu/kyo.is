@@ -66,6 +66,40 @@ AI: OpenAI + Anthropic + Google (Vercel AI SDK)
 8. 安全: API 端点验证输入，DOMPurify 清理 HTML，CSP 头部
 </design_constraints>
 
+<i18n_rules>
+国际化铁律（违反即阻塞）:
+
+1. 禁止硬编码文本
+   - 所有用户可见文本必须通过 t() 函数获取
+   - 默认语言是中文，fallback 英文
+   - 错误示例: `<Button>Save</Button>`
+   - 正确示例: `<Button>{t("common.save", "保存")}</Button>`
+
+2. 单一真相源
+   - 翻译文件是文本的唯一来源: src/lib/locales/{lang}/translation.json
+   - 支持 4 种语言: en, zh-TW, ja, ko
+   - 新增文本必须同时添加到所有 4 个语言文件
+
+3. 翻译键命名规范
+   - 通用文本: common.{category}.{key} (如 common.dialog.save)
+   - 应用文本: apps.{appId}.{key} (如 apps.bookmarks.search)
+   - 组件文本: components.{component}.{key}
+
+4. 新建界面/功能的检查清单
+   - [ ] 所有按钮文本使用 t()
+   - [ ] 所有标签/占位符使用 t()
+   - [ ] 所有提示/错误消息使用 t()
+   - [ ] 所有菜单项使用 t()
+   - [ ] 所有对话框标题/内容使用 t()
+   - [ ] 4 种语言文件都已更新
+
+5. 翻译质量
+   - zh-TW: 繁体中文，台湾用语习惯
+   - ja: 日语，敬体优先
+   - ko: 韩语，敬体优先
+   - 不确定时用英文占位，标记 TODO
+</i18n_rules>
+
 <development_workflow>
 本地开发: bun run dev:vercel (推荐) 或 bun dev
 构建: bun run build (生成 .vercel/output/)
