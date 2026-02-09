@@ -146,7 +146,7 @@ export const appRegistry = {
   "theme-editor": {
     id: "theme-editor" as const,
     name: "Theme Editor",
-    icon: { type: "emoji" as const, emoji: "🎨" },
+    icon: { type: "image" as const, src: "/icons/default/palette.png" },
     description: "Customize your theme",
     component: LazyThemeEditorApp,
     helpItems: themeEditorHelpItems,
@@ -178,9 +178,7 @@ const FALLBACK_ICON = "/icons/default/application.png";
 export const getAppIconPath = (appId: AppId): string => {
   const app = appRegistry[appId as keyof typeof appRegistry];
   if (!app?.icon) return FALLBACK_ICON;
-  if (typeof app.icon === "string") return app.icon;
-  if (app.icon.type === "emoji") return FALLBACK_ICON;
-  return app.icon.src;
+  return typeof app.icon === "string" ? app.icon : app.icon.src;
 };
 
 export const getNonFinderApps = (
