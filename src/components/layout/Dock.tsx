@@ -52,6 +52,7 @@ interface IconButtonProps {
   showIndicator?: boolean;
   isEmoji?: boolean;
   isBookmark?: boolean; // iOS-style rounded container for bookmark favicons
+  isMacTheme?: boolean; // Enable Aqua crystal effect
   onDragOver?: React.DragEventHandler;
   onDrop?: React.DragEventHandler;
   onDragLeave?: React.DragEventHandler;

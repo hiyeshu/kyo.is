@@ -2362,7 +2362,7 @@
     "aboutThisMac": {
       "builtInMemory": "內建記憶體",
       "clickToToggle": "按一下以切換",
-      "description": "關於此電腦上的 ryOS 資訊",
+      "description": "關於此電腦上的 kyo 資訊",
       "largestUnusedBlock": "最大未用區塊",
       "mb": "MB",
       "system": "系統",
@@ -2402,7 +2402,7 @@
     "auth": {
       "createAccount": "建立帳戶",
       "creatingAccount": "正在建立...",
-      "dialogTitle": "ryOS 登入",
+      "dialogTitle": "kyo 登入",
       "logIn": "登入",
       "logOut": "登出",
       "logOutDescription": "您確定要登出嗎？您將會從您的帳戶登出。",
@@ -2512,8 +2512,8 @@
     },
     "htmlPreview": {
       "bannerFallbackTitle": "未命名 Applet",
-      "codePreviewTitle": "ryOS 程式碼預覽",
-      "codePreviewTitleFullscreen": "ryOS 程式碼預覽全螢幕",
+      "codePreviewTitle": "kyo 程式碼預覽",
+      "codePreviewTitleFullscreen": "kyo 程式碼預覽全螢幕",
       "copyHtml": "複製 HTML 程式碼",
       "downloadHtml": "下載 HTML",
       "exitFullscreen": "結束全螢幕",
@@ -2581,8 +2581,8 @@
     },
     "startMenu": {
       "aboutThisComputer": "關於這部電腦",
-      "ryos98": "98",
-      "ryosProfessional": "專業版",
+      "kyo98": "98",
+      "kyoProfessional": "專業版",
       "start": "開始"
     },
     "swipeInstructions": {
@@ -2594,16 +2594,16 @@
     "system": {
       "debugBootScreenTest": "偵錯開機畫面測試...",
       "formatFileSystem": "格式化檔案系統",
-      "formatFileSystemDesc": "您確定要格式化檔案系統嗎？這將永久刪除所有檔案（範例檔案除外）、圖片和自訂桌布。格式化後 ryOS 將重新啟動。",
+      "formatFileSystemDesc": "您確定要格式化檔案系統嗎？這將永久刪除所有檔案（範例檔案除外）、圖片和自訂桌布。格式化後 kyo 將重新啟動。",
       "formattingFileSystem": "格式化檔案系統...",
       "rebooting": "重新開機中...",
       "resetAllSettings": "重設所有設定",
-      "resetAllSettingsDesc": "您確定要重設所有設定嗎？這將清除所有已儲存的設定並還原為預設狀態。重設後 ryOS 將重新啟動。",
+      "resetAllSettingsDesc": "您確定要重設所有設定嗎？這將清除所有已儲存的設定並還原為預設狀態。重設後 kyo 將重新啟動。",
       "resettingSystem": "重設系統中...",
       "restoringSystem": "還原系統中...",
       "systemRestoring": "系統還原中...",
-      "updatingToRyOS": "更新至 ryOS {{version}}...",
-      "updatingToRyOSWithBuild": "更新至 ryOS {{version}} ({{buildNumber}})..."
+      "updatingToRyOS": "更新至 kyo {{version}}...",
+      "updatingToRyOSWithBuild": "更新至 kyo {{version}} ({{buildNumber}})..."
     },
     "toast": {
       "alreadyLatestVersion": "已經是最新版本",
@@ -2638,7 +2638,7 @@
   "settings": {
     "language": {
       "chineseTraditional": "中文",
-      "description": "選擇您的 ryOS 介面偏好語言",
+      "description": "選擇您的 kyo 介面偏好語言",
       "english": "English",
       "french": "Français",
       "german": "Deutsch",

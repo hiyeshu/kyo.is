@@ -12,7 +12,6 @@ import { useTranslation } from "react-i18next";
 import { ChatMessages, type Message } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { Button } from "@/components/ui/button";
-import { CaretDown } from "@phosphor-icons/react";
 import { useThemeStore } from "@/stores/useThemeStore";
 
 // ============================================================================
@@ -250,20 +249,15 @@ export function ChatAppComponent({
               : undefined),
           }}
         >
-          {/* 左侧：标题下拉 */}
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              className="flex items-center gap-0.5 px-2 py-1 h-7"
-            >
-              <h2 className="font-geneva-12 text-[12px] font-medium truncate">
-                {t("apps.chat.aiAssistant", "AI 助手")}
-              </h2>
-              <CaretDown
-                className="h-2.5 w-2.5 text-neutral-400"
-                weight="bold"
-              />
-            </Button>
+          {/* 左侧：日期 */}
+          <div className="flex items-center px-2">
+            <span className="font-geneva-12 text-[12px] text-neutral-600">
+              {new Date().toLocaleDateString(undefined, {
+                month: "long",
+                day: "numeric",
+                weekday: "short",
+              })}
+            </span>
           </div>
 
           {/* 右侧：清除按钮 */}
@@ -283,11 +277,7 @@ export function ChatAppComponent({
 
         {/* 消息区域 */}
         <div className="flex-1 overflow-hidden">
-          <ChatMessages
-            messages={messages}
-            isLoading={isLoading}
-            onClear={handleClear}
-          />
+          <ChatMessages messages={messages} isLoading={isLoading} />
         </div>
 
         {/* 输入区域 */}

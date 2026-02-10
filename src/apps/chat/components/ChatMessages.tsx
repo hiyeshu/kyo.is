@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { CaretDown, Copy, Check } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+
 import { useThemeStore } from "@/stores/useThemeStore";
 
 // ============================================================================
@@ -26,7 +26,6 @@ export interface Message {
 interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
-  onClear?: () => void;
 }
 
 // ============================================================================
@@ -81,7 +80,7 @@ function ScrollToBottomButton({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 10 }}
           transition={{ type: "spring", duration: 0.2 }}
-          className={`absolute bottom-14 right-3 rounded-full z-20 flex items-center justify-center cursor-pointer select-none ${
+          className={`absolute bottom-2 right-3 rounded-full z-20 flex items-center justify-center cursor-pointer select-none ${
             isMacTheme ? "overflow-hidden" : ""
           }`}
           style={{
@@ -148,7 +147,6 @@ function ScrollToBottomButton({
 export function ChatMessages({
   messages,
   isLoading,
-  onClear,
 }: ChatMessagesProps) {
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -173,7 +171,10 @@ export function ChatMessages({
   const handleScroll = () => {
     if (scrollRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-      setIsAtBottom(scrollHeight - scrollTop - clientHeight < 50);
+      // 只有当内容可滚动时才判断是否在底部
+      const isScrollable = scrollHeight > clientHeight;
+      const nearBottom = scrollHeight - scrollTop - clientHeight < 50;
+      setIsAtBottom(!isScrollable || nearBottom);
     }
   };
 
@@ -210,30 +211,7 @@ export function ChatMessages({
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto px-3 py-2"
       >
-        {/* 空状态 */}
-        <AnimatePresence>
-          {messages.length === 0 && !isLoading && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex items-center gap-2 text-gray-500 font-geneva-12 text-[13px] h-[12px]"
-            >
-              <span>💬</span>
-              <span>{t("apps.chat.emptyState", "开始对话...")}</span>
-              {onClear && (
-                <Button
-                  size="sm"
-                  variant="link"
-                  onClick={onClear}
-                  className="m-0 p-0 text-[13px] h-0 text-gray-500 hover:text-gray-700"
-                >
-                  {t("apps.chat.newChat", "新对话")}
-                </Button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+
 
         {/* 消息列表 */}
         <AnimatePresence initial={false} mode="sync">
@@ -280,7 +258,7 @@ export function ChatMessages({
                       )}
                     </motion.button>
                   )}
-                  <span>{isUser ? t("apps.chat.you", "你") : "AI"}</span>
+                  <span>{isUser ? t("apps.chat.you", "你") : "Kyo"}</span>
                   <span className="text-gray-400">
                     {message.timestamp ? formatTime(message.timestamp) : "..."}
                   </span>

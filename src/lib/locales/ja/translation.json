@@ -2632,7 +2632,7 @@
   "settings": {
     "language": {
       "chineseTraditional": "中文",
-      "description": "ryOSインターフェースの優先言語を選択",
+      "description": "Kyoインターフェースの優先言語を選択",
       "english": "English",
       "french": "Français",
       "german": "Deutsch",

@@ -2632,7 +2632,7 @@
   "settings": {
     "language": {
       "chineseTraditional": "中文",
-      "description": "ryOS 인터페이스의 기본 언어 선택",
+      "description": "Kyo 인터페이스의 기본 언어 선택",
       "english": "English",
       "french": "Français",
       "german": "Deutsch",

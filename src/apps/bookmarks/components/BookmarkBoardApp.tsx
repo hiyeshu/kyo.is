@@ -63,6 +63,7 @@ function BookmarkCard({
   onDragEnd,
   isDragging,
   isDragOver,
+  isMacTheme = false,
 }: {
   bm: Bookmark;
   onClick: () => void;
@@ -76,6 +77,7 @@ function BookmarkCard({
   onDragEnd: () => void;
   isDragging: boolean;
   isDragOver: boolean;
+  isMacTheme?: boolean;
 }) {
   // 长按检测
   const longPressTimerRef = useRef<number | null>(null);
@@ -132,9 +134,9 @@ function BookmarkCard({
       onDragEnd={onDragEnd}
       title={bm.url}
     >
-      {/* 图标容器 - macOS 风格圆角方块 */}
+      {/* 图标容器 */}
       <div className={cn(
-        "w-12 h-12 rounded-xl flex items-center justify-center",
+        "w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden",
         "bg-gradient-to-b from-white to-white/90",
         "border border-black/10",
         "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]",
@@ -142,6 +144,15 @@ function BookmarkCard({
         "transition-shadow"
       )}>
         <BookmarkIconDisplay bookmark={bm} size="sm" />
+        {/* macOS Aqua 水晶高光 */}
+        {isMacTheme && (
+          <div 
+            className="absolute inset-0 pointer-events-none rounded-xl"
+            style={{
+              background: "linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 50%, transparent 50%, rgba(0,0,0,0.03) 100%)",
+            }}
+          />
+        )}
       </div>
       {/* 标题 - 双行截断 */}
       <span className="text-[11px] text-center line-clamp-2 w-full font-geneva-12 leading-tight text-black/70 group-hover:text-black/90">
@@ -245,6 +256,7 @@ function FolderSection({
             onDragEnd={h.handleDragEnd}
             isDragging={h.draggedItem?.item.id === bm.id}
             isDragOver={h.dragOverIndex === index && h.draggedItem?.folderId === folder.id}
+            isMacTheme={h.currentTheme === "macosx"}
           />
         ))}
         {/* 空文件夹的拖放区域 */}
@@ -428,7 +440,7 @@ export function BookmarkBoardApp({
         onNavigatePrevious={onNavigatePrevious}
         menuBar={h.isXpTheme ? menuBar : undefined}
       >
-        <div className="flex flex-col h-full w-full">
+        <div className="flex flex-col h-full w-full bg-white/85">
           {/* ── 搜索栏 (macOS Aqua 风格) ─────────────────────── */}
           <div
             className={cn(
@@ -448,13 +460,15 @@ export function BookmarkBoardApp({
                 : undefined
             }
           >
-            {/* macOS Aqua 胶囊搜索框 */}
+            {/* 搜索框 */}
             <div 
               className={cn(
-                "flex items-center flex-1 gap-1.5 px-2.5 py-1 rounded-full",
-                "bg-white/80 border border-black/15",
-                "shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]",
-                "focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50"
+                "flex items-center flex-1 gap-1.5 px-2.5 py-1",
+                h.isXpTheme
+                  ? "rounded-none border border-[#7f9db9] bg-white"
+                  : h.currentTheme === "system7"
+                  ? "rounded-none border border-black bg-white"
+                  : "rounded-full bg-white/80 border border-black/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50"
               )}
             >
               <MagnifyingGlass size={14} className="text-black/40 shrink-0" />
@@ -472,11 +486,12 @@ export function BookmarkBoardApp({
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center shrink-0",
-                    "bg-white/80 border border-black/15",
-                    "shadow-[0_1px_2px_rgba(0,0,0,0.08)]",
-                    "hover:bg-white hover:border-black/20 active:bg-black/5",
-                    "transition-all"
+                    "w-7 h-7 flex items-center justify-center shrink-0 transition-all",
+                    h.isXpTheme
+                      ? "rounded-none border border-[#7f9db9] bg-[#f0f0f0] hover:bg-[#e5e5e5]"
+                      : h.currentTheme === "system7"
+                      ? "rounded-none border border-black bg-white hover:bg-gray-100"
+                      : "rounded-full bg-white/80 border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-white hover:border-black/20 active:bg-black/5"
                   )}
                 >
                   <Plus size={16} weight="bold" className="text-black/60" />
@@ -522,6 +537,7 @@ export function BookmarkBoardApp({
                     onDragEnd={h.handleDragEnd}
                     isDragging={h.draggedItem?.item.id === bm.id}
                     isDragOver={h.dragOverIndex === index && !h.draggedItem?.folderId}
+                    isMacTheme={h.currentTheme === "macosx"}
                   />
                 ))}
               </div>

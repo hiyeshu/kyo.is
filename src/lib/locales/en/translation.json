@@ -2648,7 +2648,7 @@
   "settings": {
     "language": {
       "title": "Language",
-      "description": "Select your preferred language for ryOS interface",
+      "description": "Select your preferred language for Kyo interface",
       "english": "English",
       "chineseTraditional": "中文",
       "japanese": "日本語",
