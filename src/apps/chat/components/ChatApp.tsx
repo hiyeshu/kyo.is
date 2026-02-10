@@ -110,13 +110,20 @@ export function ChatAppComponent({
         const decoder = new TextDecoder();
         let fullContent = "";
         const assistantTimestamp = Date.now();
+        let chunkCount = 0;
 
+        console.log("[Chat] Starting to read stream...");
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          console.log("[Chat] Read result - done:", done, "value length:", value?.length);
+          if (done) {
+            console.log("[Chat] Stream ended, total chunks:", chunkCount);
+            break;
+          }
 
+          chunkCount++;
           const chunk = decoder.decode(value, { stream: true });
-          console.log("[Chat] Raw chunk:", chunk);
+          console.log("[Chat] Chunk #" + chunkCount + ":", chunk);
           const lines = chunk.split("\n");
 
           for (const line of lines) {
