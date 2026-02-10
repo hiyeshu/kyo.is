@@ -2334,12 +2334,14 @@
       }
     },
     "chat": {
+      "name": "聊天",
       "title": "聊天",
       "description": "與 AI 助手聊天",
       "emptyState": "開始對話...",
       "inputPlaceholder": "輸入消息...",
       "send": "發送",
-      "stop": "停止"
+      "stop": "停止",
+      "error": "抱歉，發生了錯誤，請重試。"
     }
   },
   "common": {

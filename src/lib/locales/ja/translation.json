@@ -2328,12 +2328,14 @@
       }
     },
     "chat": {
+      "name": "チャット",
       "title": "チャット",
       "description": "AIアシスタントとチャット",
       "emptyState": "会話を始める...",
       "inputPlaceholder": "メッセージを入力...",
       "send": "送信",
-      "stop": "停止"
+      "stop": "停止",
+      "error": "申し訳ありません、エラーが発生しました。もう一度お試しください。"
     }
   },
   "common": {

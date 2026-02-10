@@ -29,9 +29,10 @@ interface LegacyDockItem {
 // Protected items that cannot be removed from dock
 export const PROTECTED_DOCK_ITEMS = new Set(["__applications__", "__trash__"]);
 
-// Default pinned items - Kyo is bookmark-focused, start with bookmarks app
+// Default pinned items - Kyo is bookmark-focused, start with bookmarks and chat
 const DEFAULT_PINNED_ITEMS: DockItem[] = [
   { type: "app", id: "bookmarks" },
+  { type: "app", id: "chat" },
 ];
 
 interface DockStoreState {

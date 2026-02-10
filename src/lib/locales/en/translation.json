@@ -2621,12 +2621,14 @@
       }
     },
     "chat": {
+      "name": "Chat",
       "title": "Chat",
       "description": "Chat with AI assistant",
       "emptyState": "Start a conversation...",
       "inputPlaceholder": "Type a message...",
       "send": "Send",
-      "stop": "Stop"
+      "stop": "Stop",
+      "error": "Sorry, an error occurred. Please try again."
     }
   },
   "components": {
