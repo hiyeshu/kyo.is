@@ -14,9 +14,9 @@ interface BookmarkIconDisplayProps {
 }
 
 const SIZE_MAP = {
-  sm: "w-5 h-5 text-base",
-  md: "w-6 h-6 text-xl",
-  lg: "w-8 h-8 text-2xl",
+  sm: "w-7 h-7 text-xl",      // 28px - 卡片默认
+  md: "w-9 h-9 text-2xl",     // 36px - 中等
+  lg: "w-12 h-12 text-3xl",   // 48px - Dialog 预览
 };
 
 export function BookmarkIconDisplay({

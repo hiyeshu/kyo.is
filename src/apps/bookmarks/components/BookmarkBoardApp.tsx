@@ -5,7 +5,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { AppProps } from "../../base/types";
 import { WindowFrame } from "@/components/layout/WindowFrame";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus, FolderPlus, Link, DotsThree, PencilSimple, Trash } from "@phosphor-icons/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { HelpDialog } from "@/components/dialogs/HelpDialog";
 import { AboutDialog } from "@/components/dialogs/AboutDialog";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
@@ -98,10 +105,11 @@ function BookmarkCard({
 
   return (
     <div
-      className={`flex flex-col items-center gap-1 p-2 rounded-lg cursor-pointer group relative transition-all
-        ${isDragging ? "opacity-50 scale-95" : "hover:bg-black/5"}
-        ${isDragOver ? "ring-2 ring-blue-500 ring-offset-1" : ""}
-      `}
+      className={cn(
+        "flex flex-col items-center gap-1.5 p-2 rounded-xl cursor-pointer group relative transition-all",
+        isDragging ? "opacity-50 scale-95" : "hover:bg-black/[0.06] active:bg-black/10",
+        isDragOver && "ring-2 ring-blue-500 ring-offset-1"
+      )}
       onClick={onClick}
       onContextMenu={onContextMenu}
       onTouchStart={handleTouchStart}
@@ -117,10 +125,19 @@ function BookmarkCard({
       onDragEnd={onDragEnd}
       title={bm.url}
     >
-      <div className="w-10 h-10 rounded-lg bg-white/80 border border-black/10 flex items-center justify-center shadow-sm">
+      {/* 图标容器 - macOS 风格圆角方块 */}
+      <div className={cn(
+        "w-12 h-12 rounded-xl flex items-center justify-center",
+        "bg-gradient-to-b from-white to-white/90",
+        "border border-black/10",
+        "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]",
+        "group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)]",
+        "transition-shadow"
+      )}>
         <BookmarkIconDisplay bookmark={bm} size="sm" />
       </div>
-      <span className="text-[10px] text-center truncate w-full font-geneva-12 leading-tight opacity-80">
+      {/* 标题 - 双行截断 */}
+      <span className="text-[11px] text-center line-clamp-2 w-full font-geneva-12 leading-tight text-black/70 group-hover:text-black/90">
         {bm.title}
       </span>
     </div>
@@ -132,29 +149,72 @@ function BookmarkCard({
 function FolderSection({
   folder,
   h,
+  isDragOverFolder,
+  onFolderDragOver,
+  onFolderDragLeave,
+  onFolderDrop,
+  t,
 }: {
   folder: BookmarkFolder;
   h: ReturnType<typeof useBookmarkBoard>;
+  isDragOverFolder: boolean;
+  onFolderDragOver: (e: React.DragEvent) => void;
+  onFolderDragLeave: (e: React.DragEvent) => void;
+  onFolderDrop: (e: React.DragEvent) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any;
 }) {
   return (
-    <div className="mb-3">
+    <div 
+      className={cn(
+        "mb-3 rounded-lg transition-all",
+        isDragOverFolder && "bg-blue-500/10 ring-2 ring-blue-500/30"
+      )}
+      onDragOver={onFolderDragOver}
+      onDragLeave={onFolderDragLeave}
+      onDrop={onFolderDrop}
+    >
       <div 
         className="flex items-center gap-1.5 mb-1.5 px-1 group/folder"
         onContextMenu={(e) => h.openContextMenu(e, folder)}
       >
-        <span className="text-[10px] font-geneva-12 font-medium text-black/40 uppercase tracking-wider cursor-default">
+        <span className="text-[11px] font-geneva-12 font-medium text-black/50 uppercase tracking-wider cursor-default">
           {folder.title}
         </span>
-        <div className="flex-1 h-px bg-black/8" />
-        <button
-          className="text-[10px] text-black/30 hover:text-black/60 opacity-0 group-hover/folder:opacity-100 transition-opacity"
-          onClick={() => h.openAddDialog(folder.id)}
-          title="Add to folder"
-        >
-          <Plus size={10} weight="bold" />
-        </button>
+        <div className="flex-1 h-px bg-black/10" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={cn(
+                "w-5 h-5 rounded flex items-center justify-center",
+                "text-black/40 hover:text-black/70 hover:bg-black/5",
+                "opacity-0 group-hover/folder:opacity-100 transition-all"
+              )}
+            >
+              <DotsThree size={18} weight="bold" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[160px]">
+            <DropdownMenuItem onClick={() => h.openAddDialog(folder.id)}>
+              <Plus size={14} className="mr-2" />
+              {t("apps.bookmarks.addBookmark", "添加書籤")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => h.openRenameFolderDialog(folder)}>
+              <PencilSimple size={14} className="mr-2" />
+              {t("apps.bookmarks.renameFolder", "重命名")}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => h.removeFolder(folder.id)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash size={14} className="mr-2" />
+              {t("apps.bookmarks.deleteFolder", "刪除分類")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-1">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1">
         {folder.bookmarks.map((bm, index) => (
           <BookmarkCard
             key={bm.id}
@@ -180,6 +240,12 @@ function FolderSection({
             isDragOver={h.dragOverIndex === index && h.draggedItem?.folderId === folder.id}
           />
         ))}
+        {/* 空文件夹的拖放区域 */}
+        {folder.bookmarks.length === 0 && (
+          <div className="col-span-full py-4 text-center text-[10px] text-black/30">
+            {isDragOverFolder ? "Drop here" : "Drag bookmarks here"}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -202,6 +268,38 @@ export function BookmarkBoardApp({
   const currentTheme = useThemeStore((s) => s.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   const isMacTheme = currentTheme === "macosx";
+
+  // ─── 文件夹拖拽状态 ──────────────────────────────────────────────────────────
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+
+  const handleFolderDragOver = (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // 只有在拖拽书签时才允许放入文件夹
+    if (h.draggedItem && !isFolder(h.draggedItem.item)) {
+      setDragOverFolderId(folderId);
+    }
+  };
+
+  const handleFolderDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    // 检查是否真的离开了文件夹区域
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+      setDragOverFolderId(null);
+    }
+  };
+
+  const handleFolderDrop = (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolderId(null);
+    
+    if (h.draggedItem && !isFolder(h.draggedItem.item)) {
+      // 移动书签到目标文件夹
+      h.handleDropToFolder(h.draggedItem.item.id, folderId);
+    }
+  };
 
   // ─── 右键菜单项 ─────────────────────────────────────────────────────────────
   const getContextMenuItems = (): MenuItem[] => {
@@ -324,40 +422,77 @@ export function BookmarkBoardApp({
         menuBar={h.isXpTheme ? menuBar : undefined}
       >
         <div className="flex flex-col h-full w-full">
-          {/* ── 搜索栏 ────────────────────────────────────── */}
+          {/* ── 搜索栏 (macOS Aqua 风格) ─────────────────────── */}
           <div
-            className={`flex items-center px-2 py-1.5 ${
+            className={cn(
+              "flex items-center gap-2 px-3 py-2",
               h.isXpTheme
                 ? "border-b border-[#919b9c]"
                 : h.currentTheme === "system7"
                 ? "bg-gray-100 border-b border-black"
                 : "border-b border-black/10"
-            }`}
+            )}
+            style={
+              !h.isXpTheme && h.currentTheme !== "system7"
+                ? {
+                    backgroundColor: "var(--os-color-window-bg, #f5f5f5)",
+                    backgroundImage: "var(--os-pinstripe-window)",
+                  }
+                : undefined
+            }
           >
-            <div className="flex items-center flex-1 gap-1 px-1.5 py-0.5 rounded bg-black/[0.03]">
-              <MagnifyingGlass size={12} className="text-black/30 shrink-0" />
-              <Input
+            {/* macOS Aqua 胶囊搜索框 */}
+            <div 
+              className={cn(
+                "flex items-center flex-1 gap-1.5 px-2.5 py-1 rounded-full",
+                "bg-white/80 border border-black/15",
+                "shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]",
+                "focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50"
+              )}
+            >
+              <MagnifyingGlass size={14} className="text-black/40 shrink-0" />
+              <input
+                type="text"
                 value={h.searchQuery}
                 onChange={(e) => h.setSearchQuery(e.target.value)}
                 placeholder={t("apps.bookmarks.search", "Search bookmarks...")}
-                className="flex-1 !text-[11px] border-none shadow-none bg-transparent focus-visible:ring-0 h-5 px-0"
+                className="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/30"
               />
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0 ml-1"
-              onClick={() => h.openAddDialog()}
-            >
-              <Plus size={14} />
-            </Button>
+            
+            {/* + 按钮 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    "w-7 h-7 rounded-full flex items-center justify-center shrink-0",
+                    "bg-white/80 border border-black/15",
+                    "shadow-[0_1px_2px_rgba(0,0,0,0.08)]",
+                    "hover:bg-white hover:border-black/20 active:bg-black/5",
+                    "transition-all"
+                  )}
+                >
+                  <Plus size={16} weight="bold" className="text-black/60" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[160px]">
+                <DropdownMenuItem onClick={() => h.openAddDialog()}>
+                  <Link size={14} className="mr-2" />
+                  {t("apps.bookmarks.addBookmark", "新增書籤")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => h.openFolderDialog()}>
+                  <FolderPlus size={14} className="mr-2" />
+                  {t("apps.bookmarks.newFolder", "新增分類")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* ── 书签网格 ──────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto p-3">
             {/* 顶层书签 */}
             {topLevel.length > 0 && (
-              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-1 mb-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1 mb-3">
                 {topLevel.map((bm, index) => (
                   <BookmarkCard
                     key={bm.id}
@@ -391,6 +526,11 @@ export function BookmarkBoardApp({
                 key={folder.id}
                 folder={folder}
                 h={h}
+                isDragOverFolder={dragOverFolderId === folder.id}
+                onFolderDragOver={(e) => handleFolderDragOver(e, folder.id)}
+                onFolderDragLeave={handleFolderDragLeave}
+                onFolderDrop={(e) => handleFolderDrop(e, folder.id)}
+                t={t}
               />
             ))}
 
@@ -764,6 +904,63 @@ export function BookmarkBoardApp({
                 )}
               >
                 {t("apps.bookmarks.create", "建立")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── 重命名文件夹对话框 ──────────────────────────── */}
+        <Dialog open={h.renameFolderDialogOpen} onOpenChange={h.setRenameFolderDialogOpen}>
+          <DialogContent 
+            className={cn("sm:max-w-[320px]", isXpTheme && "p-0 overflow-hidden")}
+            style={isXpTheme ? { fontSize: "11px" } : undefined}
+          >
+            <DialogHeader>
+              <DialogTitle 
+                className={cn(
+                  "text-sm",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
+              >
+                {t("apps.bookmarks.renameFolder", "重命名")}
+              </DialogTitle>
+            </DialogHeader>
+            <div className={isXpTheme ? "p-2 px-4" : "py-2"}>
+              <Input
+                value={h.renameFolderName}
+                onChange={(e) => h.setRenameFolderName(e.target.value)}
+                placeholder={t("apps.bookmarks.folderName", "檔案夾名稱")}
+                className={cn(
+                  "text-xs",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
+                onKeyDown={(e) => e.key === "Enter" && h.submitRenameFolder()}
+                autoFocus
+              />
+            </div>
+            <DialogFooter className={isXpTheme ? "p-2 px-4 pt-0 gap-1" : "gap-1"}>
+              <Button
+                variant={isMacTheme ? "secondary" : "retro"}
+                size="sm"
+                onClick={() => h.setRenameFolderDialogOpen(false)}
+                className={cn(
+                  !isMacTheme && "h-7",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
+              >
+                {t("common.dialog.cancel", "取消")}
+              </Button>
+              <Button 
+                variant={isMacTheme ? "default" : "retro"}
+                size="sm" 
+                onClick={h.submitRenameFolder}
+                disabled={!h.renameFolderName.trim()}
+                className={cn(
+                  !isMacTheme && "h-7",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
+              >
+                {t("common.dialog.save", "儲存")}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -302,6 +302,14 @@ export function useBookmarkBoard() {
     dragCounterRef.current = 0;
   }, []);
 
+  // 直接拖放到文件夹
+  const handleDropToFolder = useCallback((bookmarkId: string, targetFolderId: string | null) => {
+    store.moveBookmarkToFolder(bookmarkId, targetFolderId);
+    setDraggedItem(null);
+    setDragOverIndex(null);
+    dragCounterRef.current = 0;
+  }, [store]);
+
   // ─── 重置 ──────────────────────────────────────────────────────────────────
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
@@ -325,6 +333,26 @@ export function useBookmarkBoard() {
     store.addFolder(name);
     setFolderDialogOpen(false);
   }, [folderName, store]);
+
+  // ─── 重命名文件夹 ──────────────────────────────────────────────────────────
+  const [renameFolderDialogOpen, setRenameFolderDialogOpen] = useState(false);
+  const [renamingFolder, setRenamingFolder] = useState<BookmarkFolder | null>(null);
+  const [renameFolderName, setRenameFolderName] = useState("");
+
+  const openRenameFolderDialog = useCallback((folder: BookmarkFolder) => {
+    setRenamingFolder(folder);
+    setRenameFolderName(folder.title);
+    setRenameFolderDialogOpen(true);
+  }, []);
+
+  const submitRenameFolder = useCallback(() => {
+    if (!renamingFolder) return;
+    const name = renameFolderName.trim();
+    if (!name) return;
+    store.renameFolder(renamingFolder.id, name);
+    setRenameFolderDialogOpen(false);
+    setRenamingFolder(null);
+  }, [renamingFolder, renameFolderName, store]);
 
   // ─── Help / About ──────────────────────────────────────────────────────────
   const [helpOpen, setHelpOpen] = useState(false);
@@ -390,19 +418,29 @@ export function useBookmarkBoard() {
     handleDragLeave,
     handleDrop,
     handleDragEnd,
+    handleDropToFolder,
 
     // 重置
     resetDialogOpen,
     setResetDialogOpen,
     confirmReset,
 
-    // 文件夹
+    // 添加文件夹
     folderDialogOpen,
     setFolderDialogOpen,
     folderName,
     setFolderName,
     openFolderDialog,
     submitFolder,
+
+    // 重命名文件夹
+    renameFolderDialogOpen,
+    setRenameFolderDialogOpen,
+    renamingFolder,
+    renameFolderName,
+    setRenameFolderName,
+    openRenameFolderDialog,
+    submitRenameFolder,
 
     // Help / About
     helpOpen,

@@ -190,6 +190,7 @@ interface BookmarkStore {
   
   // 文件夹
   addFolder: (title: string) => string; // 返回新文件夹 ID
+  renameFolder: (id: string, newTitle: string) => void;
   removeFolder: (id: string) => void;
   
   // 排序
@@ -260,6 +261,13 @@ export const useBookmarkStore = create<BookmarkStore>()(
         set((s) => ({ items: [...s.items, newFolder] }));
         return newFolder.id;
       },
+
+      renameFolder: (id, newTitle) =>
+        set((s) => ({
+          items: s.items.map((item) =>
+            isFolder(item) && item.id === id ? { ...item, title: newTitle } : item
+          ),
+        })),
 
       removeFolder: (id) =>
         set((s) => ({ items: s.items.filter((i) => !(isFolder(i) && i.id === id)) })),
