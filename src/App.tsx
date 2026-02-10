@@ -73,7 +73,7 @@ export function App() {
     }
   }, [currentTheme, isMobile]);
 
-  const [bootScreenMessage, setBootScreenMessage] = useState<string | null>(
+  const [bootScreenMessageData, setBootScreenMessageData] = useState<{ key: string; params?: Record<string, string> } | null>(
     null
   );
   const [showBootScreen, setShowBootScreen] = useState(false);
@@ -87,7 +87,7 @@ export function App() {
     // Only show boot screen for system operations (reset/restore/format/debug)
     const persistedMessage = getNextBootMessage();
     if (persistedMessage) {
-      setBootScreenMessage(persistedMessage);
+      setBootScreenMessageData(persistedMessage);
       setBootDebugMode(isBootDebugMode());
       setShowBootScreen(true);
     }
@@ -174,7 +174,7 @@ export function App() {
       <BootScreen
         isOpen={true}
         onOpenChange={() => {}}
-        title={bootScreenMessage || t("common.system.systemRestoring")}
+        title={bootScreenMessageData ? t(bootScreenMessageData.key, bootScreenMessageData.params) : t("common.system.systemRestoring")}
         debugMode={bootDebugMode}
         onBootComplete={() => {
           clearNextBootMessage();

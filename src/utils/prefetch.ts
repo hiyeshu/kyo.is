@@ -68,13 +68,13 @@ function storeVersion(version: string, buildNumber: string, buildTime?: string):
  * @param buildNumber - Optional build number to show in boot screen
  */
 async function reloadPage(version?: string, buildNumber?: string): Promise<void> {
-  // Set boot message to show boot screen after reload
+  // Store translation key + params; BootScreen will translate at display time
   if (version && buildNumber) {
-    setNextBootMessage(i18n.t("common.system.updatingToKyoWithBuild", { version, buildNumber }));
+    setNextBootMessage("common.system.updatingToKyoWithBuild", { version, buildNumber });
   } else if (version) {
-    setNextBootMessage(i18n.t("common.system.updatingToKyo", { version }));
+    setNextBootMessage("common.system.updatingToKyo", { version });
   } else {
-    setNextBootMessage(i18n.t("common.system.rebooting"));
+    setNextBootMessage("common.system.rebooting");
   }
   
   try {
