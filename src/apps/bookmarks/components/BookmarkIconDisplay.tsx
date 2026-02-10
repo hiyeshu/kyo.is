@@ -43,7 +43,7 @@ export function BookmarkIconDisplay({
     <img
       src={iconInfo.value}
       alt=""
-      className={`${sizeClass} object-cover rounded-lg overflow-hidden ${className}`}
+      className={`${sizeClass} object-contain rounded-lg overflow-hidden ${className}`}
       style={{ imageRendering: "-webkit-optimize-contrast" }}
       draggable={false}
       onError={(e) => {
