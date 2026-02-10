@@ -76,6 +76,7 @@ export function useBookmarkBoard() {
   const [addTitle, setAddTitle] = useState("");
   const [addUrl, setAddUrl] = useState("");
   const [addFolderId, setAddFolderId] = useState<string | undefined>(undefined);
+  const [addIcon, setAddIcon] = useState<BookmarkIcon | undefined>(undefined);
   const [isFetchingTitle, setIsFetchingTitle] = useState(false);
 
   // 所有文件夹列表
@@ -101,6 +102,7 @@ export function useBookmarkBoard() {
     setAddTitle("");
     setAddUrl("");
     setAddFolderId(folderId);
+    setAddIcon(undefined); // 重置为默认 (auto)
     setAddDialogOpen(true);
   }, []);
 
@@ -152,9 +154,16 @@ export function useBookmarkBoard() {
     // 根据用户地区自动选择 favicon 服务
     const favicon = getFaviconUrl(hostname);
 
-    store.addBookmark(finalTitle, fullUrl, favicon, addFolderId);
+    // 添加书签
+    const bookmarkId = store.addBookmark(finalTitle, fullUrl, favicon, addFolderId);
+    
+    // 如果用户选择了自定义图标，更新书签
+    if (addIcon) {
+      store.updateBookmark(bookmarkId, { icon: addIcon });
+    }
+    
     setAddDialogOpen(false);
-  }, [addUrl, addTitle, addFolderId, store]);
+  }, [addUrl, addTitle, addFolderId, addIcon, store]);
 
   // ─── 编辑书签 ──────────────────────────────────────────────────────────────
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -162,15 +171,32 @@ export function useBookmarkBoard() {
   const [editTitle, setEditTitle] = useState("");
   const [editUrl, setEditUrl] = useState("");
   const [editIcon, setEditIcon] = useState<BookmarkIcon | undefined>(undefined);
+  const [editFolderId, setEditFolderId] = useState<string | undefined>(undefined);
+  const [originalFolderId, setOriginalFolderId] = useState<string | undefined>(undefined);
+
+  // 查找书签所在的文件夹
+  const findBookmarkFolderId = useCallback((bookmarkId: string): string | undefined => {
+    for (const item of store.items) {
+      if (isFolder(item)) {
+        if (item.bookmarks.some(b => b.id === bookmarkId)) {
+          return item.id;
+        }
+      }
+    }
+    return undefined; // 在顶层
+  }, [store.items]);
 
   const openEditDialog = useCallback((bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
     setEditTitle(bookmark.title);
     setEditUrl(bookmark.url);
-    // 初始化图标状态
     setEditIcon(bookmark.icon || { type: "favicon", value: bookmark.favicon || "" });
+    // 查找当前文件夹
+    const folderId = findBookmarkFolderId(bookmark.id);
+    setEditFolderId(folderId);
+    setOriginalFolderId(folderId);
     setEditDialogOpen(true);
-  }, []);
+  }, [findBookmarkFolderId]);
 
   const submitEdit = useCallback(() => {
     if (!editingBookmark) return;
@@ -185,18 +211,22 @@ export function useBookmarkBoard() {
       hostname = new URL(fullUrl).hostname;
     } catch { /* noop */ }
 
+    // 更新书签内容
     store.updateBookmark(editingBookmark.id, {
       title: title || hostname,
       url: fullUrl,
-      // 保存新的图标配置
       icon: editIcon,
-      // 兼容旧版：同时更新 favicon 字段
       favicon: editIcon?.type === "favicon" ? getFaviconUrl(hostname) : editingBookmark.favicon,
     });
     
+    // 如果文件夹变了，移动书签
+    if (editFolderId !== originalFolderId) {
+      store.moveBookmarkToFolder(editingBookmark.id, editFolderId || null);
+    }
+    
     setEditDialogOpen(false);
     setEditingBookmark(null);
-  }, [editingBookmark, editTitle, editUrl, editIcon, store]);
+  }, [editingBookmark, editTitle, editUrl, editIcon, editFolderId, originalFolderId, store]);
 
   // ─── 打开书签 ──────────────────────────────────────────────────────────────
   const openBookmark = useCallback((url: string) => {
@@ -378,6 +408,8 @@ export function useBookmarkBoard() {
     setAddUrl,
     addFolderId,
     setAddFolderId,
+    addIcon,
+    setAddIcon,
     openAddDialog,
     submitBookmark,
     isFetchingTitle,
@@ -394,6 +426,8 @@ export function useBookmarkBoard() {
     setEditUrl,
     editIcon,
     setEditIcon,
+    editFolderId,
+    setEditFolderId,
     openEditDialog,
     submitEdit,
 

@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { MagnifyingGlass, Plus, FolderPlus, Link, DotsThree, PencilSimple, Trash } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus, FolderPlus, Link, DotsThree, PencilSimple, Trash, FolderSimple } from "@phosphor-icons/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +26,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { HelpDialog } from "@/components/dialogs/HelpDialog";
 import { AboutDialog } from "@/components/dialogs/AboutDialog";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
@@ -563,45 +570,42 @@ export function BookmarkBoardApp({
             className={cn("sm:max-w-[420px] p-0 gap-0 overflow-hidden", isXpTheme && "p-0")}
             style={isXpTheme ? { fontSize: "11px" } : undefined}
           >
+            <DialogHeader>
+              <DialogTitle 
+                className={cn(
+                  "text-sm font-medium",
+                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                )}
+              >
+                {t("apps.bookmarks.addBookmark", "新增書籤")}
+              </DialogTitle>
+            </DialogHeader>
+
             <div className="flex">
               {/* 左侧预览区 */}
               <div
-                className="w-[120px] shrink-0 flex items-center justify-center border-r border-black/10"
+                className="w-[100px] shrink-0 flex items-center justify-center border-r border-black/10"
                 style={{
                   backgroundColor: "var(--os-color-window-bg, #f5f5f5)",
                   backgroundImage: "var(--os-pinstripe-window)",
                 }}
               >
                 <div className="w-16 h-16 rounded-xl bg-white/80 border border-black/10 flex items-center justify-center shadow-sm">
-                  {h.previewFavicon ? (
-                    <img
-                      src={h.previewFavicon}
-                      alt=""
-                      className="w-8 h-8 object-contain"
-                      style={{ imageRendering: "-webkit-optimize-contrast" }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <span className="text-2xl opacity-30">🌐</span>
-                  )}
+                  <BookmarkIconDisplay 
+                    bookmark={{ 
+                      id: "preview", 
+                      title: h.addTitle, 
+                      url: h.addUrl, 
+                      icon: h.addIcon,
+                      favicon: h.previewFavicon || undefined
+                    }} 
+                    size="lg" 
+                  />
                 </div>
               </div>
 
               {/* 右侧表单区 */}
               <div className={isXpTheme ? "flex-1 p-2 px-4" : "flex-1 p-4"}>
-                <DialogHeader className="pb-3">
-                  <DialogTitle 
-                    className={cn(
-                      "text-sm font-medium",
-                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                    )}
-                  >
-                    {t("apps.bookmarks.addBookmark", "新增書籤")}
-                  </DialogTitle>
-                </DialogHeader>
-
                 <div className="space-y-3">
                   {/* URL */}
                   <div className="space-y-1">
@@ -655,10 +659,26 @@ export function BookmarkBoardApp({
                     />
                   </div>
 
-                  {/* 文件夹选择 */}
+                  {/* 图标选择器 */}
                   <div className="space-y-1">
                     <Label 
-                      htmlFor="bm-folder" 
+                      className={cn(
+                        "text-[11px] text-black/50",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                      )}
+                    >
+                      {t("apps.bookmarks.icon", "圖示")}
+                    </Label>
+                    <IconPicker
+                      url={h.addUrl}
+                      value={h.addIcon}
+                      onChange={h.setAddIcon}
+                    />
+                  </div>
+
+                  {/* 文件夹选择 - macOS 风格 */}
+                  <div className="space-y-1">
+                    <Label 
                       className={cn(
                         "text-[11px] text-black/50",
                         isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
@@ -666,22 +686,30 @@ export function BookmarkBoardApp({
                     >
                       {t("apps.bookmarks.folder", "檔案夾")}
                     </Label>
-                    <select
-                      id="bm-folder"
-                      value={h.addFolderId || ""}
-                      onChange={(e) => h.setAddFolderId(e.target.value || undefined)}
-                      className={cn(
-                        "w-full h-8 px-2 text-xs rounded border border-black/20 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                      )}
+                    <Select
+                      value={h.addFolderId || "__none__"}
+                      onValueChange={(v) => h.setAddFolderId(v === "__none__" ? undefined : v)}
                     >
-                      <option value="">{t("apps.bookmarks.noFolder", "無檔案夾")}</option>
-                      {h.folders.map((f) => (
-                        <option key={f.id} value={f.id}>
-                          {f.title}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">
+                          <span className="flex items-center gap-1.5">
+                            <FolderSimple size={14} className="text-black/40" />
+                            {t("apps.bookmarks.noFolder", "無檔案夾")}
+                          </span>
+                        </SelectItem>
+                        {h.folders.map((f) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            <span className="flex items-center gap-1.5">
+                              <FolderSimple size={14} weight="fill" className="text-blue-500" />
+                              {f.title}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -781,7 +809,8 @@ export function BookmarkBoardApp({
                       onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
                     />
                   </div>
-                  {/* Name */}
+
+                  {/* 名称 */}
                   <div className="space-y-1">
                     <Label 
                       htmlFor="edit-title" 
@@ -804,7 +833,8 @@ export function BookmarkBoardApp({
                       onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
                     />
                   </div>
-                  {/* Icon Picker */}
+
+                  {/* 图标选择器 */}
                   <div className="space-y-1">
                     <Label 
                       className={cn(
@@ -819,6 +849,42 @@ export function BookmarkBoardApp({
                       value={h.editIcon}
                       onChange={h.setEditIcon}
                     />
+                  </div>
+
+                  {/* 文件夹选择 - macOS 风格 */}
+                  <div className="space-y-1">
+                    <Label 
+                      className={cn(
+                        "text-[11px] text-black/50",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                      )}
+                    >
+                      {t("apps.bookmarks.folder", "檔案夾")}
+                    </Label>
+                    <Select
+                      value={h.editFolderId || "__none__"}
+                      onValueChange={(v) => h.setEditFolderId(v === "__none__" ? undefined : v)}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">
+                          <span className="flex items-center gap-1.5">
+                            <FolderSimple size={14} className="text-black/40" />
+                            {t("apps.bookmarks.noFolder", "無檔案夾")}
+                          </span>
+                        </SelectItem>
+                        {h.folders.map((f) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            <span className="flex items-center gap-1.5">
+                              <FolderSimple size={14} weight="fill" className="text-blue-500" />
+                              {f.title}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
