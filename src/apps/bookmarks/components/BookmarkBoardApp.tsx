@@ -262,7 +262,7 @@ function FolderSection({
         {/* 空文件夹的拖放区域 */}
         {folder.bookmarks.length === 0 && (
           <div className="col-span-full py-4 text-center text-[10px] text-black/30">
-            {isDragOverFolder ? "Drop here" : "Drag bookmarks here"}
+            {isDragOverFolder ? t("bookmarkBoard.dropHere") : t("bookmarkBoard.dragHere")}
           </div>
         )}
       </div>

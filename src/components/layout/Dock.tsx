@@ -604,6 +604,8 @@ const MULTI_WINDOW_APPS: AppId[] = [];
 function MacDock() {
   const { t } = useTranslation();
   const isPhone = useIsPhone();
+  const currentTheme = useThemeStore((s) => s.current);
+  const isMacTheme = currentTheme === "macosx";
   const { instances, instanceOrder, bringInstanceToForeground, restoreInstance, minimizeInstance, closeAppInstance } =
     useAppStoreShallow((s) => ({
       instances: s.instances,
@@ -1874,6 +1876,7 @@ function MacDock() {
                         idKey={item.id}
                         isBookmark={isImageIcon}
                         isEmoji={iconInfo.isEmoji}
+                        isMacTheme={isMacTheme}
                         onClick={() => {
                           window.open(bookmark.url, "_blank", "noopener,noreferrer");
                         }}
