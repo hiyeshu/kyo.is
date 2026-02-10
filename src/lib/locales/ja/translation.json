@@ -2596,8 +2596,8 @@
       "resettingSystem": "システムをリセット中...",
       "restoringSystem": "システムを復元中...",
       "systemRestoring": "システムを復元中...",
-      "updatingToRyOS": "Kyo {{version}} にアップデート中...",
-      "updatingToRyOSWithBuild": "Kyo {{version}} ({{buildNumber}}) にアップデート中..."
+      "updatingToKyo": "Kyo {{version}} にアップデート中...",
+      "updatingToKyoWithBuild": "Kyo {{version}} にアップデート中..."
     },
     "toast": {
       "alreadyLatestVersion": "最新バージョンです",

@@ -6,6 +6,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { useAppStore } from "@/stores/useAppStore";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { getTranslatedAppName, AppId } from "@/utils/i18n";
@@ -34,10 +35,13 @@ export function AboutDialog({
 }: AboutDialogProps) {
   const { t } = useTranslation();
   const currentTheme = useThemeStore((state) => state.current);
+  const liveVersion = useAppStore((s) => s.ryOSVersion);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   
   // Use translated app name if appId is provided, otherwise fall back to metadata.name
   const displayName = appId ? getTranslatedAppName(appId) : metadata.name;
+  // 优先使用 version.json 的动态版本
+  const displayVersion = liveVersion || metadata.version;
 
   const dialogContent = (
     <div className="flex flex-col items-center justify-center space-y-2 py-8 px-6">
@@ -72,7 +76,7 @@ export function AboutDialog({
         >
           {displayName}
         </div>
-        <p className="text-gray-500 mb-2">{t("common.dialog.version")} {metadata.version}</p>
+        <p className="text-gray-500 mb-2">{t("common.dialog.version")} {displayVersion}</p>
         <p>
           {t("common.dialog.madeBy")}{" "}
           <a

@@ -2602,8 +2602,8 @@
       "resettingSystem": "重設系統中...",
       "restoringSystem": "還原系統中...",
       "systemRestoring": "系統還原中...",
-      "updatingToRyOS": "更新至 kyo {{version}}...",
-      "updatingToRyOSWithBuild": "更新至 kyo {{version}} ({{buildNumber}})..."
+      "updatingToKyo": "正在更新 Kyo {{version}}...",
+      "updatingToKyoWithBuild": "正在更新 Kyo {{version}}..."
     },
     "toast": {
       "alreadyLatestVersion": "已經是最新版本",

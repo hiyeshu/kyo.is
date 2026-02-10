@@ -198,7 +198,7 @@ export function BootScreen({
                 className="w-[120px] h-[120px] object-contain"
                 style={{ marginBottom: "-30px", filter: "grayscale(50%) brightness(1.25)" }}
               />
-              {/* kyo X text */}
+              {/* Kyo text */}
               <h1
                 className="text-[52px] mb-6"
                 style={{
@@ -208,7 +208,7 @@ export function BootScreen({
                   textShadow: "0 1px 2px rgba(0, 0, 0, 0.15)"
                 }}
               >
-                kyo X
+                Kyo
               </h1>
               {/* Progress bar - using aqua-progress classes */}
               <div className="aqua-progress w-[220px] h-[20px] rounded-none" style={{ borderRadius: 0 }}>
