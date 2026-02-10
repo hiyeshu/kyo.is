@@ -101,6 +101,14 @@ const LazyThemeEditorApp = createLazyComponent<unknown>(
   "theme-editor"
 );
 
+const LazyChatApp = createLazyComponent<unknown>(
+  () =>
+    import(
+      "@/apps/chat/components/ChatApp"
+    ).then((m) => ({ default: m.ChatAppComponent })),
+  "chat"
+);
+
 const LazyControlPanelsApp = createLazyComponent<unknown>(
   () =>
     import(
@@ -143,6 +151,25 @@ export const appRegistry = {
       minSize: { width: 360, height: 300 },
     } as WindowConstraints,
   },
+  "chat": {
+    id: "chat" as const,
+    name: "Chat",
+    icon: { type: "image" as const, src: "/icons/macosx/question.png" },
+    description: "与 AI 助手聊天",
+    component: LazyChatApp,
+    helpItems: [] as { icon: string; title: string; description: string }[],
+    metadata: {
+      name: "Chat",
+      version: "1.0.0",
+      icon: "/icons/macosx/question.png",
+      creator: { name: "yeshu", url: "https://github.com/hiyeshu" },
+      github: "https://github.com/hiyeshu/kyo.is",
+    },
+    windowConfig: {
+      defaultSize: { width: 600, height: 500 },
+      minSize: { width: 400, height: 300 },
+    } as WindowConstraints,
+  },
   "theme-editor": {
     id: "theme-editor" as const,
     name: "Theme Editor",
@@ -178,7 +205,8 @@ const FALLBACK_ICON = "/icons/default/application.png";
 export const getAppIconPath = (appId: AppId): string => {
   const app = appRegistry[appId as keyof typeof appRegistry];
   if (!app?.icon) return FALLBACK_ICON;
-  return typeof app.icon === "string" ? app.icon : app.icon.src;
+  if (typeof app.icon === "string") return app.icon;
+  return app.icon.type === "image" ? app.icon.src : FALLBACK_ICON;
 };
 
 export const getNonFinderApps = (

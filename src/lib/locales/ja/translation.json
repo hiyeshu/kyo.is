@@ -1854,11 +1854,10 @@
       "search": "ブックマークを検索...",
       "countBookmarks": "{{count}} 件のブックマーク",
       "addBookmark": "ブックマークを追加",
-      "newFolder": "新規カテゴリ",
+      "newFolder": "新規フォルダ",
       "dropHere": "ここにドロップ",
       "dragHere": "ブックマークをここにドラッグ",
       "editBookmark": "ブックマークを編集",
-      "newFolder": "新規フォルダ",
       "openInNewTab": "新しいタブで開く",
       "addToDock": "Dockに追加",
       "url": "URL",
@@ -2327,6 +2326,14 @@
         "unknownError": "不明なエラー",
         "videoAdded": "動画を追加しました"
       }
+    },
+    "chat": {
+      "title": "チャット",
+      "description": "AIアシスタントとチャット",
+      "emptyState": "会話を始める...",
+      "inputPlaceholder": "メッセージを入力...",
+      "send": "送信",
+      "stop": "停止"
     }
   },
   "common": {

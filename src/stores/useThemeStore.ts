@@ -84,7 +84,7 @@ const createThemeStore = () => create<ThemeState>((set, get) => ({
     localStorage.removeItem(LEGACY_THEME_KEY);
     document.documentElement.dataset.osTheme = theme;
     ensureLegacyCss(theme);
-    
+
     // 壁纸联动：如果启用且未显式禁用
     const shouldSyncWallpaper = options?.syncWallpaper ?? get().syncWallpaper;
     if (shouldSyncWallpaper) {
@@ -103,7 +103,7 @@ const createThemeStore = () => create<ThemeState>((set, get) => ({
     if (savedSync !== null) {
       set({ syncWallpaper: savedSync === "true" });
     }
-    
+
     // Try new key first, fall back to legacy
     let saved = localStorage.getItem(THEME_KEY) as OsThemeId | null;
     if (!saved) {

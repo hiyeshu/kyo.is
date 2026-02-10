@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.23",
-    "@ai-sdk/google": "^3.0.13",
+    "@ai-sdk/google": "^3.0.23",
     "@ai-sdk/openai": "^3.0.18",
     "@ai-sdk/react": "^3.0.51",
     "@phosphor-icons/react": "^2.1.10",

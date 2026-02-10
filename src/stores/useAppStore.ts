@@ -847,6 +847,8 @@ const createUseAppStore = () =>
         instances: Object.fromEntries(
           Object.entries(state.instances)
             .filter(([, inst]) => inst.isOpen)
+            // Don't persist chat instances - they should start fresh each time
+            .filter(([, inst]) => inst.appId !== "chat")
             .map(([id, inst]) => {
               // Exclude launchOrigin from persisted state - restored windows should
               // animate from window center, not from the original icon position

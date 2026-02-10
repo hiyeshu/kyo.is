@@ -160,22 +160,16 @@ const createFolder = (title: string, bookmarks: Bookmark[] = []): BookmarkFolder
 // ─── 默认数据 ───────────────────────────────────────────────────────────────
 
 const createDefaultItems = (): BoardItem[] => [
-  createBookmark("Google", "https://google.com"),
+  createBookmark("AI探索站", "https://web.okjike.com/topic/63579abb6724cc583b9bba9a/square"),
+  createBookmark("小红书", "https://xiaohongshu.com"),
+  createBookmark("Notion", "https://notion.so"),
+  createBookmark("X", "https://x.com"),
+  createBookmark("网易云音乐", "https://music.163.com"),
+  createBookmark("哔哩哔哩", "https://bilibili.com"),
+  createBookmark("Flomo", "https://flomoapp.com"),
+  createBookmark("YouMind", "https://youmind.com"),
+  createBookmark("豆瓣", "https://douban.com"),
   createBookmark("GitHub", "https://github.com"),
-  createBookmark("YouTube", "https://youtube.com"),
-  createBookmark("Twitter", "https://x.com"),
-  createBookmark("Reddit", "https://reddit.com"),
-  createFolder("Dev", [
-    createBookmark("MDN", "https://developer.mozilla.org"),
-    createBookmark("Stack Overflow", "https://stackoverflow.com"),
-    createBookmark("npm", "https://npmjs.com"),
-    createBookmark("Can I Use", "https://caniuse.com"),
-  ]),
-  createFolder("Design", [
-    createBookmark("Dribbble", "https://dribbble.com"),
-    createBookmark("Behance", "https://behance.net"),
-    createBookmark("Figma", "https://figma.com"),
-  ]),
 ];
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -365,7 +359,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
     }),
     {
       name: "kyo:bookmark-store",
-      version: 3, // v3: 迁移 favicon URL 从 Google 到 cccyun
+      version: 4, // v4: 重置为新默认书签
       migrate: (persisted, version) => {
         const old = persisted as { items?: BoardItem[] };
         
@@ -433,6 +427,11 @@ export const useBookmarkStore = create<BookmarkStore>()(
               } as Bookmark;
             });
           }
+        }
+        
+        // v4: 重置为新默认书签
+        if (version < 4) {
+          return { items: createDefaultItems() };
         }
         
         return persisted as BookmarkStore;

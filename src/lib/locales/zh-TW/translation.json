@@ -1860,11 +1860,10 @@
       "search": "搜尋書籤...",
       "countBookmarks": "{{count}} 個書籤",
       "addBookmark": "新增書籤",
-      "newFolder": "新增分類",
+      "newFolder": "新增檔案夾",
       "dropHere": "放開以放入",
       "dragHere": "拖曳書籤到此處",
       "editBookmark": "編輯書籤",
-      "newFolder": "新增檔案夾",
       "openInNewTab": "在新分頁開啟",
       "addToDock": "加入 Dock",
       "url": "網址",
@@ -2333,6 +2332,14 @@
         "unknownError": "未知錯誤",
         "videoAdded": "影片已新增"
       }
+    },
+    "chat": {
+      "title": "聊天",
+      "description": "與 AI 助手聊天",
+      "emptyState": "開始對話...",
+      "inputPlaceholder": "輸入消息...",
+      "send": "發送",
+      "stop": "停止"
     }
   },
   "common": {

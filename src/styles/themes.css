@@ -1809,6 +1809,21 @@
 }
 
 /* -------------------------------------------------- */
+/* Chat bubble base styles (all themes) */
+/* -------------------------------------------------- */
+.chat-bubble {
+  position: relative;
+  padding: 6px 8px;
+  border-radius: 4px;
+  width: fit-content;
+  max-width: 90%;
+  min-height: 12px;
+  line-height: 1.4;
+  word-break: break-word;
+  user-select: text;
+}
+
+/* -------------------------------------------------- */
 /* macOS Chat bubble aqua style */
 /* -------------------------------------------------- */
 :root[data-os-theme="macosx"] .chat-bubble {

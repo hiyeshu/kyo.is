@@ -213,7 +213,7 @@ export function AppleMenu() {
                         </div>
                       ) : (
                         <ThemedIcon
-                          name={app.icon.src}
+                          name={app.icon.type === "image" ? app.icon.src : "/icons/default/application.png"}
                           alt={app.name}
                           className="w-4 h-4 [image-rendering:pixelated]"
                         />
