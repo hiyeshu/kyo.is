@@ -211,7 +211,7 @@
       "updatingAssets": "Updating assets",
       "files": "files",
       "total": "total",
-      "updateReady": "Update ready for kyo {{version}} ({{buildNumber}})",
+      "updateReady": "New version available! Kyo {{version}}",
       "reboot": "Reboot",
       "failedToCacheAssets": "Failed to cache assets",
       "failedToLoadAssetManifest": "Failed to load asset manifest",

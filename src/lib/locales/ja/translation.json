@@ -290,8 +290,8 @@
           "title": "アプレットストア"
         },
         "createWithRyosChat": {
-          "description": "ryOSチャットにカスタムアプリとアプレットの作成を依頼。アイデアを共有して即座に動作するアプリを取得。",
-          "title": "ryOSチャットで作成"
+          "description": "Kyoチャットにカスタムアプリとアプレットの作成を依頼。アイデアを共有して即座に動作するアプリを取得。",
+          "title": "Kyoチャットで作成"
         },
         "keepUpdated": {
           "description": "ストアメニューで更新を確認して、インストール済みアプレットの最新バージョンを取得。",
@@ -306,7 +306,7 @@
           "title": "アプレットを共有"
         },
         "viewApplets": {
-          "description": "ryOSチャットから保存したアプレットまたはストアからダウンロードしたアプレットを開いて実行。",
+          "description": "Kyoチャットから保存したアプレットまたはストアからダウンロードしたアプレットを開いて実行。",
           "title": "アプレットを表示"
         }
       },
@@ -332,7 +332,7 @@
         "noAppletsOpen": "アプレットは開いていません",
         "open": "開く...",
         "openAppletStore": "アプレットストアを開く",
-        "ryosApp": "ryOSアプリ",
+        "ryosApp": "Kyoアプリ",
         "shareApplet": "アプレットを共有...",
         "store": "ストア",
         "untitled": "無題",
@@ -412,7 +412,7 @@
       },
       "help": {
         "chatWithRyo": {
-          "description": "メッセージを入力してRyoとチャット、コードを生成、またはryOSのヘルプを取得。",
+          "description": "メッセージを入力してRyoとチャット、コードを生成、またはKyoのヘルプを取得。",
           "title": "Ryoとチャット"
         },
         "controlApps": {
@@ -479,7 +479,7 @@
         "listening": "聴取中",
         "loginToChat": "チャットにログイン",
         "loginToContinue": "Ryoとのチャットを続けるにはログインしてください。",
-        "loginToRyOS": "ryOSにログイン",
+        "loginToRyOS": "Kyoにログイン",
         "newChat": "新しいチャット",
         "noTranscriptionText": "文字起こしテキストが受信されませんでした",
         "nudgeSent": "👋 *つつき送信済み*",
@@ -701,7 +701,7 @@
       "elevenlabs": "ElevenLabs",
       "elevenlabsVoiceId": "ElevenLabs 音声ID",
       "formatFileSystem": "ファイルシステムをフォーマット",
-      "formatFileSystemDescription": "これにより、すべてのファイル（サンプルドキュメントを除く）、画像、カスタム壁紙が消去されます。フォーマット後、ryOSは再起動します。",
+      "formatFileSystemDescription": "これにより、すべてのファイル（サンプルドキュメントを除く）、画像、カスタム壁紙が消去されます。フォーマット後、Kyoは再起動します。",
       "help": {
         "aiModel": {
           "description": "チャットとターミナルアシスタントで使用するAIモデルを選択",
@@ -735,7 +735,7 @@
       "logIn": "ログイン",
       "logOut": "ログアウト",
       "logOutOfAllDevices": "すべてのデバイスからログアウト",
-      "loggedInToRyOS": "ryOSにログイン済み",
+      "loggedInToRyOS": "Kyoにログイン済み",
       "loggingOut": "ログアウト中...",
       "login": "ログイン",
       "loginToSendMessages": "メッセージの送信などにはログイン",
@@ -761,7 +761,7 @@
       "resetAllSettings": "すべての設定をリセット",
       "resetAllSettingsDescription": "これにより、保存されているすべての設定が消去され、初期設定に戻ります。",
       "restore": "復元",
-      "ryOSAccount": "ryOS アカウント",
+      "KyoAccount": "Kyo アカウント",
       "screenSaver": "スクリーンセーバー",
       "screenSaverDescription": "一定時間操作がないと起動します",
       "screenSaverExitHint": "クリックまたは、いずれかのキーを押して終了",
@@ -2356,7 +2356,7 @@
     "aboutThisMac": {
       "builtInMemory": "内蔵メモリ",
       "clickToToggle": "クリックで切り替え",
-      "description": "このコンピュータのryOSについて",
+      "description": "このコンピュータのKyoについて",
       "largestUnusedBlock": "最大の未使用ブロック",
       "mb": "MB",
       "system": "システム",
@@ -2396,7 +2396,7 @@
     "auth": {
       "createAccount": "アカウントを作成",
       "creatingAccount": "作成中...",
-      "dialogTitle": "ryOSログイン",
+      "dialogTitle": "Kyoログイン",
       "logIn": "ログイン",
       "logOut": "ログアウト",
       "logOutDescription": "ログアウトしますか？アカウントからサインアウトされます。",
@@ -2506,8 +2506,8 @@
     },
     "htmlPreview": {
       "bannerFallbackTitle": "無題のアプレット",
-      "codePreviewTitle": "ryOSコードプレビュー",
-      "codePreviewTitleFullscreen": "ryOSコードプレビュー（フルスクリーン）",
+      "codePreviewTitle": "Kyoコードプレビュー",
+      "codePreviewTitleFullscreen": "Kyoコードプレビュー（フルスクリーン）",
       "copyHtml": "HTMLコードをコピー",
       "downloadHtml": "HTMLをダウンロード",
       "exitFullscreen": "全画面表示を終了",
@@ -2588,16 +2588,16 @@
     "system": {
       "debugBootScreenTest": "デバッグ起動画面テスト...",
       "formatFileSystem": "ファイルシステムをフォーマット",
-      "formatFileSystemDesc": "ファイルシステムをフォーマットしてもよろしいですか？これにより、すべての書類（サンプル書類を除く）、画像、カスタム壁紙が永久に削除されます。フォーマット後、ryOSが再起動します。",
+      "formatFileSystemDesc": "ファイルシステムをフォーマットしてもよろしいですか？これにより、すべての書類（サンプル書類を除く）、画像、カスタム壁紙が永久に削除されます。フォーマット後、Kyoが再起動します。",
       "formattingFileSystem": "ファイルシステムをフォーマット中...",
       "rebooting": "再起動中...",
       "resetAllSettings": "すべての設定をリセット",
-      "resetAllSettingsDesc": "すべての設定をリセットしてもよろしいですか？これにより、保存されたすべての設定がクリアされ、デフォルト状態に復元されます。リセット後、ryOSが再起動します。",
+      "resetAllSettingsDesc": "すべての設定をリセットしてもよろしいですか？これにより、保存されたすべての設定がクリアされ、デフォルト状態に復元されます。リセット後、Kyoが再起動します。",
       "resettingSystem": "システムをリセット中...",
       "restoringSystem": "システムを復元中...",
       "systemRestoring": "システムを復元中...",
-      "updatingToRyOS": "ryOS {{version}} にアップデート中...",
-      "updatingToRyOSWithBuild": "ryOS {{version}} ({{buildNumber}}) にアップデート中..."
+      "updatingToRyOS": "Kyo {{version}} にアップデート中...",
+      "updatingToRyOSWithBuild": "Kyo {{version}} ({{buildNumber}}) にアップデート中..."
     },
     "toast": {
       "alreadyLatestVersion": "最新バージョンです",
@@ -2608,7 +2608,7 @@
       "noAssetsToCache": "キャッシュするアセットがありません",
       "reboot": "再起動",
       "total": "合計",
-      "updateReady": "ryOS {{version}} ({{buildNumber}}) のアップデート準備完了",
+      "updateReady": "新しいバージョンが来たよ！ Kyo {{version}}",
       "updatingAssets": "アセット更新中",
       "updatingIcons": "アイコン更新中",
       "updatingSounds": "サウンド更新中",
