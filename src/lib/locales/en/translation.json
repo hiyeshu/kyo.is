@@ -2629,6 +2629,11 @@
       "send": "Send",
       "stop": "Stop",
       "clear": "Clear",
+      "newChat": "New Chat",
+      "you": "You",
+      "aiAssistant": "AI Assistant",
+      "copyMessage": "Copy message",
+      "scrollToBottom": "Scroll to bottom",
       "error": "Sorry, an error occurred. Please try again."
     }
   },

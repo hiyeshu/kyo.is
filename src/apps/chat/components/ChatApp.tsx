@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 react hooks，依赖 ../../base/types 的 AppProps
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，实现聊天界面，对接 Dify Chatflow API
+ * [POS]: apps/chat/components 的主组件，ryOS 风格设计，对接 Dify Chatflow API
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -11,7 +11,9 @@ import { WindowFrame } from "@/components/layout/WindowFrame";
 import { useTranslation } from "react-i18next";
 import { ChatMessages, type Message } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
-import { Trash } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
+import { CaretDown } from "@phosphor-icons/react";
+import { useThemeStore } from "@/stores/useThemeStore";
 
 // ============================================================================
 // 主组件
@@ -27,6 +29,9 @@ export function ChatAppComponent({
   onNavigatePrevious,
 }: AppProps) {
   const { t } = useTranslation();
+  const currentTheme = useThemeStore((s) => s.current);
+  const isMacTheme = currentTheme === "macosx";
+  const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
 
   // -------------------------------------------------------------------------
   // 状态管理
@@ -65,19 +70,14 @@ export function ChatAppComponent({
         timestamp: now,
       };
 
-      // 构建包含新消息的完整消息列表
       const updatedMessages = [...messages, userMessage];
-
-      // 添加用户消息到列表
       setMessages(updatedMessages);
       setInput("");
       setIsLoading(true);
 
-      // 创建新的 AbortController 用于取消请求
       const controller = new AbortController();
       setAbortController(controller);
 
-      // 准备 AI 消息 ID（不立即添加到列表）
       const assistantMessageId = `assistant-${now}`;
       let hasAddedMessage = false;
 
@@ -99,7 +99,6 @@ export function ChatAppComponent({
           throw new Error(`API error: ${response.status}`);
         }
 
-        // 处理 SSE 流式响应
         const reader = response.body?.getReader();
         if (!reader) throw new Error("No response body");
 
@@ -117,13 +116,11 @@ export function ChatAppComponent({
           for (const line of lines) {
             if (!line) continue;
 
-            // AI SDK 格式: 0:"text" 表示文本增量
             if (line.startsWith("0:")) {
               try {
                 const textDelta = JSON.parse(line.slice(2));
                 fullContent += textDelta;
 
-                // 第一次收到内容时才添加消息
                 if (!hasAddedMessage) {
                   setMessages((prev) => [
                     ...prev,
@@ -136,7 +133,6 @@ export function ChatAppComponent({
                   ]);
                   hasAddedMessage = true;
                 } else {
-                  // 后续更新消息内容
                   setMessages((prev) =>
                     prev.map((m) =>
                       m.id === assistantMessageId
@@ -148,9 +144,7 @@ export function ChatAppComponent({
               } catch {
                 // 忽略解析错误
               }
-            }
-            // d:{...} 表示完成信息，包含 conversationId
-            else if (line.startsWith("d:")) {
+            } else if (line.startsWith("d:")) {
               try {
                 const data = JSON.parse(line.slice(2));
                 if (data.conversationId) {
@@ -164,10 +158,9 @@ export function ChatAppComponent({
         }
       } catch (error) {
         if ((error as Error).name === "AbortError") {
-          // 用户取消，不做处理
+          // 用户取消
         } else {
           console.error("Chat error:", error);
-          // 显示错误消息
           const errorTimestamp = Date.now();
           if (!hasAddedMessage) {
             setMessages((prev) => [
@@ -239,37 +232,69 @@ export function ChatAppComponent({
       onNavigateNext={onNavigateNext}
       onNavigatePrevious={onNavigatePrevious}
     >
-      <div className="flex flex-col h-full bg-[var(--os-color-window-bg)]">
-        {/* 头部栏 */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--os-color-border)] bg-[var(--os-color-window-bg)]/80 backdrop-blur-sm">
-          {/* 左侧：今日日期 */}
-          <div className="text-xs font-geneva-12 text-[var(--os-color-text-secondary)]">
-            {new Date().toLocaleDateString(undefined, {
-              month: "long",
-              day: "numeric",
-              weekday: "short",
-            })}
+      <div className="relative flex flex-col h-full w-full bg-white/85">
+        {/* 头部栏 - ryOS 风格 */}
+        <div
+          className={`sticky top-0 z-10 flex items-center justify-between px-2 py-1 border-b ${
+            isMacTheme ? "" : "bg-neutral-200/90 backdrop-blur-lg"
+          } ${isXpTheme ? "border-[#919b9c]" : isMacTheme ? "" : "border-black"}`}
+          style={{
+            transform: "translateZ(0)",
+            ...(isMacTheme
+              ? {
+                  backgroundImage: "var(--os-pinstripe-window)",
+                  opacity: 0.95,
+                  borderBottom:
+                    "var(--os-metrics-titlebar-border-width, 1px) solid var(--os-color-titlebar-border-inactive, rgba(0, 0, 0, 0.2))",
+                }
+              : undefined),
+          }}
+        >
+          {/* 左侧：标题下拉 */}
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              className="flex items-center gap-0.5 px-2 py-1 h-7"
+            >
+              <h2 className="font-geneva-12 text-[12px] font-medium truncate">
+                {t("apps.chat.aiAssistant", "AI 助手")}
+              </h2>
+              <CaretDown
+                className="h-2.5 w-2.5 text-neutral-400"
+                weight="bold"
+              />
+            </Button>
           </div>
 
           {/* 右侧：清除按钮 */}
-          <button
-            onClick={handleClear}
-            disabled={messages.length === 0}
-            className="flex items-center gap-1 text-xs font-geneva-12 text-[var(--os-color-text-secondary)] hover:text-[var(--os-color-text)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title={t("apps.chat.clear", "清除")}
-          >
-            <Trash className="w-3.5 h-3.5" />
-            <span>{t("apps.chat.clear", "清除")}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              onClick={handleClear}
+              disabled={messages.length === 0}
+              className="flex items-center gap-1 px-2 py-1 h-7"
+            >
+              <span className="font-geneva-12 text-[11px]">
+                {t("apps.chat.clear", "清除")}
+              </span>
+            </Button>
+          </div>
         </div>
 
         {/* 消息区域 */}
         <div className="flex-1 overflow-hidden">
-          <ChatMessages messages={messages} isLoading={isLoading} />
+          <ChatMessages
+            messages={messages}
+            isLoading={isLoading}
+            onClear={handleClear}
+          />
         </div>
 
         {/* 输入区域 */}
-        <div className="border-t border-[var(--os-color-border)] p-3 bg-[var(--os-color-window-bg)]/80 backdrop-blur-sm">
+        <div
+          className="p-2 z-10"
+          style={{ width: "calc(100% - var(--sbw, 0px))" }}
+        >
           <ChatInput
             input={input}
             isLoading={isLoading}

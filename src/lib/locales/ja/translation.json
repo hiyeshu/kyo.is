@@ -2336,6 +2336,11 @@
       "send": "送信",
       "stop": "停止",
       "clear": "クリア",
+      "newChat": "新規チャット",
+      "you": "あなた",
+      "aiAssistant": "AIアシスタント",
+      "copyMessage": "メッセージをコピー",
+      "scrollToBottom": "一番下にスクロール",
       "error": "申し訳ありません、エラーが発生しました。もう一度お試しください。"
     }
   },

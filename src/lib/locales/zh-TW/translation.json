@@ -2342,6 +2342,11 @@
       "send": "發送",
       "stop": "停止",
       "clear": "清除",
+      "newChat": "新對話",
+      "you": "你",
+      "aiAssistant": "AI 助手",
+      "copyMessage": "複製消息",
+      "scrollToBottom": "滾動到底部",
       "error": "抱歉，發生了錯誤，請重試。"
     }
   },

@@ -2336,6 +2336,11 @@
       "send": "전송",
       "stop": "중지",
       "clear": "지우기",
+      "newChat": "새 대화",
+      "you": "나",
+      "aiAssistant": "AI 어시스턴트",
+      "copyMessage": "메시지 복사",
+      "scrollToBottom": "맨 아래로 스크롤",
       "error": "죄송합니다. 오류가 발생했습니다. 다시 시도해 주세요."
     }
   },
