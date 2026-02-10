@@ -103,10 +103,18 @@ export default async function handler(req: Request) {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
+    // 缓存不完整的行（跨 chunk 的情况）
+    let buffer = "";
+
     const transformStream = new TransformStream({
       async transform(chunk, controller) {
-        const text = decoder.decode(chunk);
-        const lines = text.split("\n");
+        // 追加新数据到缓冲区
+        buffer += decoder.decode(chunk, { stream: true });
+        
+        // 按换行符分割，最后一个可能是不完整的行
+        const lines = buffer.split("\n");
+        // 保留最后一个（可能不完整）
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
@@ -140,6 +148,24 @@ export default async function handler(req: Request) {
             }
           } catch (e) {
             // 忽略解析错误，继续处理下一行
+            console.error("Parse error for line:", line, e);
+          }
+        }
+      },
+      // 流结束时处理剩余缓冲区
+      flush(controller) {
+        if (buffer && buffer.startsWith("data: ")) {
+          const jsonStr = buffer.slice(6);
+          if (jsonStr && jsonStr !== "[DONE]") {
+            try {
+              const event = JSON.parse(jsonStr) as DifyMessageEvent;
+              if (event.event === "message" && event.answer) {
+                const aiSdkChunk = `0:${JSON.stringify(event.answer)}\n`;
+                controller.enqueue(encoder.encode(aiSdkChunk));
+              }
+            } catch (e) {
+              // 忽略
+            }
           }
         }
       },
