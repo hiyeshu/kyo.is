@@ -18,6 +18,53 @@ const generateId = () => crypto.randomUUID();
 
 const FAVICON_REGION_KEY = "kyo:favicon-region";
 
+// 热门网站的高清图标映射（这些网站的 favicon 服务通常抓不到或质量差）
+// 使用各网站官方提供的高清 logo 或 CDN 地址
+const FAVICON_OVERRIDES: Record<string, string> = {
+  // 中国热门网站
+  "xiaohongshu.com": "https://fe-video-qc.xhscdn.com/fe-platform/ed8fe64ce29e20e3a93c9f5c-small.png",
+  "www.xiaohongshu.com": "https://fe-video-qc.xhscdn.com/fe-platform/ed8fe64ce29e20e3a93c9f5c-small.png",
+  "bilibili.com": "https://www.bilibili.com/favicon.ico",
+  "www.bilibili.com": "https://www.bilibili.com/favicon.ico",
+  "douban.com": "https://img3.doubanio.com/favicon.ico",
+  "www.douban.com": "https://img3.doubanio.com/favicon.ico",
+  "zhihu.com": "https://static.zhihu.com/heifetz/favicon.ico",
+  "www.zhihu.com": "https://static.zhihu.com/heifetz/favicon.ico",
+  "weibo.com": "https://weibo.com/favicon.ico",
+  "www.weibo.com": "https://weibo.com/favicon.ico",
+  "taobao.com": "https://www.taobao.com/favicon.ico",
+  "www.taobao.com": "https://www.taobao.com/favicon.ico",
+  "jd.com": "https://www.jd.com/favicon.ico",
+  "www.jd.com": "https://www.jd.com/favicon.ico",
+  "163.com": "https://www.163.com/favicon.ico",
+  "music.163.com": "https://s1.music.126.net/style/favicon.ico",
+  "baidu.com": "https://www.baidu.com/favicon.ico",
+  "www.baidu.com": "https://www.baidu.com/favicon.ico",
+  "qq.com": "https://www.qq.com/favicon.ico",
+  "weixin.qq.com": "https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico",
+  "okjike.com": "https://web.okjike.com/favicon.ico",
+  "web.okjike.com": "https://web.okjike.com/favicon.ico",
+  "flomoapp.com": "https://flomoapp.com/images/logo-192.png",
+  "v.flomoapp.com": "https://flomoapp.com/images/logo-192.png",
+  // 国际热门网站
+  "twitter.com": "https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png",
+  "x.com": "https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png",
+  "notion.so": "https://www.notion.so/images/favicon.ico",
+  "www.notion.so": "https://www.notion.so/images/favicon.ico",
+  "spotify.com": "https://open.spotifycdn.com/cdn/images/favicon32.b64ecc03.png",
+  "open.spotify.com": "https://open.spotifycdn.com/cdn/images/favicon32.b64ecc03.png",
+  "youtube.com": "https://www.youtube.com/s/desktop/12d6b690/img/favicon_144x144.png",
+  "www.youtube.com": "https://www.youtube.com/s/desktop/12d6b690/img/favicon_144x144.png",
+  "github.com": "https://github.githubassets.com/favicons/favicon.svg",
+  "discord.com": "https://discord.com/assets/847541504914fd33810e70a0ea73177e.ico",
+  "reddit.com": "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png",
+  "www.reddit.com": "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png",
+  "instagram.com": "https://static.cdninstagram.com/rsrc.php/v3/yG/r/De-Dwpd5CHc.png",
+  "www.instagram.com": "https://static.cdninstagram.com/rsrc.php/v3/yG/r/De-Dwpd5CHc.png",
+  "tiktok.com": "https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok/webapp/main/webapp-desktop/8152caf0c8e8bc67ae0d.png",
+  "www.tiktok.com": "https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok/webapp/main/webapp-desktop/8152caf0c8e8bc67ae0d.png",
+};
+
 // 检测用户是否在中国（通过 IP 检测 API）
 async function detectRegion(): Promise<"cn" | "global"> {
   try {
@@ -44,6 +91,16 @@ async function detectRegion(): Promise<"cn" | "global"> {
 
 // 同步获取 favicon URL（使用缓存的地区设置）
 function getFaviconUrl(domain: string): string {
+  // 1. 先检查硬编码映射（高清图标优先）
+  const override = FAVICON_OVERRIDES[domain];
+  if (override) return override;
+  
+  // 2. 尝试提取主域名再查一次（处理 www.xxx.com 情况）
+  const mainDomain = domain.replace(/^www\./, "");
+  const mainOverride = FAVICON_OVERRIDES[mainDomain];
+  if (mainOverride) return mainOverride;
+  
+  // 3. fallback 到 favicon 服务
   const cached = localStorage.getItem(FAVICON_REGION_KEY);
   if (cached === "cn") {
     return `https://favicon.cccyun.cc/${domain}`;
