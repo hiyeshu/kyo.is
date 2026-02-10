@@ -75,12 +75,9 @@ export function ChatAppComponent({
       const controller = new AbortController();
       setAbortController(controller);
 
-      // 创建 AI 消息占位
+      // 准备 AI 消息 ID（不立即添加到列表）
       const assistantMessageId = `assistant-${Date.now()}`;
-      setMessages((prev) => [
-        ...prev,
-        { id: assistantMessageId, role: "assistant", content: "" },
-      ]);
+      let hasAddedMessage = false;
 
       try {
         const response = await fetch("/api/chat", {
@@ -122,13 +119,24 @@ export function ChatAppComponent({
               try {
                 const textDelta = JSON.parse(line.slice(2));
                 fullContent += textDelta;
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantMessageId
-                      ? { ...m, content: fullContent }
-                      : m
-                  )
-                );
+
+                // 第一次收到内容时才添加消息
+                if (!hasAddedMessage) {
+                  setMessages((prev) => [
+                    ...prev,
+                    { id: assistantMessageId, role: "assistant", content: fullContent },
+                  ]);
+                  hasAddedMessage = true;
+                } else {
+                  // 后续更新消息内容
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantMessageId
+                        ? { ...m, content: fullContent }
+                        : m
+                    )
+                  );
+                }
               } catch {
                 // 忽略解析错误
               }
@@ -151,20 +159,31 @@ export function ChatAppComponent({
           // 用户取消，不做处理
         } else {
           console.error("Chat error:", error);
-          // 显示错误消息
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMessageId
-                ? {
-                    ...m,
-                    content: t(
-                      "apps.chat.error",
-                      "抱歉，发生了错误，请重试。"
-                    ),
-                  }
-                : m
-            )
-          );
+          // 显示错误消息（如果还没添加消息，则添加一个错误消息）
+          if (!hasAddedMessage) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: assistantMessageId,
+                role: "assistant",
+                content: t("apps.chat.error", "抱歉，发生了错误，请重试。"),
+              },
+            ]);
+          } else {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantMessageId
+                  ? {
+                      ...m,
+                      content: t(
+                        "apps.chat.error",
+                        "抱歉，发生了错误，请重试。"
+                      ),
+                    }
+                  : m
+              )
+            );
+          }
         }
       } finally {
         setIsLoading(false);
