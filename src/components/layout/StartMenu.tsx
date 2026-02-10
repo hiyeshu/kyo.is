@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AboutFinderDialog } from "@/components/dialogs/AboutFinderDialog";
+import { AboutDialog } from "@/components/dialogs/AboutDialog";
 import { AnyApp } from "@/apps/base/types";
 import { AppId } from "@/config/appIds";
 import { ThemedIcon } from "@/components/shared/ThemedIcon";
@@ -22,8 +22,20 @@ export function StartMenu({ apps }: StartMenuProps) {
   const { t } = useTranslation();
   const launchApp = useLaunchApp();
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
-  const [aboutFinderOpen, setAboutFinderOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const currentTheme = useThemeStore((state) => state.current);
+
+  // Kyo metadata for About dialog
+  const kyoMetadata = {
+    name: "Kyo",
+    version: "1.0.0",
+    creator: {
+      name: "yeshu",
+      url: "https://github.com/hiyeshu",
+    },
+    github: "https://github.com/hiyeshu/kyo.is",
+    icon: "/favicon.svg",
+  };
 
   const handleAppClick = (appId: string) => {
     launchApp(appId as AppId);
@@ -178,7 +190,7 @@ export function StartMenu({ apps }: StartMenuProps) {
               <div className="py-1 overflow-y-auto flex-1 min-h-0">
                 {/* About This Computer */}
                 <DropdownMenuItem
-                  onClick={() => setAboutFinderOpen(true)}
+                  onClick={() => setAboutOpen(true)}
                   className="h-8 px-3 flex items-center gap-2 hover:bg-blue-500 hover:text-white"
                   style={{
                     fontSize: "11px",
@@ -242,9 +254,10 @@ export function StartMenu({ apps }: StartMenuProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AboutFinderDialog
-        isOpen={aboutFinderOpen}
-        onOpenChange={setAboutFinderOpen}
+      <AboutDialog
+        isOpen={aboutOpen}
+        onOpenChange={setAboutOpen}
+        metadata={kyoMetadata}
       />
     </>
   );

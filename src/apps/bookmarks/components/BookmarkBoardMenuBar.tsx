@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/menubar";
 import { MenuBar } from "@/components/layout/MenuBar";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   onAddBookmark: () => void;
@@ -32,6 +33,7 @@ export function BookmarkBoardMenuBar({
   onShowAbout,
   onClose,
 }: Props) {
+  const { t } = useTranslation();
   const currentTheme = useThemeStore((s) => s.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
 
@@ -40,22 +42,22 @@ export function BookmarkBoardMenuBar({
       {/* ── File ─────────────────────────────────── */}
       <MenubarMenu>
         <MenubarTrigger className="text-md px-2 py-1 border-none focus-visible:ring-0">
-          File
+          {t("common.menu.file")}
         </MenubarTrigger>
         <MenubarContent align="start" sideOffset={1} className="px-0">
           <MenubarItem onClick={onAddBookmark} className="text-md h-6 px-3">
-            Add Bookmark
+            {t("common.menu.addBookmark", "Add Bookmark")}
           </MenubarItem>
           <MenubarItem onClick={onAddFolder} className="text-md h-6 px-3">
-            New Folder
+            {t("common.menu.newFolder", "New Folder")}
           </MenubarItem>
           <MenubarSeparator className="h-[2px] bg-black my-1" />
           <MenubarItem onClick={onResetBookmarks} className="text-md h-6 px-3">
-            Reset to Defaults
+            {t("common.menu.resetToDefaults", "Reset to Defaults")}
           </MenubarItem>
           <MenubarSeparator className="h-[2px] bg-black my-1" />
           <MenubarItem onClick={onClose} className="text-md h-6 px-3">
-            Close
+            {t("common.menu.close")}
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
@@ -63,15 +65,15 @@ export function BookmarkBoardMenuBar({
       {/* ── Help ─────────────────────────────────── */}
       <MenubarMenu>
         <MenubarTrigger className="px-2 py-1 text-md focus-visible:ring-0">
-          Help
+          {t("common.menu.help")}
         </MenubarTrigger>
         <MenubarContent align="start" sideOffset={1} className="px-0">
           <MenubarItem onClick={onShowHelp} className="text-md h-6 px-3">
-            Bookmark Board Help
+            {t("apps.bookmarks.help.title", "Bookmark Board Help")}
           </MenubarItem>
           <MenubarSeparator className="h-[2px] bg-black my-1" />
           <MenubarItem onClick={onShowAbout} className="text-md h-6 px-3">
-            About Bookmark Board
+            {t("common.appMenu.aboutApp", { appName: t("apps.bookmarks.name", "Bookmark Board") })}
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>

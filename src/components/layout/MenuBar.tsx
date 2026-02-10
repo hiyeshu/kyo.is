@@ -46,11 +46,11 @@ const kyoMetadata = {
   name: "Kyo",
   version: "1.0.0",
   creator: {
-    name: "Kyo",
-    url: "https://kyo.is",
+    name: "yeshu",
+    url: "https://github.com/hiyeshu",
   },
-  github: "https://github.com/anomalyco/kyo.is",
-  icon: "/icons/mac.png",
+  github: "https://github.com/hiyeshu/kyo.is",
+  icon: "/favicon.svg",
 };
 
 interface MenuBarProps {
@@ -473,33 +473,8 @@ function KyoAppMenu() {
 }
 
 function DefaultMenuItems() {
-  const { t } = useTranslation();
-  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
-
-  return (
-    <>
-      {/* Help Menu */}
-      <MenubarMenu>
-        <MenubarTrigger className="text-md px-2 py-1 border-none focus-visible:ring-0">
-          {t("common.menu.help")}
-        </MenubarTrigger>
-        <MenubarContent align="start" sideOffset={1} className="px-0">
-          <MenubarItem
-            onClick={() => setIsAboutDialogOpen(true)}
-            className="text-md h-6 px-3"
-          >
-            {t("common.appMenu.aboutApp", { appName: "Kyo" })}
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
-
-      <AboutDialog
-        isOpen={isAboutDialogOpen}
-        onOpenChange={setIsAboutDialogOpen}
-        metadata={kyoMetadata}
-      />
-    </>
-  );
+  // No default menu items - apps should provide their own menus
+  return null;
 }
 
 function VolumeControl() {

@@ -10,7 +10,7 @@ import {
   MenubarSubTrigger,
   MenubarSubContent,
 } from "@/components/ui/menubar";
-import { AboutFinderDialog } from "@/components/dialogs/AboutFinderDialog";
+import { AboutDialog } from "@/components/dialogs/AboutDialog";
 import { LoginDialog } from "@/components/dialogs/LoginDialog";
 import { LogoutDialog } from "@/components/dialogs/LogoutDialog";
 import { AppId, appRegistry } from "@/config/appRegistry";
@@ -68,10 +68,22 @@ const getDocumentIconPath = (doc: RecentDocument): string => {
 
 export function AppleMenu() {
   const { t } = useTranslation();
-  const [aboutFinderOpen, setAboutFinderOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const launchApp = useLaunchApp();
   const currentTheme = useThemeStore((state) => state.current);
   const isMacOsxTheme = currentTheme === "macosx";
+
+  // Kyo metadata for About dialog
+  const kyoMetadata = {
+    name: "Kyo",
+    version: "1.0.0",
+    creator: {
+      name: "yeshu",
+      url: "https://github.com/hiyeshu",
+    },
+    github: "https://github.com/hiyeshu/kyo.is",
+    icon: "/favicon.svg",
+  };
 
   // Recent items from store
   const recentApps = useAppStore((state) => state.recentApps);
@@ -125,18 +137,6 @@ export function AppleMenu() {
     launchApp("control-panels");
   };
 
-  const handleAppletStore = () => {
-    // Applet store removed
-  };
-
-  const handleMoreApps = () => {
-    // Finder removed
-  };
-
-  const handleMoreDocuments = () => {
-    // Finder removed
-  };
-
   // Get top 5 recent apps
   const topRecentApps = recentApps.slice(0, 5);
   // Get top 5 recent documents
@@ -164,7 +164,7 @@ export function AppleMenu() {
         <MenubarContent align="start" sideOffset={1} className="px-0">
           {/* About This Computer */}
           <MenubarItem
-            onClick={() => setAboutFinderOpen(true)}
+            onClick={() => setAboutOpen(true)}
             className="text-md h-6 px-3"
           >
             {t("common.appleMenu.aboutThisComputer")}
@@ -186,14 +186,6 @@ export function AppleMenu() {
             className="text-md h-6 px-3"
           >
             {t("apps.control-panels.name")}
-          </MenubarItem>
-
-          {/* Applet Store */}
-          <MenubarItem
-            onClick={handleAppletStore}
-            className="text-md h-6 px-3"
-          >
-            {t("common.appleMenu.appletStore")}
           </MenubarItem>
 
           <MenubarSeparator className="h-[2px] bg-black my-1" />
@@ -235,14 +227,6 @@ export function AppleMenu() {
                   {t("common.appleMenu.noRecentApps")}
                 </MenubarItem>
               )}
-              
-              {/* More Apps - always shown */}
-              <MenubarItem
-                onClick={handleMoreApps}
-                className="text-md h-6 px-3"
-              >
-                {t("common.appleMenu.moreApps")}
-              </MenubarItem>
 
               <MenubarSeparator className="h-[2px] bg-black my-1" />
 
@@ -278,14 +262,6 @@ export function AppleMenu() {
                   {t("common.appleMenu.noRecentDocuments")}
                 </MenubarItem>
               )}
-              
-              {/* More Documents - always shown */}
-              <MenubarItem
-                onClick={handleMoreDocuments}
-                className="text-md h-6 px-3"
-              >
-                {t("common.appleMenu.moreDocuments")}
-              </MenubarItem>
             </MenubarSubContent>
           </MenubarSub>
 
@@ -316,9 +292,10 @@ export function AppleMenu() {
       </MenubarMenu>
 
       {/* Dialogs */}
-      <AboutFinderDialog
-        isOpen={aboutFinderOpen}
-        onOpenChange={setAboutFinderOpen}
+      <AboutDialog
+        isOpen={aboutOpen}
+        onOpenChange={setAboutOpen}
+        metadata={kyoMetadata}
       />
 
       {/* Sign Up Dialog */}

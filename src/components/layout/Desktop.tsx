@@ -223,6 +223,7 @@ export function Desktop({
       onClick={onClick}
       onContextMenu={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         setContextMenuPos({ x: e.clientX, y: e.clientY });
         setContextMenuAppId(null);
         setContextMenuBookmark(null);

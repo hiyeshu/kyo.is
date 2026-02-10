@@ -167,7 +167,7 @@ export function RightClickMenu({
   if (!position) return null;
 
   return (
-    <DropdownMenu open onOpenChange={(open) => !open && onClose()}>
+    <DropdownMenu open={true} onOpenChange={(open) => !open && onClose()}>
       <DropdownMenuTrigger asChild>
         <div
           style={{
