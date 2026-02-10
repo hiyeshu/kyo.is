@@ -414,17 +414,14 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
               <div
                 className="select-none relative"
                 style={{
-                  width: "100%",
-                  height: "100%",
+                  width: "90%",
+                  height: "90%",
+                  margin: "auto",
                   borderRadius: "22%",
                   overflow: "hidden",
                   pointerEvents: "none",
-                  // White background shows through if favicon has transparency
                   backgroundColor: "#ffffff",
-                  boxShadow: `
-                    0 1px 3px rgba(0,0,0,0.12),
-                    0 1px 2px rgba(0,0,0,0.08)
-                  `,
+                  boxShadow: "0 1px 0 rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.12)",
                 }}
               >
                 <img
