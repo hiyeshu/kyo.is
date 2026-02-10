@@ -308,7 +308,7 @@ export function ChatMessages({
               className="flex flex-col items-start mb-2"
             >
               <div className="text-[10px] text-gray-500 mb-0.5 font-geneva-12 flex items-center gap-2">
-                <span>AI</span>
+                <span>Kyo</span>
                 <span className="text-gray-400">...</span>
               </div>
               <div className="p-1.5 px-3 chat-bubble bg-blue-100 rounded">
