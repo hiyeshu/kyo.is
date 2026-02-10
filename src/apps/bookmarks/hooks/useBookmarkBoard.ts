@@ -10,6 +10,7 @@ import {
   useBookmarkStore,
   isFolder,
   getFaviconUrl,
+  openBookmarkUrl,
   type Bookmark,
   type BookmarkFolder,
   type BoardItem,
@@ -229,27 +230,10 @@ export function useBookmarkBoard() {
   }, [editingBookmark, editTitle, editUrl, editIcon, editFolderId, originalFolderId, store]);
 
   // ─── 打开书签 ──────────────────────────────────────────────────────────────
-  
-  // iOS PWA 检测
-  const isIOSPWA = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches 
-      || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    return isStandalone && isIOS;
-  }, []);
 
   const openBookmark = useCallback((url: string) => {
-    if (isIOSPWA) {
-      // iOS PWA: 用 location.href 让 iOS Universal Links 自动处理
-      // 如果 App 注册了这个域名 → 自动打开 App
-      // 如果没有 → 在 Safari 里打开网页
-      window.location.href = url;
-    } else {
-      // 浏览器: 新标签页
-      window.open(url, "_blank", "noopener,noreferrer");
-    }
-  }, [isIOSPWA]);
+    openBookmarkUrl(url);
+  }, []);
 
   // ─── 删除 ──────────────────────────────────────────────────────────────────
   const removeBookmark = useCallback((id: string) => {

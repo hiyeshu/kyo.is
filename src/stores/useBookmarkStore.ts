@@ -1,6 +1,6 @@
 /**
  * [INPUT]: zustand + zustand/middleware(persist)
- * [OUTPUT]: useBookmarkStore, Bookmark, BookmarkFolder, BoardItem, isFolder, isBookmark
+ * [OUTPUT]: useBookmarkStore, Bookmark, BookmarkFolder, BoardItem, isFolder, isBookmark, openBookmarkUrl
  * [POS]: 书签数据的单一真相源，被 bookmark-board 和 Dock 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -22,8 +22,8 @@ const FAVICON_REGION_KEY = "kyo:favicon-region";
 // 使用各网站官方提供的高清 logo 或 CDN 地址
 const FAVICON_OVERRIDES: Record<string, string> = {
   // 中国热门网站
-  "xiaohongshu.com": "https://fe-video-qc.xhscdn.com/fe-platform/ed8fe64ce29e20e3a93c9f5c-small.png",
-  "www.xiaohongshu.com": "https://fe-video-qc.xhscdn.com/fe-platform/ed8fe64ce29e20e3a93c9f5c-small.png",
+  "xiaohongshu.com": "/icons/favicons/xiaohongshu.svg",
+  "www.xiaohongshu.com": "/icons/favicons/xiaohongshu.svg",
   "bilibili.com": "https://www.bilibili.com/favicon.ico",
   "www.bilibili.com": "https://www.bilibili.com/favicon.ico",
   "douban.com": "https://img3.doubanio.com/favicon.ico",
@@ -118,6 +118,89 @@ if (typeof window !== "undefined") {
 export { getFaviconUrl };
 
 const fav = (domain: string) => getFaviconUrl(domain);
+
+// ─── iOS PWA Deep Link ──────────────────────────────────────────────────────
+// 热门 App 的 URL scheme 映射，用于 iOS PWA 下直接唤起原生 App
+
+const APP_URL_SCHEMES: Record<string, string> = {
+  "bilibili.com": "bilibili://",
+  "www.bilibili.com": "bilibili://",
+  "m.bilibili.com": "bilibili://",
+  "xiaohongshu.com": "xhslink://app",
+  "www.xiaohongshu.com": "xhslink://app",
+  "music.163.com": "orpheuswidget://",
+  "douban.com": "douban://",
+  "www.douban.com": "douban://",
+  "github.com": "github://",
+  "weibo.com": "sinaweibo://",
+  "www.weibo.com": "sinaweibo://",
+  "zhihu.com": "zhihu://",
+  "www.zhihu.com": "zhihu://",
+  "youtube.com": "youtube://",
+  "www.youtube.com": "youtube://",
+  "twitter.com": "twitter://",
+  "x.com": "twitter://",
+  "instagram.com": "instagram://",
+  "www.instagram.com": "instagram://",
+  "reddit.com": "reddit://",
+  "www.reddit.com": "reddit://",
+  "spotify.com": "spotify://",
+  "open.spotify.com": "spotify://",
+  "discord.com": "discord://",
+  "tiktok.com": "snssdk1128://",
+  "www.tiktok.com": "snssdk1128://",
+};
+
+function getAppScheme(domain: string): string | null {
+  const scheme = APP_URL_SCHEMES[domain];
+  if (scheme) return scheme;
+  const main = domain.replace(/^www\./, "");
+  return APP_URL_SCHEMES[main] || null;
+}
+
+/** iOS PWA 检测 */
+function isIOSPWA(): boolean {
+  if (typeof window === "undefined") return false;
+  const isStandalone = ("standalone" in navigator && (navigator as { standalone?: boolean }).standalone === true)
+    || window.matchMedia("(display-mode: standalone)").matches;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  return isStandalone && isIOS;
+}
+
+/**
+ * 统一的书签 URL 打开函数
+ * - iOS PWA + 有 URL scheme → 尝试唤起 App，失败回退浏览器
+ * - iOS PWA + 无 scheme → window.open 跳 Safari
+ * - 浏览器 → 新标签页
+ */
+export function openBookmarkUrl(url: string): void {
+  if (isIOSPWA()) {
+    try {
+      const fullUrl = url.startsWith("http") ? url : `https://${url}`;
+      const domain = new URL(fullUrl).hostname;
+      const scheme = getAppScheme(domain);
+      if (scheme) {
+        // 用隐藏 iframe 尝试唤起 App，不影响当前页面
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = scheme;
+        document.body.appendChild(iframe);
+        // 500ms 后清理 iframe 并回退到浏览器打开
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          window.open(url, "_blank");
+        }, 500);
+        return;
+      }
+    } catch {
+      // URL 解析失败，走默认逻辑
+    }
+    // 无 scheme 映射，直接在 Safari 打开
+    window.open(url, "_blank");
+  } else {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+}
 
 // ─── 数据模型 ───────────────────────────────────────────────────────────────
 

@@ -14,7 +14,7 @@ import { AppId, getAppIconPath, appRegistry, getNonFinderApps } from "@/config/a
 import { getTranslatedAppName } from "@/utils/i18n";
 import { useLaunchApp } from "@/hooks/useLaunchApp";
 import { useDockStore, PROTECTED_DOCK_ITEMS, type DockItem } from "@/stores/useDockStore";
-import { useBookmarkStore, getBookmarkIconInfo } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl } from "@/stores/useBookmarkStore";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useSound, Sounds } from "@/hooks/useSound";
@@ -1891,7 +1891,7 @@ function MacDock() {
                         isEmoji={iconInfo.isEmoji}
                         isMacTheme={isMacTheme}
                         onClick={() => {
-                          window.open(bookmark.url, "_blank", "noopener,noreferrer");
+                          openBookmarkUrl(bookmark.url);
                         }}
                         onContextMenu={(e) => {
                           e.preventDefault();
@@ -1909,7 +1909,7 @@ function MacDock() {
                                 type: "item",
                                 label: t("common.dock.openInNewTab"),
                                 onSelect: () => {
-                                  window.open(bookmark.url, "_blank", "noopener,noreferrer");
+                                  openBookmarkUrl(bookmark.url);
                                 },
                               },
                               {

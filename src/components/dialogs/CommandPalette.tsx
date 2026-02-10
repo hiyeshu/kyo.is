@@ -7,7 +7,7 @@
 
 import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
-import { useBookmarkStore, isFolder, getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, isFolder, getBookmarkIconInfo, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -100,7 +100,7 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
 
   // 打开书签
   const handleSelect = (url: string) => {
-    window.open(url, "_blank");
+    openBookmarkUrl(url);
     onOpenChange(false);
   };
 

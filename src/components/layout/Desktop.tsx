@@ -13,7 +13,7 @@ import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
-import { useBookmarkStore, isFolder, type Bookmark } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, isFolder, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
 import { getTranslatedAppName } from "@/utils/i18n";
@@ -347,7 +347,7 @@ export function Desktop({
                 e.stopPropagation();
                 // Mobile: single tap opens bookmark; Desktop: single click selects
                 if (isMobile) {
-                  window.open(bm.url, "_blank", "noopener,noreferrer");
+                  openBookmarkUrl(bm.url);
                   setSelectedBookmarkId(null);
                 } else {
                   setSelectedBookmarkId(bm.id);
@@ -358,7 +358,7 @@ export function Desktop({
                 e.stopPropagation();
                 // Desktop: double click opens bookmark
                 if (!isMobile) {
-                  window.open(bm.url, "_blank", "noopener,noreferrer");
+                  openBookmarkUrl(bm.url);
                   setSelectedBookmarkId(null);
                 }
               }}
