@@ -61,11 +61,16 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const { messages, conversationId } = (await req.json()) as ChatRequest;
+    const body = await req.json();
+    console.log("Received request body:", JSON.stringify(body));
+
+    const { messages, conversationId } = body as ChatRequest;
+    console.log("Parsed messages:", messages);
 
     // 获取最后一条用户消息作为 query
-    const lastUserMessage = messages.filter((m) => m.role === "user").pop();
+    const lastUserMessage = messages?.filter((m) => m.role === "user").pop();
     if (!lastUserMessage) {
+      console.error("No user message found. Messages:", messages);
       return new Response("No user message found", { status: 400 });
     }
 
