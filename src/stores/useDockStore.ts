@@ -129,33 +129,38 @@ export const useDockStore = create<DockStoreState>()(
     }),
     {
       name: "kyo:dock-storage",
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       migrate: (persisted, version) => {
         const state = persisted as { pinnedItems?: LegacyDockItem[] };
         
         if (version < 2 && state.pinnedItems) {
-          // Migrate link items to bookmarks
+          // v1→v2: Migrate link items to bookmarks
           const bookmarkStore = useBookmarkStore.getState();
           const migratedItems: DockItem[] = [];
           
           for (const item of state.pinnedItems) {
             if (item.type === "link" && item.url) {
-              // Create bookmark from link
               const bookmarkId = bookmarkStore.addBookmark(
                 item.name || "Website",
                 item.url,
                 item.icon
               );
-              // Add bookmark reference to dock
               migratedItems.push({ type: "bookmark", id: bookmarkId });
             } else if (item.type === "app" || item.type === "bookmark") {
-              // Keep as-is
               migratedItems.push({ type: item.type, id: item.id });
             }
           }
           
           state.pinnedItems = migratedItems as LegacyDockItem[];
+        }
+
+        if (version < 3 && state.pinnedItems) {
+          // v2→v3: 确保 chat 在 dock 中（老用户迁移）
+          const hasChat = state.pinnedItems.some((item) => item.id === "chat");
+          if (!hasChat) {
+            state.pinnedItems.push({ type: "app", id: "chat" } as LegacyDockItem);
+          }
         }
         
         return persisted as DockStoreState;
