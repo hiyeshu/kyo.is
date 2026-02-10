@@ -183,6 +183,7 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
       isLoading = false,
       isEmoji = false,
       isBookmark = false,
+      isMacTheme = false,
       onDragOver,
       onDrop,
       onDragLeave,
@@ -411,7 +412,7 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
             {isBookmark ? (
               // iOS-style bookmark icon: clip favicon to rounded rect, white bg for transparency
               <div
-                className="select-none"
+                className="select-none relative"
                 style={{
                   width: "100%",
                   height: "100%",
@@ -448,6 +449,18 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
                     target.parentElement!.style.justifyContent = "center";
                   }}
                 />
+                {/* macOS Aqua 水晶高光 */}
+                {isMacTheme && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "22%",
+                      pointerEvents: "none",
+                      background: "linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 50%, rgba(0,0,0,0.03) 100%)",
+                    }}
+                  />
+                )}
               </div>
             ) : isEmoji ? (
               <motion.span

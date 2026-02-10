@@ -262,7 +262,7 @@ function FolderSection({
         {/* 空文件夹的拖放区域 */}
         {folder.bookmarks.length === 0 && (
           <div className="col-span-full py-4 text-center text-[10px] text-black/30">
-            {isDragOverFolder ? t("bookmarkBoard.dropHere") : t("bookmarkBoard.dragHere")}
+            {isDragOverFolder ? t("apps.bookmarks.dropHere") : t("apps.bookmarks.dragHere")}
           </div>
         )}
       </div>
@@ -330,7 +330,7 @@ export function BookmarkBoardApp({
       return [
         {
           type: "item",
-          label: t("bookmarks.addBookmark", "Add Bookmark"),
+          label: t("apps.bookmarks.addBookmark", "Add Bookmark"),
           icon: "➕",
           onSelect: () => {
             h.openAddDialog(item.id);
