@@ -63,8 +63,11 @@ export function ChatAppComponent({
         content: input.trim(),
       };
 
+      // 构建包含新消息的完整消息列表
+      const updatedMessages = [...messages, userMessage];
+
       // 添加用户消息到列表
-      setMessages((prev) => [...prev, userMessage]);
+      setMessages(updatedMessages);
       setInput("");
       setIsLoading(true);
 
@@ -84,7 +87,7 @@ export function ChatAppComponent({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: [...messages, userMessage].map((m) => ({
+            messages: updatedMessages.map((m) => ({
               role: m.role,
               content: m.content,
             })),
