@@ -108,7 +108,7 @@ export function BouncingLogo() {
           className="w-full h-full"
           style={{ color: COLORS[colorIndex] }}
         >
-          {/* ryOS logo */}
+          {/* kyo logo */}
           <text
             x="50%"
             y="50%"
@@ -119,7 +119,7 @@ export function BouncingLogo() {
             fontFamily="system-ui, -apple-system, sans-serif"
             fontWeight="bold"
           >
-            ryOS
+            kyo
           </text>
         </svg>
       </div>

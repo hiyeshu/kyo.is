@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 依赖 @ai-sdk/react 的 useChat hook，依赖 ../../base/types 的 AppProps
+ * [INPUT]: 依赖 react hooks，依赖 ../../base/types 的 AppProps
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
  * [POS]: apps/chat/components 的主组件，实现聊天界面，对接 Dify Chatflow API
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -9,18 +9,9 @@ import { useState, useCallback } from "react";
 import { AppProps } from "../../base/types";
 import { WindowFrame } from "@/components/layout/WindowFrame";
 import { useTranslation } from "react-i18next";
-import { ChatMessages } from "./ChatMessages";
+import { ChatMessages, type Message } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
-
-// ============================================================================
-// 类型定义
-// ============================================================================
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-}
+import { Trash } from "@phosphor-icons/react";
 
 // ============================================================================
 // 主组件
@@ -49,6 +40,15 @@ export function ChatAppComponent({
     useState<AbortController | null>(null);
 
   // -------------------------------------------------------------------------
+  // 清除聊天
+  // -------------------------------------------------------------------------
+
+  const handleClear = useCallback(() => {
+    setMessages([]);
+    setConversationId(null);
+  }, []);
+
+  // -------------------------------------------------------------------------
   // 消息发送处理
   // -------------------------------------------------------------------------
 
@@ -57,10 +57,12 @@ export function ChatAppComponent({
       e.preventDefault();
       if (!input.trim() || isLoading) return;
 
+      const now = Date.now();
       const userMessage: Message = {
-        id: `user-${Date.now()}`,
+        id: `user-${now}`,
         role: "user",
         content: input.trim(),
+        timestamp: now,
       };
 
       // 构建包含新消息的完整消息列表
@@ -76,7 +78,7 @@ export function ChatAppComponent({
       setAbortController(controller);
 
       // 准备 AI 消息 ID（不立即添加到列表）
-      const assistantMessageId = `assistant-${Date.now()}`;
+      const assistantMessageId = `assistant-${now}`;
       let hasAddedMessage = false;
 
       try {
@@ -103,6 +105,7 @@ export function ChatAppComponent({
 
         const decoder = new TextDecoder();
         let fullContent = "";
+        const assistantTimestamp = Date.now();
 
         while (true) {
           const { done, value } = await reader.read();
@@ -124,7 +127,12 @@ export function ChatAppComponent({
                 if (!hasAddedMessage) {
                   setMessages((prev) => [
                     ...prev,
-                    { id: assistantMessageId, role: "assistant", content: fullContent },
+                    {
+                      id: assistantMessageId,
+                      role: "assistant",
+                      content: fullContent,
+                      timestamp: assistantTimestamp,
+                    },
                   ]);
                   hasAddedMessage = true;
                 } else {
@@ -159,7 +167,8 @@ export function ChatAppComponent({
           // 用户取消，不做处理
         } else {
           console.error("Chat error:", error);
-          // 显示错误消息（如果还没添加消息，则添加一个错误消息）
+          // 显示错误消息
+          const errorTimestamp = Date.now();
           if (!hasAddedMessage) {
             setMessages((prev) => [
               ...prev,
@@ -167,6 +176,7 @@ export function ChatAppComponent({
                 id: assistantMessageId,
                 role: "assistant",
                 content: t("apps.chat.error", "抱歉，发生了错误，请重试。"),
+                timestamp: errorTimestamp,
               },
             ]);
           } else {
@@ -220,7 +230,7 @@ export function ChatAppComponent({
 
   return (
     <WindowFrame
-      title={t("apps.chat.title", "Chat")}
+      title={t("apps.chat.title", "聊天")}
       onClose={onClose}
       isForeground={isForeground}
       appId="chat"
@@ -230,11 +240,36 @@ export function ChatAppComponent({
       onNavigatePrevious={onNavigatePrevious}
     >
       <div className="flex flex-col h-full bg-[var(--os-color-window-bg)]">
+        {/* 头部栏 */}
+        <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--os-color-border)] bg-[var(--os-color-window-bg)]/80 backdrop-blur-sm">
+          {/* 左侧：今日日期 */}
+          <div className="text-xs font-geneva-12 text-[var(--os-color-text-secondary)]">
+            {new Date().toLocaleDateString(undefined, {
+              month: "long",
+              day: "numeric",
+              weekday: "short",
+            })}
+          </div>
+
+          {/* 右侧：清除按钮 */}
+          <button
+            onClick={handleClear}
+            disabled={messages.length === 0}
+            className="flex items-center gap-1 text-xs font-geneva-12 text-[var(--os-color-text-secondary)] hover:text-[var(--os-color-text)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title={t("apps.chat.clear", "清除")}
+          >
+            <Trash className="w-3.5 h-3.5" />
+            <span>{t("apps.chat.clear", "清除")}</span>
+          </button>
+        </div>
+
+        {/* 消息区域 */}
         <div className="flex-1 overflow-hidden">
           <ChatMessages messages={messages} isLoading={isLoading} />
         </div>
 
-        <div className="border-t border-[var(--os-color-border)] p-4">
+        {/* 输入区域 */}
+        <div className="border-t border-[var(--os-color-border)] p-3 bg-[var(--os-color-window-bg)]/80 backdrop-blur-sm">
           <ChatInput
             input={input}
             isLoading={isLoading}

@@ -198,17 +198,17 @@ export function BootScreen({
                 className="w-[120px] h-[120px] object-contain"
                 style={{ marginBottom: "-30px", filter: "grayscale(50%) brightness(1.25)" }}
               />
-              {/* ryOS X text */}
-              <h1 
+              {/* kyo X text */}
+              <h1
                 className="text-[52px] mb-6"
-                style={{ 
+                style={{
                   color: "#333333",
                   fontFamily: "AppleGaramond, 'Apple Garamond', 'Times New Roman', serif",
                   letterSpacing: "1px",
                   textShadow: "0 1px 2px rgba(0, 0, 0, 0.15)"
                 }}
               >
-                ryOS X
+                kyo X
               </h1>
               {/* Progress bar - using aqua-progress classes */}
               <div className="aqua-progress w-[220px] h-[20px] rounded-none" style={{ borderRadius: 0 }}>
@@ -262,7 +262,7 @@ export function BootScreen({
                 style={{ filter: "invert(1)" }}
               />
               <h1 className="text-[36px] font-mondwest mt-4 mb-0">
-                <span className="text-blue-500">ry</span>OS
+                <span className="text-blue-500">k</span>yo
               </h1>
             </div>
             <h2 className="text-[16px] font-chicago mt-4 mb-1">

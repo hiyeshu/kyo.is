@@ -123,13 +123,13 @@
       "restoringSystem": "Restoring System...",
       "formattingFileSystem": "Formatting File System...",
       "debugBootScreenTest": "Debug Boot Screen Test...",
-      "updatingToRyOS": "Updating to ryOS {{version}}...",
-      "updatingToRyOSWithBuild": "Updating to ryOS {{version}} ({{buildNumber}})...",
+      "updatingToRyOS": "Updating to kyo {{version}}...",
+      "updatingToRyOSWithBuild": "Updating to kyo {{version}} ({{buildNumber}})...",
       "rebooting": "Rebooting...",
       "resetAllSettings": "Reset All Settings",
-      "resetAllSettingsDesc": "Are you sure you want to reset all settings? This will clear all saved settings and restore default states. ryOS will restart after reset.",
+      "resetAllSettingsDesc": "Are you sure you want to reset all settings? This will clear all saved settings and restore default states. kyo will restart after reset.",
       "formatFileSystem": "Format File System",
-      "formatFileSystemDesc": "Are you sure you want to format the file system? This will permanently delete all documents (except sample documents), images, and custom wallpapers. ryOS will restart after format."
+      "formatFileSystemDesc": "Are you sure you want to format the file system? This will permanently delete all documents (except sample documents), images, and custom wallpapers. kyo will restart after format."
     },
     "desktop": {
       "setWallpaper": "Set Wallpaper…",
@@ -195,7 +195,7 @@
     },
     "aboutThisMac": {
       "title": "About This Computer",
-      "description": "Information about ryOS on this computer",
+      "description": "Information about kyo on this computer",
       "builtInMemory": "Built-in Memory",
       "virtualMemory": "Virtual Memory",
       "virtualMemoryOff": "Off",
@@ -211,7 +211,7 @@
       "updatingAssets": "Updating assets",
       "files": "files",
       "total": "total",
-      "updateReady": "Update ready for ryOS {{version}} ({{buildNumber}})",
+      "updateReady": "Update ready for kyo {{version}} ({{buildNumber}})",
       "reboot": "Reboot",
       "failedToCacheAssets": "Failed to cache assets",
       "failedToLoadAssetManifest": "Failed to load asset manifest",
@@ -220,7 +220,7 @@
       "couldNotCheckUpdates": "Could not check for updates"
     },
     "auth": {
-      "dialogTitle": "ryOS Login",
+      "dialogTitle": "kyo Login",
       "username": "Username",
       "password": "Password",
       "logIn": "Log In",
@@ -251,8 +251,8 @@
       "full": "Full",
       "toggleCode": "Toggle code",
       "exitFullscreen": "Exit fullscreen",
-      "codePreviewTitle": "ryOS Code Preview",
-      "codePreviewTitleFullscreen": "ryOS Code Preview Fullscreen"
+      "codePreviewTitle": "kyo Code Preview",
+      "codePreviewTitleFullscreen": "kyo Code Preview Fullscreen"
     },
     "swipeInstructions": {
       "title": "Swipe to Switch Windows",
@@ -662,7 +662,7 @@
       "help": {
         "chatWithRyo": {
           "title": "Chat with Ryo",
-          "description": "Type your message to chat with Ryo, generate code, or get help with ryOS."
+          "description": "Type your message to chat with Ryo, generate code, or get help with kyo."
         },
         "createEditFiles": {
           "title": "Create & Edit Files",
@@ -715,7 +715,7 @@
         "failedToCreateRoom": "Failed to create room"
       },
       "status": {
-        "loginToRyOS": "Login to ryOS",
+        "loginToRyOS": "Login to kyo",
         "loginToChat": "Login to Chat",
         "clear": "Clear",
         "leave": "Leave",
@@ -1965,7 +1965,7 @@
         "shareApplet": "Share Applet...",
         "importFromDevice": "Import from Device...",
         "exportAs": "Export As...",
-        "ryosApp": "ryOS App",
+        "ryosApp": "kyo App",
         "html": "HTML",
         "store": "Store",
         "openAppletStore": "Open Applet Store",
@@ -1988,12 +1988,12 @@
           "description": "Browse and install applets from the community. Open the Store menu to discover new apps."
         },
         "createWithRyosChat": {
-          "title": "Create with ryOS Chat",
-          "description": "Ask ryOS Chat to create custom apps and applets for you. Share your ideas and get working apps instantly."
+          "title": "Create with kyo Chat",
+          "description": "Ask kyo Chat to create custom apps and applets for you. Share your ideas and get working apps instantly."
         },
         "viewApplets": {
           "title": "View Applets",
-          "description": "Open and run applets saved from ryOS Chat or downloaded from the store."
+          "description": "Open and run applets saved from kyo Chat or downloaded from the store."
         },
         "shareApplets": {
           "title": "Share Applets",
@@ -2141,13 +2141,13 @@
       "terminalIeAmbientSynth": "Synth",
       "chatSynth": "Chat Synth",
       "selectAPreset": "Select a preset",
-      "loggedInToRyOS": "Logged in to ryOS",
+      "loggedInToRyOS": "Logged in to kyo",
       "logIn": "Log In",
       "setPassword": "Set Password",
       "logOut": "Log Out",
       "loggingOut": "Logging out...",
       "logOutOfAllDevices": "Log Out of All Devices",
-      "ryOSAccount": "ryOS Account",
+      "ryOSAccount": "kyo Account",
       "loginToSendMessages": "Login to send messages and more",
       "login": "Login",
       "checkForUpdates": "Check for Updates",
@@ -2158,7 +2158,7 @@
       "resetAllSettings": "Reset All Settings",
       "resetAllSettingsDescription": "This will clear all saved settings and restore defaults.",
       "formatFileSystem": "Format File System",
-      "formatFileSystemDescription": "This will clear all files (except sample docs), images, and custom wallpapers. ryOS will restart after format.",
+      "formatFileSystemDescription": "This will clear all files (except sample docs), images, and custom wallpapers. kyo will restart after format.",
       "debugMode": "Debug Mode",
       "debugModeDescription": "Enable debugging settings",
       "shaderEffect": "Shader Effect",
@@ -2628,6 +2628,7 @@
       "inputPlaceholder": "Type a message...",
       "send": "Send",
       "stop": "Stop",
+      "clear": "Clear",
       "error": "Sorry, an error occurred. Please try again."
     }
   },

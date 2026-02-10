@@ -290,8 +290,8 @@
           "title": "小程式商店"
         },
         "createWithRyosChat": {
-          "description": "請 ryOS 聊天為您建立自訂應用程式和小程式。分享您的想法並立即獲得可用的應用程式。",
-          "title": "使用 ryOS 聊天建立"
+          "description": "請 kyo 聊天為您建立自訂應用程式和小程式。分享您的想法並立即獲得可用的應用程式。",
+          "title": "使用 kyo 聊天建立"
         },
         "keepUpdated": {
           "description": "在「商店」選單中檢查更新以獲得已安裝小程式的最新版本。",
@@ -306,7 +306,7 @@
           "title": "分享小程式"
         },
         "viewApplets": {
-          "description": "開啟並執行從 ryOS 聊天儲存或從商店下載的小程式。",
+          "description": "開啟並執行從 kyo 聊天儲存或從商店下載的小程式。",
           "title": "檢視小程式"
         }
       },
@@ -332,7 +332,7 @@
         "noAppletsOpen": "沒有開啟的小程式",
         "open": "開啟...",
         "openAppletStore": "開啟小程式商店",
-        "ryosApp": "ryOS 應用程式",
+        "ryosApp": "kyo 應用程式",
         "shareApplet": "分享小程式...",
         "store": "商店",
         "untitled": "未命名",
@@ -412,7 +412,7 @@
       },
       "help": {
         "chatWithRyo": {
-          "description": "輸入訊息與 Ryo 聊天、產生程式碼或取得 ryOS 的協助。",
+          "description": "輸入訊息與 Ryo 聊天、產生程式碼或取得 kyo 的協助。",
           "title": "與 Ryo 聊天"
         },
         "controlApps": {
@@ -479,7 +479,7 @@
         "listening": "聆聽中",
         "loginToChat": "登入聊天",
         "loginToContinue": "登入以繼續與 Ryo 聊天。",
-        "loginToRyOS": "登入 ryOS",
+        "loginToRyOS": "登入 kyo",
         "newChat": "新聊天",
         "noTranscriptionText": "未收到轉錄文字。",
         "nudgeSent": "👋 *輕推已送出*",
@@ -701,7 +701,7 @@
       "elevenlabs": "ElevenLabs",
       "elevenlabsVoiceId": "ElevenLabs 語音 ID",
       "formatFileSystem": "格式化檔案系統",
-      "formatFileSystemDescription": "這將清除所有檔案（範例檔案除外）、圖片和自訂桌布。格式化後 ryOS 將重新啟動。",
+      "formatFileSystemDescription": "這將清除所有檔案（範例檔案除外）、圖片和自訂桌布。格式化後 kyo 將重新啟動。",
       "help": {
         "aiModel": {
           "description": "選擇聊天和終端機助理使用的 AI 模型",
@@ -735,7 +735,7 @@
       "logIn": "登入",
       "logOut": "登出",
       "logOutOfAllDevices": "登出所有裝置",
-      "loggedInToRyOS": "已登入 ryOS",
+      "loggedInToRyOS": "已登入 kyo",
       "loggingOut": "登出中...",
       "login": "登入",
       "loginToSendMessages": "登入以傳送訊息及更多功能",
@@ -761,7 +761,7 @@
       "resetAllSettings": "重設所有設定",
       "resetAllSettingsDescription": "這將清除所有已儲存的設定並還原為預設值。",
       "restore": "還原",
-      "ryOSAccount": "ryOS 帳戶",
+      "ryOSAccount": "kyo 帳戶",
       "screenSaver": "螢幕保護程式",
       "screenSaverDescription": "在閒置一段時間後啟用",
       "screenSaverExitHint": "點擊或按下任何鍵即可退出",
@@ -2341,6 +2341,7 @@
       "inputPlaceholder": "輸入消息...",
       "send": "發送",
       "stop": "停止",
+      "clear": "清除",
       "error": "抱歉，發生了錯誤，請重試。"
     }
   },
