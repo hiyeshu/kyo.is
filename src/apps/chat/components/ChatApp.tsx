@@ -81,6 +81,7 @@ export function ChatAppComponent({
       let hasAddedMessage = false;
 
       try {
+        console.log("[Chat] Sending request to /api/chat");
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -94,11 +95,16 @@ export function ChatAppComponent({
           signal: controller.signal,
         });
 
+        console.log("[Chat] Response status:", response.status, response.ok);
+        
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error("[Chat] Error response:", errorText);
           throw new Error(`API error: ${response.status}`);
         }
 
         const reader = response.body?.getReader();
+        console.log("[Chat] Reader:", reader ? "obtained" : "null");
         if (!reader) throw new Error("No response body");
 
         const decoder = new TextDecoder();
@@ -110,10 +116,12 @@ export function ChatAppComponent({
           if (done) break;
 
           const chunk = decoder.decode(value, { stream: true });
+          console.log("[Chat] Raw chunk:", chunk);
           const lines = chunk.split("\n");
 
           for (const line of lines) {
             if (!line) continue;
+            console.log("[Chat] Processing line:", line);
 
             if (line.startsWith("0:")) {
               try {
