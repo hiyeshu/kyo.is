@@ -129,8 +129,8 @@ const APP_URL_SCHEMES: Record<string, string> = {
   "www.bilibili.com": "bilibili://",
   "m.bilibili.com": "bilibili://",
   // 小红书
-  "xiaohongshu.com": "xiaohongshu://",
-  "www.xiaohongshu.com": "xiaohongshu://",
+  "xiaohongshu.com": "xhsdiscover://",
+  "www.xiaohongshu.com": "xhsdiscover://",
   // 网易云音乐
   "music.163.com": "orpheus://",
   // 豆瓣
