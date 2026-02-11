@@ -443,14 +443,16 @@ export function BookmarkBoardApp({
         menuBar={undefined}  /* 书签板不需要窗口内菜单栏，功能都在 + 按钮里 */
       >
         <div className="flex flex-col h-full w-full bg-white/85">
-          {/* ── 搜索栏 (macOS Aqua 风格) ─────────────────────── */}
+          {/* ── 搜索栏 ─────────────────────────────────────────── */}
           <div
             className={cn(
-              "flex items-center gap-2 px-3 py-2",
-              h.isXpTheme
-                ? "border-b border-[#919b9c]"
+              "flex items-center gap-2 px-2 py-1.5",
+              h.currentTheme === "win98"
+                ? "bg-[#c0c0c0]"
+                : h.currentTheme === "xp"
+                ? "bg-[#ece9d8] border-b border-[#aca899]"
                 : h.currentTheme === "system7"
-                ? "bg-gray-100 border-b border-black"
+                ? "bg-[#c0c0c0] border-b border-black"
                 : "border-b border-black/20"
             )}
             style={
@@ -465,21 +467,26 @@ export function BookmarkBoardApp({
             {/* 搜索框 */}
             <div 
               className={cn(
-                "flex items-center flex-1 gap-1.5 px-2.5 py-1",
-                h.isXpTheme
-                  ? "rounded-none border border-[#7f9db9] bg-white"
+                "flex items-center flex-1 gap-1.5 px-2 py-0.5",
+                h.currentTheme === "win98"
+                  ? "bg-white border-t border-l border-[#808080] border-b border-r border-b-white border-r-white shadow-[inset_1px_1px_0_#404040]"
+                  : h.currentTheme === "xp"
+                  ? "bg-white border border-[#7f9db9] shadow-[inset_1px_1px_0_#ccc]"
                   : h.currentTheme === "system7"
-                  ? "rounded-none border border-black bg-white"
+                  ? "bg-white border-2 border-black"
                   : "rounded-full bg-white/80 border border-black/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50"
               )}
             >
-              <MagnifyingGlass size={14} className="text-black/40 shrink-0" />
+              <MagnifyingGlass size={14} className="text-black/50 shrink-0" />
               <input
                 type="text"
                 value={h.searchQuery}
                 onChange={(e) => h.setSearchQuery(e.target.value)}
                 placeholder={t("apps.bookmarks.search", "Search bookmarks...")}
-                className="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/30"
+                className={cn(
+                  "flex-1 bg-transparent outline-none placeholder:text-black/40",
+                  h.isXpTheme ? "text-[11px]" : "text-[12px]"
+                )}
               />
             </div>
             
@@ -488,15 +495,17 @@ export function BookmarkBoardApp({
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "w-7 h-7 flex items-center justify-center shrink-0 transition-all",
-                    h.isXpTheme
-                      ? "rounded-none border border-[#7f9db9] bg-[#f0f0f0] hover:bg-[#e5e5e5]"
+                    "flex items-center justify-center shrink-0",
+                    h.currentTheme === "win98"
+                      ? "w-6 h-6 bg-[#c0c0c0] border-t border-l border-t-white border-l-white border-b border-r border-b-[#808080] border-r-[#808080] shadow-[1px_1px_0_#404040] active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white active:shadow-none"
+                      : h.currentTheme === "xp"
+                      ? "w-7 h-7 bg-[#f0f0f0] border border-[#7f9db9] hover:bg-[#e5e5e5] active:bg-[#ddd]"
                       : h.currentTheme === "system7"
-                      ? "rounded-none border border-black bg-white hover:bg-gray-100"
-                      : "rounded-full bg-white/80 border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-white hover:border-black/20 active:bg-black/5"
+                      ? "w-6 h-6 bg-white border-2 border-black hover:bg-gray-100"
+                      : "w-7 h-7 rounded-full bg-white/80 border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-white hover:border-black/20 active:bg-black/5"
                   )}
                 >
-                  <Plus size={16} weight="bold" className="text-black/60" />
+                  <Plus size={14} weight="bold" className="text-black/70" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[160px]">
