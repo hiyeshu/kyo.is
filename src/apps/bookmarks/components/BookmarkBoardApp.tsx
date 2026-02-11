@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogBody,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { MagnifyingGlass, Plus, FolderPlus, Link, DotsThree, PencilSimple, Trash, FolderSimple } from "@phosphor-icons/react";
@@ -449,7 +450,7 @@ export function BookmarkBoardApp({
                 ? "border-b border-[#919b9c]"
                 : h.currentTheme === "system7"
                 ? "bg-gray-100 border-b border-black"
-                : "border-b border-black/10"
+                : "border-b border-black/20"
             )}
             style={
               !h.isXpTheme && h.currentTheme !== "system7"
@@ -621,7 +622,7 @@ export function BookmarkBoardApp({
               </div>
 
               {/* 右侧表单区 */}
-              <div className={isXpTheme ? "flex-1 p-2 px-4" : "flex-1 p-4"}>
+              <DialogBody className={isXpTheme ? "flex-1 p-2 px-4" : "flex-1 p-4"}>
                 <div className="space-y-3">
                   {/* URL */}
                   <div className="space-y-1">
@@ -755,7 +756,7 @@ export function BookmarkBoardApp({
                     {t("apps.bookmarks.add", "新增")}
                   </Button>
                 </DialogFooter>
-              </div>
+              </DialogBody>
             </div>
           </DialogContent>
         </Dialog>
@@ -800,7 +801,7 @@ export function BookmarkBoardApp({
               </div>
 
               {/* 右侧表单区 */}
-              <div className={isXpTheme ? "flex-1 p-2 px-4" : "flex-1 p-4"}>
+              <DialogBody className={isXpTheme ? "flex-1 p-2 px-4" : "flex-1 p-4"}>
                 <div className="space-y-3">
                   {/* URL */}
                   <div className="space-y-1">
@@ -930,7 +931,7 @@ export function BookmarkBoardApp({
                     {t("common.dialog.save", "儲存")}
                   </Button>
                 </DialogFooter>
-              </div>
+              </DialogBody>
             </div>
           </DialogContent>
         </Dialog>
@@ -938,7 +939,7 @@ export function BookmarkBoardApp({
         {/* ── 新建文件夹对话框 ────────────────────────────── */}
         <Dialog open={h.folderDialogOpen} onOpenChange={h.setFolderDialogOpen}>
           <DialogContent 
-            className={cn("sm:max-w-[320px]", isXpTheme && "p-0 overflow-hidden")}
+            className={cn("sm:max-w-[320px] p-0 gap-0 overflow-hidden", isXpTheme && "p-0")}
             style={isXpTheme ? { fontSize: "11px" } : undefined}
           >
             <DialogHeader>
@@ -951,50 +952,60 @@ export function BookmarkBoardApp({
                 {t("apps.bookmarks.newFolder", "新增檔案夾")}
               </DialogTitle>
             </DialogHeader>
-            <div className={isXpTheme ? "p-2 px-4" : "py-2"}>
-              <Input
-                value={h.folderName}
-                onChange={(e) => h.setFolderName(e.target.value)}
-                placeholder={t("apps.bookmarks.folderName", "檔案夾名稱")}
-                className={cn(
-                  "text-xs",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
-                onKeyDown={(e) => e.key === "Enter" && h.submitFolder()}
-                autoFocus
-              />
-            </div>
-            <DialogFooter className={isXpTheme ? "p-2 px-4 pt-0 gap-1" : "gap-1"}>
-              <Button
-                variant={isMacTheme ? "secondary" : "retro"}
-                size="sm"
-                onClick={() => h.setFolderDialogOpen(false)}
-                className={cn(
-                  !isMacTheme && "h-7",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
-              >
-                {t("common.dialog.cancel", "取消")}
-              </Button>
-              <Button 
-                variant={isMacTheme ? "default" : "retro"}
-                size="sm" 
-                onClick={h.submitFolder}
-                className={cn(
-                  !isMacTheme && "h-7",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
-              >
-                {t("apps.bookmarks.create", "建立")}
-              </Button>
-            </DialogFooter>
+            <DialogBody className={isXpTheme ? "p-2 px-4" : "p-4"}>
+              <div className="space-y-1 mb-4">
+                <Label 
+                  className={cn(
+                    "text-[11px] text-black/50",
+                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                  )}
+                >
+                  {t("apps.bookmarks.folderName", "文件夹名称")}
+                </Label>
+                <Input
+                  value={h.folderName}
+                  onChange={(e) => h.setFolderName(e.target.value)}
+                  placeholder={t("apps.bookmarks.folderNamePlaceholder", "输入文件夹名称")}
+                  className={cn(
+                    "text-xs h-8",
+                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                  )}
+                  onKeyDown={(e) => e.key === "Enter" && h.submitFolder()}
+                  autoFocus
+                />
+              </div>
+              <DialogFooter className="gap-1">
+                <Button
+                  variant={isMacTheme ? "secondary" : "retro"}
+                  size="sm"
+                  onClick={() => h.setFolderDialogOpen(false)}
+                  className={cn(
+                    !isMacTheme && "h-7",
+                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                  )}
+                >
+                  {t("common.dialog.cancel", "取消")}
+                </Button>
+                <Button 
+                  variant={isMacTheme ? "default" : "retro"}
+                  size="sm" 
+                  onClick={h.submitFolder}
+                  className={cn(
+                    !isMacTheme && "h-7",
+                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                  )}
+                >
+                  {t("apps.bookmarks.create", "建立")}
+                </Button>
+              </DialogFooter>
+            </DialogBody>
           </DialogContent>
         </Dialog>
 
         {/* ── 重命名文件夹对话框 ──────────────────────────── */}
         <Dialog open={h.renameFolderDialogOpen} onOpenChange={h.setRenameFolderDialogOpen}>
           <DialogContent 
-            className={cn("sm:max-w-[320px]", isXpTheme && "p-0 overflow-hidden")}
+            className={cn("sm:max-w-[320px] p-0 gap-0 overflow-hidden", isXpTheme && "p-0")}
             style={isXpTheme ? { fontSize: "11px" } : undefined}
           >
             <DialogHeader>
@@ -1007,44 +1018,54 @@ export function BookmarkBoardApp({
                 {t("apps.bookmarks.renameFolder", "重命名")}
               </DialogTitle>
             </DialogHeader>
-            <div className={isXpTheme ? "p-2 px-4" : "py-2"}>
-              <Input
-                value={h.renameFolderName}
-                onChange={(e) => h.setRenameFolderName(e.target.value)}
-                placeholder={t("apps.bookmarks.folderName", "檔案夾名稱")}
-                className={cn(
-                  "text-xs",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
-                onKeyDown={(e) => e.key === "Enter" && h.submitRenameFolder()}
-                autoFocus
-              />
-            </div>
-            <DialogFooter className={isXpTheme ? "p-2 px-4 pt-0 gap-1" : "gap-1"}>
-              <Button
-                variant={isMacTheme ? "secondary" : "retro"}
-                size="sm"
-                onClick={() => h.setRenameFolderDialogOpen(false)}
-                className={cn(
-                  !isMacTheme && "h-7",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
-              >
-                {t("common.dialog.cancel", "取消")}
-              </Button>
-              <Button 
-                variant={isMacTheme ? "default" : "retro"}
-                size="sm" 
-                onClick={h.submitRenameFolder}
-                disabled={!h.renameFolderName.trim()}
-                className={cn(
-                  !isMacTheme && "h-7",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
-              >
-                {t("common.dialog.save", "儲存")}
-              </Button>
-            </DialogFooter>
+            <DialogBody className={isXpTheme ? "p-2 px-4" : "p-4"}>
+              <div className="space-y-1 mb-4">
+                <Label 
+                  className={cn(
+                    "text-[11px] text-black/50",
+                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
+                  )}
+                >
+                  {t("apps.bookmarks.folderName", "文件夹名称")}
+                </Label>
+                <Input
+                  value={h.renameFolderName}
+                  onChange={(e) => h.setRenameFolderName(e.target.value)}
+                  placeholder={t("apps.bookmarks.folderNamePlaceholder", "输入文件夹名称")}
+                  className={cn(
+                    "text-xs h-8",
+                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                  )}
+                  onKeyDown={(e) => e.key === "Enter" && h.submitRenameFolder()}
+                  autoFocus
+                />
+              </div>
+              <DialogFooter className="gap-1">
+                <Button
+                  variant={isMacTheme ? "secondary" : "retro"}
+                  size="sm"
+                  onClick={() => h.setRenameFolderDialogOpen(false)}
+                  className={cn(
+                    !isMacTheme && "h-7",
+                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                  )}
+                >
+                  {t("common.dialog.cancel", "取消")}
+                </Button>
+                <Button 
+                  variant={isMacTheme ? "default" : "retro"}
+                  size="sm" 
+                  onClick={h.submitRenameFolder}
+                  disabled={!h.renameFolderName.trim()}
+                  className={cn(
+                    !isMacTheme && "h-7",
+                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                  )}
+                >
+                  {t("common.dialog.save", "儲存")}
+                </Button>
+              </DialogFooter>
+            </DialogBody>
           </DialogContent>
         </Dialog>
 
