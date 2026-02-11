@@ -286,9 +286,7 @@ function isIOSPWA(): boolean {
  * - 浏览器 → 新标签页
  * 
  * iOS PWA 跳转策略：
- * 1. 使用 window.location.href 直接跳转 URL scheme（比 iframe 更可靠）
- * 2. 如果 app 已安装，会立即切换到 app，页面 visibilitychange 触发
- * 3. 如果 app 未安装或 scheme 无效，iOS 静默失败，2秒后回退到浏览器打开
+ * 使用临时 <a> 标签模拟点击，不改变当前页面 location，避免返回时重复跳转
  */
 export function openBookmarkUrl(url: string): void {
   if (isIOSPWA()) {
@@ -298,28 +296,25 @@ export function openBookmarkUrl(url: string): void {
       const scheme = getAppScheme(domain);
       
       if (scheme) {
-        let didLeave = false;
-        const startTime = Date.now();
+        // 用临时 <a> 标签触发 URL scheme，不影响当前页面状态
+        const link = document.createElement("a");
+        link.href = scheme;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         
-        // 监听页面可见性变化，判断是否成功跳转
-        const handleVisibilityChange = () => {
-          if (document.hidden) {
-            didLeave = true;
-          }
-        };
-        document.addEventListener("visibilitychange", handleVisibilityChange);
+        // 标记已尝试跳转，避免重复触发
+        const jumpKey = `scheme_jump_${Date.now()}`;
+        sessionStorage.setItem(jumpKey, "1");
         
-        // 直接跳转 URL scheme
-        window.location.href = scheme;
-        
-        // 2秒后检查：如果没有离开页面，说明跳转失败，回退浏览器打开
+        // 1.5秒后检查：如果页面还可见，说明跳转失败，回退浏览器打开
         setTimeout(() => {
-          document.removeEventListener("visibilitychange", handleVisibilityChange);
-          // 如果页面没有切换（用户还在 PWA 里），且时间超过 1.5 秒，说明跳转失败
-          if (!didLeave && Date.now() - startTime > 1500) {
+          sessionStorage.removeItem(jumpKey);
+          if (!document.hidden) {
             window.open(url, "_blank");
           }
-        }, 2000);
+        }, 1500);
         return;
       }
     } catch {
