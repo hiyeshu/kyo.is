@@ -359,6 +359,13 @@ export function openBookmarkUrl(url: string): void {
       const deepLink = getDeepLink(fullUrl);
       
       if (deepLink) {
+        // 追踪是否曾经离开页面（跳转到 app 成功）
+        let didLeave = false;
+        const onVisibilityChange = () => {
+          if (document.hidden) didLeave = true;
+        };
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        
         // 用临时 <a> 标签触发 URL scheme，不影响当前页面状态
         const link = document.createElement("a");
         link.href = deepLink;
@@ -367,9 +374,11 @@ export function openBookmarkUrl(url: string): void {
         link.click();
         document.body.removeChild(link);
         
-        // 1.5秒后检查：如果页面还可见，说明跳转失败，回退浏览器打开
+        // 1.5秒后检查：如果从未离开过页面，说明跳转失败，回退浏览器打开
         setTimeout(() => {
-          if (!document.hidden) {
+          document.removeEventListener("visibilitychange", onVisibilityChange);
+          // 只有从未离开过（app 没打开）才回退到浏览器
+          if (!didLeave) {
             window.open(url, "_blank");
           }
         }, 1500);
