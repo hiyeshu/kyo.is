@@ -13,7 +13,7 @@ import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
-import { useBookmarkStore, isFolder, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, isFolder, openBookmarkUrl, getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
 import { getTranslatedAppName } from "@/utils/i18n";
@@ -413,13 +413,16 @@ function BookmarkDesktopIcon({
 }) {
   const isXpTheme = theme === "xp" || theme === "win98";
   const isSystem7 = theme === "system7";
+  const isLegacyTheme = isXpTheme || isSystem7;
 
   // Mobile: larger icons for better touch targets (48-56px)
-  // Desktop: standard 40px container, 32px icon
-  const containerSize = isMobile ? "w-14 h-14" : "w-10 h-10";
-  const iconSize = isMobile ? "w-12 h-12" : "w-8 h-8";
-  const iconSizeSmall = isMobile ? "w-10 h-10" : "w-6 h-6";
-  const iconWidth = isMobile ? "w-[80px]" : "w-[72px]";
+  // Desktop: standard icons, XP/98/System7 slightly larger
+  const containerSize = isMobile ? "w-14 h-14" : isLegacyTheme ? "w-14 h-14" : "w-12 h-12";
+  const iconSize = isMobile ? "w-12 h-12" : isLegacyTheme ? "w-12 h-12" : "w-10 h-10";
+  const iconWidth = isMobile ? "w-[80px]" : isLegacyTheme ? "w-[88px]" : "w-[72px]";
+  
+  // 使用单一真相源获取图标信息
+  const iconInfo = getBookmarkIconInfo(bookmark);
 
   return (
     <div
@@ -429,81 +432,64 @@ function BookmarkDesktopIcon({
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
-      {/* Icon container - style varies by theme, size varies by device */}
+      {/* Icon container - 根据主题渲染不同样式 */}
       <div className={`${containerSize} flex items-center justify-center mb-0.5 relative`}>
-        {isXpTheme ? (
-          // XP/Win98: Classic Windows IE-style icon
-          bookmark.favicon ? (
+        {iconInfo.isEmoji ? (
+          // Emoji 图标
+          <span className={`${iconSize} flex items-center justify-center text-3xl`}>
+            {iconInfo.value}
+          </span>
+        ) : isXpTheme ? (
+          // XP/Win98: 直接显示图标，无圆角
+          <img
+            src={iconInfo.value}
+            alt=""
+            className={`${iconSize} object-contain`}
+            draggable={false}
+            loading="lazy"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "/icons/xp/ie-site.png";
+            }}
+          />
+        ) : isSystem7 ? (
+          // System 7: 黑白风格
+          <div 
+            className={`${iconSize} border-2 border-black bg-white flex items-center justify-center overflow-hidden`}
+            style={{ filter: "grayscale(100%)" }}
+          >
             <img
-              src={bookmark.favicon}
+              src={iconInfo.value}
               alt=""
-              className={`${iconSize} object-contain`}
+              className="w-3/4 h-3/4 object-contain"
               draggable={false}
               loading="lazy"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = "/icons/xp/ie-site.png";
+                target.src = "/icons/default/internet.png";
               }}
             />
-          ) : (
-            <img
-              src="/icons/xp/ie-site.png"
-              alt=""
-              className={`${iconSize} object-contain`}
-              draggable={false}
-            />
-          )
-        ) : isSystem7 ? (
-          // System 7: Black & white classic Mac style
-          <div 
-            className={`${iconSize} border border-black bg-white flex items-center justify-center overflow-hidden`}
-            style={{ filter: "grayscale(100%)" }}
-          >
-            {bookmark.favicon ? (
-              <img
-                src={bookmark.favicon}
-                alt=""
-                className={`${iconSizeSmall} object-contain`}
-                draggable={false}
-                loading="lazy"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/icons/default/internet.png";
-                }}
-              />
-            ) : (
-              <img
-                src="/icons/default/internet.png"
-                alt=""
-                className={`${iconSizeSmall} object-contain`}
-                draggable={false}
-              />
-            )}
           </div>
         ) : (
-          // Default/Aqua: Modern rounded style
+          // macOS Aqua: 圆角 + 阴影
           <div
-            className={`${iconSize} rounded-lg bg-white flex items-center justify-center overflow-hidden`}
+            className={`${iconSize} rounded-xl bg-white flex items-center justify-center overflow-hidden`}
             style={{
-              boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1)",
             }}
           >
-            {bookmark.favicon ? (
-              <img
-                src={bookmark.favicon}
-                alt=""
-                className="w-full h-full object-contain"
-                style={{ imageRendering: "-webkit-optimize-contrast" }}
-                draggable={false}
-                loading="lazy"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                  (e.target as HTMLImageElement).parentElement!.innerHTML = "🌐";
-                }}
-              />
-            ) : (
-              <span className={isMobile ? "text-2xl" : "text-lg"}>🌐</span>
-            )}
+            <img
+              src={iconInfo.value}
+              alt=""
+              className="w-full h-full object-cover"
+              style={{ imageRendering: "-webkit-optimize-contrast" }}
+              draggable={false}
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+                (e.target as HTMLImageElement).parentElement!.innerHTML = '<span class="text-2xl">🌐</span>';
+              }}
+            />
           </div>
         )}
       </div>
@@ -537,6 +523,7 @@ function DesktopIcon({
   onDoubleClick,
   onContextMenu,
   theme,
+  isMobile = false,
 }: {
   label: string;
   icon: string;
@@ -545,24 +532,66 @@ function DesktopIcon({
   onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
   theme: string;
+  isMobile?: boolean;
 }) {
   const isXpTheme = theme === "xp" || theme === "win98";
+  const isLegacyTheme = isXpTheme || theme === "system7";
+  
+  // 和 BookmarkDesktopIcon 统一尺寸
+  const containerSize = isMobile ? "w-14 h-14" : isLegacyTheme ? "w-14 h-14" : "w-12 h-12";
+  const iconSize = isMobile ? "w-12 h-12" : isLegacyTheme ? "w-12 h-12" : "w-10 h-10";
+  const iconWidth = isMobile ? "w-[80px]" : isLegacyTheme ? "w-[88px]" : "w-[72px]";
+  
+  const isSystem7 = theme === "system7";
   
   return (
     <div
       data-desktop-icon="true"
-      className={`flex flex-col items-center justify-start w-[72px] cursor-default select-none`}
+      className={`flex flex-col items-center justify-start ${iconWidth} cursor-default select-none`}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
-      <div className="w-10 h-10 flex items-center justify-center mb-0.5">
-        <img
-          src={icon}
-          alt={label}
-          className="max-w-full max-h-full pointer-events-none"
-          draggable={false}
-        />
+      {/* 图标容器 - 和 BookmarkDesktopIcon 统一样式 */}
+      <div className={`${containerSize} flex items-center justify-center mb-0.5 relative`}>
+        {isXpTheme ? (
+          // XP/Win98: 直接显示图标，无圆角
+          <img
+            src={icon}
+            alt={label}
+            className={`${iconSize} object-contain pointer-events-none`}
+            draggable={false}
+          />
+        ) : isSystem7 ? (
+          // System 7: 黑白风格
+          <div 
+            className={`${iconSize} border-2 border-black bg-white flex items-center justify-center overflow-hidden`}
+            style={{ filter: "grayscale(100%)" }}
+          >
+            <img
+              src={icon}
+              alt={label}
+              className="w-3/4 h-3/4 object-contain pointer-events-none"
+              draggable={false}
+            />
+          </div>
+        ) : (
+          // macOS Aqua: 圆角 + 阴影
+          <div
+            className={`${iconSize} rounded-xl bg-white flex items-center justify-center overflow-hidden`}
+            style={{
+              boxShadow: "0 2px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1)",
+            }}
+          >
+            <img
+              src={icon}
+              alt={label}
+              className="w-full h-full object-cover pointer-events-none"
+              style={{ imageRendering: "-webkit-optimize-contrast" }}
+              draggable={false}
+            />
+          </div>
+        )}
       </div>
       <span
         className={`text-[11px] leading-tight text-center break-words max-w-full px-0.5 rounded ${

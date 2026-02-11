@@ -202,11 +202,11 @@ export function ControlPanelsApp({
         instanceId={instanceId}
         onNavigateNext={onNavigateNext}
         onNavigatePrevious={onNavigatePrevious}
-        menuBar={isXpTheme ? menuBar : undefined}
+        menuBar={undefined}  /* 系统偏好设定不需要窗口内菜单栏 */
       >
         <div
           className={`flex flex-col h-full w-full ${
-            isWindowsLegacyTheme ? "pt-0 pb-2 px-2" : ""
+            isWindowsLegacyTheme ? "p-2" : ""
           } ${
             isClassicMacTheme
               ? isMacOSXTheme

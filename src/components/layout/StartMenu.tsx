@@ -191,9 +191,9 @@ export function StartMenu({ apps }: StartMenuProps) {
                 {/* About This Computer */}
                 <DropdownMenuItem
                   onClick={() => setAboutOpen(true)}
-                  className="h-8 px-3 flex items-center gap-2 hover:bg-blue-500 hover:text-white"
+                  className="h-12 px-3 flex items-center gap-3 hover:bg-blue-500 hover:text-white"
                   style={{
-                    fontSize: "11px",
+                    fontSize: "13px",
                     color: "#000000",
                     fontFamily: "var(--font-ms-sans)",
                     imageRendering: "pixelated",
@@ -202,7 +202,7 @@ export function StartMenu({ apps }: StartMenuProps) {
                   <ThemedIcon
                     name="info.png"
                     alt="About"
-                    className="w-6 h-6 [image-rendering:pixelated]"
+                    className="w-10 h-10 [image-rendering:pixelated]"
                   />
                   {t("common.startMenu.aboutThisComputer")}
                 </DropdownMenuItem>
@@ -218,9 +218,9 @@ export function StartMenu({ apps }: StartMenuProps) {
                   <DropdownMenuItem
                     key={app.id}
                     onClick={() => handleAppClick(app.id)}
-                    className="h-8 px-3 flex items-center gap-2 hover:bg-blue-500 hover:text-white"
+                    className="h-12 px-3 flex items-center gap-3 hover:bg-blue-500 hover:text-white"
                     style={{
-                      fontSize: "11px",
+                      fontSize: "13px",
                       color: "#000000",
                       fontFamily: "var(--font-ms-sans)",
                       imageRendering: "pixelated",
@@ -231,10 +231,10 @@ export function StartMenu({ apps }: StartMenuProps) {
                         <ThemedIcon
                           name={app.icon}
                           alt={app.name}
-                          className="w-6 h-6 [image-rendering:pixelated]"
+                          className="w-10 h-10 [image-rendering:pixelated]"
                         />
                       ) : (
-                        <div className="w-6 h-6 flex items-center justify-center">
+                        <div className="w-10 h-10 flex items-center justify-center">
                           {app.icon}
                         </div>
                       )
@@ -242,7 +242,7 @@ export function StartMenu({ apps }: StartMenuProps) {
                       <ThemedIcon
                         name={app.icon.src}
                         alt={app.name}
-                        className="w-6 h-6 [image-rendering:pixelated]"
+                        className="w-10 h-10 [image-rendering:pixelated]"
                       />
                     )}
                     {getTranslatedAppName(app.id as AppId)}

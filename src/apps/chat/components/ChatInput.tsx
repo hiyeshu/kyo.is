@@ -95,22 +95,20 @@ export function ChatInput({
             isMacTheme 
               ? "text-xs pl-3 pr-24 rounded-full h-9" 
               : isWinTheme
-              ? "text-[13px] pl-2 pr-24 h-10"
+              ? "text-[13px] pl-3 pr-28 !h-9 !min-h-[36px]"
               : "text-xs pl-2 pr-24"
           }`}
         />
 
         {/* 功能按钮 - 绝对定位在输入框右侧 */}
-        <div className={`absolute right-1 flex items-center gap-0.5 ${isWinTheme ? "h-10" : "h-full"}`}>
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
           {[Paperclip, ImageSquare, Microphone].map((Icon, i) => (
             <button
               key={i}
               type="button"
-              className={`flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors ${
-                isWinTheme ? "w-7 h-7" : "w-6 h-6"
-              }`}
+              className={`flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors w-6 h-6`}
             >
-              <Icon className={isWinTheme ? "h-4 w-4" : "h-4 w-4"} weight="bold" />
+              <Icon className={isWinTheme ? "h-3.5 w-3.5" : "h-4 w-4"} weight="bold" />
             </button>
           ))}
         </div>
@@ -133,9 +131,7 @@ export function ChatInput({
             className={`p-0 flex items-center justify-center ${
               isMacTheme
                 ? "text-xs w-9 h-9 rounded-full relative overflow-hidden transition-transform hover:scale-105"
-                : isWinTheme
-                ? "w-10 h-10 text-white"
-                : "text-xs w-9 h-9"
+                : "w-9 h-9"
             } ${!isLoading && isEmpty ? "opacity-50 cursor-not-allowed" : ""}`}
             style={
               isMacTheme
@@ -148,24 +144,18 @@ export function ChatInput({
                       : "0 2px 3px rgba(0,0,0,0.2), 0 1px 1px rgba(0,0,0,0.3), inset 0 0 0 0.5px rgba(0,0,0,0.3), inset 0 1px 2px rgba(0,0,0,0.4), inset 0 2px 3px 1px rgba(217, 249, 157, 0.5)",
                     backdropFilter: "blur(2px)",
                   }
-                : isWinTheme
-                ? {
-                    background: isLoading 
-                      ? (currentTheme === "xp" ? "#c44" : "#808080")
-                      : (currentTheme === "xp" ? "#3c78b5" : "#000080"),
-                  }
                 : undefined
             }
           >
             {isMacTheme && <AquaShine />}
             {isLoading ? (
               <Square
-                className={`h-4 w-4 ${isMacTheme ? "text-black/70 relative z-10" : isWinTheme ? "text-white" : ""}`}
+                className={`h-4 w-4 ${isMacTheme ? "text-black/70 relative z-10" : isWinTheme ? "text-black" : ""}`}
                 weight="fill"
               />
             ) : (
               <ArrowUp
-                className={`h-4 w-4 ${isMacTheme ? "text-black/70 relative z-10" : isWinTheme ? "text-white" : ""}`}
+                className={`h-4 w-4 ${isMacTheme ? "text-black/70 relative z-10" : isWinTheme ? "text-black" : ""}`}
                 weight="bold"
               />
             )}
