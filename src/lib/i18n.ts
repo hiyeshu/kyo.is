@@ -3,6 +3,7 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
 import enTranslation from "./locales/en/translation.json";
+import zhCNTranslation from "./locales/zh-CN/translation.json";
 import zhTWTranslation from "./locales/zh-TW/translation.json";
 import jaTranslation from "./locales/ja/translation.json";
 import koTranslation from "./locales/ko/translation.json";
@@ -10,6 +11,9 @@ import koTranslation from "./locales/ko/translation.json";
 const resources = {
   en: {
     translation: enTranslation,
+  },
+  "zh-CN": {
+    translation: zhCNTranslation,
   },
   "zh-TW": {
     translation: zhTWTranslation,
@@ -22,7 +26,7 @@ const resources = {
   },
 };
 
-export const SUPPORTED_LANGUAGES = ["en", "zh-TW", "ja", "ko"] as const;
+export const SUPPORTED_LANGUAGES = ["en", "zh-CN", "zh-TW", "ja", "ko"] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 /**
@@ -51,9 +55,16 @@ export const detectLanguageFromLocale = (locale: string): SupportedLanguage | nu
   // Extract language code (first part before hyphen)
   const langCode = normalizedLocale.split("-")[0];
   
-  // Special case: all Chinese variants map to zh-TW
+  // Special case: Chinese variants
+  // zh-Hans, zh-CN, zh-SG → 简体中文
+  // zh-Hant, zh-TW, zh-HK, zh-MO → 繁体中文
   if (langCode === "zh") {
-    return "zh-TW";
+    const lowerLocale = normalizedLocale.toLowerCase();
+    if (lowerLocale.includes("hant") || lowerLocale.includes("tw") || 
+        lowerLocale.includes("hk") || lowerLocale.includes("mo")) {
+      return "zh-TW";
+    }
+    return "zh-CN"; // 默认简体中文
   }
   
   // Check if language code matches any supported language
@@ -80,7 +91,7 @@ export const autoDetectLanguage = (): SupportedLanguage => {
     }
   }
   
-  return "en"; // Default fallback
+  return "zh-CN"; // 默认简体中文
 };
 
 // Storage keys
@@ -129,7 +140,7 @@ const getInitialLanguage = (): string => {
     return detectedLanguage;
   }
   
-  return "en";
+  return "zh-CN";
 };
 
 const initialLanguage = getInitialLanguage();
@@ -162,7 +173,8 @@ document.documentElement.lang = initialLanguage;
 
 export const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
   en: "English",
-  "zh-TW": "中文",
+  "zh-CN": "简体中文",
+  "zh-TW": "繁體中文",
   ja: "日本語",
   ko: "한국어",
 };

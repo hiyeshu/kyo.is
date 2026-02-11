@@ -307,7 +307,7 @@ const createDefaultItems = (): BoardItem[] => [
   createBookmark("网易云音乐", "https://music.163.com"),
   createBookmark("哔哩哔哩", "https://bilibili.com"),
   createBookmark("Flomo", "https://flomoapp.com"),
-  createBookmark("YouMind", "https://youmind.com"),
+  createBookmark("YouMind", "https://youmind.com", "/icons/favicons/youmind.png"),
   createBookmark("豆瓣", "https://douban.com"),
   createBookmark("GitHub", "https://github.com"),
 ];
