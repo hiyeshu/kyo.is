@@ -270,6 +270,67 @@ function getAppScheme(domain: string): string | null {
   return APP_URL_SCHEMES[main] || null;
 }
 
+/**
+ * 将完整 URL 转换为 App 深度链接
+ * 部分 app 支持带路径的深度链接，可以直接打开特定页面
+ */
+function getDeepLink(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    const { hostname, pathname } = parsed;
+    const domain = hostname.replace(/^(www\.|m\.)/, "");
+    
+    // ─── 即刻：话题/动态/用户页 ─────────────────────────────────────────────────
+    if (domain === "okjike.com") {
+      // 话题页: /topics/{id} → jike://page.jk/topic/{id}
+      const topicMatch = pathname.match(/^\/topics\/([a-f0-9]+)/i);
+      if (topicMatch) return `jike://page.jk/topic/${topicMatch[1]}`;
+      
+      // 动态页: /originalPosts/{id} → jike://page.jk/originalPost/{id}
+      const postMatch = pathname.match(/^\/originalPosts\/([a-f0-9]+)/i);
+      if (postMatch) return `jike://page.jk/originalPost/${postMatch[1]}`;
+      
+      // 用户页: /users/{id} → jike://page.jk/user/{id}
+      const userMatch = pathname.match(/^\/users\/([a-f0-9-]+)/i);
+      if (userMatch) return `jike://page.jk/user/${userMatch[1]}`;
+      
+      // 其他页面用通用 scheme
+      return "jike://";
+    }
+    
+    // ─── 哔哩哔哩：视频/用户/番剧 ────────────────────────────────────────────────
+    if (domain === "bilibili.com") {
+      // 视频页: /video/BVxxx → bilibili://video/BVxxx
+      const videoMatch = pathname.match(/^\/video\/(BV[a-zA-Z0-9]+|av\d+)/i);
+      if (videoMatch) return `bilibili://video/${videoMatch[1]}`;
+      
+      // 用户空间: /space/{uid} → bilibili://space/{uid}
+      const spaceMatch = pathname.match(/^\/space\/(\d+)/);
+      if (spaceMatch) return `bilibili://space/${spaceMatch[1]}`;
+      
+      return "bilibili://";
+    }
+    
+    // ─── 小红书：笔记/用户 ───────────────────────────────────────────────────────
+    if (domain === "xiaohongshu.com") {
+      // 笔记页: /explore/{id} 或 /discovery/item/{id}
+      const noteMatch = pathname.match(/^\/(?:explore|discovery\/item)\/([a-f0-9]+)/i);
+      if (noteMatch) return `xhsdiscover://item/${noteMatch[1]}`;
+      
+      // 用户页: /user/profile/{id}
+      const userMatch = pathname.match(/^\/user\/profile\/([a-f0-9]+)/i);
+      if (userMatch) return `xhsdiscover://user/${userMatch[1]}`;
+      
+      return "xhsdiscover://";
+    }
+    
+    // 其他 app 暂时用基础 scheme
+    return getAppScheme(hostname);
+  } catch {
+    return null;
+  }
+}
+
 /** iOS PWA 检测 */
 function isIOSPWA(): boolean {
   if (typeof window === "undefined") return false;
@@ -292,25 +353,20 @@ export function openBookmarkUrl(url: string): void {
   if (isIOSPWA()) {
     try {
       const fullUrl = url.startsWith("http") ? url : `https://${url}`;
-      const domain = new URL(fullUrl).hostname;
-      const scheme = getAppScheme(domain);
+      // 优先使用深度链接（带路径），否则用基础 scheme
+      const deepLink = getDeepLink(fullUrl);
       
-      if (scheme) {
+      if (deepLink) {
         // 用临时 <a> 标签触发 URL scheme，不影响当前页面状态
         const link = document.createElement("a");
-        link.href = scheme;
+        link.href = deepLink;
         link.style.display = "none";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         
-        // 标记已尝试跳转，避免重复触发
-        const jumpKey = `scheme_jump_${Date.now()}`;
-        sessionStorage.setItem(jumpKey, "1");
-        
         // 1.5秒后检查：如果页面还可见，说明跳转失败，回退浏览器打开
         setTimeout(() => {
-          sessionStorage.removeItem(jumpKey);
           if (!document.hidden) {
             window.open(url, "_blank");
           }
