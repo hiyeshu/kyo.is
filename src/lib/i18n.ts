@@ -131,10 +131,9 @@ const getInitialLanguage = (): string => {
     return saved;
   }
   
-  // If this is first initialization, auto-detect
+  // 新用户：检测浏览器语言，检测失败默认简体中文
   if (!isInitialized) {
-    const detectedLanguage = autoDetectLanguage();
-    // Store the detected language and mark as initialized
+    const detectedLanguage = autoDetectLanguage(); // 检测失败会返回 zh-CN
     localStorage.setItem(LANGUAGE_KEY, detectedLanguage);
     localStorage.setItem(LANGUAGE_INITIALIZED_KEY, "true");
     return detectedLanguage;
