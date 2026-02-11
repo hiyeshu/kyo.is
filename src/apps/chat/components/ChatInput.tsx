@@ -95,13 +95,13 @@ export function ChatInput({
             isMacTheme 
               ? "text-xs pl-3 pr-24 rounded-full h-9" 
               : isWinTheme
-              ? "text-[13px] pl-2 pr-24 h-8"
+              ? "text-[13px] pl-2 pr-24 h-10"
               : "text-xs pl-2 pr-24"
           }`}
         />
 
         {/* 功能按钮 - 绝对定位在输入框右侧 */}
-        <div className={`absolute right-1 flex items-center gap-0.5 ${isWinTheme ? "h-8" : "h-full"}`}>
+        <div className={`absolute right-1 flex items-center gap-0.5 ${isWinTheme ? "h-10" : "h-full"}`}>
           {[Paperclip, ImageSquare, Microphone].map((Icon, i) => (
             <button
               key={i}
@@ -134,7 +134,7 @@ export function ChatInput({
               isMacTheme
                 ? "text-xs w-9 h-9 rounded-full relative overflow-hidden transition-transform hover:scale-105"
                 : isWinTheme
-                ? "w-10 h-8 text-white"
+                ? "w-10 h-10 text-white"
                 : "text-xs w-9 h-9"
             } ${!isLoading && isEmpty ? "opacity-50 cursor-not-allowed" : ""}`}
             style={
