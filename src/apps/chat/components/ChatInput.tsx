@@ -78,32 +78,39 @@ export function ChatInput({
   const { t } = useTranslation();
   const currentTheme = useThemeStore((state) => state.current);
   const isMacTheme = currentTheme === "macosx";
+  const isWinTheme = currentTheme === "xp" || currentTheme === "win98";
   const isEmpty = input.trim() === "";
 
   return (
-    <form onSubmit={onSubmit} className="flex gap-1">
+    <form onSubmit={onSubmit} className="flex items-center gap-2">
       {/* 输入框容器 */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative flex items-center">
         <Input
           type="text"
           value={input}
           onChange={onInputChange}
           placeholder={t("apps.chat.inputPlaceholder", "输入消息...")}
           disabled={isLoading}
-          className={`w-full text-xs font-geneva-12 ${
-            isMacTheme ? "pl-3 pr-20 rounded-full" : "pl-2 pr-20"
+          className={`w-full font-geneva-12 ${
+            isMacTheme 
+              ? "text-xs pl-3 pr-24 rounded-full h-9" 
+              : isWinTheme
+              ? "text-[13px] pl-2 pr-24 h-8"
+              : "text-xs pl-2 pr-24"
           }`}
         />
 
-        {/* 功能按钮 */}
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+        {/* 功能按钮 - 绝对定位在输入框右侧 */}
+        <div className={`absolute right-1 flex items-center gap-0.5 ${isWinTheme ? "h-8" : "h-full"}`}>
           {[Paperclip, ImageSquare, Microphone].map((Icon, i) => (
             <button
               key={i}
               type="button"
-              className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+              className={`flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors ${
+                isWinTheme ? "w-7 h-7" : "w-6 h-6"
+              }`}
             >
-              <Icon className="h-4 w-4" weight="bold" />
+              <Icon className={isWinTheme ? "h-4 w-4" : "h-4 w-4"} weight="bold" />
             </button>
           ))}
         </div>
@@ -117,15 +124,18 @@ export function ChatInput({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.8, opacity: 0 }}
           transition={{ duration: 0.15 }}
+          className="flex items-center"
         >
           <Button
             type={isLoading ? "button" : "submit"}
             onClick={isLoading ? onStop : undefined}
             disabled={!isLoading && isEmpty}
-            className={`text-xs w-9 h-9 p-0 flex items-center justify-center ${
+            className={`p-0 flex items-center justify-center ${
               isMacTheme
-                ? "rounded-full relative overflow-hidden transition-transform hover:scale-105"
-                : ""
+                ? "text-xs w-9 h-9 rounded-full relative overflow-hidden transition-transform hover:scale-105"
+                : isWinTheme
+                ? "w-10 h-8 text-white"
+                : "text-xs w-9 h-9"
             } ${!isLoading && isEmpty ? "opacity-50 cursor-not-allowed" : ""}`}
             style={
               isMacTheme
@@ -138,18 +148,24 @@ export function ChatInput({
                       : "0 2px 3px rgba(0,0,0,0.2), 0 1px 1px rgba(0,0,0,0.3), inset 0 0 0 0.5px rgba(0,0,0,0.3), inset 0 1px 2px rgba(0,0,0,0.4), inset 0 2px 3px 1px rgba(217, 249, 157, 0.5)",
                     backdropFilter: "blur(2px)",
                   }
+                : isWinTheme
+                ? {
+                    background: isLoading 
+                      ? (currentTheme === "xp" ? "#c44" : "#808080")
+                      : (currentTheme === "xp" ? "#3c78b5" : "#000080"),
+                  }
                 : undefined
             }
           >
             {isMacTheme && <AquaShine />}
             {isLoading ? (
               <Square
-                className={`h-4 w-4 ${isMacTheme ? "text-black/70 relative z-10" : ""}`}
+                className={`h-4 w-4 ${isMacTheme ? "text-black/70 relative z-10" : isWinTheme ? "text-white" : ""}`}
                 weight="fill"
               />
             ) : (
               <ArrowUp
-                className={`h-4 w-4 ${isMacTheme ? "text-black/70 relative z-10" : ""}`}
+                className={`h-4 w-4 ${isMacTheme ? "text-black/70 relative z-10" : isWinTheme ? "text-white" : ""}`}
                 weight="bold"
               />
             )}
