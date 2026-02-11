@@ -281,9 +281,14 @@ function isIOSPWA(): boolean {
 
 /**
  * 统一的书签 URL 打开函数
- * - iOS PWA + 有 URL scheme → 尝试唤起 App，失败回退浏览器
+ * - iOS PWA + 有 URL scheme → 尝试唤起原生 App
  * - iOS PWA + 无 scheme → window.open 跳 Safari
  * - 浏览器 → 新标签页
+ * 
+ * iOS PWA 跳转策略：
+ * 1. 使用 window.location.href 直接跳转 URL scheme（比 iframe 更可靠）
+ * 2. 如果 app 已安装，会立即切换到 app，页面 visibilitychange 触发
+ * 3. 如果 app 未安装或 scheme 无效，iOS 静默失败，2秒后回退到浏览器打开
  */
 export function openBookmarkUrl(url: string): void {
   if (isIOSPWA()) {
@@ -291,17 +296,30 @@ export function openBookmarkUrl(url: string): void {
       const fullUrl = url.startsWith("http") ? url : `https://${url}`;
       const domain = new URL(fullUrl).hostname;
       const scheme = getAppScheme(domain);
+      
       if (scheme) {
-        // 用隐藏 iframe 尝试唤起 App，不影响当前页面
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = scheme;
-        document.body.appendChild(iframe);
-        // 500ms 后清理 iframe 并回退到浏览器打开
+        let didLeave = false;
+        const startTime = Date.now();
+        
+        // 监听页面可见性变化，判断是否成功跳转
+        const handleVisibilityChange = () => {
+          if (document.hidden) {
+            didLeave = true;
+          }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        
+        // 直接跳转 URL scheme
+        window.location.href = scheme;
+        
+        // 2秒后检查：如果没有离开页面，说明跳转失败，回退浏览器打开
         setTimeout(() => {
-          document.body.removeChild(iframe);
-          window.open(url, "_blank");
-        }, 500);
+          document.removeEventListener("visibilitychange", handleVisibilityChange);
+          // 如果页面没有切换（用户还在 PWA 里），且时间超过 1.5 秒，说明跳转失败
+          if (!didLeave && Date.now() - startTime > 1500) {
+            window.open(url, "_blank");
+          }
+        }, 2000);
         return;
       }
     } catch {
