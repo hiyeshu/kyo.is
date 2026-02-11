@@ -446,19 +446,19 @@ export function BookmarkBoardApp({
           {/* ── 搜索栏 ─────────────────────────────────────────── */}
           {h.isXpTheme ? (
             /* Windows 98/XP: 搜索栏即输入框，不套层 */
-            <div className="flex items-center gap-1 px-1 py-1 bg-white border-b border-[#919b9c]">
-              <MagnifyingGlass size={14} className="text-black/40 shrink-0 ml-1" />
+            <div className="flex items-center gap-2 px-2 py-2 bg-white border-b border-[#919b9c]">
+              <MagnifyingGlass size={16} className="text-black/40 shrink-0" />
               <input
                 type="text"
                 value={h.searchQuery}
                 onChange={(e) => h.setSearchQuery(e.target.value)}
                 placeholder={t("apps.bookmarks.search", "Search bookmarks...")}
-                className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-black/40"
+                className="flex-1 text-[13px] bg-transparent outline-none placeholder:text-black/40"
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="w-6 h-6 flex items-center justify-center shrink-0 hover:bg-black/5 active:bg-black/10">
-                    <Plus size={14} weight="bold" className="text-black/60" />
+                  <button className="w-7 h-7 flex items-center justify-center shrink-0 hover:bg-black/5 active:bg-black/10">
+                    <Plus size={16} weight="bold" className="text-black/60" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[160px]">
