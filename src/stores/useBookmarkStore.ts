@@ -281,17 +281,19 @@ function getDeepLink(url: string): string | null {
     const domain = hostname.replace(/^(www\.|m\.)/, "");
     
     // ─── 即刻：话题/动态/用户页 ─────────────────────────────────────────────────
-    if (domain === "okjike.com") {
-      // 话题页: /topics/{id} → jike://page.jk/topic/{id}
-      const topicMatch = pathname.match(/^\/topics\/([a-f0-9]+)/i);
+    // web.okjike.com 用 /topic/，m.okjike.com 用 /topics/
+    if (domain === "okjike.com" || hostname === "web.okjike.com") {
+      // 话题页: /topic/{id} 或 /topics/{id} → jike://page.jk/topic/{id}
+      // 支持 /topic/{id}/square 等子路径
+      const topicMatch = pathname.match(/^\/topics?\/([a-f0-9]+)/i);
       if (topicMatch) return `jike://page.jk/topic/${topicMatch[1]}`;
       
-      // 动态页: /originalPosts/{id} → jike://page.jk/originalPost/{id}
-      const postMatch = pathname.match(/^\/originalPosts\/([a-f0-9]+)/i);
+      // 动态页: /originalPosts/{id} 或 /originalPost/{id}
+      const postMatch = pathname.match(/^\/originalPosts?\/([a-f0-9]+)/i);
       if (postMatch) return `jike://page.jk/originalPost/${postMatch[1]}`;
       
-      // 用户页: /users/{id} → jike://page.jk/user/{id}
-      const userMatch = pathname.match(/^\/users\/([a-f0-9-]+)/i);
+      // 用户页: /users/{id} 或 /user/{id}
+      const userMatch = pathname.match(/^\/users?\/([a-f0-9-]+)/i);
       if (userMatch) return `jike://page.jk/user/${userMatch[1]}`;
       
       // 其他页面用通用 scheme
