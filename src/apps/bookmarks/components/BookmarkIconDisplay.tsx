@@ -14,9 +14,9 @@ interface BookmarkIconDisplayProps {
 }
 
 const SIZE_MAP = {
-  sm: "w-7 h-7 text-xl",      // 28px - 卡片默认
-  md: "w-9 h-9 text-2xl",     // 36px - 中等
-  lg: "w-12 h-12 text-3xl",   // 48px - Dialog 预览
+  sm: "w-full h-full text-2xl",   // 填满父容器，由父容器控制圆角
+  md: "w-9 h-9 text-2xl",         // 36px - 中等
+  lg: "w-12 h-12 text-3xl",       // 48px - Dialog 预览
 };
 
 export function BookmarkIconDisplay({
@@ -43,7 +43,7 @@ export function BookmarkIconDisplay({
     <img
       src={iconInfo.value}
       alt=""
-      className={`${sizeClass} object-contain rounded-lg overflow-hidden ${className}`}
+      className={`${sizeClass} object-cover rounded-lg overflow-hidden ${className}`}
       style={{ imageRendering: "-webkit-optimize-contrast" }}
       draggable={false}
       onError={(e) => {
