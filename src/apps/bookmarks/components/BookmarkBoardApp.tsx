@@ -415,6 +415,7 @@ export function BookmarkBoardApp({
 
   return (
     <>
+      {/* macOS 主题：菜单栏在窗口外 */}
       {!h.isXpTheme && isForeground && menuBar}
       
       {/* 右键菜单：使用 fixed 定位容器，全局坐标 */}
@@ -439,7 +440,7 @@ export function BookmarkBoardApp({
         instanceId={instanceId}
         onNavigateNext={onNavigateNext}
         onNavigatePrevious={onNavigatePrevious}
-        menuBar={h.isXpTheme ? menuBar : undefined}
+        menuBar={undefined}  /* 书签板不需要窗口内菜单栏，功能都在 + 按钮里 */
       >
         <div className="flex flex-col h-full w-full bg-white/85">
           {/* ── 搜索栏 (macOS Aqua 风格) ─────────────────────── */}
