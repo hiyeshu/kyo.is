@@ -123,64 +123,144 @@ const fav = (domain: string) => getFaviconUrl(domain);
 // 热门 App 的 URL scheme 映射，用于 iOS PWA 下直接唤起原生 App
 
 const APP_URL_SCHEMES: Record<string, string> = {
-  // 国内热门
+  // ─── 国内热门 ─────────────────────────────────────────────────────────────────
+  // 哔哩哔哩
   "bilibili.com": "bilibili://",
   "www.bilibili.com": "bilibili://",
   "m.bilibili.com": "bilibili://",
+  // 小红书
   "xiaohongshu.com": "xiaohongshu://",
   "www.xiaohongshu.com": "xiaohongshu://",
-  "music.163.com": "orpheuswidget://",
+  // 网易云音乐
+  "music.163.com": "orpheus://",
+  // 豆瓣
   "douban.com": "douban://",
   "www.douban.com": "douban://",
+  // 微博
   "weibo.com": "sinaweibo://",
   "www.weibo.com": "sinaweibo://",
+  // 知乎
   "zhihu.com": "zhihu://",
   "www.zhihu.com": "zhihu://",
+  // 淘宝
   "taobao.com": "taobao://",
   "www.taobao.com": "taobao://",
-  "jd.com": "openApp.jdMobile://",
-  "www.jd.com": "openApp.jdMobile://",
+  // 天猫
+  "tmall.com": "tmall://",
+  "www.tmall.com": "tmall://",
+  // 京东
+  "jd.com": "openapp.jdmoble://",
+  "www.jd.com": "openapp.jdmoble://",
+  // 拼多多
+  "pinduoduo.com": "pinduoduo://",
+  "www.pinduoduo.com": "pinduoduo://",
+  // 支付宝
   "alipay.com": "alipay://",
+  // 微信
   "weixin.qq.com": "weixin://",
   "wx.qq.com": "weixin://",
+  // QQ
   "qq.com": "mqq://",
+  // 即刻
   "web.okjike.com": "jike://",
   "okjike.com": "jike://",
   "m.okjike.com": "jike://",
+  // 优酷
   "youku.com": "youku://",
   "www.youku.com": "youku://",
+  // 爱奇艺
   "iqiyi.com": "qiyi-iphone://",
   "www.iqiyi.com": "qiyi-iphone://",
+  // 腾讯视频
+  "v.qq.com": "tenvideo://",
+  // 美团
   "meituan.com": "imeituan://",
   "www.meituan.com": "imeituan://",
+  // 美团外卖
+  "waimai.meituan.com": "meituanwaimai://",
+  // 大众点评
   "dianping.com": "dianping://",
   "www.dianping.com": "dianping://",
+  // 携程
   "ctrip.com": "CtripWireless://",
   "www.ctrip.com": "CtripWireless://",
+  // 今日头条
   "toutiao.com": "snssdk141://",
   "www.toutiao.com": "snssdk141://",
+  // 抖音
   "douyin.com": "snssdk1128://",
   "www.douyin.com": "snssdk1128://",
+  // 快手
+  "kuaishou.com": "gifshow://",
+  "www.kuaishou.com": "gifshow://",
+  // 酷安
+  "coolapk.com": "tencent100336226://",
+  "www.coolapk.com": "tencent100336226://",
+  // 微信读书
+  "weread.qq.com": "weread://",
+  // QQ音乐
+  "y.qq.com": "qqmusic://",
+  // 酷狗音乐
+  "kugou.com": "kugouURL://",
+  "www.kugou.com": "kugouURL://",
+  // 酷我音乐
+  "kuwo.cn": "com.kuwo.kwmusic.kwmusicForKwsing://",
+  "www.kuwo.cn": "com.kuwo.kwmusic.kwmusicForKwsing://",
+  // 唯品会
+  "vip.com": "vipshop://",
+  "www.vip.com": "vipshop://",
+  // 滴滴
+  "didi.cn": "diditaxi://",
+  "www.didi.cn": "diditaxi://",
+  // Keep
+  "keep.com": "keep://",
+  "www.keep.com": "keep://",
+  // 高德地图
+  "amap.com": "iosamap://",
+  "www.amap.com": "iosamap://",
+  // 百度地图
+  "map.baidu.com": "baidumap://",
+  // 腾讯会议
+  "meeting.tencent.com": "wemeet://",
+  // 钉钉
+  "dingtalk.com": "dingtalk://",
+  "www.dingtalk.com": "dingtalk://",
   
-  // 国际热门
+  // ─── 国际热门 ─────────────────────────────────────────────────────────────────
+  // GitHub
   "github.com": "github://",
+  // YouTube
   "youtube.com": "youtube://",
   "www.youtube.com": "youtube://",
+  "music.youtube.com": "youtubemusic://",
+  // Twitter/X
   "twitter.com": "twitter://",
   "x.com": "twitter://",
+  // Instagram
   "instagram.com": "instagram://",
   "www.instagram.com": "instagram://",
+  // Reddit
   "reddit.com": "reddit://",
   "www.reddit.com": "reddit://",
+  // Spotify
   "spotify.com": "spotify://",
   "open.spotify.com": "spotify://",
+  // Discord
   "discord.com": "discord://",
-  "tiktok.com": "snssdk1128://",
-  "www.tiktok.com": "snssdk1128://",
+  // TikTok
+  "tiktok.com": "snssdk1233://",
+  "www.tiktok.com": "snssdk1233://",
+  // Notion
   "notion.so": "notion://",
   "www.notion.so": "notion://",
+  // Telegram
   "telegram.org": "tg://",
   "t.me": "tg://",
+  // WhatsApp
+  "whatsapp.com": "whatsapp://",
+  "www.whatsapp.com": "whatsapp://",
+  // Line
+  "line.me": "line://",
 };
 
 function getAppScheme(domain: string): string | null {
