@@ -443,74 +443,97 @@ export function BookmarkBoardApp({
         menuBar={undefined}  /* 书签板不需要窗口内菜单栏，功能都在 + 按钮里 */
       >
         <div className="flex flex-col h-full w-full bg-white/85">
-          {/* ── 搜索栏 (macOS Aqua 风格) ─────────────────────── */}
-          <div
-            className={cn(
-              "flex items-center gap-2 px-3 py-2",
-              h.isXpTheme
-                ? "border-b border-[#919b9c]"
-                : h.currentTheme === "system7"
-                ? "bg-gray-100 border-b border-black"
-                : "border-b border-black/20"
-            )}
-            style={
-              !h.isXpTheme && h.currentTheme !== "system7"
-                ? {
-                    backgroundColor: "var(--os-color-window-bg, #f5f5f5)",
-                    backgroundImage: "var(--os-pinstripe-window)",
-                  }
-                : undefined
-            }
-          >
-            {/* 搜索框 */}
-            <div 
-              className={cn(
-                "flex items-center flex-1 gap-1.5 px-2.5 py-1",
-                h.isXpTheme
-                  ? "rounded-none border border-[#7f9db9] bg-white"
-                  : h.currentTheme === "system7"
-                  ? "rounded-none border border-black bg-white"
-                  : "rounded-full bg-white/80 border border-black/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50"
-              )}
-            >
-              <MagnifyingGlass size={14} className="text-black/40 shrink-0" />
+          {/* ── 搜索栏 ─────────────────────────────────────────── */}
+          {h.isXpTheme ? (
+            /* Windows 98/XP: 搜索栏即输入框，不套层 */
+            <div className="flex items-center gap-1 px-1 py-1 bg-white border-b border-[#919b9c]">
+              <MagnifyingGlass size={14} className="text-black/40 shrink-0 ml-1" />
               <input
                 type="text"
                 value={h.searchQuery}
                 onChange={(e) => h.setSearchQuery(e.target.value)}
                 placeholder={t("apps.bookmarks.search", "Search bookmarks...")}
-                className="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/30"
+                className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-black/40"
               />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="w-6 h-6 flex items-center justify-center shrink-0 hover:bg-black/5 active:bg-black/10">
+                    <Plus size={14} weight="bold" className="text-black/60" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[160px]">
+                  <DropdownMenuItem onClick={() => h.openAddDialog()}>
+                    <Link size={14} className="mr-2" />
+                    {t("apps.bookmarks.addBookmark", "新增書籤")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => h.openFolderDialog()}>
+                    <FolderPlus size={14} className="mr-2" />
+                    {t("apps.bookmarks.newFolder", "新增分類")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            
-            {/* + 按钮 */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    "w-7 h-7 flex items-center justify-center shrink-0 transition-all",
-                    h.isXpTheme
-                      ? "rounded-none border border-[#7f9db9] bg-[#f0f0f0] hover:bg-[#e5e5e5]"
-                      : h.currentTheme === "system7"
-                      ? "rounded-none border border-black bg-white hover:bg-gray-100"
-                      : "rounded-full bg-white/80 border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-white hover:border-black/20 active:bg-black/5"
-                  )}
-                >
-                  <Plus size={16} weight="bold" className="text-black/60" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[160px]">
-                <DropdownMenuItem onClick={() => h.openAddDialog()}>
-                  <Link size={14} className="mr-2" />
-                  {t("apps.bookmarks.addBookmark", "新增書籤")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => h.openFolderDialog()}>
-                  <FolderPlus size={14} className="mr-2" />
-                  {t("apps.bookmarks.newFolder", "新增分類")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          ) : (
+            /* macOS / System 7: 工具栏 + 搜索框 */
+            <div
+              className={cn(
+                "flex items-center gap-2 px-3 py-2",
+                h.currentTheme === "system7"
+                  ? "bg-gray-100 border-b border-black"
+                  : "border-b border-black/20"
+              )}
+              style={
+                h.currentTheme !== "system7"
+                  ? {
+                      backgroundColor: "var(--os-color-window-bg, #f5f5f5)",
+                      backgroundImage: "var(--os-pinstripe-window)",
+                    }
+                  : undefined
+              }
+            >
+              <div 
+                className={cn(
+                  "flex items-center flex-1 gap-1.5 px-2.5 py-1",
+                  h.currentTheme === "system7"
+                    ? "rounded-none border border-black bg-white"
+                    : "rounded-full bg-white/80 border border-black/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50"
+                )}
+              >
+                <MagnifyingGlass size={14} className="text-black/40 shrink-0" />
+                <input
+                  type="text"
+                  value={h.searchQuery}
+                  onChange={(e) => h.setSearchQuery(e.target.value)}
+                  placeholder={t("apps.bookmarks.search", "Search bookmarks...")}
+                  className="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/30"
+                />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "w-7 h-7 flex items-center justify-center shrink-0 transition-all",
+                      h.currentTheme === "system7"
+                        ? "rounded-none border border-black bg-white hover:bg-gray-100"
+                        : "rounded-full bg-white/80 border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-white hover:border-black/20 active:bg-black/5"
+                    )}
+                  >
+                    <Plus size={16} weight="bold" className="text-black/60" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[160px]">
+                  <DropdownMenuItem onClick={() => h.openAddDialog()}>
+                    <Link size={14} className="mr-2" />
+                    {t("apps.bookmarks.addBookmark", "新增書籤")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => h.openFolderDialog()}>
+                    <FolderPlus size={14} className="mr-2" />
+                    {t("apps.bookmarks.newFolder", "新增分類")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
 
           {/* ── 书签网格 ──────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto p-3">
