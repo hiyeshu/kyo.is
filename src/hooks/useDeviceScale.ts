@@ -89,3 +89,30 @@ export function getUserScale(): number {
   
   return value ? parseFloat(value) : 1;
 }
+
+/**
+ * 获取当前总缩放值 (device × theme × user)
+ */
+export function getOsScale(): number {
+  if (typeof window === "undefined") return 1;
+  
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue("--os-scale")
+    .trim();
+  
+  // CSS calc() 返回计算后的数值
+  return value ? parseFloat(value) : 1;
+}
+
+/**
+ * 获取 CSS 变量的计算值（像素）
+ */
+export function getCssVar(name: string): number {
+  if (typeof window === "undefined") return 0;
+  
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  
+  return value ? parseFloat(value) : 0;
+}

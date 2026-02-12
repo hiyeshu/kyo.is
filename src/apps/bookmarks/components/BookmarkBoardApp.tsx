@@ -135,15 +135,21 @@ function BookmarkCard({
       onDragEnd={onDragEnd}
       title={bm.url}
     >
-      {/* 图标容器 */}
-      <div className={cn(
-        "w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden",
-        "bg-gradient-to-b from-white to-white/90",
-        "border border-black/10",
-        "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]",
-        "group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)]",
-        "transition-shadow"
-      )}>
+      {/* 图标容器 - 使用 CSS 变量 */}
+      <div 
+        className={cn(
+          "rounded-xl flex items-center justify-center relative overflow-hidden",
+          "bg-gradient-to-b from-white to-white/90",
+          "border border-black/10",
+          "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]",
+          "group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)]",
+          "transition-shadow"
+        )}
+        style={{
+          width: "var(--os-icon-bookmark)",
+          height: "var(--os-icon-bookmark)",
+        }}
+      >
         <BookmarkIconDisplay bookmark={bm} size="sm" />
         {/* macOS Aqua 水晶高光 */}
         {isMacTheme && (
@@ -155,8 +161,11 @@ function BookmarkCard({
           />
         )}
       </div>
-      {/* 标题 - 双行截断 */}
-      <span className="text-[11px] text-center line-clamp-2 w-full font-geneva-12 leading-tight text-black/70 group-hover:text-black/90">
+      {/* 标题 - 双行截断，字体使用 CSS 变量 */}
+      <span 
+        className="text-center line-clamp-2 w-full font-geneva-12 leading-tight text-black/70 group-hover:text-black/90"
+        style={{ fontSize: "var(--os-text-xs)" }}
+      >
         {bm.title}
       </span>
     </div>

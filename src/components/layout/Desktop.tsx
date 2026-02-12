@@ -342,7 +342,6 @@ export function Desktop({
               bookmark={bm}
               isSelected={selectedBookmarkId === bm.id}
               theme={currentTheme}
-              isMobile={isMobile}
               onClick={(e) => {
                 e.stopPropagation();
                 // Mobile: single tap opens bookmark; Desktop: single click selects
@@ -401,7 +400,6 @@ function BookmarkDesktopIcon({
   onDoubleClick,
   onContextMenu,
   theme,
-  isMobile,
 }: {
   bookmark: Bookmark;
   isSelected: boolean;
@@ -409,34 +407,39 @@ function BookmarkDesktopIcon({
   onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
   theme: string;
-  isMobile: boolean;
 }) {
   const isXpTheme = theme === "xp" || theme === "win98";
   const isSystem7 = theme === "system7";
-  const isLegacyTheme = isXpTheme || isSystem7;
-
-  // Mobile: larger icons for better touch targets (48-56px)
-  // Desktop: standard icons, XP/98/System7 slightly larger
-  const containerSize = isMobile ? "w-14 h-14" : isLegacyTheme ? "w-14 h-14" : "w-12 h-12";
-  const iconSize = isMobile ? "w-12 h-12" : isLegacyTheme ? "w-12 h-12" : "w-10 h-10";
-  const iconWidth = isMobile ? "w-[80px]" : isLegacyTheme ? "w-[88px]" : "w-[72px]";
   
   // 使用单一真相源获取图标信息
   const iconInfo = getBookmarkIconInfo(bookmark);
 
+  // 图标和容器样式 - 使用 CSS 变量
+  const iconStyle: React.CSSProperties = {
+    width: "var(--os-icon-desktop)",
+    height: "var(--os-icon-desktop)",
+  };
+
   return (
     <div
       data-desktop-icon="true"
-      className={`flex flex-col items-center justify-start ${iconWidth} cursor-default select-none`}
+      className="flex flex-col items-center justify-start cursor-default select-none"
+      style={{ width: "calc(var(--os-icon-desktop) + 32px)" }}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
-      {/* Icon container - 根据主题渲染不同样式 */}
-      <div className={`${containerSize} flex items-center justify-center mb-0.5 relative`}>
+      {/* Icon container - 使用 CSS 变量 */}
+      <div 
+        className="flex items-center justify-center mb-0.5 relative"
+        style={{ width: "calc(var(--os-icon-desktop) + 8px)", height: "calc(var(--os-icon-desktop) + 8px)" }}
+      >
         {iconInfo.isEmoji ? (
           // Emoji 图标
-          <span className={`${iconSize} flex items-center justify-center text-3xl`}>
+          <span 
+            className="flex items-center justify-center text-3xl"
+            style={iconStyle}
+          >
             {iconInfo.value}
           </span>
         ) : isXpTheme ? (
@@ -444,7 +447,8 @@ function BookmarkDesktopIcon({
           <img
             src={iconInfo.value}
             alt=""
-            className={`${iconSize} object-contain`}
+            className="object-contain"
+            style={iconStyle}
             draggable={false}
             loading="lazy"
             onError={(e) => {
@@ -455,8 +459,8 @@ function BookmarkDesktopIcon({
         ) : isSystem7 ? (
           // System 7: 黑白风格
           <div 
-            className={`${iconSize} border-2 border-black bg-white flex items-center justify-center overflow-hidden`}
-            style={{ filter: "grayscale(100%)" }}
+            className="border-2 border-black bg-white flex items-center justify-center overflow-hidden"
+            style={{ ...iconStyle, filter: "grayscale(100%)" }}
           >
             <img
               src={iconInfo.value}
@@ -473,8 +477,9 @@ function BookmarkDesktopIcon({
         ) : (
           // macOS Aqua: 圆角 + 阴影
           <div
-            className={`${iconSize} rounded-xl bg-white flex items-center justify-center overflow-hidden`}
+            className="rounded-xl bg-white flex items-center justify-center overflow-hidden"
             style={{
+              ...iconStyle,
               boxShadow: "0 2px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1)",
             }}
           >
@@ -494,9 +499,9 @@ function BookmarkDesktopIcon({
         )}
       </div>
       
-      {/* Label - style varies by theme */}
+      {/* Label - 使用 CSS 变量 */}
       <span
-        className={`${isMobile ? "text-xs" : "text-[11px]"} leading-tight text-center break-words max-w-full px-0.5 rounded ${
+        className={`leading-tight text-center break-words max-w-full px-0.5 rounded ${
           isSelected
             ? "bg-[Highlight] text-[HighlightText]"
             : isXpTheme
@@ -505,7 +510,10 @@ function BookmarkDesktopIcon({
             ? "text-black"
             : "text-gray-900 [text-shadow:_0_1px_1px_rgb(255_255_255_/_80%)]"
         }`}
-        style={isXpTheme ? { fontFamily: '"Pixelated MS Sans Serif", Arial', fontSize: isMobile ? '12px' : '11px' } : undefined}
+        style={{ 
+          fontSize: "var(--os-text-xs)",
+          fontFamily: isXpTheme ? '"Pixelated MS Sans Serif", Arial' : undefined,
+        }}
       >
         {bookmark.title}
       </span>
@@ -523,7 +531,6 @@ function DesktopIcon({
   onDoubleClick,
   onContextMenu,
   theme,
-  isMobile = false,
 }: {
   label: string;
   icon: string;
@@ -532,41 +539,44 @@ function DesktopIcon({
   onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
   theme: string;
-  isMobile?: boolean;
 }) {
   const isXpTheme = theme === "xp" || theme === "win98";
-  const isLegacyTheme = isXpTheme || theme === "system7";
-  
-  // 和 BookmarkDesktopIcon 统一尺寸
-  const containerSize = isMobile ? "w-14 h-14" : isLegacyTheme ? "w-14 h-14" : "w-12 h-12";
-  const iconSize = isMobile ? "w-12 h-12" : isLegacyTheme ? "w-12 h-12" : "w-10 h-10";
-  const iconWidth = isMobile ? "w-[80px]" : isLegacyTheme ? "w-[88px]" : "w-[72px]";
-  
   const isSystem7 = theme === "system7";
+  
+  // 图标样式 - 使用 CSS 变量
+  const iconStyle: React.CSSProperties = {
+    width: "var(--os-icon-desktop)",
+    height: "var(--os-icon-desktop)",
+  };
   
   return (
     <div
       data-desktop-icon="true"
-      className={`flex flex-col items-center justify-start ${iconWidth} cursor-default select-none`}
+      className="flex flex-col items-center justify-start cursor-default select-none"
+      style={{ width: "calc(var(--os-icon-desktop) + 32px)" }}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
-      {/* 图标容器 - 和 BookmarkDesktopIcon 统一样式 */}
-      <div className={`${containerSize} flex items-center justify-center mb-0.5 relative`}>
+      {/* 图标容器 - 使用 CSS 变量 */}
+      <div 
+        className="flex items-center justify-center mb-0.5 relative"
+        style={{ width: "calc(var(--os-icon-desktop) + 8px)", height: "calc(var(--os-icon-desktop) + 8px)" }}
+      >
         {isXpTheme ? (
           // XP/Win98: 直接显示图标，无圆角
           <img
             src={icon}
             alt={label}
-            className={`${iconSize} object-contain pointer-events-none`}
+            className="object-contain pointer-events-none"
+            style={iconStyle}
             draggable={false}
           />
         ) : isSystem7 ? (
           // System 7: 黑白风格
           <div 
-            className={`${iconSize} border-2 border-black bg-white flex items-center justify-center overflow-hidden`}
-            style={{ filter: "grayscale(100%)" }}
+            className="border-2 border-black bg-white flex items-center justify-center overflow-hidden"
+            style={{ ...iconStyle, filter: "grayscale(100%)" }}
           >
             <img
               src={icon}
@@ -578,8 +588,9 @@ function DesktopIcon({
         ) : (
           // macOS Aqua: 圆角 + 阴影
           <div
-            className={`${iconSize} rounded-xl bg-white flex items-center justify-center overflow-hidden`}
+            className="rounded-xl bg-white flex items-center justify-center overflow-hidden"
             style={{
+              ...iconStyle,
               boxShadow: "0 2px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1)",
             }}
           >
@@ -594,14 +605,17 @@ function DesktopIcon({
         )}
       </div>
       <span
-        className={`text-[11px] leading-tight text-center break-words max-w-full px-0.5 rounded ${
+        className={`leading-tight text-center break-words max-w-full px-0.5 rounded ${
           isSelected
             ? "bg-[Highlight] text-[HighlightText]"
             : isXpTheme
             ? "text-white [text-shadow:_1px_1px_1px_rgb(0_0_0_/_90%)]"
             : "text-gray-900 [text-shadow:_0_1px_1px_rgb(255_255_255_/_80%)]"
         }`}
-        style={isXpTheme ? { fontFamily: '"Pixelated MS Sans Serif", Arial', fontSize: '11px' } : undefined}
+        style={{ 
+          fontSize: "var(--os-text-xs)",
+          fontFamily: isXpTheme ? '"Pixelated MS Sans Serif", Arial' : undefined,
+        }}
       >
         {label}
       </span>

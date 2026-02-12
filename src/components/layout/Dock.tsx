@@ -18,6 +18,7 @@ import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl } from "@/stores
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useSound, Sounds } from "@/hooks/useSound";
+import { getCssVar } from "@/hooks/useDeviceScale";
 import type { AppInstance, LaunchOriginRect } from "@/stores/useAppStore";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
@@ -42,7 +43,8 @@ function faviconUrlForDock(faviconUrl: string): string {
 
 const MAX_SCALE = 2.3; // peak multiplier at cursor center
 const DISTANCE = 140; // px range where magnification is applied
-const BASE_BUTTON_SIZE = 48; // px (w-12)
+const BASE_BUTTON_SIZE = 48; // 基准尺寸 px，实际尺寸 = BASE × osScale × dockScale
+const BASE_DOCK_HEIGHT = 56; // 基准 Dock 高度 px
 
 interface IconButtonProps {
   label: string;
@@ -739,10 +741,22 @@ function MacDock() {
     }, 50);
   }, []);
 
-  // Computed scaled sizes
-  const scaledButtonSize = Math.round(BASE_BUTTON_SIZE * dockScale);
-  const scaledDockHeight = Math.round(56 * dockScale); // Base dock height is 56px
-  const scaledPadding = Math.round(4 * dockScale); // Base padding is 4px (py-1, px-1)
+  // 读取系统缩放 (device × theme × user)
+  const [osScale, setOsScale] = useState(1);
+  useEffect(() => {
+    const updateOsScale = () => {
+      const scale = getCssVar("--os-scale") || 1;
+      setOsScale(scale);
+    };
+    updateOsScale();
+    window.addEventListener("resize", updateOsScale);
+    return () => window.removeEventListener("resize", updateOsScale);
+  }, []);
+
+  // Computed scaled sizes = 基准 × 系统缩放 × Dock 缩放
+  const scaledButtonSize = Math.round(BASE_BUTTON_SIZE * osScale * dockScale);
+  const scaledDockHeight = Math.round(BASE_DOCK_HEIGHT * osScale * dockScale);
+  const scaledPadding = Math.round(4 * osScale * dockScale);
 
   // Resize handlers for divider drag (only on desktop)
   const handleResizeStart = useCallback((e: React.MouseEvent) => {

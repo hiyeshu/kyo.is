@@ -36,6 +36,7 @@
   --base-icon-menu: 24px;
   --base-icon-taskbar: 16px;
   --base-icon-titlebar: 16px;
+  --base-icon-bookmark: 48px;      /* 书签板图标 */
   
   /* 字体 */
   --base-text-xs: 11px;
@@ -67,6 +68,7 @@
   --os-icon-menu: calc(var(--base-icon-menu) * var(--os-scale));
   --os-icon-taskbar: calc(var(--base-icon-taskbar) * var(--os-scale));
   --os-icon-titlebar: calc(var(--base-icon-titlebar) * var(--os-scale));
+  --os-icon-bookmark: calc(var(--base-icon-bookmark) * var(--os-scale));
   
   /* 字体 */
   --os-text-xs: calc(var(--base-text-xs) * var(--os-scale));
