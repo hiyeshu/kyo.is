@@ -111,3 +111,75 @@
 :root[data-os-theme="macosx"] {
   --theme-scale: 1;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * 图标样式系统 - 每个主题独立定义
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* 默认/Aqua: 圆角玻璃质感 */
+:root {
+  --os-icon-radius: 12px;
+  --os-icon-border: none;
+  --os-icon-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --os-icon-filter: none;
+  --os-icon-bg: white;
+  --os-icon-padding: 0;
+  /* 容器样式 */
+  --os-icon-container-bg: linear-gradient(to bottom, white, rgba(255,255,255,0.95));
+  --os-icon-container-border: 1px solid rgba(0, 0, 0, 0.1);
+  /* 悬停效果 */
+  --os-icon-hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  --os-icon-hover-transform: scale(1.02);
+}
+
+/* macOS Aqua: 水晶质感、圆角、柔和阴影 */
+:root[data-os-theme="macosx"] {
+  --os-icon-radius: 12px;
+  --os-icon-border: 1px solid rgba(0, 0, 0, 0.1);
+  --os-icon-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --os-icon-filter: none;
+  --os-icon-bg: white;
+  --os-icon-container-bg: linear-gradient(to bottom, white, rgba(255,255,255,0.95));
+  --os-icon-container-border: 1px solid rgba(0, 0, 0, 0.1);
+  --os-icon-hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  --os-icon-hover-transform: scale(1.02);
+}
+
+/* Windows XP: Luna 蓝调、轻微阴影、无圆角 */
+:root[data-os-theme="xp"] {
+  --os-icon-radius: 0;
+  --os-icon-border: none;
+  --os-icon-shadow: 2px 2px 4px rgba(0, 0, 0, 0.25);
+  --os-icon-filter: none;
+  --os-icon-bg: transparent;
+  --os-icon-container-bg: transparent;
+  --os-icon-container-border: none;
+  --os-icon-hover-shadow: 2px 2px 6px rgba(0, 0, 0, 0.35);
+  --os-icon-hover-transform: none;
+}
+
+/* Windows 98: 经典 3D 凸起效果、无圆角 */
+:root[data-os-theme="win98"] {
+  --os-icon-radius: 0;
+  --os-icon-border: none;
+  --os-icon-shadow: none;
+  --os-icon-filter: none;
+  --os-icon-bg: transparent;
+  --os-icon-container-bg: transparent;
+  --os-icon-container-border: none;
+  --os-icon-hover-shadow: none;
+  --os-icon-hover-transform: none;
+}
+
+/* System 7: 纯黑白像素、1-bit 风格 */
+:root[data-os-theme="system7"] {
+  --os-icon-radius: 0;
+  --os-icon-border: 2px solid black;
+  --os-icon-shadow: none;
+  --os-icon-filter: grayscale(100%) contrast(1.2);
+  --os-icon-bg: white;
+  --os-icon-container-bg: white;
+  --os-icon-container-border: 2px solid black;
+  --os-icon-hover-shadow: none;
+  --os-icon-hover-transform: none;
+}
