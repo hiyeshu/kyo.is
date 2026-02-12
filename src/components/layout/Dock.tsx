@@ -18,7 +18,7 @@ import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl } from "@/stores
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useSound, Sounds } from "@/hooks/useSound";
-import { getOsScale } from "@/hooks/useDeviceScale";
+
 import type { AppInstance, LaunchOriginRect } from "@/stores/useAppStore";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
@@ -742,10 +742,16 @@ function MacDock() {
   }, []);
 
   // 读取系统缩放 (device × theme × user)
+  // 读取系统缩放 (device × theme × user)
+  // Dock 用 px 单位，不受根 font-size 影响，需要手动应用 osScale
   const [osScale, setOsScale] = useState(1);
   useEffect(() => {
     const updateOsScale = () => {
-      setOsScale(getOsScale());
+      // 读取 CSS 变量
+      const ds = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--device-scale')) || 1;
+      const ts = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--theme-scale')) || 1;
+      const us = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--user-scale')) || 1;
+      setOsScale(ds * ts * us);
     };
     updateOsScale();
     window.addEventListener("resize", updateOsScale);
