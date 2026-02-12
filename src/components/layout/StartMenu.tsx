@@ -191,9 +191,10 @@ export function StartMenu({ apps }: StartMenuProps) {
                 {/* About This Computer */}
                 <DropdownMenuItem
                   onClick={() => setAboutOpen(true)}
-                  className="h-12 px-3 flex items-center gap-3 hover:bg-blue-500 hover:text-white"
+                  className="px-3 flex items-center gap-3 hover:bg-blue-500 hover:text-white"
                   style={{
-                    fontSize: "13px",
+                    height: "var(--os-spacing-xl)",
+                    fontSize: "var(--os-text-base)",
                     color: "#000000",
                     fontFamily: "var(--font-ms-sans)",
                     imageRendering: "pixelated",
@@ -202,7 +203,8 @@ export function StartMenu({ apps }: StartMenuProps) {
                   <ThemedIcon
                     name="info.png"
                     alt="About"
-                    className="w-10 h-10 [image-rendering:pixelated]"
+                    className="[image-rendering:pixelated]"
+                    style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
                   />
                   {t("common.startMenu.aboutThisComputer")}
                 </DropdownMenuItem>
@@ -218,9 +220,10 @@ export function StartMenu({ apps }: StartMenuProps) {
                   <DropdownMenuItem
                     key={app.id}
                     onClick={() => handleAppClick(app.id)}
-                    className="h-12 px-3 flex items-center gap-3 hover:bg-blue-500 hover:text-white"
+                    className="px-3 flex items-center gap-3 hover:bg-blue-500 hover:text-white"
                     style={{
-                      fontSize: "13px",
+                      height: "var(--os-spacing-xl)",
+                      fontSize: "var(--os-text-base)",
                       color: "#000000",
                       fontFamily: "var(--font-ms-sans)",
                       imageRendering: "pixelated",
@@ -231,10 +234,14 @@ export function StartMenu({ apps }: StartMenuProps) {
                         <ThemedIcon
                           name={app.icon}
                           alt={app.name}
-                          className="w-10 h-10 [image-rendering:pixelated]"
+                          className="[image-rendering:pixelated]"
+                          style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
                         />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center">
+                        <div 
+                          className="flex items-center justify-center"
+                          style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
+                        >
                           {app.icon}
                         </div>
                       )
@@ -242,7 +249,8 @@ export function StartMenu({ apps }: StartMenuProps) {
                       <ThemedIcon
                         name={app.icon.src}
                         alt={app.name}
-                        className="w-10 h-10 [image-rendering:pixelated]"
+                        className="[image-rendering:pixelated]"
+                        style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
                       />
                     )}
                     {getTranslatedAppName(app.id as AppId)}

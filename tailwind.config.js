@@ -128,8 +128,9 @@ module.exports = {
         "os-menubar": "var(--os-color-menubar-border)",
       },
       height: {
-        "os-titlebar": "var(--os-metrics-titlebar-height)",
-        "os-menubar": "var(--os-metrics-menubar-height)",
+        "os-titlebar": "var(--os-titlebar-height)",
+        "os-menubar": "var(--os-menubar-height)",
+        "os-taskbar": "var(--os-taskbar-height)",
       },
       fontFamily: {
         "os-ui": "var(--os-font-ui)",

@@ -681,12 +681,12 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
         className="flex items-center border-none bg-transparent space-x-0 rounded-none"
         style={{
           fontFamily: isXpTheme ? "var(--font-ms-sans)" : "var(--os-font-ui)",
-          fontSize: "11px",
+          fontSize: "var(--os-text-xs)",
           paddingLeft: "6px",
           paddingRight: "2px",
-          height: "28px",
-          minHeight: "28px",
-          maxHeight: "28px",
+          height: "var(--os-titlebar-height)",
+          minHeight: "var(--os-titlebar-height)",
+          maxHeight: "var(--os-titlebar-height)",
         }}
       >
         {children}
@@ -706,17 +706,18 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
         style={{
           background: taskbarBackground,
           fontFamily: "var(--font-ms-sans)",
-          fontSize: "11px",
+          fontSize: "var(--os-text-xs)",
           color: currentTheme === "xp" ? "#ffffff" : "#000000",
           userSelect: "none",
           width: "100vw",
-          height: "calc(40px + env(safe-area-inset-bottom, 0px))",
+          height: "calc(var(--os-taskbar-height) + env(safe-area-inset-bottom, 0px))",
           position: "fixed",
         }}
       >
       <div
-        className="absolute left-0 right-0 flex items-center h-[40px]"
+        className="absolute left-0 right-0 flex items-center"
         style={{
+          height: "var(--os-taskbar-height)",
           bottom: "env(safe-area-inset-bottom, 0px)",
           paddingLeft: "env(safe-area-inset-left, 0px)",
           paddingRight: "env(safe-area-inset-right, 0px)",
@@ -836,9 +837,9 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
                       <span
                         className="flex-shrink-0 flex items-center justify-center"
                         style={{
-                          fontSize: "18px",
-                          width: "20px",
-                          height: "20px",
+                          fontSize: "var(--os-text-lg)",
+                          width: "var(--os-icon-taskbar)",
+                          height: "var(--os-icon-taskbar)",
                         }}
                       >
                         {displayIcon}
@@ -847,10 +848,11 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
                       <ThemedIcon
                         name={displayIcon}
                         alt=""
-                        className="w-5 h-5 flex-shrink-0 [image-rendering:pixelated]"
+                        className="flex-shrink-0 [image-rendering:pixelated]"
+                        style={{ width: "var(--os-icon-taskbar)", height: "var(--os-icon-taskbar)" }}
                       />
                     )}
-                    <span className="truncate text-[13px]">
+                    <span className="truncate" style={{ fontSize: "var(--os-text-base)" }}>
                       {displayLabel}
                     </span>
                   </motion.button>
@@ -956,9 +958,9 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
                           <span
                             className="flex-shrink-0 flex items-center justify-center"
                             style={{
-                              fontSize: "14px",
-                              width: "16px",
-                              height: "16px",
+                              fontSize: "var(--os-text-sm)",
+                              width: "var(--os-icon-titlebar)",
+                              height: "var(--os-icon-titlebar)",
                             }}
                           >
                             {displayIcon}
@@ -967,10 +969,11 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
                           <ThemedIcon
                             name={displayIcon}
                             alt=""
-                            className="w-4 h-4 [image-rendering:pixelated]"
+                            className="[image-rendering:pixelated]"
+                            style={{ width: "var(--os-icon-titlebar)", height: "var(--os-icon-titlebar)" }}
                           />
                         )}
-                        <span className="truncate text-xs">
+                        <span className="truncate" style={{ fontSize: "var(--os-text-xs)" }}>
                           {displayLabel}
                         </span>
                       </DropdownMenuItem>
