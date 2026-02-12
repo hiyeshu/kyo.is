@@ -18,7 +18,7 @@ import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl } from "@/stores
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useSound, Sounds } from "@/hooks/useSound";
-import { getCssVar } from "@/hooks/useDeviceScale";
+import { getOsScale } from "@/hooks/useDeviceScale";
 import type { AppInstance, LaunchOriginRect } from "@/stores/useAppStore";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
@@ -745,8 +745,7 @@ function MacDock() {
   const [osScale, setOsScale] = useState(1);
   useEffect(() => {
     const updateOsScale = () => {
-      const scale = getCssVar("--os-scale") || 1;
-      setOsScale(scale);
+      setOsScale(getOsScale());
     };
     updateOsScale();
     window.addEventListener("resize", updateOsScale);

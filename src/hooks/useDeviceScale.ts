@@ -91,28 +91,39 @@ export function getUserScale(): number {
 }
 
 /**
- * 获取当前总缩放值 (device × theme × user)
+ * 获取单个 CSS 变量的数值（不支持 calc）
  */
-export function getOsScale(): number {
+function getCssVarNumber(name: string): number {
   if (typeof window === "undefined") return 1;
-  
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue("--os-scale")
-    .trim();
-  
-  // CSS calc() 返回计算后的数值
-  return value ? parseFloat(value) : 1;
-}
-
-/**
- * 获取 CSS 变量的计算值（像素）
- */
-export function getCssVar(name: string): number {
-  if (typeof window === "undefined") return 0;
   
   const value = getComputedStyle(document.documentElement)
     .getPropertyValue(name)
     .trim();
   
-  return value ? parseFloat(value) : 0;
+  const num = parseFloat(value);
+  return isNaN(num) ? 1 : num;
+}
+
+/**
+ * 获取当前总缩放值 (device × theme × user)
+ * 
+ * 注意：不能直接读取 --os-scale，因为它是 calc() 表达式
+ * 需要分别读取三个变量并在 JS 中相乘
+ */
+export function getOsScale(): number {
+  if (typeof window === "undefined") return 1;
+  
+  const deviceScale = getCssVarNumber("--device-scale");
+  const themeScale = getCssVarNumber("--theme-scale");
+  const userScale = getCssVarNumber("--user-scale");
+  
+  return deviceScale * themeScale * userScale;
+}
+
+/**
+ * 获取 CSS 变量的数值
+ * 注意：不支持 calc() 表达式，只能读取简单数值
+ */
+export function getCssVar(name: string): number {
+  return getCssVarNumber(name);
 }
