@@ -710,12 +710,12 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
           color: currentTheme === "xp" ? "#ffffff" : "#000000",
           userSelect: "none",
           width: "100vw",
-          height: "calc(30px + env(safe-area-inset-bottom, 0px))",
+          height: "calc(40px + env(safe-area-inset-bottom, 0px))",
           position: "fixed",
         }}
       >
       <div
-        className="absolute left-0 right-0 flex items-center h-[30px]"
+        className="absolute left-0 right-0 flex items-center h-[40px]"
         style={{
           bottom: "env(safe-area-inset-bottom, 0px)",
           paddingLeft: "env(safe-area-inset-left, 0px)",
@@ -836,9 +836,9 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
                       <span
                         className="flex-shrink-0 flex items-center justify-center"
                         style={{
-                          fontSize: "14px",
-                          width: "16px",
-                          height: "16px",
+                          fontSize: "18px",
+                          width: "20px",
+                          height: "20px",
                         }}
                       >
                         {displayIcon}
@@ -847,10 +847,10 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
                       <ThemedIcon
                         name={displayIcon}
                         alt=""
-                        className="w-4 h-4 flex-shrink-0 [image-rendering:pixelated]"
+                        className="w-5 h-5 flex-shrink-0 [image-rendering:pixelated]"
                       />
                     )}
-                    <span className="truncate text-xs">
+                    <span className="truncate text-[13px]">
                       {displayLabel}
                     </span>
                   </motion.button>

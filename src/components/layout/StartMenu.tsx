@@ -64,7 +64,7 @@ export function StartMenu({ apps }: StartMenuProps) {
               border: currentTheme === "xp" ? "none" : "none", // Windows 98 uses box-shadow instead of border
               color: currentTheme === "xp" ? "#ffffff" : "#000000",
               fontWeight: currentTheme === "xp" ? "500" : "bold",
-              fontSize: currentTheme === "xp" ? "1.1rem" : "11px",
+              fontSize: currentTheme === "xp" ? "1.1rem" : "13px",
               fontStyle: currentTheme === "xp" ? "italic" : "normal",
               boxShadow:
                 currentTheme === "xp"
@@ -95,7 +95,7 @@ export function StartMenu({ apps }: StartMenuProps) {
               name="apple.png"
               alt="Start"
               className={`[image-rendering:pixelated] ${
-                currentTheme === "xp" ? "w-5 h-4" : "w-5 h-5"
+                currentTheme === "xp" ? "w-6 h-5" : "w-6 h-6"
               }`}
               style={{
                 filter:

@@ -1252,7 +1252,7 @@ export function WindowFrame({
                 !isForeground && "inactive" // Add inactive class when not in foreground
               )}
               style={{
-                ...(currentTheme === "xp" ? { minHeight: "30px" } : undefined),
+                ...(currentTheme === "xp" ? { minHeight: "36px" } : { minHeight: "32px" }),
                 ...(!isForeground
                   ? {
                       background: theme.colors.titleBar.inactiveBg,
@@ -1294,6 +1294,7 @@ export function WindowFrame({
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  fontSize: currentTheme === "win98" ? "13px" : undefined,
                   ...(!isForeground
                     ? {
                         color: theme.colors.titleBar.inactiveText,
@@ -1305,7 +1306,7 @@ export function WindowFrame({
                 <ThemedIcon
                   name={getAppIconPath(appId)}
                   alt={title}
-                  className="w-4 h-4 mr-1 [image-rendering:pixelated]"
+                  className={`mr-1 [image-rendering:pixelated] ${currentTheme === "win98" ? "w-5 h-5" : "w-4 h-4"}`}
                   style={{
                     filter: !isForeground ? "grayscale(100%)" : "none",
                   }}
