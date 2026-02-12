@@ -747,15 +747,28 @@ function MacDock() {
   const [osScale, setOsScale] = useState(1);
   useEffect(() => {
     const updateOsScale = () => {
-      // 读取 CSS 变量
-      const ds = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--device-scale')) || 1;
+      // 直接计算 device-scale，不依赖 CSS 变量（避免时序问题）
+      const width = window.innerWidth;
+      let deviceScale = 1;
+      if (width < 768) {
+        deviceScale = 1.25; // phone
+      } else if (width < 1024) {
+        deviceScale = 1.1; // tablet
+      }
+      
+      // 读取 theme-scale 和 user-scale 从 CSS
       const ts = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--theme-scale')) || 1;
       const us = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--user-scale')) || 1;
-      setOsScale(ds * ts * us);
+      setOsScale(deviceScale * ts * us);
     };
-    updateOsScale();
+    
+    // 延迟执行，确保 CSS 变量已设置
+    const timer = setTimeout(updateOsScale, 0);
     window.addEventListener("resize", updateOsScale);
-    return () => window.removeEventListener("resize", updateOsScale);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", updateOsScale);
+    };
   }, []);
 
   // Computed scaled sizes = 基准 × 系统缩放 × Dock 缩放
