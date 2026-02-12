@@ -195,8 +195,17 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
  * iOS PWA Standalone 模式 - 黑色背景融合灵动岛
  * ═══════════════════════════════════════════════════════════════════════════════ */
-@media (display-mode: standalone) {
+@media all and (display-mode: standalone) {
   html, body {
-    background-color: #000000;
+    background-color: #000000 !important;
+  }
+}
+
+/* iOS Safari standalone 模式备用检测 */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    html, body {
+      background-color: #000000 !important;
+    }
   }
 }
