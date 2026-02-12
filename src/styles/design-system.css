@@ -1,0 +1,113 @@
+/**
+ * Kyo Design System - 单一真相源
+ * 
+ * 三层缩放架构：
+ * 1. --device-scale: 设备层（JS 自动设置）
+ * 2. --theme-scale: 主题层（CSS 覆盖）
+ * 3. --user-scale: 用户层（偏好设定）
+ * 
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
+:root {
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * 三层缩放系统
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --device-scale: 1;      /* JS 根据设备自动设置: phone=1.3, tablet=1.15, desktop=1 */
+  --theme-scale: 1;       /* 主题覆盖: XP/98=1.15, Aqua/System7=1 */
+  --user-scale: 1;        /* 用户自定义: 系统偏好设定滑块 */
+  
+  /* 最终缩放值 = device × theme × user */
+  --os-scale: calc(var(--device-scale) * var(--theme-scale) * var(--user-scale));
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * 基准尺寸（Desktop Aqua 为基准 = 1.0）
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  
+  /* 布局 */
+  --base-dock-height: 56px;
+  --base-dock-icon: 48px;
+  --base-taskbar-height: 30px;
+  --base-titlebar-height: 22px;
+  --base-menubar-height: 22px;
+  
+  /* 图标 */
+  --base-icon-desktop: 40px;
+  --base-icon-menu: 24px;
+  --base-icon-taskbar: 16px;
+  --base-icon-titlebar: 16px;
+  
+  /* 字体 */
+  --base-text-xs: 11px;
+  --base-text-sm: 12px;
+  --base-text-base: 13px;
+  --base-text-lg: 14px;
+  --base-text-xl: 16px;
+  
+  /* 间距 */
+  --base-spacing-xs: 4px;
+  --base-spacing-sm: 8px;
+  --base-spacing-md: 12px;
+  --base-spacing-lg: 16px;
+  --base-spacing-xl: 24px;
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * 计算后的实际尺寸（组件使用这些变量）
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  
+  /* 布局 */
+  --os-dock-height: calc(var(--base-dock-height) * var(--os-scale));
+  --os-dock-icon: calc(var(--base-dock-icon) * var(--os-scale));
+  --os-taskbar-height: calc(var(--base-taskbar-height) * var(--os-scale));
+  --os-titlebar-height: calc(var(--base-titlebar-height) * var(--os-scale));
+  --os-menubar-height: calc(var(--base-menubar-height) * var(--os-scale));
+  
+  /* 图标 */
+  --os-icon-desktop: calc(var(--base-icon-desktop) * var(--os-scale));
+  --os-icon-menu: calc(var(--base-icon-menu) * var(--os-scale));
+  --os-icon-taskbar: calc(var(--base-icon-taskbar) * var(--os-scale));
+  --os-icon-titlebar: calc(var(--base-icon-titlebar) * var(--os-scale));
+  
+  /* 字体 */
+  --os-text-xs: calc(var(--base-text-xs) * var(--os-scale));
+  --os-text-sm: calc(var(--base-text-sm) * var(--os-scale));
+  --os-text-base: calc(var(--base-text-base) * var(--os-scale));
+  --os-text-lg: calc(var(--base-text-lg) * var(--os-scale));
+  --os-text-xl: calc(var(--base-text-xl) * var(--os-scale));
+  
+  /* 间距 */
+  --os-spacing-xs: calc(var(--base-spacing-xs) * var(--os-scale));
+  --os-spacing-sm: calc(var(--base-spacing-sm) * var(--os-scale));
+  --os-spacing-md: calc(var(--base-spacing-md) * var(--os-scale));
+  --os-spacing-lg: calc(var(--base-spacing-lg) * var(--os-scale));
+  --os-spacing-xl: calc(var(--base-spacing-xl) * var(--os-scale));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * 主题层覆盖
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* XP/98: 复古主题，基础比例稍大 */
+:root[data-os-theme="xp"],
+:root[data-os-theme="win98"] {
+  --theme-scale: 1.1;
+  
+  /* XP/98 特有的基准覆盖 */
+  --base-taskbar-height: 40px;
+  --base-titlebar-height: 28px;
+  --base-icon-desktop: 48px;
+  --base-icon-menu: 32px;
+  --base-icon-taskbar: 20px;
+  --base-text-base: 13px;
+}
+
+/* System 7: 经典 Mac，保持原比例 */
+:root[data-os-theme="system7"] {
+  --theme-scale: 1;
+  --base-icon-desktop: 44px;
+}
+
+/* macOS Aqua: 现代 Mac，基准比例 */
+:root[data-os-theme="macosx"] {
+  --theme-scale: 1;
+}

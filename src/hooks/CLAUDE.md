@@ -4,6 +4,7 @@
 ## 成员清单
 
 useActivityLabel.ts: 活动标签 hook，根据应用状态生成动态标签文本，用于 Dock 菜单显示
+useDeviceScale.ts: 设备缩放 hook，根据屏幕宽度自动设置 --device-scale CSS 变量，三层缩放系统的设备层
 useAudioTranscription.ts: 音频转录 hook，调用 /api/audio-transcribe，支持语音消息转文字，进度回调
 useAuth.ts: 认证 hook，管理用户登录状态、令牌、用户信息，调用 /api/auth 端点
 useEventListener.ts: 事件监听 hook，自动清理的 DOM 事件监听器，支持 window/document/element

@@ -18,6 +18,7 @@ import { AnyApp } from "./apps/base/types";
 import { useThemeStore } from "./stores/useThemeStore";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { useOffline } from "./hooks/useOffline";
+import { useDeviceScale } from "./hooks/useDeviceScale";
 import { useTranslation } from "react-i18next";
 import { isTauri } from "./utils/platform";
 import { checkDesktopUpdate, onDesktopUpdate, DesktopUpdateResult } from "./utils/prefetch";
@@ -41,6 +42,9 @@ export function App() {
   const isMobile = useIsMobile();
   // Initialize offline detection
   useOffline();
+  
+  // Initialize device scale (三层缩放系统的设备层)
+  useDeviceScale();
 
   // Determine toast position and offset based on theme and device
   const toastConfig = useMemo(() => {

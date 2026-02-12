@@ -9,6 +9,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./App";
 import { Analytics } from "@vercel/analytics/react";
+import "./styles/design-system.css";
 import "./index.css";
 import { useThemeStore } from "./stores/useThemeStore";
 import { initPrefetch } from "./utils/prefetch";
