@@ -169,7 +169,7 @@
   --os-color-dock-tooltip-bg: rgba(30, 30, 30, 0.95);
   --os-color-dock-tooltip-text: rgba(255, 255, 255, 0.9);
   --os-color-dock-divider: rgba(0, 0, 0, 0.15);
-  --os-metrics-dock-radius: 12px;
+  --os-metrics-dock-radius: 10px;
   --os-metrics-dock-icon-size: 48px;
   --os-dock-blur: 20px;
 }
