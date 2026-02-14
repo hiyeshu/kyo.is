@@ -69,7 +69,7 @@ export function App() {
       };
     } else {
       // macOS themes: top-right with menubar clearance
-      const menuBarHeight = currentTheme === "system7" ? 30 : 25;
+      const menuBarHeight = 25;
       return {
         position: "top-right" as const,
         offset: `${menuBarHeight + 12}px`,

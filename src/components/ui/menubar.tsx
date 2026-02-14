@@ -69,7 +69,7 @@ const MenubarTrigger = React.forwardRef<
 >(({ className, style, ...props }, ref) => {
   const currentTheme = useThemeStore((state) => state.current)
   const isWindowsTheme = currentTheme === "xp" || currentTheme === "win98"
-  const isSystem7 = currentTheme === "system7"
+  const isSystem7 = false
   const isMacOSX = currentTheme === "macosx"
 
   // Theme-specific styles for the trigger
@@ -116,7 +116,7 @@ const MenubarSubTrigger = React.forwardRef<
   const currentTheme = useThemeStore((state) => state.current)
   const isMacOSTheme = currentTheme === "macosx"
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98"
-  const isSystem7 = currentTheme === "system7"
+  const isSystem7 = false
 
   return (
     <MenubarPrimitive.SubTrigger
@@ -257,7 +257,7 @@ const MenubarItem = React.forwardRef<
   const currentTheme = useThemeStore((state) => state.current)
   const isMacOSTheme = currentTheme === "macosx"
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98"
-  const isSystem7 = currentTheme === "system7"
+  const isSystem7 = false
 
   return (
     <MenubarPrimitive.Item
@@ -308,7 +308,7 @@ const MenubarCheckboxItem = React.forwardRef<
   const currentTheme = useThemeStore((state) => state.current)
   const isMacOSTheme = currentTheme === "macosx"
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98"
-  const isSystem7 = currentTheme === "system7"
+  const isSystem7 = false
 
   return (
     <MenubarPrimitive.CheckboxItem
@@ -370,7 +370,7 @@ const MenubarRadioItem = React.forwardRef<
   const currentTheme = useThemeStore((state) => state.current)
   const isMacOSTheme = currentTheme === "macosx"
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98"
-  const isSystem7 = currentTheme === "system7"
+  const isSystem7 = false
 
   return (
     <MenubarPrimitive.RadioItem
@@ -463,7 +463,7 @@ const MenubarSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Separator>
 >(({ className, ...props }, ref) => {
   const currentTheme = useThemeStore((state) => state.current)
-  const isSystem7 = currentTheme === "system7"
+  const isSystem7 = false
   const isMacOSTheme = currentTheme === "macosx"
 
   return (

@@ -483,30 +483,16 @@ export function BookmarkBoardApp({
               </DropdownMenu>
             </div>
           ) : (
-            /* macOS / System 7: 工具栏 + 搜索框 */
+            /* macOS: 工具栏 + 搜索框 */
             <div
-              className={cn(
-                "flex items-center gap-2 px-3 py-2",
-                h.currentTheme === "system7"
-                  ? "bg-gray-100 border-b border-black"
-                  : "border-b border-black/20"
-              )}
-              style={
-                h.currentTheme !== "system7"
-                  ? {
-                      backgroundColor: "var(--os-color-window-bg, #f5f5f5)",
-                      backgroundImage: "var(--os-pinstripe-window)",
-                    }
-                  : undefined
-              }
+              className="flex items-center gap-2 px-3 py-2 border-b border-black/20"
+              style={{
+                backgroundColor: "var(--os-color-window-bg, #f5f5f5)",
+                backgroundImage: "var(--os-pinstripe-window)",
+              }}
             >
               <div 
-                className={cn(
-                  "flex items-center flex-1 gap-1.5 px-2.5 py-1",
-                  h.currentTheme === "system7"
-                    ? "rounded-none border border-black bg-white"
-                    : "rounded-full bg-white/80 border border-black/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50"
-                )}
+                className="flex items-center flex-1 gap-1.5 px-2.5 py-1 rounded-full bg-white/80 border border-black/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50"
               >
                 <MagnifyingGlass size={14} className="text-black/40 shrink-0" />
                 <input
@@ -520,12 +506,7 @@ export function BookmarkBoardApp({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className={cn(
-                      "w-7 h-7 flex items-center justify-center shrink-0 transition-all",
-                      h.currentTheme === "system7"
-                        ? "rounded-none border border-black bg-white hover:bg-gray-100"
-                        : "rounded-full bg-white/80 border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-white hover:border-black/20 active:bg-black/5"
-                    )}
+                    className="w-7 h-7 flex items-center justify-center shrink-0 transition-all rounded-full bg-white/80 border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-white hover:border-black/20 active:bg-black/5"
                   >
                     <Plus size={16} weight="bold" className="text-black/60" />
                   </button>

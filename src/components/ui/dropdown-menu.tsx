@@ -243,7 +243,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   const currentTheme = useThemeStore((state) => state.current);
   const isMacOSTheme = currentTheme === "macosx";
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  const isSystem7 = currentTheme === "system7";
+  const isSystem7 = false;
 
   return (
     <DropdownMenuPrimitive.CheckboxItem
@@ -376,7 +376,7 @@ const DropdownMenuSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
 >(({ className, ...props }, ref) => {
   const currentTheme = useThemeStore((state) => state.current);
-  const isSystem7 = currentTheme === "system7";
+  const isSystem7 = false;
   const isMacOSTheme = currentTheme === "macosx";
 
   return (

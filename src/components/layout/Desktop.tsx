@@ -409,7 +409,7 @@ function BookmarkDesktopIcon({
   theme: string;
 }) {
   const isXpTheme = theme === "xp" || theme === "win98";
-  const isSystem7 = theme === "system7";
+  const isSystem7 = false;
   
   // 使用单一真相源获取图标信息
   const iconInfo = getBookmarkIconInfo(bookmark);
@@ -541,7 +541,7 @@ function DesktopIcon({
   theme: string;
 }) {
   const isXpTheme = theme === "xp" || theme === "win98";
-  const isSystem7 = theme === "system7";
+  const isSystem7 = false;
   
   // 图标样式 - 使用 CSS 变量
   const iconStyle: React.CSSProperties = {

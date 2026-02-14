@@ -134,7 +134,7 @@ export function ControlPanelsApp({
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   const isWindowsLegacyTheme = isXpTheme;
   const isMacOSXTheme = currentTheme === "macosx";
-  const isClassicMacTheme = currentTheme === "system7" || isMacOSXTheme;
+  const isClassicMacTheme = isMacOSXTheme;
   const tabStyles = getTabStyles(currentTheme);
 
   // ─── Audio ───────────────────────────────────────────────────────────────────

@@ -1,11 +1,9 @@
-import { system7 } from "./system7";
 import { macosx } from "./macosx";
 import { xp } from "./xp";
 import { win98 } from "./win98";
 import { OsTheme, OsThemeId, ThemeMetadata } from "./types";
 
 export const themes: Record<OsThemeId, OsTheme> = {
-  system7,
   macosx,
   xp,
   win98,
@@ -32,7 +30,7 @@ export function isWindowsTheme(id: OsThemeId): boolean {
 }
 
 /**
- * Check if a theme is macOS-style (macOS X, System 7).
+ * Check if a theme is macOS-style (macOS X).
  */
 export function isMacTheme(id: OsThemeId): boolean {
   return themes[id].metadata.isMac;

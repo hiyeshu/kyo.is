@@ -1150,7 +1150,7 @@ export function WindowFrame({
               ? "window w-full h-full flex flex-col rounded-os overflow-hidden relative" // No border for notitlebar
               : "window w-full h-full flex flex-col border-[length:var(--os-metrics-border-width)] border-os-window rounded-os overflow-hidden",
             !effectiveTransparentBackground && !isXpTheme && "bg-os-window-bg",
-            !isXpTheme && (currentTheme !== "system7" || isForeground)
+            !isXpTheme && (true || isForeground)
               ? "shadow-os-window"
               : "",
             isForeground ? "is-foreground" : ""

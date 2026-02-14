@@ -107,7 +107,7 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
   // 主题判断
   const isMacTheme = currentTheme === "macosx";
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  const isSystem7 = currentTheme === "system7";
+  const isSystem7 = false;
 
   // 面板样式
   const getPanelStyle = (): React.CSSProperties => {

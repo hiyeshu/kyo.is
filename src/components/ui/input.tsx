@@ -24,7 +24,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const currentTheme = useThemeStore((state) => state.current);
     const isMacOSTheme = currentTheme === "macosx";
-    const isSystem7Theme = currentTheme === "system7";
+    const isSystem7Theme = false;
 
     return (
       <input

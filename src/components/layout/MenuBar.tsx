@@ -1044,7 +1044,7 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
   // In Tauri with titleBarStyle: overlay, add clearance for traffic lights (but not in fullscreen)
   // Don't add clearance on Windows platform (Chromium - no traffic lights), only on Mac (WebKit)
   const isWindowsPlatform = isTauriWindows();
-  const needsTrafficLightClearance = isTauriApp && !isFullscreen && !isWindowsPlatform && (currentTheme === "macosx" || currentTheme === "system7");
+  const needsTrafficLightClearance = isTauriApp && !isFullscreen && !isWindowsPlatform && (currentTheme === "macosx");
   
   return (
     <div

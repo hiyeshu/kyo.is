@@ -1,4 +1,4 @@
-export type OsThemeId = "system7" | "macosx" | "xp" | "win98";
+export type OsThemeId = "macosx" | "xp" | "win98";
 
 /**
  * Theme metadata for conditional rendering and layout decisions.
