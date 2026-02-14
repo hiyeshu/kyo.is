@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2025-07-25T04:19:03.185Z",
+  "generatedAt": "2026-02-14T17:43:19.198Z",
   "tiles": [
     "tiles/azul_dark.png",
     "tiles/azul_extra_light.png",
@@ -53,6 +53,7 @@
   "photos": {
     "landscapes": [
       "photos/landscapes/beach.jpg",
+      "photos/landscapes/bliss.jpg",
       "photos/landscapes/clouds.jpg",
       "photos/landscapes/french_alps.jpg",
       "photos/landscapes/ganges_river.jpg",
@@ -137,6 +138,7 @@
       "photos/aqua/abstract-6.jpg",
       "photos/aqua/abstract-7.jpg",
       "photos/aqua/abstract-8.jpg",
+      "photos/aqua/aqua-wave.jpg",
       "photos/aqua/dew-drop.jpg",
       "photos/aqua/flow-1.jpg",
       "photos/aqua/flow-2.jpg",

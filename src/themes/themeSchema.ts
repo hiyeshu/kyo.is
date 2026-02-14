@@ -260,10 +260,10 @@ export const PRESET_SKINS: PresetSkin[] = [
  * 切换主题时可选择是否同步切换壁纸
  */
 export const THEME_DEFAULT_WALLPAPERS: Record<PresetSkinId, string> = {
-  macosx: "/wallpapers/photos/aqua/water.jpg",
+  macosx: "/wallpapers/photos/aqua/aqua-wave.jpg",
   system7: "/wallpapers/tiles/default.png",
-  xp: "/wallpapers/videos/bliss_og.mp4",
-  win98: "/wallpapers/tiles/bubbles_bondi.png",
+  xp: "/wallpapers/photos/landscapes/bliss.jpg",
+  win98: "/wallpapers/tiles/azul_dark.png",
 };
 
 /**
