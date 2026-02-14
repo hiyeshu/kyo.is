@@ -243,7 +243,6 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   const currentTheme = useThemeStore((state) => state.current);
   const isMacOSTheme = currentTheme === "macosx";
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  const isSystem7 = false;
 
   return (
     <DropdownMenuPrimitive.CheckboxItem
@@ -251,9 +250,8 @@ const DropdownMenuCheckboxItem = React.forwardRef<
       className={cn(
         "relative flex cursor-default select-none items-center py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         // Theme-specific hover/focus styles
-        isSystem7 && "rounded-none focus:bg-black focus:text-white hover:bg-black hover:text-white mx-0",
         isMacOSTheme && "rounded-none focus:bg-[rgba(39,101,202,0.88)] focus:text-white hover:bg-[rgba(39,101,202,0.88)] hover:text-white",
-        !isSystem7 && !isMacOSTheme && "rounded-sm focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground",
+        !isMacOSTheme && "rounded-sm focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground",
         className,
         "data-[state=checked]:text-foreground"
       )}
@@ -268,10 +266,6 @@ const DropdownMenuCheckboxItem = React.forwardRef<
           : isMacOSTheme
           ? "13px !important"
           : undefined,
-        ...(isSystem7 && {
-          padding: "2px 12px 2px 32px",
-          margin: "0",
-        }),
         ...(isXpTheme && {
           padding: "2px 12px 2px 32px",
           margin: "0",
@@ -376,7 +370,6 @@ const DropdownMenuSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
 >(({ className, ...props }, ref) => {
   const currentTheme = useThemeStore((state) => state.current);
-  const isSystem7 = false;
   const isMacOSTheme = currentTheme === "macosx";
 
   return (
@@ -385,9 +378,7 @@ const DropdownMenuSeparator = React.forwardRef<
       className={cn(
         className,
         "-mx-1 my-1 h-[1px] border-b-0",
-        !isMacOSTheme && "border-t border-muted",
-        isSystem7 && "border-dotted",
-        !isSystem7 && !isMacOSTheme && "border-solid"
+        !isMacOSTheme && "border-t border-muted border-solid"
       )}
       style={{
         ...(isMacOSTheme && {

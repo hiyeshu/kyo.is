@@ -24,7 +24,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const currentTheme = useThemeStore((state) => state.current);
     const isMacOSTheme = currentTheme === "macosx";
-    const isSystem7Theme = false;
 
     return (
       <input
@@ -46,12 +45,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.1)",
               transition: "all 0.2s ease",
               // Padding intentionally omitted so consumer classes (e.g. pl-4 pr-16) take effect
-            }),
-          ...(isSystem7Theme &&
-            !unstyled && {
-              borderColor: "#000000",
-              borderWidth: "1px",
-              borderRadius: "0",
             }),
           ...style,
         }}

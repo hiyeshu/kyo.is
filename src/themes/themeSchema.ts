@@ -209,7 +209,7 @@ export const THEME_SCHEMA: ThemeSchema = {
 // 预设皮肤 - 对应 themes.css 中的 data-os-theme 值
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export type PresetSkinId = "macosx" | "system7" | "xp" | "win98";
+export type PresetSkinId = "macosx" | "xp" | "win98";
 
 export interface PresetSkin {
   id: PresetSkinId;
@@ -230,12 +230,6 @@ export const PRESET_SKINS: PresetSkin[] = [
     name: "Aqua",
     description: "macOS 经典水晶风格",
     themeAttribute: "macosx",
-  },
-  {
-    id: "system7",
-    name: "System 7",
-    description: "复古 Mac 黑白风格",
-    themeAttribute: "system7",
   },
   {
     id: "xp",
@@ -261,7 +255,6 @@ export const PRESET_SKINS: PresetSkin[] = [
  */
 export const THEME_DEFAULT_WALLPAPERS: Record<PresetSkinId, string> = {
   macosx: "/wallpapers/photos/aqua/aqua-wave.jpg",
-  system7: "/wallpapers/tiles/default.png",
   xp: "/wallpapers/photos/landscapes/bliss.jpg",
   win98: "/wallpapers/tiles/azul_dark.png",
 };

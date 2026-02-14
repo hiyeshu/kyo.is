@@ -91,8 +91,6 @@ export function BootScreen({
         return "/assets/splash/xp-boot.gif";
       case "win98":
         return "/assets/splash/win98.gif";
-      case "system7":
-        return "/assets/splash/hello.svg";
       default:
         return "/assets/splash/macos.svg";
     }
