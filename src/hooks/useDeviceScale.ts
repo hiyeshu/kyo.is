@@ -1,7 +1,11 @@
 /**
  * [INPUT]: 依赖 window.innerWidth
- * [OUTPUT]: 自动设置 --device-scale CSS 变量
- * [POS]: hooks/ 的设备缩放检测，根据屏幕宽度设置设备层缩放比例
+ * [OUTPUT]: 设置 --device-scale CSS 变量（备用），提供 getDeviceType/getOsScale 工具函数
+ * [POS]: hooks/ 的设备缩放检测，作为 CSS 媒体查询的 JS 层备份
+ * 
+ * 注意: 主要的 --device-scale 设置由 design-system.css 的媒体查询完成（无时序问题）
+ * 此 hook 主要用于 JS 计算（如 Dock.tsx 的 osScale 计算）
+ * 
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 

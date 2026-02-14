@@ -24,7 +24,7 @@
   --os-metrics-border-width: 2px;
   --os-metrics-radius: 0.5rem;
   --os-metrics-titlebar-height: 1.5rem;
-  --os-metrics-menubar-height: 28px;
+  --os-metrics-menubar-height: 1.75rem; /* 28px */
   --os-window-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
   /* Dock */
   --os-color-dock-bg: rgba(255, 255, 255, 0.6);
@@ -66,7 +66,7 @@
   --os-metrics-border-width: 2px;
   --os-metrics-radius: 0px; /* System 7 has square corners */
   --os-metrics-titlebar-height: 1.5rem;
-  --os-metrics-menubar-height: 30px;
+  --os-metrics-menubar-height: 1.875rem; /* 30px */
   --os-window-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
   /* Dock - System 7 style: white with black border, no blur */
   --os-color-dock-bg: #ffffff;
@@ -132,7 +132,7 @@
   --os-metrics-titlebar-border-width: 1px;
   --os-metrics-radius: 0.45rem;
   --os-metrics-titlebar-height: 1.375rem;
-  --os-metrics-menubar-height: 25px;
+  --os-metrics-menubar-height: 1.5625rem; /* 25px at 16px base, scales with root font-size */
   --os-window-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
   /* Shared texture variables */
   --os-texture-toolbar-image: url("/assets/brushed-metal.jpg");
@@ -210,7 +210,7 @@
   --os-metrics-border-width: 2px;
   --os-metrics-radius: 0px;
   --os-metrics-titlebar-height: 1.375rem;
-  --os-metrics-menubar-height: 30px;
+  --os-metrics-menubar-height: 1.875rem; /* 30px */
   --os-window-shadow: none;
   /* Dock - Windows 98 Taskbar style: gray with 3D borders */
   --os-color-dock-bg: #c0c0c0;
@@ -274,7 +274,7 @@
   --os-metrics-border-width: 3px;
   --os-metrics-radius: 0.5rem;
   --os-metrics-titlebar-height: 1.875rem;
-  --os-metrics-menubar-height: 30px;
+  --os-metrics-menubar-height: 1.875rem; /* 30px */
   --os-window-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
   /* Dock - Windows XP Taskbar style: Luna blue gradient */
   --os-color-dock-bg: linear-gradient(to bottom, #3168d5, #4993e6, #3168d5);
@@ -524,7 +524,8 @@
   font-family: var(--os-font-ui) !important;
   -webkit-font-smoothing: antialiased !important;
   font-smooth: auto !important;
-  font-size: 12px !important;
+  /* 使用 rem 单位，跟随 --os-scale 缩放 (单一真相源: design-system.css) */
+  font-size: 0.75rem !important; /* 12px at 16px base */
 }
 
 :root[data-os-theme="macosx"] * {
@@ -554,7 +555,7 @@
 
 /* macOS specific font sizes and gloss effect */
 :root[data-os-theme="macosx"] .menubar {
-  font-size: 14px !important;
+  font-size: 0.875rem !important; /* 14px at 16px base, scales with --os-scale */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   font-weight: 500 !important;
   position: relative;
@@ -591,12 +592,12 @@
 
 
 :root[data-os-theme="macosx"] .title-bar {
-  font-size: 13px !important;
+  font-size: 0.8125rem !important; /* 13px at 16px base, scales with --os-scale */
   font-weight: 500 !important;
 }
 
 :root[data-os-theme="macosx"] button:not(.aqua-button):not(.aqua-tab):not(.app-menu-trigger) {
-  font-size: 13px !important;
+  font-size: 0.8125rem !important; /* 13px */
   font-weight: normal !important;
 }
 
@@ -608,15 +609,15 @@
 :root[data-os-theme="macosx"] input,
 :root[data-os-theme="macosx"] select,
 :root[data-os-theme="macosx"] textarea {
-  font-size: 12px !important;
+  font-size: 0.75rem !important; /* 12px */
 }
 
 :root[data-os-theme="macosx"] label {
-  font-size: 11px !important;
+  font-size: 0.6875rem !important; /* 11px */
 }
 
 :root[data-os-theme="macosx"] .window-body {
-  font-size: 12px !important;
+  font-size: 0.75rem !important; /* 12px */
 }
 
 :root[data-os-theme="macosx"] p,

@@ -305,27 +305,24 @@ function Clock({ enableExposeToggle = false }: ClockProps) {
         hour12: true,
       });
     }
-  } else if (viewportWidth < 420) {
-    // For small screens: just time (24h for locales that prefer it)
-    if (prefers24Hour) {
-      displayTime = formatTime24h(time);
+  } else if (viewportWidth <= 768) {
+    // For mobile screens (≤ 768px): show date only (phone status bar already has time)
+    const month = time.getMonth() + 1;
+    const day = time.getDate();
+    
+    if (currentLocale.startsWith("zh")) {
+      // Chinese (zh, zh-TW, zh-CN, etc.): "2月14日"
+      displayTime = `${month}月${day}日`;
+    } else if (currentLocale.startsWith("ja")) {
+      // Japanese: "2月14日"
+      displayTime = `${month}月${day}日`;
+    } else if (currentLocale.startsWith("ko")) {
+      // Korean: "2월14일"
+      displayTime = `${month}월${day}일`;
     } else {
-      displayTime = time.toLocaleTimeString(currentLocale, {
-        hour: hourFormat,
-        minute: "2-digit",
-        hour12: true,
-      });
-    }
-  } else if (viewportWidth >= 420 && viewportWidth <= 768) {
-    // For medium screens: time (24h for locales that prefer it)
-    if (prefers24Hour) {
-      displayTime = formatTime24h(time);
-    } else {
-      displayTime = time.toLocaleTimeString(currentLocale, {
-        hour: hourFormat,
-        minute: "2-digit",
-        hour12: true,
-      });
+      // English and other locales: "Feb 14"
+      const monthName = time.toLocaleDateString(currentLocale, { month: "short" });
+      displayTime = `${monthName} ${day}`;
     }
   } else {
     // For larger screens (> 768px): full date and time
@@ -338,21 +335,21 @@ function Clock({ enableExposeToggle = false }: ClockProps) {
         });
     
     // Custom formatting for Chinese, Japanese, and Korean
-    if (currentLocale === "zh-TW") {
-      // Chinese format: "12月2日 週二 12:03"
-      const month = time.getMonth() + 1; // getMonth() returns 0-11, so add 1
+    if (currentLocale.startsWith("zh")) {
+      // Chinese format: "2月14日 周六 17:03"
+      const month = time.getMonth() + 1;
       const day = time.getDate();
       const weekday = time.toLocaleDateString(currentLocale, { weekday: "short" });
       displayTime = `${month}月${day}日 ${weekday} ${timeString}`;
-    } else if (currentLocale === "ja") {
-      // Japanese format: "12月2日 (火) 12:06"
-      const month = time.getMonth() + 1; // getMonth() returns 0-11, so add 1
+    } else if (currentLocale.startsWith("ja")) {
+      // Japanese format: "2月14日 (土) 17:06"
+      const month = time.getMonth() + 1;
       const day = time.getDate();
       const weekday = time.toLocaleDateString(currentLocale, { weekday: "short" });
       displayTime = `${month}月${day}日 (${weekday}) ${timeString}`;
-    } else if (currentLocale === "ko") {
-      // Korean format: "12월2일 (화) 12:06" (similar to Japanese)
-      const month = time.getMonth() + 1; // getMonth() returns 0-11, so add 1
+    } else if (currentLocale.startsWith("ko")) {
+      // Korean format: "2월14일 (토) 17:06"
+      const month = time.getMonth() + 1;
       const day = time.getDate();
       const weekday = time.toLocaleDateString(currentLocale, { weekday: "short" });
       displayTime = `${month}월${day}일 (${weekday}) ${timeString}`;

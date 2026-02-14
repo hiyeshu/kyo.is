@@ -51,15 +51,19 @@ export function TrafficLightButton({
 }: TrafficLightButtonProps) {
   const styles = isForeground ? colorStyles[color] : inactiveStyles;
 
+  // Use rem units so buttons scale with root font-size (单一真相源: --os-scale)
+  // 0.8125rem = 13px at 16px base, scales to 16.25px at 20px base (1.25x)
+  const size = "0.8125rem";
+
   return (
-    <div className="relative" style={{ width: "13px", height: "13px" }}>
+    <div className="relative" style={{ width: size, height: size }}>
       {/* Visual button */}
       <div
         aria-hidden="true"
         className="rounded-full relative overflow-hidden cursor-default outline-none box-border"
         style={{
-          width: "13px",
-          height: "13px",
+          width: size,
+          height: size,
           background: styles.gradient,
           boxShadow: styles.shadow,
         }}
