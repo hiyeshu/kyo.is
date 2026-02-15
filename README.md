@@ -1,7 +1,6 @@
-![kyois](https://github.com/user-attachments/assets/87b89269-d74c-4c18-972a-94647f6a1b29)
 [English](./README.md) | [中文](./README.zh-CN.md)
 
-# <img src="public/favicon.svg" alt="Kyo icon" width="22" height="22" /> Kyo.is
+# <img src="public/favicon.svg" alt="Kyo icon" width="26" height="26" /> Kyo.is
 
 **Your bookmarks are your desktop.**
 
