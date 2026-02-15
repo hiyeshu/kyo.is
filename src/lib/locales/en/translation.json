@@ -172,7 +172,7 @@
     "appleMenu": {
       "aboutThisComputer": "About This Computer",
       "softwareUpdate": "Software Update…",
-      "systemPreferences": "System Preferences…",
+      "systemPreferences": "Settings…",
       "controlPanels": "Control Panels…",
       "appletStore": "Applet Store…",
       "recentItems": "Recent Items",
@@ -2095,7 +2095,7 @@
       }
     },
     "control-panels": {
-      "name": "System Preferences",
+      "name": "Settings",
       "description": "System settings",
       "menu": {
         "app": "App",

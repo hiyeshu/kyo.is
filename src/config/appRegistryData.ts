@@ -6,7 +6,7 @@
  */
 
 // Kyo.is apps (Finder and Applet Viewer removed)
-export const appIds = ["bookmarks", "chat", "theme-editor", "control-panels"] as const;
+export const appIds = ["bookmarks", "chat", "control-panels", "stickies"] as const;
 
 export type AppId = (typeof appIds)[number];
 
@@ -18,8 +18,8 @@ export interface AppBasicInfo {
 export const appNames: Record<AppId, string> = {
   "bookmarks": "Bookmarks",
   "chat": "Chat",
-  "theme-editor": "Theme Editor",
-  "control-panels": "System Preferences",
+  "control-panels": "Settings",
+  "stickies": "Stickies",
 };
 
 export function getAppBasicInfoList(): AppBasicInfo[] {

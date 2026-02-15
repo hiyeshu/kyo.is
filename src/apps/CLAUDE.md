@@ -7,7 +7,7 @@
 base/ - 应用基础框架，AppManager 应用管理器、应用类型定义、窗口生命周期
 bookmarks/ - 书签管理应用，空间书签板，支持文件夹、搜索、拖拽排序、导入导出
 control-panels/ - 系统设置应用，主题、壁纸、音量、备份恢复
-theme-editor/ - 主题编辑器，Expert Mode 可视化编辑所有 CSS 变量
+stickies/ - 便利贴应用，浮动便签、多色、拖拽缩放
 
 ## 应用架构
 每个应用目录结构：

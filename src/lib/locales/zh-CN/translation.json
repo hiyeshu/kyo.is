@@ -752,7 +752,7 @@
       "minute": "分钟",
       "minutes": "分钟",
       "mono": "黑白",
-      "name": "系统偏好设定",
+      "name": "设置",
       "openai": "OpenAI",
       "openaiVoice": "OpenAI 语音",
       "patterns": "样式",
@@ -2397,7 +2397,7 @@
       "noRecentDocuments": "没有最近使用的文件",
       "recentItems": "最近使用过的条目",
       "softwareUpdate": "软体更新…",
-      "systemPreferences": "系统偏好设定…"
+      "systemPreferences": "设置…"
     },
     "auth": {
       "createAccount": "建立账户",

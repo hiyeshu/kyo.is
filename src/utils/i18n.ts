@@ -91,6 +91,7 @@ export function getTranslatedHelpItems(appId: AppId): Array<{
 }> {
   const helpKeys: Partial<Record<AppId, string[]>> = {
     bookmarks: ["addBookmark", "organize", "search", "folders", "import", "export"],
+    stickies: ["createNote", "colors", "moveResize", "deleteNote", "clearAll", "autoSave"],
   };
 
   const keys = helpKeys[appId] || [];

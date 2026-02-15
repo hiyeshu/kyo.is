@@ -752,7 +752,7 @@
       "minute": "分",
       "minutes": "分",
       "mono": "モノラル",
-      "name": "システム環境設定",
+      "name": "設定",
       "openai": "OpenAI",
       "openaiVoice": "OpenAI 音声",
       "patterns": "パターン",
@@ -2391,7 +2391,7 @@
       "noRecentDocuments": "最近使った書類はありません",
       "recentItems": "最近使った項目",
       "softwareUpdate": "ソフトウェア・アップデート…",
-      "systemPreferences": "システム環境設定…"
+      "systemPreferences": "設定…"
     },
     "auth": {
       "createAccount": "アカウントを作成",

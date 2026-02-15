@@ -37,6 +37,19 @@
   --os-metrics-dock-radius: 0px;
   --os-metrics-dock-icon-size: 48px;
   --os-dock-blur: 0px;
+  --os-sticky-yellow: #ffffa5;
+  --os-sticky-yellow-border: #e6e650;
+  --os-sticky-blue: #d4edfc;
+  --os-sticky-blue-border: #8ec8e8;
+  --os-sticky-green: #d4f5d4;
+  --os-sticky-green-border: #8ed88e;
+  --os-sticky-pink: #ffd4e5;
+  --os-sticky-pink-border: #ff8eb8;
+  --os-sticky-purple: #e8d4f5;
+  --os-sticky-purple-border: #c88ee8;
+  --os-sticky-orange: #ffe4c4;
+  --os-sticky-orange-border: #ffb870;
+  --os-sticky-text: #000000;
 }
 
 /* Mac OS X Theme */
@@ -119,6 +132,19 @@
   --os-metrics-dock-radius: 8px;
   --os-metrics-dock-icon-size: 48px;
   --os-dock-blur: 20px;
+  --os-sticky-yellow: #fff59e;
+  --os-sticky-yellow-border: #e1d460;
+  --os-sticky-blue: #d2ebfb;
+  --os-sticky-blue-border: #8cbddd;
+  --os-sticky-green: #d3f3d3;
+  --os-sticky-green-border: #8ad18a;
+  --os-sticky-pink: #ffd0e0;
+  --os-sticky-pink-border: #f99bbf;
+  --os-sticky-purple: #e7d0f3;
+  --os-sticky-purple-border: #c091de;
+  --os-sticky-orange: #ffe0bc;
+  --os-sticky-orange-border: #f2b26a;
+  --os-sticky-text: #000000;
 }
 
 /* Ensure all UI elements in macOS theme use the theme font */

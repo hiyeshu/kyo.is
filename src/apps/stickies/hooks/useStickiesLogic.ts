@@ -1,0 +1,98 @@
+/**
+ * [INPUT]: 依赖 react hooks，依赖 hooks/useTranslatedHelpItems，依赖 stores/useThemeStore 与 useStickiesStore
+ * [OUTPUT]: 对外提供 useStickiesLogic hook
+ * [POS]: apps/stickies/hooks/ 的业务逻辑聚合层，被 StickiesApp 组合
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
+import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { useTranslatedHelpItems } from "@/hooks/useTranslatedHelpItems";
+import { useThemeStore } from "@/stores/useThemeStore";
+import { useStickiesStore, StickyColor } from "@/stores/useStickiesStore";
+import { helpItems } from "../metadata";
+import { useShallow } from "zustand/react/shallow";
+
+export function useStickiesLogic() {
+  const { t } = useTranslation();
+  const translatedHelpItems = useTranslatedHelpItems("stickies", helpItems);
+
+  // Theme state
+  const currentTheme = useThemeStore((state) => state.current);
+  const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
+
+  // Dialog state
+  const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
+
+  // Notes state from store
+  const {
+    notes,
+    addNote,
+    updateNote,
+    deleteNote,
+    bringToFront,
+    clearAllNotes,
+  } = useStickiesStore(
+    useShallow((state) => ({
+      notes: state.notes,
+      addNote: state.addNote,
+      updateNote: state.updateNote,
+      deleteNote: state.deleteNote,
+      bringToFront: state.bringToFront,
+      clearAllNotes: state.clearAllNotes,
+    }))
+  );
+
+  // Selected note for color changes etc
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+
+  const handleCreateNote = useCallback((color?: StickyColor) => {
+    const newId = addNote(color);
+    setSelectedNoteId(newId);
+  }, [addNote]);
+
+  const handleDeleteNote = useCallback((id: string) => {
+    deleteNote(id);
+    if (selectedNoteId === id) {
+      setSelectedNoteId(null);
+    }
+  }, [deleteNote, selectedNoteId]);
+
+  const handleChangeColor = useCallback((id: string, color: StickyColor) => {
+    updateNote(id, { color });
+  }, [updateNote]);
+
+  const handleNoteClick = useCallback((id: string) => {
+    setSelectedNoteId(id);
+    bringToFront(id);
+  }, [bringToFront]);
+
+  return {
+    // Translations
+    t,
+    translatedHelpItems,
+
+    // Theme
+    currentTheme,
+    isXpTheme,
+
+    // Dialogs
+    isHelpDialogOpen,
+    setIsHelpDialogOpen,
+    isAboutDialogOpen,
+    setIsAboutDialogOpen,
+
+    // Notes
+    notes,
+    selectedNoteId,
+    setSelectedNoteId,
+    handleCreateNote,
+    handleDeleteNote,
+    handleChangeColor,
+    handleNoteClick,
+    updateNote,
+    clearAllNotes,
+    bringToFront,
+  };
+}

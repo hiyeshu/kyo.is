@@ -14,6 +14,7 @@ export function useTranslatedHelpItems(
 
   const helpKeys: Partial<Record<AppId, string[]>> = {
     bookmarks: ["addBookmark", "organize", "search", "folders", "import", "export"],
+    stickies: ["createNote", "colors", "moveResize", "deleteNote", "clearAll", "autoSave"],
   };
 
   return useMemo(() => {
@@ -33,4 +34,3 @@ export function useTranslatedHelpItems(
     });
   }, [appId, originalHelpItems, t]);
 }
-

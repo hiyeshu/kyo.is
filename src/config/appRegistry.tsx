@@ -93,13 +93,6 @@ const LazyBookmarksApp = createLazyComponent<unknown>(
   "bookmarks"
 );
 
-const LazyThemeEditorApp = createLazyComponent<unknown>(
-  () =>
-    import(
-      "@/apps/theme-editor/components/ThemeEditorApp"
-    ).then((m) => ({ default: m.ThemeEditorApp })),
-  "theme-editor"
-);
 
 const LazyChatApp = createLazyComponent<unknown>(
   () =>
@@ -117,6 +110,14 @@ const LazyControlPanelsApp = createLazyComponent<unknown>(
   "control-panels"
 );
 
+const LazyStickiesApp = createLazyComponent<unknown>(
+  () =>
+    import(
+      "@/apps/stickies/components/StickiesApp"
+    ).then((m) => ({ default: m.StickiesApp })),
+  "stickies"
+);
+
 // ─── 元数据 ──────────────────────────────────────────────────────────────────
 
 import {
@@ -124,15 +125,16 @@ import {
   helpItems as bookmarkBoardHelpItems,
 } from "@/apps/bookmarks/metadata";
 
-import {
-  appMetadata as themeEditorMetadata,
-  helpItems as themeEditorHelpItems,
-} from "@/apps/theme-editor/metadata";
 
 import {
   appMetadata as controlPanelsMetadata,
   helpItems as controlPanelsHelpItems,
 } from "@/apps/control-panels/metadata";
+
+import {
+  appMetadata as stickiesMetadata,
+  helpItems as stickiesHelpItems,
+} from "@/apps/stickies/metadata";
 
 // ─── 注册表 ──────────────────────────────────────────────────────────────────
 // Kyo.is apps (Finder and Applet Viewer removed)
@@ -170,19 +172,6 @@ export const appRegistry = {
       minSize: { width: 400, height: 300 },
     } as WindowConstraints,
   },
-  "theme-editor": {
-    id: "theme-editor" as const,
-    name: "Theme Editor",
-    icon: { type: "image" as const, src: themeEditorMetadata.icon },
-    description: "Customize your theme",
-    component: LazyThemeEditorApp,
-    helpItems: themeEditorHelpItems,
-    metadata: themeEditorMetadata,
-    windowConfig: {
-      defaultSize: { width: 680, height: 520 },
-      minSize: { width: 600, height: 450 },
-    } as WindowConstraints,
-  },
   "control-panels": {
     id: "control-panels" as const,
     name: "System Preferences",
@@ -194,6 +183,19 @@ export const appRegistry = {
     windowConfig: {
       defaultSize: { width: 540, height: 480 },
       minSize: { width: 480, height: 400 },
+    } as WindowConstraints,
+  },
+  "stickies": {
+    id: "stickies" as const,
+    name: "Stickies",
+    icon: { type: "image" as const, src: stickiesMetadata.icon },
+    description: "Floating notes for quick thoughts",
+    component: LazyStickiesApp,
+    helpItems: stickiesHelpItems,
+    metadata: stickiesMetadata,
+    windowConfig: {
+      defaultSize: { width: 380, height: 220 },
+      minSize: { width: 320, height: 180 },
     } as WindowConstraints,
   },
 } as const;
