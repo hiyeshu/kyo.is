@@ -68,6 +68,7 @@
   --base-icon-titlebar: 16px;
   --base-icon-bookmark: 48px;      /* 书签板图标 */
   --base-traffic-light: 13px;      /* 红绿灯按钮 */
+  --base-icon-apple: 24px;         /* 菜单栏苹果图标 */
   
   /* 字体 */
   --base-text-xs: 11px;
@@ -101,6 +102,7 @@
   --os-icon-titlebar: calc(var(--base-icon-titlebar) * var(--os-scale));
   --os-icon-bookmark: calc(var(--base-icon-bookmark) * var(--os-scale));
   --os-traffic-light: calc(var(--base-traffic-light) * var(--os-scale));
+  --os-icon-apple: calc(var(--base-icon-apple) * var(--os-scale));
   
   /* 字体 */
   --os-text-xs: calc(var(--base-text-xs) * var(--os-scale));

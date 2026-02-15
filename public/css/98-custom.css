@@ -412,8 +412,8 @@ input[type="range"].has-box-indicator::-moz-range-thumb {
 .title-bar-controls button {
   padding: 0;
   display: block;
-  min-width: 16px;
-  min-height: 14px;
+  min-width: calc(16px * var(--os-scale, 1));
+  min-height: calc(14px * var(--os-scale, 1));
 }
 .title-bar-controls button:focus {
   outline: none;
@@ -761,12 +761,12 @@ ul.tree-view {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 14px;
-  min-width: 16px;
-  min-height: 14px;
-  max-width: 16px;
-  max-height: 14px;
+  width: calc(16px * var(--os-scale, 1));
+  height: calc(14px * var(--os-scale, 1));
+  min-width: calc(16px * var(--os-scale, 1));
+  min-height: calc(14px * var(--os-scale, 1));
+  max-width: calc(16px * var(--os-scale, 1));
+  max-height: calc(14px * var(--os-scale, 1));
   padding: 0;
   background: silver;
   box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey,
@@ -781,7 +781,7 @@ ul.tree-view {
     inset -2px -2px #dfdfdf, inset 2px 2px grey;
 }
 .title-bar-controls > button:not([data-action]) svg {
-  width: 12px;
-  height: 12px;
+  width: calc(12px * var(--os-scale, 1));
+  height: calc(12px * var(--os-scale, 1));
   flex-shrink: 0;
 }

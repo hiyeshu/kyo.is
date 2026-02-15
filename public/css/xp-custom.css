@@ -514,8 +514,8 @@ input[type="range"].has-box-indicator::-moz-range-thumb {
 .title-bar-controls button {
   padding: 0;
   display: block;
-  min-width: 16px;
-  min-height: 14px;
+  min-width: calc(16px * var(--os-scale, 1));
+  min-height: calc(14px * var(--os-scale, 1));
 }
 
 .title-bar-controls button:focus {

@@ -155,10 +155,10 @@ export function AppleMenu() {
             <ThemedIcon
               name="apple.png"
               alt="Apple Menu"
-              style={{ width: 30, height: 30 }}
+              style={{ width: "var(--os-icon-apple)", height: "var(--os-icon-apple)" }}
             />
           ) : (
-            "\uf8ff" // 
+            "\uf8ff" //
           )}
         </MenubarTrigger>
         <MenubarContent align="start" sideOffset={1} className="px-0">
