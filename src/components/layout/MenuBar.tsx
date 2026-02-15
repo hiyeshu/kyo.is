@@ -1081,16 +1081,16 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
           className="flex items-stretch border-none bg-transparent space-x-0 p-0 rounded-none h-full"
         >
           <AppleMenu />
-          {/* App Menu - only shown in macOS X theme */}
-          {currentTheme === "macosx" && hasActiveApp && foregroundInstance && (
+          {/* App Menu - show app name on desktop, "Kyo" on mobile for cleaner look */}
+          {currentTheme === "macosx" && !isPhone && hasActiveApp && foregroundInstance && (
             <AppMenu
               appId={foregroundInstance.appId}
               appName={appRegistry[foregroundInstance.appId]?.name || foregroundInstance.appId}
               instanceId={foregroundInstance.instanceId}
             />
           )}
-          {/* Kyo App Menu - shown in macOS X theme when no app is active (desktop) */}
-          {currentTheme === "macosx" && !hasActiveApp && (
+          {/* Kyo App Menu - shown on mobile or when no app is active */}
+          {currentTheme === "macosx" && (isPhone || !hasActiveApp) && (
             <KyoAppMenu />
           )}
           {hasActiveApp && children ? children : <DefaultMenuItems />}
