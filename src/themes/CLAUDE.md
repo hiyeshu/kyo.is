@@ -6,7 +6,7 @@
 index.ts: 主题导出入口，统一导出所有主题配置
 types.ts: 主题类型定义，Theme、ThemeConfig、ThemeColors、ThemeStyles、OsThemeId
 themeSchema.ts: 主题变量 Schema，定义 10 组 CSS 变量（Window/Titlebar/TrafficLights/Menubar/Dock/Selection/Buttons/Typography/Inputs/Scrollbar），预设皮肤（Aqua/Luna/Classic），导入导出工具函数
-macosx.ts: Mac OS X 主题配置，Aqua 风格，半透明、阴影、圆角
+macosx.ts: Mac OS X 主题配置，Aqua 风格，半透明、阴影、圆角，默认壁纸指向 aqua_kyo
 xp.ts: Windows XP 主题配置，Luna 风格，蓝绿色、圆角按钮、任务栏
 win98.ts: Windows 98 主题配置，经典 Windows 风格，灰色、方形按钮
 
