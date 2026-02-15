@@ -1252,7 +1252,8 @@ export function WindowFrame({
                 !isForeground && "inactive" // Add inactive class when not in foreground
               )}
               style={{
-                ...(currentTheme === "xp" ? { minHeight: "36px" } : { minHeight: "32px" }),
+                height: "var(--os-titlebar-height)",
+                minHeight: "var(--os-titlebar-height)",
                 ...(!isForeground
                   ? {
                       background: theme.colors.titleBar.inactiveBg,
@@ -1363,7 +1364,7 @@ export function WindowFrame({
             // Mac OS X theme title bar with traffic light buttons
             <div
               className={cn(
-                "title-bar relative flex items-center h-6 min-h-[1.25rem] mx-0 mb-0 px-[0.1rem] py-[0.1rem] select-none cursor-move user-select-none z-50 draggable-area",
+                "title-bar relative flex items-center mx-0 mb-0 px-[0.1rem] py-[0.1rem] select-none cursor-move user-select-none z-50 draggable-area",
                 // For notitlebar: absolute positioning, no shrink, transition opacity
                 isNoTitlebar 
                   ? "absolute top-0 left-0 right-0 transition-opacity duration-200" 
@@ -1371,6 +1372,8 @@ export function WindowFrame({
                 effectiveTransparentBackground && !isNoTitlebar && "mt-0"
               )}
               style={{
+                height: "var(--os-titlebar-height)",
+                minHeight: "var(--os-titlebar-height)",
                 borderRadius: isNoTitlebar ? "8px 8px 0px 0px" : "8px 8px 0px 0px",
                 // For notitlebar: gradient background for visibility, opacity based on hover
                 ...(isNoTitlebar
