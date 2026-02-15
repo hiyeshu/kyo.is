@@ -51,9 +51,8 @@ export function TrafficLightButton({
 }: TrafficLightButtonProps) {
   const styles = isForeground ? colorStyles[color] : inactiveStyles;
 
-  // Use rem units so buttons scale with root font-size (单一真相源: --os-scale)
-  // 0.8125rem = 13px at 16px base, scales to 16.25px at 20px base (1.25x)
-  const size = "0.8125rem";
+  // 单一真相源: design-system.css --os-traffic-light
+  const size = "var(--os-traffic-light)";
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
