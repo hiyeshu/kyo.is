@@ -1,18 +1,18 @@
 /**
- * [INPUT]: @/components/ui/menubar, @/components/layout/MenuBar, @/stores/useThemeStore
+ * [INPUT]: @/components/ui/menubar, @/stores/useThemeStore
  * [OUTPUT]: BookmarkBoardMenuBar 组件
  * [POS]: bookmark-board 的菜单栏，被 BookmarkBoardApp 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import {
+  Menubar,
   MenubarMenu,
   MenubarTrigger,
   MenubarContent,
   MenubarItem,
   MenubarSeparator,
 } from "@/components/ui/menubar";
-import { MenuBar } from "@/components/layout/MenuBar";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useTranslation } from "react-i18next";
 
@@ -38,7 +38,17 @@ export function BookmarkBoardMenuBar({
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
 
   return (
-    <MenuBar inWindowFrame={isXpTheme}>
+    <Menubar
+      className={`border-none bg-transparent space-x-0 rounded-none ${
+        isXpTheme ? "h-[var(--os-titlebar-height)]" : "h-[var(--os-metrics-menubar-height)]"
+      }`}
+      style={{
+        fontFamily: isXpTheme ? "var(--font-ms-sans)" : "var(--os-font-ui)",
+        fontSize: "var(--os-text-xs)",
+        paddingLeft: isXpTheme ? "6px" : "0.5rem",
+        paddingRight: isXpTheme ? "2px" : "0.5rem",
+      }}
+    >
       {/* ── File ─────────────────────────────────── */}
       <MenubarMenu>
         <MenubarTrigger className="text-md px-2 py-1 border-none focus-visible:ring-0">
@@ -77,6 +87,6 @@ export function BookmarkBoardMenuBar({
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
-    </MenuBar>
+    </Menubar>
   );
 }
