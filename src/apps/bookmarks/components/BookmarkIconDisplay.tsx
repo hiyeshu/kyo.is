@@ -1,11 +1,13 @@
 /**
- * [INPUT]: 依赖 @/stores/useBookmarkStore (getBookmarkIconInfo)
+ * [INPUT]: 依赖 @/stores/useBookmarkStore (getBookmarkIconInfo), useThemeStore
  * [OUTPUT]: BookmarkIconDisplay 组件
  * [POS]: 书签图标渲染组件，size="sm" 填满父容器（样式由父控制），其他尺寸独立渲染
+ *        md/lg/xl 自带 iOS 风格圆角 + Aqua 水晶高光，和 Dock/书签板统一
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { type Bookmark, getBookmarkIconInfo } from "@/stores/useBookmarkStore";
+import { useThemeStore } from "@/stores/useThemeStore";
 
 interface BookmarkIconDisplayProps {
   bookmark: Bookmark;
@@ -21,11 +23,15 @@ const SIZE_MAP = {
   xl: { width: "64px", height: "64px", fontSize: "2.5rem" },   // 64px
 };
 
+// Aqua 水晶高光渐变 —— Dock / 书签板 / 预览共用
+const AQUA_HIGHLIGHT =
+  "linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 50%, rgba(0,0,0,0.03) 100%)";
+
 /**
  * 书签图标显示组件
  * 
  * size="sm": 填满父容器，不加额外样式（由父容器控制样式）
- * size="md/lg/xl": 独立渲染，带圆角（用于对话框预览等场景）
+ * size="md/lg/xl": 独立渲染，iOS 风格圆角 + 白底 + 阴影 + Aqua 高光
  */
 export function BookmarkIconDisplay({
   bookmark,
@@ -34,6 +40,7 @@ export function BookmarkIconDisplay({
 }: BookmarkIconDisplayProps) {
   const sizeStyle = SIZE_MAP[size];
   const iconInfo = getBookmarkIconInfo(bookmark);
+  const isMacTheme = useThemeStore((s) => s.current) === "macosx";
   
   // size="sm" 时填满父容器，不加任何容器样式
   const isEmbedded = size === "sm";
@@ -54,8 +61,7 @@ export function BookmarkIconDisplay({
     );
   }
 
-  // 图片图标 (Custom base64 或 Favicon URL)
-  // size="sm" 时直接渲染 img，由父容器控制圆角/背景/阴影
+  // size="sm": 直接渲染 img，由父容器控制圆角/背景/阴影
   if (isEmbedded) {
     return (
       <img
@@ -78,14 +84,16 @@ export function BookmarkIconDisplay({
     );
   }
 
-  // size="md/lg/xl" 时渲染带圆角的独立容器（用于对话框预览等）
+  // size="md/lg/xl": iOS 风格圆角容器 + Aqua 水晶高光（和 Dock / 书签板统一）
   return (
     <div
-      className={`flex items-center justify-center rounded-lg overflow-hidden bg-white ${className}`}
+      className={`relative overflow-hidden ${className}`}
       style={{
         width: sizeStyle.width,
         height: sizeStyle.height,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        borderRadius: "22%",
+        backgroundColor: "#ffffff",
+        boxShadow: "0 1px 0 rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.12)",
       }}
     >
       <img
@@ -99,10 +107,21 @@ export function BookmarkIconDisplay({
           target.style.display = "none";
           const span = document.createElement("span");
           span.style.fontSize = sizeStyle.fontSize;
+          span.className = "flex items-center justify-center w-full h-full";
           span.textContent = "🌐";
           target.parentElement?.appendChild(span);
         }}
       />
+      {/* Aqua 水晶高光 */}
+      {isMacTheme && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            borderRadius: "22%",
+            background: AQUA_HIGHLIGHT,
+          }}
+        />
+      )}
     </div>
   );
 }

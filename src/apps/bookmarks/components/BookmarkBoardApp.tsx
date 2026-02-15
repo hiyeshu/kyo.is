@@ -621,18 +621,16 @@ export function BookmarkBoardApp({
                   backgroundImage: "var(--os-pinstripe-window)",
                 }}
               >
-                <div className="w-16 h-16 rounded-xl bg-white/80 border border-black/10 flex items-center justify-center shadow-sm">
-                  <BookmarkIconDisplay 
-                    bookmark={{ 
-                      id: "preview", 
-                      title: h.addTitle, 
-                      url: h.addUrl, 
-                      icon: h.addIcon,
-                      favicon: h.previewFavicon || undefined
-                    }} 
-                    size="lg" 
-                  />
-                </div>
+                <BookmarkIconDisplay 
+                  bookmark={{ 
+                    id: "preview", 
+                    title: h.addTitle, 
+                    url: h.addUrl, 
+                    icon: h.addIcon,
+                    favicon: h.previewFavicon || undefined
+                  }} 
+                  size="lg" 
+                />
               </div>
 
               {/* 右侧表单区 */}
@@ -801,17 +799,15 @@ export function BookmarkBoardApp({
                   backgroundImage: "var(--os-pinstripe-window)",
                 }}
               >
-                <div className="w-16 h-16 rounded-xl bg-white/80 border border-black/10 flex items-center justify-center shadow-sm">
-                  <BookmarkIconDisplay 
-                    bookmark={{ 
-                      id: "preview", 
-                      title: h.editTitle, 
-                      url: h.editUrl, 
-                      icon: h.editIcon 
-                    }} 
-                    size="lg" 
-                  />
-                </div>
+                <BookmarkIconDisplay 
+                  bookmark={{ 
+                    id: "preview", 
+                    title: h.editTitle, 
+                    url: h.editUrl, 
+                    icon: h.editIcon 
+                  }} 
+                  size="lg" 
+                />
               </div>
 
               {/* 右侧表单区 */}
