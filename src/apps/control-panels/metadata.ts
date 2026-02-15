@@ -6,7 +6,7 @@
  */
 
 export const appMetadata = {
-  name: "System Preferences",
+  name: "Settings",
   version: "1.0.1",
   creator: {
     name: "Kyo",

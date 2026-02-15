@@ -115,7 +115,7 @@ export function AppManager({ apps }: AppManagerProps) {
       const path = window.location.pathname;
       console.log("[AppManager] Checking path:", path);
 
-      // Handle direct app launch path (e.g., /bookmarks, /theme-editor)
+      // Handle direct app launch path (e.g., /bookmarks, /control-panels)
       if (path.startsWith("/") && path.length > 1) {
         const potentialAppId = path.substring(1).split("/")[0] as AppId;
 

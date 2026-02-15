@@ -13,7 +13,7 @@ win98.ts: Windows 98 主题配置，经典 Windows 风格，灰色、方形按�
 ## 依赖关系
 - 被 @/stores/useThemeStore 使用
 - 被 @/stores/useCustomThemeStore 使用（themeSchema）
-- 被 @/apps/theme-editor 使用（THEME_SCHEMA, PRESET_SKINS）
+- 被 @/stores/useCustomThemeStore 使用（THEME_SCHEMA, PRESET_SKINS）
 - 被 @/components/layout 布局组件使用
 - 被 CSS 变量系统消费
 
