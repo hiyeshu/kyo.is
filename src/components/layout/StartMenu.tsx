@@ -191,13 +191,14 @@ export function StartMenu({ apps }: StartMenuProps) {
                 {/* About This Computer */}
                 <DropdownMenuItem
                   onClick={() => setAboutOpen(true)}
-                  className="px-3 flex items-center gap-3 hover:bg-blue-500 hover:text-white"
+                  className="px-3 flex items-center hover:bg-blue-500 hover:text-white"
                   style={{
                     height: "var(--os-spacing-xl)",
                     fontSize: "var(--os-text-base)",
                     color: "#000000",
                     fontFamily: "var(--font-ms-sans)",
                     imageRendering: "pixelated",
+                    gap: "var(--os-menu-item-gap, 8px)",
                   }}
                 >
                   <ThemedIcon
@@ -220,13 +221,14 @@ export function StartMenu({ apps }: StartMenuProps) {
                   <DropdownMenuItem
                     key={app.id}
                     onClick={() => handleAppClick(app.id)}
-                    className="px-3 flex items-center gap-3 hover:bg-blue-500 hover:text-white"
+                    className="px-3 flex items-center hover:bg-blue-500 hover:text-white"
                     style={{
                       height: "var(--os-spacing-xl)",
                       fontSize: "var(--os-text-base)",
                       color: "#000000",
                       fontFamily: "var(--font-ms-sans)",
                       imageRendering: "pixelated",
+                      gap: "var(--os-menu-item-gap, 8px)",
                     }}
                   >
                     {typeof app.icon === "string" ? (

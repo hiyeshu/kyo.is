@@ -50,6 +50,8 @@
   --os-sticky-orange: #ffe4c4;
   --os-sticky-orange-border: #ffb870;
   --os-sticky-text: #000000;
+  /* Menu item gap - default spacing */
+  --os-menu-item-gap: 8px;
 }
 
 /* Mac OS X Theme */
@@ -211,6 +213,8 @@
   --os-metrics-dock-radius: 0px;
   --os-metrics-dock-icon-size: 32px;
   --os-dock-blur: 0px;
+  /* Menu item gap - classic theme spacing */
+  --os-menu-item-gap: 14px;
 }
 
 /* Inactive selection palette for background windows (Windows 98) */
@@ -275,6 +279,8 @@
   --os-metrics-dock-radius: 0px;
   --os-metrics-dock-icon-size: 32px;
   --os-dock-blur: 0px;
+  /* Menu item gap - classic theme spacing */
+  --os-menu-item-gap: 14px;
 }
 
 /* Inactive selection palette for background windows (Windows XP) */
