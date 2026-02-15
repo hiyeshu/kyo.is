@@ -1,6 +1,6 @@
 [English](./README.md) | [中文](./README.zh-CN.md)
 
-# 💻 Kyo.is
+# <img src="public/favicon.svg" alt="Kyo icon" width="22" height="22" /> Kyo.is
 
 **你的书签即桌面。**
 
