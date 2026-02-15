@@ -1856,7 +1856,7 @@
       "cancel": "取消"
     },
     "bookmarks": {
-      "name": "书签板",
+      "name": "收藏夹",
       "search": "搜索书签...",
       "countBookmarks": "{{count}} 个书签",
       "addBookmark": "新增书签",

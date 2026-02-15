@@ -41,9 +41,9 @@
 
 /* Mac OS X Theme */
 :root[data-os-theme="macosx"] {
-  --os-font-ui: "LucidaGrande", "Lucida Grande", "AquaKana", "Hiragino Sans",
-    "Hiragino Sans GB", "Heiti SC", ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, sans-serif;
+  --os-font-ui: "LucidaGrande", "Lucida Grande", "AquaKana", "PingFang SC",
+    "Source Han Sans SC", "Noto Sans CJK SC", "Hiragino Sans", "Hiragino Sans GB",
+    "Heiti SC", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --os-font-mono: Monaco, Menlo, monospace;
   --os-color-window-bg: #ececec;
   --os-color-menubar-bg: linear-gradient(to bottom, #f8f8f8, #d4d4d4);
@@ -119,6 +119,21 @@
   --os-metrics-dock-radius: 8px;
   --os-metrics-dock-icon-size: 48px;
   --os-dock-blur: 20px;
+}
+
+/* Ensure all UI elements in macOS theme use the theme font */
+:root[data-os-theme="macosx"] button,
+:root[data-os-theme="macosx"] input,
+:root[data-os-theme="macosx"] label,
+:root[data-os-theme="macosx"] select,
+:root[data-os-theme="macosx"] textarea,
+:root[data-os-theme="macosx"] [role="menuitem"],
+:root[data-os-theme="macosx"] [role="menuitemcheckbox"],
+:root[data-os-theme="macosx"] [role="menuitemradio"],
+:root[data-os-theme="macosx"] [role="option"] {
+  font-family: var(--os-font-ui) !important;
+  font-smooth: antialiased !important;
+  -webkit-font-smoothing: antialiased !important;
 }
 
 /* Shared toolbar texture utility. Uses variables defined by the active theme. */
