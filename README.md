@@ -1,6 +1,6 @@
 [English](./README.md) | [中文](./README.zh-CN.md)
 
-# <img src="public/favicon.svg" alt="Kyo icon" width="26" height="26" /> Kyo.is
+# <img src="public/favicon.svg" alt="Kyo icon" width="32" height="32" /> Kyo.is
 
 **Your bookmarks are your desktop.**
 
