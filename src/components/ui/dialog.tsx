@@ -6,6 +6,7 @@ import { useSound, Sounds } from "@/hooks/useSound";
 import { useVibration } from "@/hooks/useVibration";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { getTheme } from "@/themes";
+import { TrafficLightButton } from "@/components/shared/TrafficLightButton";
 
 const Dialog = ({
   children,
@@ -150,7 +151,7 @@ const DialogHeader = ({
     return (
       <div
         className={cn("title-bar", className)}
-        style={currentTheme === "xp" ? { minHeight: "30px" } : undefined}
+        style={{ height: "var(--os-titlebar-height)", minHeight: "var(--os-titlebar-height)" }}
         {...props}
       >
         <div className="title-bar-text">{children}</div>
@@ -165,13 +166,17 @@ const DialogHeader = ({
 
   if (isMacOsxTheme) {
     const theme = getTheme(currentTheme);
+    // 对话框 close 回调：由 DialogPrimitive.Close 按钮触发
+    const closeRef = React.useRef<HTMLButtonElement>(null);
     return (
       <div
         className={cn(
-          "flex items-center shrink-0 h-6 min-h-[1.25rem] mx-0 mb-0 px-[0.1rem] py-[0.1rem] select-none cursor-move user-select-none z-50 draggable-area macosx-dialog-header",
+          "flex items-center shrink-0 mx-0 mb-0 px-[0.1rem] py-[0.1rem] select-none cursor-move user-select-none z-50 draggable-area macosx-dialog-header",
           className
         )}
         style={{
+          height: "var(--os-titlebar-height)",
+          minHeight: "var(--os-titlebar-height)",
           borderRadius: "8px 8px 0px 0px",
           backgroundImage: "var(--os-pinstripe-titlebar)",
           borderBottom: `1px solid ${
@@ -182,143 +187,35 @@ const DialogHeader = ({
         }}
         {...props}
       >
-        {/* Traffic Light Buttons */}
+        {/* Traffic Light Buttons — 复用 TrafficLightButton 组件 */}
         <div className="flex items-center gap-2 ml-1.5">
-          {/* Close Button (Red) */}
-          <DialogPrimitive.Close asChild>
-            <button
-              className="rounded-full relative overflow-hidden cursor-default outline-none box-border"
-              style={{
-                width: "13px",
-                height: "13px",
-                background:
-                  "linear-gradient(rgb(193, 58, 45), rgb(205, 73, 52))",
-                boxShadow:
-                  "rgba(0, 0, 0, 0.5) 0px 2px 4px, rgba(0, 0, 0, 0.4) 0px 1px 2px, rgba(225, 70, 64, 0.5) 0px 1px 1px, rgba(0, 0, 0, 0.3) 0px 0px 0px 0.5px inset, rgba(150, 40, 30, 0.8) 0px 1px 3px inset, rgba(225, 70, 64, 0.75) 0px 2px 3px 1px inset",
-              }}
-              aria-label={t("common.dialog.close")}
-            >
-              {/* Top shine */}
-              <div
-                className="absolute left-1/2 transform -translate-x-1/2 pointer-events-none"
-                style={{
-                  height: "33%",
-                  background:
-                    "linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.3))",
-                  width: "calc(100% - 6px)",
-                  borderRadius: "6px 6px 0 0",
-                  top: "1px",
-                  filter: "blur(0.2px)",
-                  zIndex: 2,
-                }}
-              />
-              {/* Bottom glow */}
-              <div
-                className="absolute left-1/2 transform -translate-x-1/2 pointer-events-none"
-                style={{
-                  height: "33%",
-                  background:
-                    "linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.5))",
-                  width: "calc(100% - 3px)",
-                  borderRadius: "0 0 6px 6px",
-                  bottom: "1px",
-                  filter: "blur(0.3px)",
-                }}
-              />
-            </button>
-          </DialogPrimitive.Close>
-          {/* Minimize Button (Yellow) - Inactive */}
-          <button
-            className="rounded-full relative overflow-hidden cursor-default outline-none box-border"
-            style={{
-              width: "13px",
-              height: "13px",
-              background:
-                "linear-gradient(rgba(160, 160, 160, 0.625), rgba(255, 255, 255, 0.625))",
-              boxShadow:
-                "0 2px 3px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.3), inset 0 0 0 0.5px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 2px 3px 1px #bbbbbb",
-              pointerEvents: "none",
-            }}
-            aria-label={t("common.window.minimizeDisabled")}
-            disabled
-          >
-            {/* Top shine */}
-            <div
-              className="absolute left-1/2 transform -translate-x-1/2 pointer-events-none"
-              style={{
-                height: "33%",
-                background:
-                  "linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.3))",
-                width: "calc(100% - 6px)",
-                borderRadius: "6px 6px 0 0",
-                top: "1px",
-                filter: "blur(0.2px)",
-                zIndex: 2,
-              }}
-            />
-            {/* Bottom glow */}
-            <div
-              className="absolute left-1/2 transform -translate-x-1/2 pointer-events-none"
-              style={{
-                height: "33%",
-                background:
-                  "linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.5))",
-                width: "calc(100% - 3px)",
-                borderRadius: "0 0 6px 6px",
-                bottom: "1px",
-                filter: "blur(0.3px)",
-              }}
-            />
-          </button>
-          {/* Maximize Button (Green) - Inactive */}
-          <button
-            className="rounded-full relative overflow-hidden cursor-default outline-none box-border"
-            style={{
-              width: "13px",
-              height: "13px",
-              background:
-                "linear-gradient(rgba(160, 160, 160, 0.625), rgba(255, 255, 255, 0.625))",
-              boxShadow:
-                "0 2px 3px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.3), inset 0 0 0 0.5px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 2px 3px 1px #bbbbbb",
-              pointerEvents: "none",
-            }}
-            aria-label={t("common.window.maximizeDisabled")}
-            disabled
-          >
-            {/* Top shine */}
-            <div
-              className="absolute left-1/2 transform -translate-x-1/2 pointer-events-none"
-              style={{
-                height: "33%",
-                background:
-                  "linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.3))",
-                width: "calc(100% - 6px)",
-                borderRadius: "6px 6px 0 0",
-                top: "1px",
-                filter: "blur(0.2px)",
-                zIndex: 2,
-              }}
-            />
-            {/* Bottom glow */}
-            <div
-              className="absolute left-1/2 transform -translate-x-1/2 pointer-events-none"
-              style={{
-                height: "33%",
-                background:
-                  "linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.5))",
-                width: "calc(100% - 3px)",
-                borderRadius: "0 0 6px 6px",
-                bottom: "1px",
-                filter: "blur(0.3px)",
-              }}
-            />
-          </button>
+          <TrafficLightButton
+            color="red"
+            isForeground
+            onClick={() => closeRef.current?.click()}
+            ariaLabel={t("common.dialog.close")}
+          />
+          <TrafficLightButton
+            color="yellow"
+            isForeground={false}
+            onClick={() => {}}
+            ariaLabel={t("common.window.minimizeDisabled")}
+          />
+          <TrafficLightButton
+            color="green"
+            isForeground={false}
+            onClick={() => {}}
+            ariaLabel={t("common.window.maximizeDisabled")}
+          />
         </div>
+        {/* 隐藏的 DialogPrimitive.Close 供红绿灯触发 */}
+        <DialogPrimitive.Close ref={closeRef} className="hidden" />
 
-        {/* Title */}
+        {/* Title — 字体走 CSS 变量 */}
         <span
-          className="select-none mx-auto px-2 py-0 h-full flex items-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[80%] text-[13px] text-os-titlebar-active-text"
+          className="select-none mx-auto px-2 py-0 h-full flex items-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[80%] text-os-titlebar-active-text"
           style={{
+            fontSize: "var(--os-text-base)",
             textShadow: "0 2px 3px rgba(0, 0, 0, 0.25)",
             fontWeight: 500,
           }}
