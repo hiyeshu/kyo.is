@@ -232,7 +232,7 @@ export function BootScreen({
     );
   }
 
-  // System 7 boot screen
+  // Default fallback boot screen
   return (
     <Dialog open={isOpen} onOpenChange={() => {}} modal>
       <DialogPrimitive.Portal>

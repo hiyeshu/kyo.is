@@ -91,7 +91,7 @@ export function resolveIconLegacyAware(
     const parts = rest.split("/");
     const maybeTheme = parts[0];
     // Known themes (even before manifest loads). Include 'default'.
-    const KNOWN_THEMES = ["default", "macosx", "system7", "xp", "win98"];
+    const KNOWN_THEMES = ["default", "macosx", "xp", "win98"];
     const m = manifestCache;
     const isKnownTheme =
       (m && m.themes[maybeTheme]) || KNOWN_THEMES.includes(maybeTheme);

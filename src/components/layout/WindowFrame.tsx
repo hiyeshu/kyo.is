@@ -1360,7 +1360,7 @@ export function WindowFrame({
                 />
               </div>
             </div>
-          ) : currentTheme === "macosx" ? (
+          ) : (
             // Mac OS X theme title bar with traffic light buttons
             <div
               className={cn(
@@ -1467,7 +1467,7 @@ export function WindowFrame({
               {/* Title - absolutely centered so it stays centered regardless of left/right content width */}
               <span
                 className={cn(
-                  "select-none absolute left-1/2 -translate-x-1/2 px-2 py-0 h-full flex items-center justify-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[80%] text-[13px] pointer-events-none",
+                  "select-none absolute left-1/2 -translate-x-1/2 px-2 py-0 h-full flex items-center justify-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[80%] pointer-events-none",
                   isNoTitlebar
                     ? "text-white"
                     : isForeground
@@ -1475,6 +1475,7 @@ export function WindowFrame({
                     : "text-os-titlebar-inactive-text"
                 )}
                 style={{
+                  fontSize: "var(--os-text-base)",
                   textShadow: isNoTitlebar
                     ? "0 1px 3px rgba(0, 0, 0, 0.8)"
                     : isForeground
@@ -1524,102 +1525,6 @@ export function WindowFrame({
                                 )}
                               </div>
             </div>
-          ) : (
-            // Original Mac theme title bar (for System 7)
-            <div
-              className={cn(
-                "flex items-center shrink-0 h-os-titlebar min-h-[1.5rem] mx-0 my-[0.1rem] mb-0 px-[0.1rem] py-[0.2rem] select-none cursor-move border-b-[1.5px] user-select-none z-50 draggable-area",
-                isTransparent && "mt-0",
-                isForeground
-                  ? isTransparent
-                    ? "bg-white/70 backdrop-blur-sm border-b-os-window"
-                    : "bg-os-titlebar-active-bg bg-os-titlebar-pattern bg-clip-content bg-[length:6.6666666667%_13.3333333333%] border-b-os-window"
-                  : isTransparent
-                  ? "bg-white/20 backdrop-blur-sm border-b-os-window"
-                  : "bg-os-titlebar-inactive-bg border-b-gray-400"
-              )}
-              onMouseDown={handleMouseDownWithForeground}
-              onDoubleClick={(e) => {
-                if (isFromTitlebarControls(e.target)) return;
-                handleFullMaximize(e);
-              }}
-              onTouchStart={(e: React.TouchEvent<HTMLElement>) => {
-                if (isFromTitlebarControls(e.target)) {
-                  e.stopPropagation();
-                  return;
-                }
-                handleTitleBarTap(e);
-                handleMouseDownWithForeground(e);
-                if (isPhone) {
-                  handleTouchStart(e);
-                }
-              }}
-              onTouchMove={(e: React.TouchEvent<HTMLElement>) => {
-                if (isPhone) {
-                  handleTouchMove(e);
-                }
-              }}
-              onTouchEnd={() => {
-                if (isPhone) {
-                  handleTouchEnd();
-                }
-              }}
-            >
-              <div
-                onClick={handleClose}
-                onMouseDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                className="relative ml-2 w-4 h-4 cursor-default select-none"
-                data-titlebar-controls
-              >
-                <div className="absolute inset-0 -m-2" />{" "}
-                {/* Larger click area */}
-                <div
-                  className={`w-4 h-4 ${
-                    !isTransparent &&
-                    "bg-os-button-face shadow-[0_0_0_1px_var(--os-color-button-face)]"
-                  } border-2 border-os-window hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center ${
-                    !isForeground && "invisible"
-                  }`}
-                />
-              </div>
-              <span
-                className={cn(
-                  "select-none mx-auto px-2 py-0 h-full flex items-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[80%]",
-                  !isTransparent && "bg-os-button-face",
-                  isForeground
-                    ? "text-os-titlebar-active-text"
-                    : "text-os-titlebar-inactive-text"
-                )}
-                onTouchMove={(e) => e.preventDefault()}
-              >
-<span className="truncate">{title}</span>
-                              </span>
-                              {titleBarRightContent ? (
-                                <span className="mr-2 flex items-center shrink-0">{titleBarRightContent}</span>
-                              ) : onFullscreenToggle ? (
-                                <button
-                                  aria-label={t("common.window.fullscreen")}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onFullscreenToggle();
-                                  }}
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                  onTouchStart={(e) => e.stopPropagation()}
-                                  data-titlebar-controls
-                                  className={cn(
-                                    "mr-2 w-5 h-5 flex items-center justify-center",
-                                    isForeground
-                                      ? "text-gray-600"
-                                      : "text-gray-400"
-                                  )}
-                                >
-                                  <ArrowsOutSimple size={12} weight="bold" />
-                                </button>
-                              ) : (
-                                <div className="mr-2 w-4 h-4" />
-                              )}
-                            </div>
           )}
 
           {/* For XP/98 themes, render the menuBar inside the window */}

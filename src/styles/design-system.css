@@ -16,7 +16,7 @@
    * 三层缩放系统
    * ═══════════════════════════════════════════════════════════════════════════ */
   --device-scale: 1;      /* 设备层: CSS 媒体查询自动设置 (phone=1.25, tablet=1.1, desktop=1) */
-  --theme-scale: 1;       /* 主题覆盖: XP/98=1.1, Aqua/System7=1 */
+  --theme-scale: 1;       /* 主题覆盖: XP/98=1.1, Aqua=1 */
   --user-scale: 1;        /* 用户自定义: 系统偏好设定滑块 */
   
   /* 最终缩放值 = device × theme × user */
@@ -135,12 +135,6 @@
   --base-text-base: 13px;
 }
 
-/* System 7: 经典 Mac，保持原比例 */
-:root[data-os-theme="system7"] {
-  --theme-scale: 1;
-  --base-icon-desktop: 44px;
-}
-
 /* macOS Aqua: 现代 Mac，基准比例 */
 :root[data-os-theme="macosx"] {
   --theme-scale: 1;
@@ -201,19 +195,6 @@
   --os-icon-bg: transparent;
   --os-icon-container-bg: transparent;
   --os-icon-container-border: none;
-  --os-icon-hover-shadow: none;
-  --os-icon-hover-transform: none;
-}
-
-/* System 7: 纯黑白像素、1-bit 风格 */
-:root[data-os-theme="system7"] {
-  --os-icon-radius: 0;
-  --os-icon-border: 2px solid black;
-  --os-icon-shadow: none;
-  --os-icon-filter: grayscale(100%) contrast(1.2);
-  --os-icon-bg: white;
-  --os-icon-container-bg: white;
-  --os-icon-container-border: 2px solid black;
   --os-icon-hover-shadow: none;
   --os-icon-hover-transform: none;
 }

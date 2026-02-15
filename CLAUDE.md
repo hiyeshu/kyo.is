@@ -37,7 +37,7 @@ eslint.config.js - ESLint 规则，React Hooks 检查
 文件系统: 虚拟 FS，IndexedDB 持久化，备份/恢复
 AI 集成: Vercel AI SDK，支持 OpenAI/Anthropic/Google，流式响应
 实时通信: Pusher WebSocket，聊天室、在线状态
-主题系统: System 7 / Aqua / Windows XP / Windows 98，动态切换
+主题系统: Aqua / Windows XP / Windows 98，动态切换
 路由: 无路由器，窗口即应用实例，状态驱动 UI
 </architecture>
 

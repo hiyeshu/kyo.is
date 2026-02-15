@@ -409,7 +409,6 @@ function BookmarkDesktopIcon({
   theme: string;
 }) {
   const isXpTheme = theme === "xp" || theme === "win98";
-  const isSystem7 = false;
   
   // 使用单一真相源获取图标信息
   const iconInfo = getBookmarkIconInfo(bookmark);
@@ -456,24 +455,6 @@ function BookmarkDesktopIcon({
               target.src = "/icons/xp/ie-site.png";
             }}
           />
-        ) : isSystem7 ? (
-          // System 7: 黑白风格
-          <div 
-            className="border-2 border-black bg-white flex items-center justify-center overflow-hidden"
-            style={{ ...iconStyle, filter: "grayscale(100%)" }}
-          >
-            <img
-              src={iconInfo.value}
-              alt=""
-              className="w-3/4 h-3/4 object-contain"
-              draggable={false}
-              loading="lazy"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = "/icons/default/internet.png";
-              }}
-            />
-          </div>
         ) : (
           // macOS Aqua: 圆角 + 阴影
           <div
@@ -506,8 +487,6 @@ function BookmarkDesktopIcon({
             ? "bg-[Highlight] text-[HighlightText]"
             : isXpTheme
             ? "text-white [text-shadow:_1px_1px_1px_rgb(0_0_0_/_90%)]"
-            : isSystem7
-            ? "text-black"
             : "text-gray-900 [text-shadow:_0_1px_1px_rgb(255_255_255_/_80%)]"
         }`}
         style={{ 
@@ -541,7 +520,6 @@ function DesktopIcon({
   theme: string;
 }) {
   const isXpTheme = theme === "xp" || theme === "win98";
-  const isSystem7 = false;
   
   // 图标样式 - 使用 CSS 变量
   const iconStyle: React.CSSProperties = {
@@ -572,19 +550,6 @@ function DesktopIcon({
             style={iconStyle}
             draggable={false}
           />
-        ) : isSystem7 ? (
-          // System 7: 黑白风格
-          <div 
-            className="border-2 border-black bg-white flex items-center justify-center overflow-hidden"
-            style={{ ...iconStyle, filter: "grayscale(100%)" }}
-          >
-            <img
-              src={icon}
-              alt={label}
-              className="w-3/4 h-3/4 object-contain pointer-events-none"
-              draggable={false}
-            />
-          </div>
         ) : (
           // macOS Aqua: 圆角 + 阴影
           <div

@@ -197,11 +197,6 @@ button.piano-key {
   border-radius: 0 0 6px 6px !important; /* rounded-b-md equivalent */
 }
 
-/* Square corners for retro themes - using specific override classes */
-button.piano-key.system7-square {
-  border-radius: 0 !important;
-}
-
 button.piano-key:not(:disabled).active,
 button.piano-key:not(:disabled):active {
   box-shadow: none !important;
@@ -371,12 +366,6 @@ button.piano-key.piano-key[class*="bg-[#ff33ff]"] {
 
   .file-icon-label {
     font-family: var(--os-font-ui);
-  }
-
-  :root[data-os-theme="system7"] .file-icon-label {
-    font-family: var(--font-geneva-12);
-    -webkit-font-smoothing: antialiased;
-    font-smooth: always;
   }
 
   .font-apple-garamond {
@@ -927,7 +916,7 @@ button.piano-key.piano-key[class*="bg-[#ff33ff]"] {
 /* ------------------------------------------------------------------------- */
 /* macOS X theme override: disable pixelated rendering for icons and media    */
 /* Ensures smoother interpolation for macOS X while keeping retro themes      */
-/* (system7, win98, xp) pixelated via existing utility classes or inline      */
+/* (win98, xp) pixelated via existing utility classes or inline               */
 /* styles. Uses !important to override Tailwind arbitrary value classes or    */
 /* inline styles that set image-rendering: pixelated.                         */
 /* ------------------------------------------------------------------------- */
@@ -968,35 +957,6 @@ button.piano-key.piano-key[class*="bg-[#ff33ff]"] {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 46px) !important;
   }
 }
-
-/* System 7 theme: square corners, black border, drop shadow, smaller body text */
-:root[data-os-theme="system7"] [data-sonner-toast] {
-  border-radius: 0 !important;
-  border: 1px solid #000 !important;
-  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5) !important;
-}
-
-/* Smaller body text for System 7 toasts */
-:root[data-os-theme="system7"] [data-sonner-toast] .text-sm,
-:root[data-os-theme="system7"] [data-sonner-toast] [data-content] {
-  font-size: 12px !important;
-}
-
-/* Retro button style for System 7 toasts */
-:root[data-os-theme="system7"] [data-sonner-toast] button {
-  font-size: 12px !important;
-  border: 5px solid transparent !important;
-  border-image: url('/assets/button.svg') 30 stretch !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  color: #000 !important;
-}
-
-:root[data-os-theme="system7"] [data-sonner-toast] button:active {
-  border-image: url('/assets/button-default.svg') 60 stretch !important;
-}
-
 
 
 /* Windows XP theme: yellow XP background, no shadows, rounded corners */
@@ -1128,7 +1088,6 @@ ruby.lyrics-furigana {
 /* Inherit opacity and text-shadow from parent lyrics for consistency */
 rt.lyrics-furigana-rt,
 :root[data-os-theme="macosx"] rt.lyrics-furigana-rt,
-:root[data-os-theme="system7"] rt.lyrics-furigana-rt,
 :root[data-os-theme="win98"] rt.lyrics-furigana-rt,
 :root[data-os-theme="xp"] rt.lyrics-furigana-rt {
   font-size: 50% !important;

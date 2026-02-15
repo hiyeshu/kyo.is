@@ -21,7 +21,7 @@ WindowFrame.tsx: 窗口框架组件，窗口容器，标题栏、控制按钮、
 - 被 App.tsx 组合使用
 
 ## 布局组件约束
-1. 布局组件必须支持多主题（System 7/Aqua/XP/Win98）
+1. 布局组件必须支持多主题（Aqua/XP/Win98）
 2. 窗口管理必须使用 useWindowManager hook
 3. 动画使用 Framer Motion，避免 CSS transition
 4. 布局必须响应式，支持移动端适配

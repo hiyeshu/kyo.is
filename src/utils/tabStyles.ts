@@ -10,24 +10,17 @@ export interface TabStyleConfig {
 export function getTabStyles(currentTheme: OsThemeId): TabStyleConfig {
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   const isMacOSXTheme = currentTheme === "macosx";
-  const isSystem7Theme = false;
   const isWindowsLegacyTheme = isXpTheme;
 
   const separatorColor = isMacOSXTheme
     ? "rgba(0, 0, 0, 0.2)"
-    : isSystem7Theme || isWindowsLegacyTheme
+    : isWindowsLegacyTheme
     ? "#808080"
     : "rgba(0, 0, 0, 0.2)";
 
   const tabListBase = `flex w-full ${
     isMacOSXTheme ? "" : "h-6"
   } space-x-0.5 shadow-none`;
-
-  // System 7 styling - classic, no gradients or gloss
-  const tabListSystem7 = "bg-[#E3E3E3] border-b border-[#808080]";
-  const tabTriggerSystem7 =
-    "bg-[#D4D4D4] data-[state=active]:bg-[#E3E3E3] border border-[#808080] data-[state=active]:border-b-[#E3E3E3]";
-  const tabContentSystem7 = "bg-[#E3E3E3] border border-t-0 border-[#808080]";
 
   // macOS styling - use aqua-button CSS classes
   const tabListMacOSX = "aqua-tab-bar";
@@ -42,15 +35,9 @@ export function getTabStyles(currentTheme: OsThemeId): TabStyleConfig {
   } border border-black/20`;
 
   return {
-    tabListClasses: `${tabListBase} ${
-      isSystem7Theme ? tabListSystem7 : isMacOSXTheme ? tabListMacOSX : ""
-    }`,
-    tabTriggerClasses: `${tabTriggerBase} ${
-      isSystem7Theme ? tabTriggerSystem7 : isMacOSXTheme ? tabTriggerMacOSX : ""
-    }`,
-    tabContentClasses: `${tabContentBase} ${
-      isSystem7Theme ? tabContentSystem7 : isMacOSXTheme ? tabContentMacOSX : ""
-    }`,
+    tabListClasses: `${tabListBase} ${isMacOSXTheme ? tabListMacOSX : ""}`,
+    tabTriggerClasses: `${tabTriggerBase} ${isMacOSXTheme ? tabTriggerMacOSX : ""}`,
+    tabContentClasses: `${tabContentBase} ${isMacOSXTheme ? tabContentMacOSX : ""}`,
     separatorStyle: { borderColor: separatorColor },
   };
 }

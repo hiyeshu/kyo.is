@@ -4,7 +4,7 @@
 ## 成员清单
 
 design-system.css: 设计系统核心，三层缩放架构（device/theme/user），基准尺寸、图标、字体、间距的 CSS 变量
-themes.css: 主题样式定义，CSS 变量、主题切换、System 7/Aqua/XP/Win98 样式、暗色模式
+themes.css: 主题样式定义，CSS 变量、主题切换、Aqua/XP/Win98 样式、暗色模式
 
 ## 依赖关系
 - 被 App.tsx 全局导入

@@ -7,7 +7,7 @@ export type OsThemeId = "macosx" | "xp" | "win98";
 export interface ThemeMetadata {
   /** Whether this is a Windows-style theme (XP, 98) */
   isWindows: boolean;
-  /** Whether this is a macOS-style theme (macOS X, System 7) */
+  /** Whether this is a macOS-style theme (macOS X) */
   isMac: boolean;
   /** Whether the theme has a dock (bottom app launcher) */
   hasDock: boolean;
@@ -48,7 +48,7 @@ export interface OsTheme {
       border?: string; // For macOS semi-transparent border
       borderInactive?: string; // For macOS inactive border
       borderBottom?: string; // For Yosemite style bottom border
-      pattern?: string; // For System 7's dotted pattern
+      pattern?: string; // For dotted/textured title bar pattern
     };
     button: {
       face: string;

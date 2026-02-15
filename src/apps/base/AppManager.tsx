@@ -49,7 +49,7 @@ export function AppManager({ apps }: AppManagerProps) {
     exposeMode: state.exposeMode,
   }));
 
-  // For Mac/System7 themes, always show menubar for Kyo (bookmark-focused)
+  // For Mac themes, always show menubar for Kyo (bookmark-focused)
   // For XP/98, the menubar is actually a taskbar and should always show
   const showDesktopMenuBar = true;
 
@@ -260,7 +260,7 @@ export function AppManager({ apps }: AppManagerProps) {
   return (
     <>
       {/* MenuBar: For XP/Win98, this is the taskbar (always shown).
-          For Mac/System7, hide when a foreground app is loaded since
+          For Mac, hide when a foreground app is loaded since
           the app renders its own MenuBar. */}
       {showDesktopMenuBar && <MenuBar />}
       {/* macOS Dock */}

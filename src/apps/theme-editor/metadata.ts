@@ -32,6 +32,6 @@ export const helpItems = [
   {
     icon: "🔄",
     title: "Base Themes",
-    description: "Start from macOS, System 7, Windows XP, or Windows 98 as a base.",
+    description: "Start from macOS, Windows XP, or Windows 98 as a base.",
   },
 ];

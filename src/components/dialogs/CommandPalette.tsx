@@ -48,13 +48,6 @@ const xpPanelStyle: React.CSSProperties = {
   boxShadow: "var(--os-window-shadow, 2px 2px 8px rgba(0, 0, 0, 0.3))",
 };
 
-const system7PanelStyle: React.CSSProperties = {
-  backgroundColor: "var(--os-color-window-bg, #ffffff)",
-  backgroundImage: "var(--os-pinstripe-window)",
-  border: "var(--os-metrics-border-width, 1px) solid var(--os-color-window-border, #000000)",
-  boxShadow: "var(--os-window-shadow, 2px 2px 0px #000000)",
-};
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
@@ -107,13 +100,10 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
   // 主题判断
   const isMacTheme = currentTheme === "macosx";
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  const isSystem7 = false;
-
   // 面板样式
   const getPanelStyle = (): React.CSSProperties => {
     if (isMacTheme) return macPanelStyle;
     if (isXpTheme) return xpPanelStyle;
-    if (isSystem7) return system7PanelStyle;
     return {};
   };
 

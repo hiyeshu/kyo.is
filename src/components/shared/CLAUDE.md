@@ -13,7 +13,7 @@ TrafficLightButton.tsx: 交通灯按钮组件，macOS 风格窗口控制按钮�
 - 被窗口框架和应用消费
 
 ## 共享组件约束
-1. 组件必须支持所有主题（System 7/Aqua/XP/Win98）
+1. 组件必须支持所有主题（Aqua/XP/Win98）
 2. 组件必须响应式，支持移动端
 3. 组件必须有清晰的 Props 接口
 4. 组件必须支持无障碍（ARIA 属性）
