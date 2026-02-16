@@ -1,38 +1,23 @@
 /**
- * [INPUT]: useBookmarkStore, useThemeStore
- * [OUTPUT]: useBookmarkBoard hook
- * [POS]: bookmark-board 的全部业务逻辑，被 BookmarkBoardApp 消费
- * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
- */
+  * [INPUT]: useBookmarkStore, useThemeStore, useToast, getApiUrl, extractFirstUrl, useTranslation
+  * [OUTPUT]: useBookmarkBoard hook
+  * [POS]: bookmarks 的全部业务逻辑，被 BookmarkBoardApp 消费
+  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+  */
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import {
   useBookmarkStore,
   isFolder,
   getFaviconUrl,
   openBookmarkUrl,
-  type Bookmark,
   type BookmarkFolder,
   type BoardItem,
-  type BookmarkIcon,
 } from "@/stores/useBookmarkStore";
 import { useThemeStore } from "@/stores/useThemeStore";
-
-// ─── 获取网页标题 ─────────────────────────────────────────────────────────────
-
-async function fetchPageTitle(url: string): Promise<string | null> {
-  try {
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) return null;
-    
-    const html = await res.text();
-    const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    return match ? match[1].trim() : null;
-  } catch {
-    return null;
-  }
-}
+import { toast } from "@/hooks/useToast";
+import { getApiUrl, extractFirstUrl } from "@/utils/platform";
+import { useTranslation } from "react-i18next";
 
 // ─── 右键菜单类型 ─────────────────────────────────────────────────────────────
 
@@ -47,6 +32,7 @@ export function useBookmarkBoard() {
   const store = useBookmarkStore();
   const currentTheme = useThemeStore((s) => s.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
+  const { t } = useTranslation();
 
   // ─── 搜索 ──────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,15 +43,24 @@ export function useBookmarkBoard() {
     return store.items
       .map((item) => {
         if (isFolder(item)) {
-          const matched = item.bookmarks.filter(
-            (b) =>
+          const matched = item.bookmarks.filter((b) => {
+            const tags = (b.tags || []).join(" ").toLowerCase();
+            const summary = (b.summary || "").toLowerCase();
+            return (
               b.title.toLowerCase().includes(q) ||
-              b.url.toLowerCase().includes(q)
-          );
+              b.url.toLowerCase().includes(q) ||
+              summary.includes(q) ||
+              tags.includes(q)
+            );
+          });
           return matched.length ? { ...item, bookmarks: matched } : null;
         }
+        const tags = (item.tags || []).join(" ").toLowerCase();
+        const summary = (item.summary || "").toLowerCase();
         return item.title.toLowerCase().includes(q) ||
-          item.url.toLowerCase().includes(q)
+          item.url.toLowerCase().includes(q) ||
+          summary.includes(q) ||
+          tags.includes(q)
           ? item
           : null;
       })
@@ -74,13 +69,10 @@ export function useBookmarkBoard() {
 
   // ─── 添加书签 ──────────────────────────────────────────────────────────────
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [addTitle, setAddTitle] = useState("");
   const [addUrl, setAddUrl] = useState("");
-  const [addFolderId, setAddFolderId] = useState<string | undefined>(undefined);
-  const [addIcon, setAddIcon] = useState<BookmarkIcon | undefined>(undefined);
-  const [isFetchingTitle, setIsFetchingTitle] = useState(false);
+  const [isAiCreating, setIsAiCreating] = useState(false);
 
-  // 所有文件夹列表
+  // 所有文件夹列表（保留用于编辑/展示）
   const folders = useMemo(
     () => store.items.filter(isFolder) as BookmarkFolder[],
     [store.items]
@@ -99,135 +91,90 @@ export function useBookmarkBoard() {
     }
   }, [addUrl]);
 
-  const openAddDialog = useCallback((folderId?: string) => {
-    setAddTitle("");
+  const openAddDialog = useCallback(() => {
     setAddUrl("");
-    setAddFolderId(folderId);
-    setAddIcon(undefined); // 重置为默认 (auto)
     setAddDialogOpen(true);
   }, []);
 
-  // 当 URL 变化时，自动获取网页标题
-  useEffect(() => {
-    if (!addDialogOpen || !addUrl.trim()) return;
-    
-    const url = addUrl.trim();
-    const fullUrl = url.startsWith("http") ? url : `https://${url}`;
-    
+  // ─── AI 添加书签（只创建） ──────────────────────────────────────────────
+  const submitAiBookmark = useCallback(async () => {
+    const input = addUrl.trim();
+    if (!input || isAiCreating) return;
+
+    const rawUrl = extractFirstUrl(input) || input;
+    const fullUrl = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
+
+    let parsedUrl: URL | null = null;
     try {
-      new URL(fullUrl);
+      parsedUrl = new URL(fullUrl);
     } catch {
       return;
     }
 
-    if (addTitle.trim()) return;
+    const existing = store.getBookmarkByUrl(parsedUrl.toString());
+    if (existing) {
+      toast(t("apps.bookmarks.linkAlreadyExists", "已存在：{{title}}", { title: existing.title }));
+      return;
+    }
 
-    const controller = new AbortController();
-    setIsFetchingTitle(true);
-
-    fetchPageTitle(fullUrl)
-      .then((title) => {
-        if (!controller.signal.aborted && title) {
-          setAddTitle(title);
-        }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setIsFetchingTitle(false);
-        }
+    setIsAiCreating(true);
+    try {
+      const response = await fetch(getApiUrl("/api/chat"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content: `You are a link ingestion assistant. Return JSON only: {"title":"...","summary":"...","tags":["..."]}. Summary should be two or three sentences. No extra text.`,
+            },
+            {
+              role: "user",
+              content: parsedUrl.toString(),
+            },
+          ],
+          task: "link-ingest",
+        }),
       });
 
-    return () => controller.abort();
-  }, [addUrl, addDialogOpen, addTitle]);
+      if (!response.ok) {
+        return;
+      }
 
-  const submitBookmark = useCallback(() => {
-    const url = addUrl.trim();
-    const title = addTitle.trim();
-    if (!url) return;
+      const text = await response.text();
+      const fullContent = text
+        .split("\n")
+        .filter((line) => line.startsWith("0:"))
+        .map((line) => {
+          try {
+            return JSON.parse(line.slice(2)) as string;
+          } catch {
+            return "";
+          }
+        })
+        .join("");
+      const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        return;
+      }
+      const data = JSON.parse(jsonMatch[0]) as { title: string; summary: string; tags: string[] };
 
-    const fullUrl = url.startsWith("http") ? url : `https://${url}`;
-    let hostname = "example.com";
-    try {
-      hostname = new URL(fullUrl).hostname;
-    } catch { /* noop */ }
+      if (!data.title || !data.summary || !Array.isArray(data.tags)) {
+        return;
+      }
 
-    const finalTitle = title || hostname;
-    // 根据用户地区自动选择 favicon 服务
-    const favicon = getFaviconUrl(hostname);
-
-    // 添加书签
-    const bookmarkId = store.addBookmark(finalTitle, fullUrl, favicon, addFolderId);
-    
-    // 如果用户选择了自定义图标，更新书签
-    if (addIcon) {
-      store.updateBookmark(bookmarkId, { icon: addIcon });
+      const trimmedTags = data.tags.filter((tag) => tag && tag.trim());
+      store.addAiBookmark(data.title, parsedUrl.toString(), data.summary, trimmedTags);
+      setAddDialogOpen(false);
+      setAddUrl("");
+    } catch {
+      // noop
+    } finally {
+      setIsAiCreating(false);
     }
-    
-    setAddDialogOpen(false);
-  }, [addUrl, addTitle, addFolderId, addIcon, store]);
+  }, [addUrl, isAiCreating, store, t]);
 
   // ─── 编辑书签 ──────────────────────────────────────────────────────────────
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editUrl, setEditUrl] = useState("");
-  const [editIcon, setEditIcon] = useState<BookmarkIcon | undefined>(undefined);
-  const [editFolderId, setEditFolderId] = useState<string | undefined>(undefined);
-  const [originalFolderId, setOriginalFolderId] = useState<string | undefined>(undefined);
-
-  // 查找书签所在的文件夹
-  const findBookmarkFolderId = useCallback((bookmarkId: string): string | undefined => {
-    for (const item of store.items) {
-      if (isFolder(item)) {
-        if (item.bookmarks.some(b => b.id === bookmarkId)) {
-          return item.id;
-        }
-      }
-    }
-    return undefined; // 在顶层
-  }, [store.items]);
-
-  const openEditDialog = useCallback((bookmark: Bookmark) => {
-    setEditingBookmark(bookmark);
-    setEditTitle(bookmark.title);
-    setEditUrl(bookmark.url);
-    setEditIcon(bookmark.icon || { type: "favicon", value: bookmark.favicon || "" });
-    // 查找当前文件夹
-    const folderId = findBookmarkFolderId(bookmark.id);
-    setEditFolderId(folderId);
-    setOriginalFolderId(folderId);
-    setEditDialogOpen(true);
-  }, [findBookmarkFolderId]);
-
-  const submitEdit = useCallback(() => {
-    if (!editingBookmark) return;
-    
-    const url = editUrl.trim();
-    const title = editTitle.trim();
-    if (!url) return;
-
-    const fullUrl = url.startsWith("http") ? url : `https://${url}`;
-    let hostname = "example.com";
-    try {
-      hostname = new URL(fullUrl).hostname;
-    } catch { /* noop */ }
-
-    // 更新书签内容
-    store.updateBookmark(editingBookmark.id, {
-      title: title || hostname,
-      url: fullUrl,
-      icon: editIcon,
-      favicon: editIcon?.type === "favicon" ? getFaviconUrl(hostname) : editingBookmark.favicon,
-    });
-    
-    // 如果文件夹变了，移动书签
-    if (editFolderId !== originalFolderId) {
-      store.moveBookmarkToFolder(editingBookmark.id, editFolderId || null);
-    }
-    
-    setEditDialogOpen(false);
-    setEditingBookmark(null);
-  }, [editingBookmark, editTitle, editUrl, editIcon, editFolderId, originalFolderId, store]);
 
   // ─── 打开书签 ──────────────────────────────────────────────────────────────
 
@@ -404,34 +351,13 @@ export function useBookmarkBoard() {
     // 添加书签
     addDialogOpen,
     setAddDialogOpen,
-    addTitle,
-    setAddTitle,
     addUrl,
     setAddUrl,
-    addFolderId,
-    setAddFolderId,
-    addIcon,
-    setAddIcon,
     openAddDialog,
-    submitBookmark,
-    isFetchingTitle,
+    submitAiBookmark,
+    isAiCreating,
     folders,
     previewFavicon,
-
-    // 编辑书签
-    editDialogOpen,
-    setEditDialogOpen,
-    editingBookmark,
-    editTitle,
-    setEditTitle,
-    editUrl,
-    setEditUrl,
-    editIcon,
-    setEditIcon,
-    editFolderId,
-    setEditFolderId,
-    openEditDialog,
-    submitEdit,
 
     // 打开
     openBookmark,

@@ -66,11 +66,17 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
 
   // 过滤书签
   const filteredBookmarks = search
-    ? allBookmarks.filter(
-        (bm) =>
-          bm.title.toLowerCase().includes(search.toLowerCase()) ||
-          bm.url.toLowerCase().includes(search.toLowerCase())
-      )
+    ? allBookmarks.filter((bm) => {
+        const q = search.toLowerCase();
+        const summary = (bm.summary || "").toLowerCase();
+        const tags = (bm.tags || []).join(" ").toLowerCase();
+        return (
+          bm.title.toLowerCase().includes(q) ||
+          bm.url.toLowerCase().includes(q) ||
+          summary.includes(q) ||
+          tags.includes(q)
+        );
+      })
     : allBookmarks;
 
   // 打开时聚焦输入框 + ESC 关闭
