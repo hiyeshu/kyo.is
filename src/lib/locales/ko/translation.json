@@ -2354,7 +2354,10 @@
     },
     "search": {
       "bookmarks": "북마크 검색...",
-      "noResults": "북마크를 찾을 수 없습니다"
+      "appsAndBookmarks": "앱 및 북마크 검색...",
+      "appsGroup": "앱",
+      "bookmarksGroup": "북마크",
+      "noResults": "결과를 찾을 수 없습니다"
     },
     "aboutThisMac": {
       "builtInMemory": "내장 메모리",

@@ -2360,7 +2360,10 @@
     },
     "search": {
       "bookmarks": "搜尋書籤...",
-      "noResults": "找不到書籤"
+      "appsAndBookmarks": "搜尋應用程式和書籤...",
+      "appsGroup": "應用程式",
+      "bookmarksGroup": "書籤",
+      "noResults": "找不到結果"
     },
     "aboutThisMac": {
       "builtInMemory": "內建記憶體",

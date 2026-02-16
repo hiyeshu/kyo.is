@@ -6,7 +6,10 @@
     },
     "search": {
       "bookmarks": "Search bookmarks...",
-      "noResults": "No bookmarks found"
+      "appsAndBookmarks": "Search apps and bookmarks...",
+      "appsGroup": "Apps",
+      "bookmarksGroup": "Bookmarks",
+      "noResults": "No results found"
     },
     "loading": {
       "openingAppletStore": "Opening Applet Store...",

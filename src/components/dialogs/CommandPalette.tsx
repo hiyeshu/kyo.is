@@ -1,7 +1,7 @@
 /**
- * [INPUT]: cmdk, useBookmarkStore, useThemeStore
+ * [INPUT]: cmdk, useBookmarkStore, useThemeStore, appRegistry, useAppStore, i18n utils
  * [OUTPUT]: CommandPalette 组件
- * [POS]: 全局书签搜索面板，被 AppManager 挂载，⌘F 触发
+ * [POS]: 统一搜索浮层，搜索应用 + 书签，被 AppManager 挂载，⌘K / Shift+F / 双击桌面触发
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -9,6 +9,10 @@ import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
 import { useBookmarkStore, isFolder, getBookmarkIconInfo, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { useAppStore } from "@/stores/useAppStore";
+import { appRegistry, getAppIconPath } from "@/config/appRegistry";
+import type { AppId } from "@/config/appRegistry";
+import { getTranslatedAppName } from "@/utils/i18n";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { MagnifyingGlass } from "@phosphor-icons/react";
@@ -57,27 +61,20 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
 
+  // 应用列表
+  const appList = Object.entries(appRegistry).map(([id, app]) => ({
+    id: id as AppId,
+    name: getTranslatedAppName(id as AppId),
+    icon: getAppIconPath(id as AppId),
+    rawName: app.name,
+  }));
+
   // 展平所有书签（包括文件夹内的）
   const allBookmarks: FlatBookmark[] = items.flatMap((item) =>
     isFolder(item)
       ? item.bookmarks.map((bm) => ({ ...bm, folderTitle: item.title }))
       : [item]
   );
-
-  // 过滤书签
-  const filteredBookmarks = search
-    ? allBookmarks.filter((bm) => {
-        const q = search.toLowerCase();
-        const summary = (bm.summary || "").toLowerCase();
-        const tags = (bm.tags || []).join(" ").toLowerCase();
-        return (
-          bm.title.toLowerCase().includes(q) ||
-          bm.url.toLowerCase().includes(q) ||
-          summary.includes(q) ||
-          tags.includes(q)
-        );
-      })
-    : allBookmarks;
 
   // 打开时聚焦输入框 + ESC 关闭
   useEffect(() => {
@@ -97,8 +94,14 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onOpenChange]);
 
-  // 打开书签
-  const handleSelect = (url: string) => {
+  // 选中应用 → 启动
+  const handleSelectApp = (appId: AppId) => {
+    useAppStore.getState().launchApp(appId);
+    onOpenChange(false);
+  };
+
+  // 选中书签 → 打开
+  const handleSelectBookmark = (url: string) => {
     openBookmarkUrl(url);
     onOpenChange(false);
   };
@@ -106,11 +109,20 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
   // 主题判断
   const isMacTheme = currentTheme === "macosx";
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  // 面板样式
+
   const getPanelStyle = (): React.CSSProperties => {
     if (isMacTheme) return macPanelStyle;
     if (isXpTheme) return xpPanelStyle;
     return {};
+  };
+
+  const itemFontStyle: React.CSSProperties = {
+    fontSize: isMacTheme ? "13px" : isXpTheme ? "11px" : "12px",
+    fontFamily: isMacTheme
+      ? "var(--os-font-ui)"
+      : isXpTheme
+      ? '"Pixelated MS Sans Serif", Arial'
+      : "var(--os-font-ui, Geneva)",
   };
 
   if (!isOpen) return null;
@@ -161,7 +173,7 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
               ref={inputRef}
               value={search}
               onValueChange={setSearch}
-              placeholder={t("common.search.bookmarks", "Search bookmarks...")}
+              placeholder={t("common.search.appsAndBookmarks", "搜索应用和书签...")}
               className="w-full py-3 bg-transparent outline-none"
               style={isMacTheme ? macInputStyle : {
                 fontSize: isXpTheme ? "11px" : "12px",
@@ -170,7 +182,6 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
                   : "var(--os-font-ui, Geneva)",
               }}
             />
-            {/* Shortcut hint */}
             <kbd
               className="hidden sm:inline-flex items-center shrink-0"
               style={{
@@ -206,31 +217,48 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
                 fontFamily: isMacTheme ? "var(--os-font-ui)" : undefined,
               }}
             >
-              {t("common.search.noResults", "No bookmarks found")}
+              {t("common.search.noResults", "找不到结果")}
             </Command.Empty>
 
-              {filteredBookmarks.map((bm) => {
+            {/* 应用组 */}
+            <Command.Group heading={t("common.search.appsGroup", "应用")}>
+              {appList.map((app) => (
+                <Command.Item
+                  key={app.id}
+                  value={`${app.name} ${app.rawName}`}
+                  onSelect={() => handleSelectApp(app.id)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                    "data-[selected=true]:text-white"
+                  )}
+                  style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                >
+                  <img
+                    src={app.icon}
+                    alt=""
+                    className="w-4 h-4 shrink-0 object-contain"
+                    style={{ borderRadius: "3px" }}
+                  />
+                  <span className="truncate">{app.name}</span>
+                </Command.Item>
+              ))}
+            </Command.Group>
+
+            {/* 书签组 */}
+            <Command.Group heading={t("common.search.bookmarksGroup", "书签")}>
+              {allBookmarks.map((bm) => {
                 const iconInfo = getBookmarkIconInfo(bm);
                 return (
                   <Command.Item
                     key={bm.url}
                     value={`${bm.title} ${bm.url}`}
-                    onSelect={() => handleSelect(bm.url)}
+                    onSelect={() => handleSelectBookmark(bm.url)}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 cursor-pointer",
                       "data-[selected=true]:text-white"
                     )}
-                    style={{
-                      borderRadius: isMacTheme ? "5px" : "2px",
-                      fontSize: isMacTheme ? "13px" : isXpTheme ? "11px" : "12px",
-                      fontFamily: isMacTheme
-                        ? "var(--os-font-ui)"
-                        : isXpTheme
-                        ? '"Pixelated MS Sans Serif", Arial'
-                        : "var(--os-font-ui, Geneva)",
-                    }}
+                    style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
                   >
-                    {/* Icon - 单一真相源 */}
                     {iconInfo.isEmoji ? (
                       <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
                         {iconInfo.value}
@@ -246,39 +274,33 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
                         }}
                       />
                     )}
-
-                {/* Title & URL */}
-                <div className="flex-1 min-w-0">
-                  <div className="truncate">{bm.title}</div>
-                  <div
-                    className="truncate"
-                    style={{
-                      fontSize: isMacTheme ? "11px" : "9px",
-                      opacity: 0.5,
-                    }}
-                  >
-                    {bm.url}
-                  </div>
-                </div>
-
-                {/* Folder badge */}
-                {bm.folderTitle && (
-                  <span
-                    className="shrink-0"
-                    style={{
-                      padding: "2px 6px",
-                      borderRadius: isMacTheme ? "4px" : "2px",
-                      fontSize: "10px",
-                      backgroundColor: "rgba(0, 0, 0, 0.06)",
-                      color: "rgba(0, 0, 0, 0.5)",
-                    }}
-                  >
-                    {bm.folderTitle}
-                  </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="truncate">{bm.title}</div>
+                      <div
+                        className="truncate"
+                        style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}
+                      >
+                        {bm.url}
+                      </div>
+                    </div>
+                    {bm.folderTitle && (
+                      <span
+                        className="shrink-0"
+                        style={{
+                          padding: "2px 6px",
+                          borderRadius: isMacTheme ? "4px" : "2px",
+                          fontSize: "10px",
+                          backgroundColor: "rgba(0, 0, 0, 0.06)",
+                          color: "rgba(0, 0, 0, 0.5)",
+                        }}
+                      >
+                        {bm.folderTitle}
+                      </span>
                     )}
                   </Command.Item>
                 );
               })}
+            </Command.Group>
           </Command.List>
 
           {/* Footer */}
@@ -295,7 +317,9 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
               fontFamily: isMacTheme ? "var(--os-font-ui)" : undefined,
             }}
           >
-            <span>{t("apps.bookmarks.countBookmarks", "{{count}} 個書籤", { count: filteredBookmarks.length })}</span>
+            <span>
+              {appList.length} {t("common.search.appsGroup", "应用")} · {allBookmarks.length} {t("common.search.bookmarksGroup", "书签")}
+            </span>
             <div className="flex items-center gap-3">
               <span>↵ {t("common.action.open", "開啟")}</span>
               <span>ESC {t("common.action.close", "關閉")}</span>
@@ -318,6 +342,12 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
         }
         [cmdk-item][data-selected=true] span {
           color: rgba(255, 255, 255, 0.7) !important;
+        }
+        [cmdk-group-heading] {
+          padding: 4px 8px;
+          font-size: ${isMacTheme ? "11px" : "10px"};
+          color: rgba(0, 0, 0, 0.4);
+          font-family: ${isMacTheme ? "var(--os-font-ui)" : "inherit"};
         }
       `}</style>
     </div>

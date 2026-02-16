@@ -204,10 +204,19 @@ export function AppManager({ apps }: AppManagerProps) {
         e.preventDefault();
         setIsExposeViewOpen((prev) => !prev);
       }
-      // ⌘F / Ctrl+F to toggle Command Palette (hijack browser find)
-      if (e.key === "f" && (e.metaKey || e.ctrlKey)) {
+      // ⌘K / Ctrl+K to toggle Command Palette
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setIsCommandPaletteOpen((prev) => !prev);
+      }
+      // Shift+F to toggle Command Palette (exclude input/textarea/contentEditable)
+      if (e.key === "F" && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const target = e.target as HTMLElement;
+        const tag = target.tagName.toLowerCase();
+        if (tag !== "input" && tag !== "textarea" && !target.isContentEditable) {
+          e.preventDefault();
+          setIsCommandPaletteOpen((prev) => !prev);
+        }
       }
     };
 
@@ -322,6 +331,7 @@ export function AppManager({ apps }: AppManagerProps) {
           launchApp(appId, initialData, undefined, false, launchOrigin);
         }}
         appStates={{ windowOrder: instanceOrder, apps: legacyAppStates }}
+        onDoubleClick={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Expose View (Mission Control) - Backdrop and labels */}
@@ -341,7 +351,7 @@ export function AppManager({ apps }: AppManagerProps) {
         items={getDesktopContextMenuItems()}
       />
 
-      {/* Command Palette - ⌘F to search bookmarks */}
+      {/* Command Palette - ⌘K to search apps & bookmarks */}
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onOpenChange={setIsCommandPaletteOpen}

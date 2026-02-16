@@ -38,6 +38,7 @@ interface DesktopProps {
     launchOrigin?: LaunchOriginRect
   ) => void;
   onClick?: () => void;
+  onDoubleClick?: () => void;
   desktopStyles?: DesktopStyles;
 }
 
@@ -48,6 +49,7 @@ export function Desktop({
   apps: _apps,
   toggleApp,
   onClick,
+  onDoubleClick,
   desktopStyles,
 }: DesktopProps) {
   const { t } = useTranslation();
@@ -221,6 +223,12 @@ export function Desktop({
     <div
       className="absolute inset-0 min-h-screen h-full z-0 desktop-background"
       onClick={onClick}
+      onDoubleClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (!target.closest("[data-desktop-icon]") && onDoubleClick) {
+          onDoubleClick();
+        }
+      }}
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
