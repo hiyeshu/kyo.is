@@ -1,5 +1,8 @@
 /**
- * Platform detection utilities
+ * [INPUT]: 依赖浏览器 window/navigator，使用 URL 与环境变量进行判断
+ * [OUTPUT]: 导出 isTauri/isWeb/getApiBaseUrl/getApiUrl/extractFirstUrl/isTauriWindows
+ * [POS]: utils 的平台与环境判断入口，被前端与 API 调用
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 /**
@@ -42,6 +45,15 @@ export function getApiUrl(path: string): string {
 }
 
 /**
+ * Extract the first URL from a text string.
+ * Returns null if no URL is found.
+ */
+export function extractFirstUrl(text: string): string | null {
+  const match = text.match(/https?:\/\/[^\s]+/i);
+  return match ? match[0] : null;
+}
+
+/**
  * Check if Tauri is running on Windows (Chromium) or Mac (WebKit)
  * @returns true if Windows (Chromium), false if Mac (WebKit) or not Tauri
  */
@@ -63,4 +75,3 @@ export function isTauriWindows(): boolean {
   // If WebKit (no window.chrome), it's Mac
   return hasChrome;
 }
-

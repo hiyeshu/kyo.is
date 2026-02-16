@@ -19,7 +19,7 @@ import {
   DialogBody,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { MagnifyingGlass, Plus, FolderPlus, Link, DotsThree, PencilSimple, Trash, FolderSimple } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus, FolderPlus, Link, DotsThree, PencilSimple, Trash } from "@phosphor-icons/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,13 +27,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { HelpDialog } from "@/components/dialogs/HelpDialog";
 import { AboutDialog } from "@/components/dialogs/AboutDialog";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
@@ -42,7 +35,6 @@ import { appMetadata, helpItems } from "../metadata";
 import { BookmarkBoardMenuBar } from "./BookmarkBoardMenuBar";
 import { useBookmarkBoard } from "../hooks/useBookmarkBoard";
 import { isFolder, type Bookmark, type BookmarkFolder } from "@/stores/useBookmarkStore";
-import { IconPicker } from "./IconPicker";
 import { BookmarkIconDisplay } from "./BookmarkIconDisplay";
 import { useDockStore } from "@/stores/useDockStore";
 import { useTranslation } from "react-i18next";
@@ -223,7 +215,7 @@ function FolderSection({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[160px]">
-            <DropdownMenuItem onClick={() => h.openAddDialog(folder.id)}>
+            <DropdownMenuItem onClick={() => h.openAddDialog()}>
               <Plus size={14} className="mr-2" />
               {t("apps.bookmarks.addBookmark", "添加書籤")}
             </DropdownMenuItem>
@@ -343,7 +335,7 @@ export function BookmarkBoardApp({
           label: t("apps.bookmarks.addBookmark", "Add Bookmark"),
           icon: "➕",
           onSelect: () => {
-            h.openAddDialog(item.id);
+            h.openAddDialog();
             h.closeContextMenu();
           },
         },
@@ -373,10 +365,10 @@ export function BookmarkBoardApp({
       { type: "separator" },
       {
         type: "item",
-        label: t("common.menu.edit", "編輯"),
-        icon: "✏️",
+        label: t("common.contextMenu.open", "開啟"),
+        icon: "↗️",
         onSelect: () => {
-          h.openEditDialog(item);
+          h.openBookmark(item.url);
           h.closeContextMenu();
         },
       },
@@ -621,15 +613,18 @@ export function BookmarkBoardApp({
                   backgroundImage: "var(--os-pinstripe-window)",
                 }}
               >
-                <BookmarkIconDisplay 
-                  bookmark={{ 
-                    id: "preview", 
-                    title: h.addTitle, 
-                    url: h.addUrl, 
-                    icon: h.addIcon,
-                    favicon: h.previewFavicon || undefined
-                  }} 
-                  size="lg" 
+                <BookmarkIconDisplay
+                  bookmark={{
+                    id: "preview",
+                    title: h.addUrl,
+                    url: h.addUrl,
+                    summary: "",
+                    tags: [],
+                    createdAt: "",
+                    icon: undefined,
+                    favicon: h.previewFavicon || undefined,
+                  }}
+                  size="lg"
                 />
               </div>
 
@@ -651,121 +646,45 @@ export function BookmarkBoardApp({
                       id="bm-url"
                       value={h.addUrl}
                       onChange={(e) => h.setAddUrl(e.target.value)}
-                      placeholder="https://example.com"
+                      placeholder={t("apps.bookmarks.url", "網址")}
                       className={cn(
                         "text-xs h-8",
                         isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
                       )}
-                      onKeyDown={(e) => e.key === "Enter" && h.submitBookmark()}
+                      onKeyDown={(e) => e.key === "Enter" && h.submitAiBookmark()}
                       autoFocus
                     />
                   </div>
 
-                  {/* 名称 */}
-                  <div className="space-y-1">
-                    <Label 
-                      htmlFor="bm-title" 
-                      className={cn(
-                        "text-[11px] text-black/50",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                      )}
-                    >
-                      {t("apps.bookmarks.bookmarkName", "名稱")}
-                      {h.isFetchingTitle && (
-                        <span className="ml-1 text-black/30">({t("common.loading", "載入中...")})</span>
-                      )}
-                    </Label>
-                    <Input
-                      id="bm-title"
-                      value={h.addTitle}
-                      onChange={(e) => h.setAddTitle(e.target.value)}
-                      placeholder={h.isFetchingTitle ? t("apps.bookmarks.fetchingTitle", "正在取得標題...") : t("apps.bookmarks.pageTitle", "頁面標題")}
-                      className={cn(
-                        "text-xs h-8",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                      )}
-                      onKeyDown={(e) => e.key === "Enter" && h.submitBookmark()}
-                    />
-                  </div>
+                  {/* AI 模式：仅粘贴 URL */}
 
-                  {/* 图标选择器 */}
-                  <div className="space-y-1">
-                    <Label 
-                      className={cn(
-                        "text-[11px] text-black/50",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                      )}
-                    >
-                      {t("apps.bookmarks.icon", "圖示")}
-                    </Label>
-                    <IconPicker
-                      url={h.addUrl}
-                      value={h.addIcon}
-                      onChange={h.setAddIcon}
-                    />
-                  </div>
-
-                  {/* 文件夹选择 - macOS 风格 */}
-                  <div className="space-y-1">
-                    <Label 
-                      className={cn(
-                        "text-[11px] text-black/50",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                      )}
-                    >
-                      {t("apps.bookmarks.folder", "檔案夾")}
-                    </Label>
-                    <Select
-                      value={h.addFolderId || "__none__"}
-                      onValueChange={(v) => h.setAddFolderId(v === "__none__" ? undefined : v)}
-                    >
-                      <SelectTrigger className="h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">
-                          <span className="flex items-center gap-1.5">
-                            <FolderSimple size={14} className="text-black/40" />
-                            {t("apps.bookmarks.noFolder", "無檔案夾")}
-                          </span>
-                        </SelectItem>
-                        {h.folders.map((f) => (
-                          <SelectItem key={f.id} value={f.id}>
-                            <span className="flex items-center gap-1.5">
-                              <FolderSimple size={14} weight="fill" className="text-blue-500" />
-                              {f.title}
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* 文件夹选择已移除（仅收藏夹） */}
                 </div>
 
                 {/* 按钮 */}
                 <DialogFooter className="pt-4 gap-1">
-                  <Button
-                    variant={isMacTheme ? "secondary" : "retro"}
-                    size="sm"
-                    onClick={() => h.setAddDialogOpen(false)}
-                    className={cn(
-                      !isMacTheme && "h-7",
-                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                    )}
-                  >
-                    {t("common.dialog.cancel", "取消")}
-                  </Button>
+                    <Button
+                      variant={isMacTheme ? "secondary" : "retro"}
+                      size="sm"
+                      onClick={() => h.setAddDialogOpen(false)}
+                      className={cn(
+                        !isMacTheme && "h-7",
+                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
+                      )}
+                    >
+                      {t("common.dialog.cancel", "取消")}
+                    </Button>
                   <Button
                     variant={isMacTheme ? "default" : "retro"}
                     size="sm"
-                    onClick={h.submitBookmark}
-                    disabled={!h.addUrl.trim()}
+                    onClick={h.submitAiBookmark}
+                    disabled={!h.addUrl.trim() || h.isAiCreating}
                     className={cn(
                       !isMacTheme && "h-7",
                       isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
                     )}
                   >
-                    {t("apps.bookmarks.add", "新增")}
+                    {h.isAiCreating ? t("common.loading", "載入中...") : t("apps.bookmarks.add", "新增")}
                   </Button>
                 </DialogFooter>
               </DialogBody>
@@ -774,178 +693,6 @@ export function BookmarkBoardApp({
         </Dialog>
 
         {/* ── 编辑书签对话框 ──────────────────────────────── */}
-        <Dialog open={h.editDialogOpen} onOpenChange={h.setEditDialogOpen}>
-          <DialogContent 
-            className={cn("sm:max-w-[420px] p-0 gap-0 overflow-hidden", isXpTheme && "p-0")}
-            style={isXpTheme ? { fontSize: "11px" } : undefined}
-          >
-            <DialogHeader>
-              <DialogTitle 
-                className={cn(
-                  "text-sm font-medium",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
-              >
-                {t("apps.bookmarks.editBookmark", "編輯書籤")}
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="flex">
-              {/* 左侧预览区 */}
-              <div
-                className="w-[100px] shrink-0 flex items-center justify-center border-r border-black/10"
-                style={{
-                  backgroundColor: "var(--os-color-window-bg, #f5f5f5)",
-                  backgroundImage: "var(--os-pinstripe-window)",
-                }}
-              >
-                <BookmarkIconDisplay 
-                  bookmark={{ 
-                    id: "preview", 
-                    title: h.editTitle, 
-                    url: h.editUrl, 
-                    icon: h.editIcon 
-                  }} 
-                  size="lg" 
-                />
-              </div>
-
-              {/* 右侧表单区 */}
-              <DialogBody className={isXpTheme ? "flex-1 p-2 px-4" : "flex-1 p-4"}>
-                <div className="space-y-3">
-                  {/* URL */}
-                  <div className="space-y-1">
-                    <Label 
-                      htmlFor="edit-url" 
-                      className={cn(
-                        "text-[11px] text-black/50",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                      )}
-                    >
-                      {t("apps.bookmarks.url", "網址")}
-                    </Label>
-                    <Input
-                      id="edit-url"
-                      value={h.editUrl}
-                      onChange={(e) => h.setEditUrl(e.target.value)}
-                      placeholder="https://example.com"
-                      className={cn(
-                        "text-xs h-8",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                      )}
-                      onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
-                    />
-                  </div>
-
-                  {/* 名称 */}
-                  <div className="space-y-1">
-                    <Label 
-                      htmlFor="edit-title" 
-                      className={cn(
-                        "text-[11px] text-black/50",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                      )}
-                    >
-                      {t("apps.bookmarks.bookmarkName", "名稱")}
-                    </Label>
-                    <Input
-                      id="edit-title"
-                      value={h.editTitle}
-                      onChange={(e) => h.setEditTitle(e.target.value)}
-                      placeholder={t("apps.bookmarks.pageTitle", "頁面標題")}
-                      className={cn(
-                        "text-xs h-8",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                      )}
-                      onKeyDown={(e) => e.key === "Enter" && h.submitEdit()}
-                    />
-                  </div>
-
-                  {/* 图标选择器 */}
-                  <div className="space-y-1">
-                    <Label 
-                      className={cn(
-                        "text-[11px] text-black/50",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                      )}
-                    >
-                      {t("apps.bookmarks.icon", "圖示")}
-                    </Label>
-                    <IconPicker
-                      url={h.editUrl}
-                      value={h.editIcon}
-                      onChange={h.setEditIcon}
-                    />
-                  </div>
-
-                  {/* 文件夹选择 - macOS 风格 */}
-                  <div className="space-y-1">
-                    <Label 
-                      className={cn(
-                        "text-[11px] text-black/50",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                      )}
-                    >
-                      {t("apps.bookmarks.folder", "檔案夾")}
-                    </Label>
-                    <Select
-                      value={h.editFolderId || "__none__"}
-                      onValueChange={(v) => h.setEditFolderId(v === "__none__" ? undefined : v)}
-                    >
-                      <SelectTrigger className="h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">
-                          <span className="flex items-center gap-1.5">
-                            <FolderSimple size={14} className="text-black/40" />
-                            {t("apps.bookmarks.noFolder", "無檔案夾")}
-                          </span>
-                        </SelectItem>
-                        {h.folders.map((f) => (
-                          <SelectItem key={f.id} value={f.id}>
-                            <span className="flex items-center gap-1.5">
-                              <FolderSimple size={14} weight="fill" className="text-blue-500" />
-                              {f.title}
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* 按钮 */}
-                <DialogFooter className="pt-4 gap-1">
-                  <Button
-                    variant={isMacTheme ? "secondary" : "retro"}
-                    size="sm"
-                    onClick={() => h.setEditDialogOpen(false)}
-                    className={cn(
-                      !isMacTheme && "h-7",
-                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                    )}
-                  >
-                    {t("common.dialog.cancel", "取消")}
-                  </Button>
-                  <Button 
-                    variant={isMacTheme ? "default" : "retro"}
-                    size="sm" 
-                    onClick={h.submitEdit} 
-                    disabled={!h.editUrl.trim()}
-                    className={cn(
-                      !isMacTheme && "h-7",
-                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                    )}
-                  >
-                    {t("common.dialog.save", "儲存")}
-                  </Button>
-                </DialogFooter>
-              </DialogBody>
-            </div>
-          </DialogContent>
-        </Dialog>
-
         {/* ── 新建文件夹对话框 ────────────────────────────── */}
         <Dialog open={h.folderDialogOpen} onOpenChange={h.setFolderDialogOpen}>
           <DialogContent 
@@ -1092,13 +839,13 @@ export function BookmarkBoardApp({
           metadata={appMetadata}
           appId="bookmarks"
         />
-        <ConfirmDialog
-          isOpen={h.resetDialogOpen}
-          onOpenChange={h.setResetDialogOpen}
-          onConfirm={h.confirmReset}
-          title="Reset Bookmarks"
-          description="Reset all bookmarks to defaults? This cannot be undone."
-        />
+            <ConfirmDialog
+              isOpen={h.resetDialogOpen}
+              onOpenChange={h.setResetDialogOpen}
+              onConfirm={h.confirmReset}
+              title={t("apps.bookmarks.resetTitle", "重置書籤")}
+              description={t("apps.bookmarks.resetDescription", "重置所有書籤為預設值？此操作無法還原。")}
+            />
       </WindowFrame>
     </>
   );

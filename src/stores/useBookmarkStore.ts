@@ -408,6 +408,9 @@ export interface Bookmark {
   id: string;
   title: string;
   url: string;
+  summary: string;
+  tags: string[];
+  createdAt: string;
   favicon?: string; // 保留兼容性
   icon?: BookmarkIcon; // 新的图标配置
 }
@@ -476,10 +479,18 @@ export function getBookmarkIconInfo(bookmark: Bookmark): BookmarkIconInfo {
 
 // ─── 创建带 ID 的书签 ─────────────────────────────────────────────────────────
 
-const createBookmark = (title: string, url: string, favicon?: string): Bookmark => ({
+const createBookmark = (
+  title: string,
+  url: string,
+  favicon?: string,
+  meta?: { summary?: string; tags?: string[]; createdAt?: string }
+): Bookmark => ({
   id: generateId(),
   title,
   url,
+  summary: meta?.summary ?? "",
+  tags: meta?.tags ?? [],
+  createdAt: meta?.createdAt ?? new Date().toISOString(),
   favicon: favicon || fav(new URL(url).hostname),
 });
 
@@ -511,7 +522,9 @@ interface BookmarkStore {
 
   // 基础 CRUD
   addBookmark: (title: string, url: string, favicon?: string, folderId?: string) => string; // 返回新书签 ID
-  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon">>) => void;
+  addAiBookmark: (title: string, url: string, summary: string, tags: string[]) => string; // AI 写入
+  getBookmarkByUrl: (url: string) => Bookmark | undefined;
+  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags">>) => void;
   removeBookmark: (id: string) => void;
   
   // 文件夹
@@ -551,6 +564,32 @@ export const useBookmarkStore = create<BookmarkStore>()(
           };
         });
         return newBookmark.id;
+      },
+
+      addAiBookmark: (title, url, summary, tags) => {
+        let hostname = "example.com";
+        try {
+          hostname = new URL(url).hostname;
+        } catch { /* noop */ }
+        const favicon = getFaviconUrl(hostname);
+        const newBookmark = createBookmark(title, url, favicon, {
+          summary,
+          tags,
+          createdAt: new Date().toISOString(),
+        });
+        set((s) => ({ items: [...s.items, newBookmark] }));
+        return newBookmark.id;
+      },
+
+      getBookmarkByUrl: (url) => {
+        for (const item of get().items) {
+          if (isBookmark(item) && item.url === url) return item;
+          if (isFolder(item)) {
+            const found = item.bookmarks.find((b) => b.url === url);
+            if (found) return found;
+          }
+        }
+        return undefined;
       },
 
       updateBookmark: (id, updates) =>
@@ -691,7 +730,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
     }),
     {
       name: "kyo:bookmark-store",
-      version: 4, // v4: 重置为新默认书签
+      version: 5, // v5: add ai metadata fields
       migrate: (persisted, version) => {
         const old = persisted as { items?: BoardItem[] };
         
@@ -764,6 +803,31 @@ export const useBookmarkStore = create<BookmarkStore>()(
         // v4: 重置为新默认书签
         if (version < 4) {
           return { items: createDefaultItems() };
+        }
+
+        // v5: add ai metadata fields
+        if (version < 5) {
+          if (old.items) {
+            old.items = old.items.map((item) => {
+              if (isFolder(item)) {
+                return {
+                  ...item,
+                  bookmarks: item.bookmarks.map((b) => ({
+                    ...b,
+                    summary: (b as Bookmark).summary ?? "",
+                    tags: (b as Bookmark).tags ?? [],
+                    createdAt: (b as Bookmark).createdAt ?? new Date().toISOString(),
+                  })),
+                };
+              }
+              return {
+                ...item,
+                summary: (item as Bookmark).summary ?? "",
+                tags: (item as Bookmark).tags ?? [],
+                createdAt: (item as Bookmark).createdAt ?? new Date().toISOString(),
+              } as Bookmark;
+            });
+          }
         }
         
         return persisted as BookmarkStore;
