@@ -12,19 +12,11 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { RightClickMenu, type MenuItem } from "@/components/ui/right-click-menu";
 
-// Match WindowFrame open/close animation (scale 0.95 ↔ 1, opacity 0 ↔ 1)
-const STICKY_ANIMATION = {
-  initial: { scale: 0.95, opacity: 0 },
-  animate: {
-    scale: 1,
-    opacity: 1,
-    transition: { duration: 0.2, ease: [0.33, 1, 0.68, 1] as const },
-  },
-  exit: {
-    scale: 0.95,
-    opacity: 0,
-    transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] as const },
-  },
+// Exit animation only - entrance handled by initial:false to prevent re-animation on select
+const STICKY_EXIT_ANIMATION = {
+  scale: 0.95,
+  opacity: 0,
+  transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] as const },
 };
 
 interface StickyNoteProps {
@@ -341,27 +333,17 @@ export function StickyNote({
         setContextMenuPos({ x: e.clientX, y: e.clientY });
         onSelect();
       }}
-      initial={{
-        ...STICKY_ANIMATION.initial,
-        left: draftPosition.x,
-        top: draftPosition.y,
-        width: draftSize.width,
-        height: draftSize.height,
-      }}
+      // initial=false prevents re-animation when note is selected/reordered
+      // Only exit animation plays when note is deleted
+      initial={false}
       animate={{
-        scale: 1,
-        opacity: 1,
         left: draftPosition.x,
         top: draftPosition.y,
         width: draftSize.width,
         height: draftSize.height,
       }}
-      transition={{
-        scale: { duration: 0 },
-        opacity: { duration: 0 },
-        ...layoutTransition,
-      }}
-      exit={STICKY_ANIMATION.exit}
+      transition={layoutTransition}
+      exit={STICKY_EXIT_ANIMATION}
       className={cn(
         "fixed flex flex-col overflow-hidden origin-top-left",
         isDragging && "opacity-95"

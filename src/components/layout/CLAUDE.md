@@ -5,12 +5,13 @@
 
 AppleMenu.tsx: Apple 菜单组件，macOS 风格左上角菜单，关于、系统偏好、最近使用项目、登入/登出
 AppMenu.tsx: 应用菜单组件，当前应用的菜单栏，文件、编辑、视图、帮助
-Desktop.tsx: 桌面组件，桌面环境核心，管理壁纸、图标、窗口、右键菜单（添加网站到 Dock）
+Desktop.tsx: 桌面组件，桌面环境核心，管理壁纸、图标、右键菜单（添加网站/便签）
 Dock.tsx: Dock 栏组件，macOS 风格底部应用栏，应用图标、网站链接、最小化窗口、拖拽排序、右键添加网站
 ExposeView.tsx: Exposé 视图组件，窗口总览，显示所有打开的窗口缩略图
 exposeUtils.ts: Exposé 工具函数，窗口布局计算、动画参数
 MenuBar.tsx: 菜单栏组件，macOS 风格顶部菜单栏，集成 AppleMenu 和 AppMenu
 StartMenu.tsx: 开始菜单组件，Windows 风格开始菜单，应用列表、关机选项
+StickyNotesLayer.tsx: 便签统一渲染层，便签是桌面一等公民，永远可用，不依赖 stickies 应用是否打开
 WindowFrame.tsx: 窗口框架组件，窗口容器，标题栏、控制按钮、拖拽、缩放
 
 ## 依赖关系

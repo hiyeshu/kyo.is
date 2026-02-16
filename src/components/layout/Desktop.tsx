@@ -7,7 +7,7 @@
 
 import { AnyApp } from "@/apps/base/types";
 import { AppId, getAppIconPath } from "@/config/appRegistry";
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useWallpaper } from "@/hooks/useWallpaper";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
@@ -56,11 +56,6 @@ export function Desktop({
   const { t } = useTranslation();
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const { wallpaperSource, isVideoWallpaper } = useWallpaper();
-  const stickiesNotes = useStickiesStore((state) => state.notes);
-  const desktopNotes = useMemo(
-    () => stickiesNotes.filter((note) => note.onDesktop),
-    [stickiesNotes]
-  );
   const videoRef = useRef<HTMLVideoElement>(null);
   const [contextMenuPos, setContextMenuPos] = useState<{
     x: number;
@@ -423,42 +418,7 @@ export function Desktop({
         </div>
       </div>
 
-      {/* Desktop stickies (read-only cards) */}
-      <div className="absolute inset-0 z-[5] pointer-events-none">
-        {desktopNotes.map((note) => (
-          <div
-            key={note.id}
-            className="absolute pointer-events-auto"
-            style={{
-              left: note.position.x,
-              top: note.position.y,
-              width: note.size.width,
-              height: note.size.height,
-              backgroundColor: `var(--os-sticky-${note.color}, #fef08a)`,
-              border: `1px solid var(--os-sticky-${note.color}-border, rgba(0, 0, 0, 0.15))`,
-              boxShadow: "var(--os-window-shadow)",
-              borderRadius: "1px",
-            }}
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-              toggleApp("stickies" as AppId, { focusNoteId: note.id });
-            }}
-          >
-            <div
-              className="h-[14px] px-[3px]"
-              style={{
-                borderBottom: `1px solid var(--os-sticky-${note.color}-border, rgba(0, 0, 0, 0.15))`,
-              }}
-            />
-            <div
-              className="p-2 text-[12px] leading-snug overflow-hidden whitespace-pre-wrap"
-              style={{ color: "var(--os-sticky-text)" }}
-            >
-              {note.content}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Stickies are now rendered by StickyNotesLayer in App.tsx */}
 
       <RightClickMenu
         position={contextMenuPos}
@@ -673,3 +633,5 @@ function DesktopIcon({
     </div>
   );
 }
+
+

@@ -24,6 +24,7 @@ import { isTauri } from "./utils/platform";
 import { checkDesktopUpdate, onDesktopUpdate, DesktopUpdateResult } from "./utils/prefetch";
 import { DownloadSimple } from "@phosphor-icons/react";
 import { ScreenSaverOverlay } from "./components/screensavers/ScreenSaverOverlay";
+import { StickyNotesLayer } from "./components/layout/StickyNotesLayer";
 import { usePasteHandler } from "./hooks/usePasteHandler";
 
 // Convert registry to array
@@ -195,6 +196,7 @@ export function App() {
   return (
     <>
       <AppManager apps={apps} />
+      <StickyNotesLayer />
       <Toaster position={toastConfig.position} offset={toastConfig.offset} />
       <ScreenSaverOverlay />
     </>

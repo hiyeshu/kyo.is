@@ -1,14 +1,11 @@
 /**
- * [INPUT]: 依赖 react hooks，依赖 AppProps，依赖 stickies 逻辑与组件，依赖 dialogs，依赖 appMetadata
- * [OUTPUT]: 对外提供 StickiesApp 组件
- * [POS]: apps/stickies/components/ 的主组件，渲染便签与菜单
+ * [INPUT]: 依赖 react hooks，依赖 AppProps，依赖 stickies 逻辑，依赖 dialogs，依赖 appMetadata
+ * [OUTPUT]: 对外提供 StickiesApp 组件（轻量级管理器，便签由 StickyNotesLayer 统一渲染）
+ * [POS]: apps/stickies/components/ 的主组件，便签管理器（菜单栏操作、对话框），便签渲染委托给 StickyNotesLayer
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { AnimatePresence } from "framer-motion";
-import { StickyNote } from "./StickyNote";
 import { StickiesMenuBar } from "./StickiesMenuBar";
 import { AppProps } from "@/apps/base/types";
 import { useStickiesLogic } from "../hooks/useStickiesLogic";
@@ -38,8 +35,6 @@ export function StickiesApp({
     handleCreateNote,
     handleDeleteNote,
     handleChangeColor,
-    handleNoteClick,
-    updateNote,
     clearAllNotes,
     bringToFront,
     setSelectedNoteId,
@@ -91,6 +86,23 @@ export function StickiesApp({
     bringToFront(focusNoteId);
   }, [bringToFront, initialData, isWindowOpen, setSelectedNoteId]);
 
+  // Listen for note selection from StickyNotesLayer
+  useEffect(() => {
+    if (!isWindowOpen) return;
+    
+    const handleNoteSelected = (e: Event) => {
+      const customEvent = e as CustomEvent<{ noteId: string }>;
+      if (customEvent.detail?.noteId) {
+        setSelectedNoteId(customEvent.detail.noteId);
+      }
+    };
+    
+    window.addEventListener("stickies:noteSelected", handleNoteSelected);
+    return () => {
+      window.removeEventListener("stickies:noteSelected", handleNoteSelected);
+    };
+  }, [isWindowOpen, setSelectedNoteId]);
+
   const menuBar = (
     <StickiesMenuBar
       onClose={handleClose}
@@ -106,49 +118,13 @@ export function StickiesApp({
 
   if (!isWindowOpen) return null;
 
-  // Calculate z-indices for notes based on foreground state
-  // Windows use z-index starting at 2 (BASE_Z_INDEX + index + 1)
-  // When NOT foreground: z-index 1 (above desktop at 0, below windows at 2+)
-  // When foreground: z-index below dialogs (z-50) so Help/About appear on top
-  const getZIndexForNote = (noteId: string) => {
-    if (!isForeground) {
-      // All stickies at z-index 1 when not foreground (below all windows)
-      return 1;
-    }
-    // When foreground, stack notes with selected on top; stay below dialogs (z-50)
-    const baseZ = 40;
-    const index = notes.findIndex((n) => n.id === noteId);
-    if (noteId === selectedNoteId) {
-      return baseZ + notes.length + 1;
-    }
-    return baseZ + index;
-  };
-
   return (
     <>
-      {/* Menu bar for macOS/System7 themes */}
+      {/* Menu bar for macOS/System7 themes - provides operations for selected note */}
       {!isXpTheme && isForeground && menuBar}
 
-      {/* Render sticky notes in a portal with AnimatePresence for in/out animations (like window frames) */}
-      {createPortal(
-        <AnimatePresence>
-          {notes.map((note) => (
-            <StickyNote
-              key={note.id}
-              note={note}
-              onSelect={() => {
-                handleNoteClick(note.id);
-                bringToFront(note.id);
-              }}
-              onUpdate={(updates) => updateNote(note.id, updates)}
-              onDelete={() => handleDeleteNote(note.id)}
-              zIndex={getZIndexForNote(note.id)}
-              isForeground={!!isForeground && note.id === selectedNoteId}
-            />
-          ))}
-        </AnimatePresence>,
-        document.body
-      )}
+      {/* Sticky notes are now rendered by StickyNotesLayer in App.tsx */}
+      {/* This component only manages: menu bar operations, dialogs, selection sync */}
 
       {/* Dialogs */}
       <HelpDialog
