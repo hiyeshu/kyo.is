@@ -8,6 +8,7 @@
 import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
 import { useBookmarkStore, isFolder, getBookmarkIconInfo, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
+import { useStickiesStore } from "@/stores/useStickiesStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useAppStore } from "@/stores/useAppStore";
 import { appRegistry, getAppIconPath } from "@/config/appRegistry";
@@ -57,17 +58,21 @@ const xpPanelStyle: React.CSSProperties = {
 export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
   const { t } = useTranslation();
   const { items } = useBookmarkStore();
+  const { notes } = useStickiesStore();
   const currentTheme = useThemeStore((s) => s.current);
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
 
   // 应用列表
-  const appList = Object.entries(appRegistry).map(([id, app]) => ({
-    id: id as AppId,
-    name: getTranslatedAppName(id as AppId),
-    icon: getAppIconPath(id as AppId),
-    rawName: app.name,
-  }));
+  const appList = Object.entries(appRegistry).map(([id]) => {
+    const appId = id as AppId;
+    return {
+      id: appId,
+      name: getTranslatedAppName(appId),
+      icon: getAppIconPath(appId),
+      searchLabel: `${getTranslatedAppName(appId)} ${appId}`,
+    };
+  });
 
   // 展平所有书签（包括文件夹内的）
   const allBookmarks: FlatBookmark[] = items.flatMap((item) =>
@@ -103,6 +108,14 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
   // 选中书签 → 打开
   const handleSelectBookmark = (url: string) => {
     openBookmarkUrl(url);
+    onOpenChange(false);
+  };
+
+  // 选中便签 → 聚焦
+  const handleSelectNote = (noteId: string) => {
+    useStickiesStore.getState().bringToFront(noteId);
+    // 确保 Stickies 应用已打开
+    useAppStore.getState().launchApp("stickies" as AppId);
     onOpenChange(false);
   };
 
@@ -225,7 +238,7 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
               {appList.map((app) => (
                 <Command.Item
                   key={app.id}
-                  value={`${app.name} ${app.rawName}`}
+                    value={app.searchLabel}
                   onSelect={() => handleSelectApp(app.id)}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2 cursor-pointer",
@@ -238,8 +251,11 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
                     alt=""
                     className="w-4 h-4 shrink-0 object-contain"
                     style={{ borderRadius: "3px" }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/icons/default/application.png";
+                    }}
                   />
-                  <span className="truncate">{app.name}</span>
+                    <span className="truncate">{app.name}</span>
                 </Command.Item>
               ))}
             </Command.Group>
@@ -301,6 +317,39 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
                 );
               })}
             </Command.Group>
+
+            {/* 便签组 */}
+            {notes.length > 0 && (
+              <Command.Group heading={t("common.search.notesGroup", "便签")}>
+                {notes
+                  .filter((note) => note.content.trim().length > 0)
+                  .map((note) => (
+                  <Command.Item
+                    key={note.id}
+                    value={note.content}
+                    onSelect={() => handleSelectNote(note.id)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                      "data-[selected=true]:text-white"
+                    )}
+                    style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                  >
+                    <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
+                      📝
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="truncate">
+                        {note.content.slice(0, 60)}
+                      </div>
+                    </div>
+                    <span
+                      className="shrink-0 w-3 h-3 rounded-full"
+                      style={{ backgroundColor: `var(--os-sticky-${note.color}, #fef08a)` }}
+                    />
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
           </Command.List>
 
           {/* Footer */}
@@ -318,7 +367,7 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
             }}
           >
             <span>
-              {appList.length} {t("common.search.appsGroup", "应用")} · {allBookmarks.length} {t("common.search.bookmarksGroup", "书签")}
+              {appList.length} {t("common.search.appsGroup", "应用")} · {allBookmarks.length} {t("common.search.bookmarksGroup", "书签")} · {notes.length} {t("common.search.notesGroup", "便签")}
             </span>
             <div className="flex items-center gap-3">
               <span>↵ {t("common.action.open", "開啟")}</span>

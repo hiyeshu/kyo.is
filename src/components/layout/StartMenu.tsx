@@ -233,9 +233,9 @@ export function StartMenu({ apps }: StartMenuProps) {
                   >
                     {typeof app.icon === "string" ? (
                       app.icon.startsWith("/icons/") ? (
-                        <ThemedIcon
-                          name={app.icon}
-                          alt={app.name}
+                          <ThemedIcon
+                            name={app.icon}
+                            alt={getTranslatedAppName(app.id as AppId)}
                           className="[image-rendering:pixelated]"
                           style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
                         />
@@ -248,9 +248,9 @@ export function StartMenu({ apps }: StartMenuProps) {
                         </div>
                       )
                     ) : (
-                      <ThemedIcon
-                        name={app.icon.src}
-                        alt={app.name}
+                        <ThemedIcon
+                          name={app.icon.src}
+                          alt={getTranslatedAppName(app.id as AppId)}
                         className="[image-rendering:pixelated]"
                         style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
                       />

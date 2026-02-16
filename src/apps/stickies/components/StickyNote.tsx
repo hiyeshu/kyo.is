@@ -1,15 +1,16 @@
 /**
- * [INPUT]: 依赖 framer-motion 动画，依赖 stores/useStickiesStore 类型，依赖 lib/utils 的 cn，依赖 i18n 的 useTranslation
+ * [INPUT]: 依赖 framer-motion 动画，依赖 stores/useStickiesStore 类型，依赖 lib/utils 的 cn，依赖 i18n 的 useTranslation，依赖 components/ui/right-click-menu
  * [OUTPUT]: 对外提供 StickyNote 组件
  * [POS]: apps/stickies/components/ 的便签渲染器，被 StickiesApp 组合
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { StickyNote as StickyNoteType, StickyColor } from "@/stores/useStickiesStore";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { RightClickMenu, type MenuItem } from "@/components/ui/right-click-menu";
 
 // Match WindowFrame open/close animation (scale 0.95 ↔ 1, opacity 0 ↔ 1)
 const STICKY_ANIMATION = {
@@ -68,6 +69,15 @@ const COLOR_TOKENS: Record<StickyColor, { bg: string; border: string; text: stri
   },
 };
 
+const COLOR_MENU_ITEMS: Array<{ value: StickyColor; labelKey: string }> = [
+  { value: "yellow", labelKey: "common.colors.yellow" },
+  { value: "blue", labelKey: "common.colors.blue" },
+  { value: "green", labelKey: "common.colors.green" },
+  { value: "pink", labelKey: "common.colors.pink" },
+  { value: "purple", labelKey: "common.colors.purple" },
+  { value: "orange", labelKey: "common.colors.orange" },
+];
+
 export function StickyNote({
   note,
   onSelect,
@@ -86,8 +96,44 @@ export function StickyNote({
   const [draftSize, setDraftSize] = useState(note.size);
   const draftPositionRef = useRef(note.position);
   const draftSizeRef = useRef(note.size);
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
 
   const colors = COLOR_TOKENS[note.color];
+
+  const contextMenuItems = useMemo<MenuItem[]>(
+    () => [
+      {
+        type: "submenu",
+        label: t("apps.stickies.contextMenu.changeColor", "更换颜色"),
+        items: COLOR_MENU_ITEMS.map((color) => ({
+          type: "item",
+          label: t(color.labelKey, color.value),
+          iconNode: (
+            <span
+              className="w-3.5 h-3.5 border border-black/30 inline-block"
+              style={{
+                backgroundColor: COLOR_TOKENS[color.value].bg,
+              }}
+            />
+          ),
+          onSelect: () => {
+            onUpdate({ color: color.value });
+            setContextMenuPos(null);
+          },
+        })),
+      },
+      { type: "separator" },
+      {
+        type: "item",
+        label: t("apps.stickies.contextMenu.removeFromDesktop", "删除便利贴"),
+        onSelect: () => {
+          onDelete();
+          setContextMenuPos(null);
+        },
+      },
+    ],
+    [onDelete, onUpdate, t]
+  );
 
   useEffect(() => {
     draftPositionRef.current = draftPosition;
@@ -285,9 +331,16 @@ export function StickyNote({
   };
 
   return (
-    <motion.div
+    <>
+      <motion.div
       ref={noteRef}
       onMouseDown={onSelect}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setContextMenuPos({ x: e.clientX, y: e.clientY });
+        onSelect();
+      }}
       initial={{
         ...STICKY_ANIMATION.initial,
         left: draftPosition.x,
@@ -304,8 +357,8 @@ export function StickyNote({
         height: draftSize.height,
       }}
       transition={{
-        scale: { duration: 0.2, ease: [0.33, 1, 0.68, 1] as const },
-        opacity: { duration: 0.2, ease: [0.33, 1, 0.68, 1] as const },
+        scale: { duration: 0 },
+        opacity: { duration: 0 },
         ...layoutTransition,
       }}
       exit={STICKY_ANIMATION.exit}
@@ -375,6 +428,12 @@ export function StickyNote({
           touchAction: "none",
         }}
       />
-    </motion.div>
+      </motion.div>
+      <RightClickMenu
+        position={contextMenuPos}
+        onClose={() => setContextMenuPos(null)}
+        items={contextMenuItems}
+      />
+    </>
   );
 }

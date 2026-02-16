@@ -24,6 +24,7 @@ import { isTauri } from "./utils/platform";
 import { checkDesktopUpdate, onDesktopUpdate, DesktopUpdateResult } from "./utils/prefetch";
 import { DownloadSimple } from "@phosphor-icons/react";
 import { ScreenSaverOverlay } from "./components/screensavers/ScreenSaverOverlay";
+import { usePasteHandler } from "./hooks/usePasteHandler";
 
 // Convert registry to array
 const apps: AnyApp[] = Object.values(appRegistry);
@@ -42,6 +43,9 @@ export function App() {
   const isMobile = useIsMobile();
   // Initialize offline detection
   useOffline();
+
+  // Initialize global paste handler (⌘V → bookmark/note)
+  usePasteHandler();
   
   // Initialize device scale (三层缩放系统的设备层)
   useDeviceScale();

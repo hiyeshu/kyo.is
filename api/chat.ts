@@ -40,6 +40,7 @@ interface DifyMessageEvent {
 interface ChatRequest {
   messages: Array<{ role: string; content: string }>;
   conversationId?: string;
+  context?: string;
 }
 
 // ============================================================================
@@ -61,13 +62,18 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const { messages, conversationId } = (await req.json()) as ChatRequest;
+    const { messages, conversationId, context } = (await req.json()) as ChatRequest;
 
     // 获取最后一条用户消息作为 query
     const lastUserMessage = messages?.filter((m) => m.role === "user").pop();
     if (!lastUserMessage) {
       return new Response("No user message found", { status: 400 });
     }
+
+    // 如果有 context，拼接到 query 前面
+    const query = context
+      ? `[用户收藏的相关内容]\n${context}\n\n[用户问题]\n${lastUserMessage.content}`
+      : lastUserMessage.content;
 
     // -------------------------------------------------------------------------
     // 调用 Dify API
@@ -81,7 +87,7 @@ export default async function handler(req: Request) {
       },
       body: JSON.stringify({
         inputs: {},
-        query: lastUserMessage.content,
+        query,
         response_mode: "streaming",
         conversation_id: conversationId || "",
         user: "kyo-user",

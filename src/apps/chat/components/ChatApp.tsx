@@ -13,6 +13,7 @@ import { ChatMessages, type Message } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { detectIntent, executeIntent, getContextForIntent } from "../utils/chatTools";
 
 // ============================================================================
 // 主组件
@@ -72,6 +73,38 @@ export function ChatAppComponent({
       const updatedMessages = [...messages, userMessage];
       setMessages(updatedMessages);
       setInput("");
+
+      // 意图检测：本地处理便签/书签/搜索等操作
+      const intent = detectIntent(userMessage.content);
+      if (intent.type !== "none") {
+        setIsLoading(true);
+        try {
+          const result = await executeIntent(intent);
+          if (result) {
+            // 本地处理完成，直接显示结果
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `assistant-${Date.now()}`,
+                role: "assistant",
+                content: result,
+                timestamp: Date.now(),
+              },
+            ]);
+            return;
+          }
+          // result 为 null 表示需要发给 API（带 context）
+        } finally {
+          if (intent.type !== "summary") {
+            setIsLoading(false);
+          }
+        }
+        if (intent.type !== "summary") return;
+      }
+
+      // 获取 context（如果有意图需要 context）
+      const context = intent.type !== "none" ? getContextForIntent(intent) : undefined;
+
       setIsLoading(true);
 
       const controller = new AbortController();
@@ -91,6 +124,7 @@ export function ChatAppComponent({
               content: m.content,
             })),
             conversationId: conversationId,
+            context,
           }),
           signal: controller.signal,
         });

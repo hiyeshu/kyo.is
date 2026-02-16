@@ -20,6 +20,7 @@ import { useAppStoreShallow } from "@/stores/helpers";
 import { toast } from "sonner";
 import { requestCloseWindow } from "@/utils/windowUtils";
 import { useTranslation } from "react-i18next";
+import { getTranslatedAppName } from "@/utils/i18n";
 
 interface AppManagerProps {
   apps: AnyApp[];
@@ -121,8 +122,11 @@ export function AppManager({ apps }: AppManagerProps) {
 
         // Check if it's a valid app ID from the registry
         if (potentialAppId in appRegistry) {
-          const appName = appRegistry[potentialAppId]?.name || potentialAppId;
-          toast.info(`Launching ${appName}...`);
+          toast.info(
+            t("common.desktop.launchingApp", "正在打开 {{appName}}...", {
+              appName: getTranslatedAppName(potentialAppId),
+            })
+          );
 
           setTimeout(() => {
             const event = new CustomEvent("launchApp", {

@@ -1940,6 +1940,10 @@
         "newNote": "新增便利贴",
         "note": "便利贴"
       },
+      "contextMenu": {
+        "changeColor": "更换颜色",
+        "removeFromDesktop": "删除便利贴"
+      },
       "name": "便利贴",
       "placeholder": "撰写便利贴...",
       "title": "便利贴"
@@ -2351,15 +2355,46 @@
       "copyMessage": "复制消息",
       "scrollToBottom": "滚动到底部",
       "error": "抱歉，发生了错误，请重试。"
+    },
+    "favorites": {
+      "name": "收藏夹",
+      "title": "收藏夹",
+      "description": "集中管理你的书签与便签",
+      "search": "搜索收藏...",
+      "empty": "暂无收藏",
+      "items": "项"
+    },
+    "whiteNoise": {
+      "name": "白噪音",
+      "title": "白噪音",
+      "description": "帮助专注与放松的环境音",
+      "selectSound": "选择一个声音开始",
+      "playing": "正在播放...",
+      "rain": "雨声",
+      "ocean": "海浪",
+      "forest": "森林",
+      "fire": "篝火",
+      "wind": "风声"
+    },
+    "white-noise": {
+      "name": "白噪音",
+      "description": "帮助专注与放松的环境音"
     }
   },
   "common": {
     "action": {
       "open": "开启",
-      "close": "关闭"
+      "close": "关闭",
+      "mute": "静音",
+      "unmute": "取消静音"
     },
     "search": {
       "bookmarks": "搜索书签...",
+      "appsAndBookmarks": "搜索应用和书签...",
+      "appsGroup": "应用",
+      "bookmarksGroup": "书签",
+      "notesGroup": "便签",
+      "emptyNote": "空便签",
       "noResults": "找不到书签"
     },
     "aboutThisMac": {
@@ -2428,11 +2463,16 @@
     "desktop": {
       "myComputer": "我的电脑",
       "setWallpaper": "设定背景图片…",
+      "openLink": "打开链接",
+      "removeFromDesktop": "从桌面移除",
+      "pasteLink": "粘贴链接",
+      "addNote": "新增便签",
       "addWebsite": "新增网站",
       "addWebsiteDescDock": "输入网站网址以新增至 Dock",
       "addWebsiteDescDesktop": "输入网站网址以新增至桌面",
       "addToDock": "加入 Dock",
-      "addToDesktop": "加入桌面"
+      "addToDesktop": "加入桌面",
+      "changeWallpaper": "更换壁纸"
     },
     "dialog": {
       "about": "关于",
@@ -2629,6 +2669,13 @@
       "maximize": "最大化",
       "minimize": "最小化"
     }
+  },
+  "paste": {
+    "duplicateUrl": "该链接已存在",
+    "bookmarkAdded": "书签已添加",
+    "fetchingMeta": "正在获取网页信息...",
+    "bookmarkUpdated": "书签信息已更新",
+    "noteCreated": "便签已创建"
   },
   "components": {
     "linkPreview": {

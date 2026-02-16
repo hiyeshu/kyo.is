@@ -1934,6 +1934,10 @@
         "newNote": "新規付箋",
         "note": "付箋"
       },
+      "contextMenu": {
+        "changeColor": "色を変更",
+        "removeFromDesktop": "付箋を削除"
+      },
       "name": "スティッキーズ",
       "placeholder": "付箋を書く...",
       "title": "スティッキーズ"
@@ -2345,18 +2349,46 @@
       "copyMessage": "メッセージをコピー",
       "scrollToBottom": "一番下にスクロール",
       "error": "申し訳ありません、エラーが発生しました。もう一度お試しください。"
+    },
+    "favorites": {
+      "name": "お気に入り",
+      "title": "お気に入り",
+      "description": "ブックマークと付箋をまとめて管理",
+      "search": "お気に入りを検索...",
+      "empty": "お気に入りがありません",
+      "items": "件"
+    },
+    "whiteNoise": {
+      "name": "ホワイトノイズ",
+      "title": "ホワイトノイズ",
+      "description": "集中とリラックスのための環境音",
+      "selectSound": "音を選択して開始",
+      "playing": "再生中...",
+      "rain": "雨音",
+      "ocean": "波音",
+      "forest": "森",
+      "fire": "焚き火",
+      "wind": "風の音"
+    },
+    "white-noise": {
+      "name": "ホワイトノイズ",
+      "description": "集中とリラックスのための環境音"
     }
   },
   "common": {
     "action": {
       "open": "開く",
-      "close": "閉じる"
+      "close": "閉じる",
+      "mute": "ミュート",
+      "unmute": "ミュート解除"
     },
     "search": {
       "bookmarks": "ブックマークを検索...",
       "appsAndBookmarks": "アプリとブックマークを検索...",
       "appsGroup": "アプリ",
       "bookmarksGroup": "ブックマーク",
+      "notesGroup": "付箋",
+      "emptyNote": "空の付箋",
       "noResults": "結果が見つかりません"
     },
     "aboutThisMac": {
@@ -2425,11 +2457,16 @@
     "desktop": {
       "myComputer": "マイコンピュータ",
       "setWallpaper": "壁紙を設定…",
+      "openLink": "リンクを開く",
+      "removeFromDesktop": "デスクトップから削除",
+      "pasteLink": "リンクをペースト",
+      "addNote": "付箋を追加",
       "addWebsite": "ウェブサイトを追加",
       "addWebsiteDescDock": "DockにウェブサイトのURLを入力してください",
       "addWebsiteDescDesktop": "デスクトップにウェブサイトのURLを入力してください",
       "addToDock": "Dockに追加",
-      "addToDesktop": "デスクトップに追加"
+      "addToDesktop": "デスクトップに追加",
+      "changeWallpaper": "壁紙を変更"
     },
     "dialog": {
       "about": "について",
@@ -2626,6 +2663,13 @@
       "maximize": "最大化",
       "minimize": "最小化"
     }
+  },
+  "paste": {
+    "duplicateUrl": "このリンクは既に存在します",
+    "bookmarkAdded": "ブックマークを追加しました",
+    "fetchingMeta": "ページ情報を取得中...",
+    "bookmarkUpdated": "ブックマークを更新しました",
+    "noteCreated": "付箋を作成しました"
   },
   "components": {
     "linkPreview": {

@@ -10,8 +10,6 @@ import { ChatAppComponent } from "./components/ChatApp";
 
 export const ChatApp: BaseApp = {
   id: "chat",
-  name: "Chat",
   icon: { type: "image", src: "/icons/default/application.png" },
-  description: "与 AI 助手聊天",
   component: ChatAppComponent,
 };

@@ -50,6 +50,7 @@
   --os-sticky-orange: #ffe4c4;
   --os-sticky-orange-border: #ffb870;
   --os-sticky-text: #000000;
+  --os-sticky-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
   /* Menu item gap - default spacing */
   --os-menu-item-gap: 8px;
 }
@@ -147,6 +148,7 @@
   --os-sticky-orange: #ffe0bc;
   --os-sticky-orange-border: #f2b26a;
   --os-sticky-text: #000000;
+  --os-sticky-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* Ensure all UI elements in macOS theme use the theme font */
@@ -215,6 +217,21 @@
   --os-dock-blur: 0px;
   /* Menu item gap - classic theme spacing */
   --os-menu-item-gap: 14px;
+  /* Stickies - Win98 pixel border style */
+  --os-sticky-yellow: #ffffe1;
+  --os-sticky-yellow-border: #808080;
+  --os-sticky-blue: #d0e8ff;
+  --os-sticky-blue-border: #808080;
+  --os-sticky-green: #d0f0d0;
+  --os-sticky-green-border: #808080;
+  --os-sticky-pink: #ffd8e8;
+  --os-sticky-pink-border: #808080;
+  --os-sticky-purple: #e0d0f0;
+  --os-sticky-purple-border: #808080;
+  --os-sticky-orange: #ffe8c8;
+  --os-sticky-orange-border: #808080;
+  --os-sticky-text: #000000;
+  --os-sticky-shadow: inset -1px -1px #000000, inset 1px 1px #ffffff;
 }
 
 /* Inactive selection palette for background windows (Windows 98) */
@@ -281,6 +298,21 @@
   --os-dock-blur: 0px;
   /* Menu item gap - classic theme spacing */
   --os-menu-item-gap: 14px;
+  /* Stickies - XP yellow note style */
+  --os-sticky-yellow: #fff8b0;
+  --os-sticky-yellow-border: #d4c84a;
+  --os-sticky-blue: #c8e0f8;
+  --os-sticky-blue-border: #7ab0d8;
+  --os-sticky-green: #c8f0c8;
+  --os-sticky-green-border: #70c870;
+  --os-sticky-pink: #ffc8d8;
+  --os-sticky-pink-border: #e890a8;
+  --os-sticky-purple: #d8c8f0;
+  --os-sticky-purple-border: #a880d0;
+  --os-sticky-orange: #ffd8b0;
+  --os-sticky-orange-border: #e8a860;
+  --os-sticky-text: #000000;
+  --os-sticky-shadow: 1px 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 /* Inactive selection palette for background windows (Windows XP) */

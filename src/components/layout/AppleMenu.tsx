@@ -206,7 +206,7 @@ export function AppleMenu() {
                       ) : (
                         <ThemedIcon
                           name={app.icon.type === "image" ? app.icon.src : "/icons/default/application.png"}
-                          alt={app.name}
+                          alt={getTranslatedAppName(recent.appId)}
                           className="w-4 h-4 [image-rendering:pixelated]"
                         />
                       )}

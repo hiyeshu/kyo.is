@@ -1940,6 +1940,10 @@
         "newNote": "新增便利貼",
         "note": "便利貼"
       },
+      "contextMenu": {
+        "changeColor": "變更顏色",
+        "removeFromDesktop": "刪除便利貼"
+      },
       "name": "便利貼",
       "placeholder": "撰寫便利貼...",
       "title": "便利貼"
@@ -2351,18 +2355,46 @@
       "copyMessage": "複製消息",
       "scrollToBottom": "滾動到底部",
       "error": "抱歉，發生了錯誤，請重試。"
+    },
+    "favorites": {
+      "name": "收藏夾",
+      "title": "收藏夾",
+      "description": "集中管理你的書籤與便利貼",
+      "search": "搜尋收藏...",
+      "empty": "暫無收藏",
+      "items": "項"
+    },
+    "whiteNoise": {
+      "name": "白噪音",
+      "title": "白噪音",
+      "description": "幫助專注與放鬆的環境音",
+      "selectSound": "選擇一個聲音開始",
+      "playing": "正在播放...",
+      "rain": "雨聲",
+      "ocean": "海浪",
+      "forest": "森林",
+      "fire": "營火",
+      "wind": "風聲"
+    },
+    "white-noise": {
+      "name": "白噪音",
+      "description": "幫助專注與放鬆的環境音"
     }
   },
   "common": {
     "action": {
       "open": "開啟",
-      "close": "關閉"
+      "close": "關閉",
+      "mute": "靜音",
+      "unmute": "取消靜音"
     },
     "search": {
       "bookmarks": "搜尋書籤...",
       "appsAndBookmarks": "搜尋應用程式和書籤...",
       "appsGroup": "應用程式",
       "bookmarksGroup": "書籤",
+      "notesGroup": "便利貼",
+      "emptyNote": "空白便利貼",
       "noResults": "找不到結果"
     },
     "aboutThisMac": {
@@ -2431,11 +2463,16 @@
     "desktop": {
       "myComputer": "我的電腦",
       "setWallpaper": "設定背景圖片…",
+      "openLink": "開啟連結",
+      "removeFromDesktop": "從桌面移除",
+      "pasteLink": "貼上連結",
+      "addNote": "新增便利貼",
       "addWebsite": "新增網站",
       "addWebsiteDescDock": "輸入網站網址以新增至 Dock",
       "addWebsiteDescDesktop": "輸入網站網址以新增至桌面",
       "addToDock": "加入 Dock",
-      "addToDesktop": "加入桌面"
+      "addToDesktop": "加入桌面",
+      "changeWallpaper": "更換桌布"
     },
     "dialog": {
       "about": "關於",
@@ -2632,6 +2669,13 @@
       "maximize": "最大化",
       "minimize": "最小化"
     }
+  },
+  "paste": {
+    "duplicateUrl": "此連結已存在",
+    "bookmarkAdded": "已新增書籤",
+    "fetchingMeta": "正在取得網頁資訊...",
+    "bookmarkUpdated": "已更新書籤資訊",
+    "noteCreated": "已建立便利貼"
   },
   "components": {
     "linkPreview": {

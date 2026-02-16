@@ -48,9 +48,9 @@ export function useStickiesLogic() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
   const handleCreateNote = useCallback((color?: StickyColor) => {
-    const newId = addNote(color);
+    const newId = addNote(color, selectedNoteId);
     setSelectedNoteId(newId);
-  }, [addNote]);
+  }, [addNote, selectedNoteId]);
 
   const handleDeleteNote = useCallback((id: string) => {
     deleteNote(id);

@@ -118,6 +118,22 @@ const LazyStickiesApp = createLazyComponent<unknown>(
   "stickies"
 );
 
+const LazyFavoritesApp = createLazyComponent<unknown>(
+  () =>
+    import(
+      "@/apps/favorites/components/FavoritesApp"
+    ).then((m) => ({ default: m.FavoritesApp })),
+  "favorites"
+);
+
+const LazyWhiteNoiseApp = createLazyComponent<unknown>(
+  () =>
+    import(
+      "@/apps/white-noise/components/WhiteNoiseApp"
+    ).then((m) => ({ default: m.WhiteNoiseApp })),
+  "white-noise"
+);
+
 // ─── 元数据 ──────────────────────────────────────────────────────────────────
 
 import {
@@ -136,15 +152,23 @@ import {
   helpItems as stickiesHelpItems,
 } from "@/apps/stickies/metadata";
 
+import {
+  appMetadata as favoritesMetadata,
+  helpItems as favoritesHelpItems,
+} from "@/apps/favorites/metadata";
+
+import {
+  appMetadata as whiteNoiseMetadata,
+  helpItems as whiteNoiseHelpItems,
+} from "@/apps/white-noise/metadata";
+
 // ─── 注册表 ──────────────────────────────────────────────────────────────────
 // Kyo.is apps (Finder and Applet Viewer removed)
 
 export const appRegistry = {
   "bookmarks": {
     id: "bookmarks" as const,
-    name: "Bookmarks",
     icon: { type: "image" as const, src: bookmarkBoardMetadata.icon },
-    description: "Your spatial bookmark manager",
     component: LazyBookmarksApp,
     helpItems: bookmarkBoardHelpItems,
     metadata: bookmarkBoardMetadata,
@@ -155,9 +179,7 @@ export const appRegistry = {
   },
   "chat": {
     id: "chat" as const,
-    name: "Chat",
     icon: { type: "image" as const, src: "/icons/macosx/question.png" },
-    description: "与 AI 助手聊天",
     component: LazyChatApp,
     helpItems: [] as { icon: string; title: string; description: string }[],
     metadata: {
@@ -174,9 +196,7 @@ export const appRegistry = {
   },
   "control-panels": {
     id: "control-panels" as const,
-    name: "System Preferences",
     icon: { type: "image" as const, src: controlPanelsMetadata.icon },
-    description: "Configure wallpaper, sound, and system settings",
     component: LazyControlPanelsApp,
     helpItems: controlPanelsHelpItems,
     metadata: controlPanelsMetadata,
@@ -185,17 +205,37 @@ export const appRegistry = {
       minSize: { width: 480, height: 400 },
     } as WindowConstraints,
   },
+  "favorites": {
+    id: "favorites" as const,
+    icon: { type: "image" as const, src: "/icons/macosx/bento.png" },
+    component: LazyFavoritesApp,
+    helpItems: favoritesHelpItems,
+    metadata: favoritesMetadata,
+    windowConfig: {
+      defaultSize: { width: 500, height: 450 },
+      minSize: { width: 360, height: 300 },
+    } as WindowConstraints,
+  },
   "stickies": {
     id: "stickies" as const,
-    name: "Stickies",
     icon: { type: "image" as const, src: stickiesMetadata.icon },
-    description: "Floating notes for quick thoughts",
     component: LazyStickiesApp,
     helpItems: stickiesHelpItems,
     metadata: stickiesMetadata,
     windowConfig: {
       defaultSize: { width: 380, height: 220 },
       minSize: { width: 320, height: 180 },
+    } as WindowConstraints,
+  },
+  "white-noise": {
+    id: "white-noise" as const,
+    icon: { type: "image" as const, src: "/icons/macosx/cdrom.png" },
+    component: LazyWhiteNoiseApp,
+    helpItems: whiteNoiseHelpItems,
+    metadata: whiteNoiseMetadata,
+    windowConfig: {
+      defaultSize: { width: 360, height: 260 },
+      minSize: { width: 300, height: 220 },
     } as WindowConstraints,
   },
 } as const;
@@ -213,9 +253,8 @@ export const getAppIconPath = (appId: AppId): string => {
 
 export const getNonFinderApps = (
   _isAdmin = false
-): Array<{ name: string; icon: string; id: AppId }> =>
-  Object.entries(appRegistry).map(([id, app]) => ({
-    name: app.name,
+): Array<{ icon: string; id: AppId }> =>
+  Object.entries(appRegistry).map(([id]) => ({
     icon: getAppIconPath(id as AppId),
     id: id as AppId,
   }));

@@ -7,13 +7,14 @@
 
 import { AnyApp } from "@/apps/base/types";
 import { AppId, getAppIconPath } from "@/config/appRegistry";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useWallpaper } from "@/hooks/useWallpaper";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useBookmarkStore, isFolder, openBookmarkUrl, getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
+import { useStickiesStore } from "@/stores/useStickiesStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
 import { getTranslatedAppName } from "@/utils/i18n";
@@ -55,6 +56,11 @@ export function Desktop({
   const { t } = useTranslation();
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const { wallpaperSource, isVideoWallpaper } = useWallpaper();
+  const stickiesNotes = useStickiesStore((state) => state.notes);
+  const desktopNotes = useMemo(
+    () => stickiesNotes.filter((note) => note.onDesktop),
+    [stickiesNotes]
+  );
   const videoRef = useRef<HTMLVideoElement>(null);
   const [contextMenuPos, setContextMenuPos] = useState<{
     x: number;
@@ -165,7 +171,7 @@ export function Desktop({
       return [
         {
           type: "item",
-          label: t("common.dock.openInNewTab", "Open in New Tab"),
+          label: t("common.desktop.openLink", "打开链接"),
           onSelect: () => {
             window.open(contextMenuBookmark.url, "_blank", "noopener,noreferrer");
             setContextMenuPos(null);
@@ -174,7 +180,7 @@ export function Desktop({
         },
         {
           type: "item",
-          label: t("common.dock.copyUrl", "Copy URL"),
+          label: t("common.dock.copyUrl", "复制链接"),
           onSelect: () => {
             navigator.clipboard.writeText(contextMenuBookmark.url);
             setContextMenuPos(null);
@@ -184,7 +190,7 @@ export function Desktop({
         { type: "separator" },
         {
           type: "item",
-          label: t("common.menu.delete", "Delete"),
+          label: t("common.desktop.removeFromDesktop", "从桌面移除"),
           onSelect: () => {
             bookmarkStore.removeBookmark(contextMenuBookmark.id);
             setContextMenuPos(null);
@@ -198,7 +204,7 @@ export function Desktop({
       return [
         {
           type: "item",
-          label: t("apps.finder.contextMenu.open", "Open"),
+          label: t("apps.finder.contextMenu.open", "打开"),
           onSelect: () => {
             toggleApp(contextMenuAppId as AppId);
             setContextMenuPos(null);
@@ -211,9 +217,44 @@ export function Desktop({
     return [
       {
         type: "item",
-        label: t("common.desktop.addWebsite", "Add Website"),
+        label: t("common.desktop.pasteLink", "粘贴链接"),
+        onSelect: async () => {
+          try {
+            const text = await navigator.clipboard.readText();
+            if (/^https?:\/\/\S+$/i.test(text.trim())) {
+              document.dispatchEvent(
+                new ClipboardEvent("paste", {
+                  clipboardData: new DataTransfer(),
+                })
+              );
+              // 触发粘贴处理器
+              const event = new Event("kyo:paste-url");
+              (event as unknown as { url: string }).url = text.trim();
+              document.dispatchEvent(event);
+            }
+          } catch { /* clipboard permission denied */ }
+        },
+      },
+      {
+        type: "item",
+        label: t("common.desktop.addNote", "新增便签"),
+        onSelect: () => {
+          useStickiesStore.getState().addNote(undefined, null, true);
+        },
+      },
+      { type: "separator" },
+      {
+        type: "item",
+        label: t("common.desktop.addWebsite", "新增网站"),
         onSelect: () => {
           setIsAddWebsiteDialogOpen(true);
+        },
+      },
+      {
+        type: "item",
+        label: t("common.desktop.changeWallpaper", "更换壁纸"),
+        onSelect: () => {
+          toggleApp("control-panels" as AppId);
         },
       },
     ];
@@ -380,6 +421,43 @@ export function Desktop({
             />
           ))}
         </div>
+      </div>
+
+      {/* Desktop stickies (read-only cards) */}
+      <div className="absolute inset-0 z-[5] pointer-events-none">
+        {desktopNotes.map((note) => (
+          <div
+            key={note.id}
+            className="absolute pointer-events-auto"
+            style={{
+              left: note.position.x,
+              top: note.position.y,
+              width: note.size.width,
+              height: note.size.height,
+              backgroundColor: `var(--os-sticky-${note.color}, #fef08a)`,
+              border: `1px solid var(--os-sticky-${note.color}-border, rgba(0, 0, 0, 0.15))`,
+              boxShadow: "var(--os-window-shadow)",
+              borderRadius: "1px",
+            }}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              toggleApp("stickies" as AppId, { focusNoteId: note.id });
+            }}
+          >
+            <div
+              className="h-[14px] px-[3px]"
+              style={{
+                borderBottom: `1px solid var(--os-sticky-${note.color}-border, rgba(0, 0, 0, 0.15))`,
+              }}
+            />
+            <div
+              className="p-2 text-[12px] leading-snug overflow-hidden whitespace-pre-wrap"
+              style={{ color: "var(--os-sticky-text)" }}
+            >
+              {note.content}
+            </div>
+          </div>
+        ))}
       </div>
 
       <RightClickMenu

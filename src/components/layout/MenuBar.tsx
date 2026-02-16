@@ -1085,7 +1085,7 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
           {currentTheme === "macosx" && !isPhone && hasActiveApp && foregroundInstance && (
             <AppMenu
               appId={foregroundInstance.appId}
-              appName={appRegistry[foregroundInstance.appId]?.name || foregroundInstance.appId}
+              appName={getTranslatedAppName(foregroundInstance.appId)}
               instanceId={foregroundInstance.instanceId}
             />
           )}
@@ -1190,4 +1190,3 @@ function ExposeButton() {
     </button>
   );
 }
-

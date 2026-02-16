@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 dropdown-menu 组件、ThemedIcon、useSound
+ * [OUTPUT]: 导出 RightClickMenu 组件与 MenuItem 类型
+ * [POS]: components/ui 的右键菜单渲染器，被桌面与应用菜单复用
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +28,7 @@ export type MenuItem =
       onSelect?: () => void;
       disabled?: boolean;
       icon?: string; // Icon path or emoji
+      iconNode?: ReactNode;
     }
   | {
       type: "separator";
@@ -30,6 +38,7 @@ export type MenuItem =
       label: string;
       items: MenuItem[];
       icon?: string; // Icon path or emoji
+      iconNode?: ReactNode;
     }
   | {
       type: "checkbox";
@@ -68,9 +77,11 @@ function renderItems(items: MenuItem[]): ReactNode {
             disabled={item.disabled}
             className={menuItemClass}
           >
-            {item.icon && (
+            {(item.icon || item.iconNode) && (
               <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-                {item.icon.startsWith("/") || item.icon.startsWith("http") ? (
+                {item.iconNode ? (
+                  item.iconNode
+                ) : item.icon?.startsWith("/") || item.icon?.startsWith("http") ? (
                   <ThemedIcon
                     name={item.icon}
                     alt={item.label}
@@ -92,12 +103,14 @@ function renderItems(items: MenuItem[]): ReactNode {
         return (
           <DropdownMenuSub key={idx}>
             <DropdownMenuSubTrigger className={menuItemClass}>
-              {item.icon && (
-                <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-                  {item.icon.startsWith("/") || item.icon.startsWith("http") ? (
-                    <ThemedIcon
-                      name={item.icon}
-                      alt={item.label}
+            {(item.icon || item.iconNode) && (
+              <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                {item.iconNode ? (
+                  item.iconNode
+                ) : item.icon?.startsWith("/") || item.icon?.startsWith("http") ? (
+                  <ThemedIcon
+                    name={item.icon}
+                    alt={item.label}
                       className="w-4 h-4 [image-rendering:pixelated]"
                     />
                   ) : (

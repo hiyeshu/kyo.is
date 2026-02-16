@@ -14,6 +14,8 @@ export interface StickyNote {
   id: string;
   content: string;
   color: StickyColor;
+  tags: string[];
+  onDesktop: boolean;
   position: { x: number; y: number };
   size: { width: number; height: number };
   createdAt: number;
@@ -22,7 +24,7 @@ export interface StickyNote {
 
 interface StickiesState {
   notes: StickyNote[];
-  addNote: (color?: StickyColor) => string;
+  addNote: (color?: StickyColor, anchorId?: string | null, onDesktop?: boolean) => string;
   updateNote: (id: string, updates: Partial<Omit<StickyNote, "id" | "createdAt">>) => void;
   deleteNote: (id: string) => void;
   bringToFront: (id: string) => void;
@@ -32,19 +34,25 @@ interface StickiesState {
 const DEFAULT_NOTE_SIZE = { width: 220, height: 240 };
 
 // Stack new notes with slight offset from existing notes
-const getNextPosition = (existingNotes: StickyNote[]) => {
+const getNextPosition = (existingNotes: StickyNote[], anchorId?: string | null) => {
   const baseX = 100;
   const baseY = 60; // Account for menu bar
   const offset = 25; // Offset for each new note
+  const anchorOffsetX = DEFAULT_NOTE_SIZE.width + 16;
+  const anchorOffsetY = 8;
 
   if (existingNotes.length === 0) {
     return { x: baseX, y: baseY };
   }
 
-  // Get the last note's position and offset from it
-  const lastNote = existingNotes[existingNotes.length - 1];
-  let newX = lastNote.position.x + offset;
-  let newY = lastNote.position.y + offset;
+  const anchorNote = anchorId
+    ? existingNotes.find((note) => note.id === anchorId)
+    : undefined;
+
+  // Prefer placing next to the selected note
+  const referenceNote = anchorNote ?? existingNotes[existingNotes.length - 1];
+  let newX = referenceNote.position.x + (anchorNote ? anchorOffsetX : offset);
+  let newY = referenceNote.position.y + (anchorNote ? anchorOffsetY : offset);
 
   // Wrap around if going off screen
   const maxX = typeof window !== "undefined" ? window.innerWidth - DEFAULT_NOTE_SIZE.width - 50 : 600;
@@ -61,7 +69,11 @@ export const useStickiesStore = create<StickiesState>()(
     (set, get) => ({
       notes: [],
 
-      addNote: (color: StickyColor = "yellow") => {
+      addNote: (
+        color: StickyColor = "yellow",
+        anchorId?: string | null,
+        onDesktop: boolean = false
+      ) => {
         const id = crypto.randomUUID();
         const now = Date.now();
         const existingNotes = get().notes;
@@ -69,7 +81,9 @@ export const useStickiesStore = create<StickiesState>()(
           id,
           content: "",
           color,
-          position: getNextPosition(existingNotes),
+          tags: [],
+          onDesktop,
+          position: getNextPosition(existingNotes, anchorId),
           size: DEFAULT_NOTE_SIZE,
           createdAt: now,
           updatedAt: now,
@@ -115,6 +129,19 @@ export const useStickiesStore = create<StickiesState>()(
     }),
     {
       name: "kyo:stickies-store",
+      version: 3,
+      migrate: (persisted: unknown, version: number) => {
+        const state = persisted as { notes?: StickyNote[] };
+        if (version < 2 && state.notes) {
+          // v1 → v2: 添加 tags 字段
+          state.notes = state.notes.map((n) => ({ ...n, tags: n.tags ?? [] }));
+        }
+        if (version < 3 && state.notes) {
+          // v2 → v3: 添加 onDesktop 字段
+          state.notes = state.notes.map((n) => ({ ...n, onDesktop: n.onDesktop ?? false }));
+        }
+        return state as StickiesState;
+      },
     }
   )
 );

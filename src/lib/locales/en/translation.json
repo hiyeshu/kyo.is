@@ -2,13 +2,17 @@
   "common": {
     "action": {
       "open": "Open",
-      "close": "Close"
+      "close": "Close",
+      "mute": "Mute",
+      "unmute": "Unmute"
     },
     "search": {
       "bookmarks": "Search bookmarks...",
       "appsAndBookmarks": "Search apps and bookmarks...",
       "appsGroup": "Apps",
       "bookmarksGroup": "Bookmarks",
+      "notesGroup": "Notes",
+      "emptyNote": "Empty note",
       "noResults": "No results found"
     },
     "loading": {
@@ -137,11 +141,16 @@
     "desktop": {
       "setWallpaper": "Set Wallpaper…",
       "myComputer": "My Computer",
+      "openLink": "Open Link",
+      "removeFromDesktop": "Remove from Desktop",
+      "pasteLink": "Paste Link",
+      "addNote": "Add Note",
       "addWebsite": "Add Website",
       "addWebsiteDescDock": "Enter a website URL to add to your Dock",
       "addWebsiteDescDesktop": "Enter a website URL to add to your Desktop",
       "addToDock": "Add to Dock",
-      "addToDesktop": "Add to Desktop"
+      "addToDesktop": "Add to Desktop",
+      "changeWallpaper": "Change Wallpaper"
     },
     "dock": {
       "open": "Open",
@@ -263,6 +272,13 @@
       "next": "Next",
       "description": "Swipe left or right to navigate between open windows"
     }
+  },
+  "paste": {
+    "duplicateUrl": "This link already exists",
+    "bookmarkAdded": "Bookmark added",
+    "fetchingMeta": "Fetching page info...",
+    "bookmarkUpdated": "Bookmark updated",
+    "noteCreated": "Sticky note created"
   },
   "apps": {
     "finder": {
@@ -2311,6 +2327,10 @@
       "title": "Stickies",
       "description": "Sticky notes for quick reminders",
       "placeholder": "Write a note...",
+      "contextMenu": {
+        "changeColor": "Change Color",
+        "removeFromDesktop": "Delete Sticky"
+      },
       "menu": {
         "newNote": "New Note",
         "note": "Note",
@@ -2641,6 +2661,30 @@
       "copyMessage": "Copy message",
       "scrollToBottom": "Scroll to bottom",
       "error": "Sorry, an error occurred. Please try again."
+    },
+    "favorites": {
+      "name": "Favorites",
+      "title": "Favorites",
+      "description": "All your bookmarks and notes in one place",
+      "search": "Search favorites...",
+      "empty": "No favorites yet",
+      "items": "items"
+    },
+    "whiteNoise": {
+      "name": "White Noise",
+      "title": "White Noise",
+      "description": "Ambient sounds for focus and relaxation",
+      "selectSound": "Select a sound to start",
+      "playing": "Playing...",
+      "rain": "Rain",
+      "ocean": "Ocean",
+      "forest": "Forest",
+      "fire": "Fire",
+      "wind": "Wind"
+    },
+    "white-noise": {
+      "name": "White Noise",
+      "description": "Ambient sounds for focus and relaxation"
     }
   },
   "components": {

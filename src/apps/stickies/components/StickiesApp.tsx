@@ -22,6 +22,7 @@ export function StickiesApp({
   onClose: _onClose,
   isForeground,
   instanceId,
+  initialData,
 }: AppProps) {
   const closeAppInstance = useAppStore((state) => state.closeAppInstance);
 
@@ -41,6 +42,7 @@ export function StickiesApp({
     updateNote,
     clearAllNotes,
     bringToFront,
+    setSelectedNoteId,
   } = useStickiesLogic();
 
   // Handle close - directly close the app instance
@@ -79,6 +81,15 @@ export function StickiesApp({
       handleCreateNote();
     }
   }, [isWindowOpen]);
+
+  useEffect(() => {
+    if (!isWindowOpen) return;
+    if (!initialData || typeof initialData !== "object") return;
+    const focusNoteId = (initialData as { focusNoteId?: string }).focusNoteId;
+    if (!focusNoteId) return;
+    setSelectedNoteId(focusNoteId);
+    bringToFront(focusNoteId);
+  }, [bringToFront, initialData, isWindowOpen, setSelectedNoteId]);
 
   const menuBar = (
     <StickiesMenuBar

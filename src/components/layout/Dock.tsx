@@ -1443,7 +1443,7 @@ function MacDock() {
           items.push({ type: "separator" });
           items.push({
             type: "item",
-            label: t("common.dock.removeFromDock") || "Remove from Dock",
+          label: t("common.dock.removeFromDock", "从 Dock 移除"),
             onSelect: () => {
               removeDockItem(appId);
             },
@@ -1457,7 +1457,7 @@ function MacDock() {
       // List existing windows if any
       if (appInstances.length > 0) {
         appInstances.forEach((inst) => {
-          let windowLabel = inst.displayTitle || inst.title || appRegistry[appId]?.name || appId;
+          let windowLabel = inst.displayTitle || inst.title || getTranslatedAppName(appId);
 
           // Kyo only has bookmarks, no special path handling needed
 
@@ -1581,7 +1581,7 @@ function MacDock() {
       const apps = getNonFinderApps(isAdmin);
       const sortedApps = apps
         .map((app) => ({
-          name: app.name,
+          name: getTranslatedAppName(app.id),
           appId: app.id,
           icon: app.icon,
         }))
@@ -1603,7 +1603,7 @@ function MacDock() {
         // Add apps as submenu
         items.push({
           type: "submenu",
-          label: t("common.dock.folderContents") || "Applications",
+          label: t("common.dock.folderContents", "应用程序"),
           items: submenuItems,
         });
       }

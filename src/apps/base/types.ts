@@ -26,9 +26,7 @@ export interface AppProps<TInitialData = unknown> {
 
 export interface BaseApp<TInitialData = unknown> {
   id: string;
-  name: string;
   icon: string | { type: "image"; src: string };
-  description: string;
   component: React.ComponentType<AppProps<TInitialData>>;
   windowConstraints?: {
     minWidth?: number | string;

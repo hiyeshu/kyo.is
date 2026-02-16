@@ -1,12 +1,12 @@
 /**
- * [INPUT]: 依赖 components/layout/MenuBar，依赖 components/ui/menubar，依赖 stores/useThemeStore，依赖 i18n
+ * [INPUT]: 依赖 components/ui/menubar，依赖 stores/useThemeStore，依赖 i18n
  * [OUTPUT]: 对外提供 StickiesMenuBar 组件
  * [POS]: apps/stickies/components/ 菜单栏组件，提供便签创建/颜色/清理入口
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { MenuBar } from "@/components/layout/MenuBar";
 import {
+  Menubar,
   MenubarMenu,
   MenubarTrigger,
   MenubarContent,
@@ -56,7 +56,17 @@ export function StickiesMenuBar({
   const isMacOsxTheme = currentTheme === "macosx";
 
   return (
-    <MenuBar inWindowFrame={isXpTheme}>
+    <Menubar
+      className={`border-none bg-transparent space-x-0 rounded-none ${
+        isXpTheme ? "h-[var(--os-titlebar-height)]" : "h-[var(--os-metrics-menubar-height)]"
+      }`}
+      style={{
+        fontFamily: isXpTheme ? "var(--font-ms-sans)" : "var(--os-font-ui)",
+        fontSize: "var(--os-text-xs)",
+        paddingLeft: isXpTheme ? "6px" : "0.5rem",
+        paddingRight: isXpTheme ? "2px" : "0.5rem",
+      }}
+    >
       {/* File Menu */}
       <MenubarMenu>
         <MenubarTrigger className="text-md px-2 py-1 border-none focus-visible:ring-0">
@@ -135,6 +145,6 @@ export function StickiesMenuBar({
           )}
         </MenubarContent>
       </MenubarMenu>
-    </MenuBar>
+    </Menubar>
   );
 }
