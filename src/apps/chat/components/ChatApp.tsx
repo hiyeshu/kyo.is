@@ -34,7 +34,7 @@ export function ChatAppComponent({
   onNavigateNext,
   onNavigatePrevious,
 }: AppProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentTheme = useThemeStore((s) => s.current);
   const isMacTheme = currentTheme === "macosx";
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
@@ -479,7 +479,7 @@ export function ChatAppComponent({
       } else if (entryDate.toDateString() === yesterday.toDateString()) {
         dateLabel = t("apps.chat.historyYesterday", "昨天");
       } else {
-        dateLabel = entryDate.toLocaleDateString(undefined, {
+        dateLabel = entryDate.toLocaleDateString(i18n.language, {
           month: "short",
           day: "numeric",
         });
@@ -546,7 +546,7 @@ export function ChatAppComponent({
                   isMacTheme ? "text-neutral-600" : isXpTheme ? "text-[#003c74]" : "text-black"
                 }`}
               >
-                {new Date().toLocaleDateString(undefined, {
+                {new Date().toLocaleDateString(i18n.language, {
                   month: "short",
                   day: "numeric",
                   weekday: "short",
