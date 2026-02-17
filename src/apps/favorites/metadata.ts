@@ -6,7 +6,7 @@
  */
 
 export const appMetadata = {
-  name: "Favorites",
+  name: "Collection Box",
   version: "1.0.0",
   creator: {
     name: "yeshu",

@@ -2357,8 +2357,8 @@
       "error": "抱歉，发生了错误，请重试。"
     },
     "favorites": {
-      "name": "收藏夹",
-      "title": "收藏夹",
+      "name": "收藏盒",
+      "title": "收藏盒",
       "description": "集中管理你的书签与便签",
       "search": "搜索收藏...",
       "empty": "暂无收藏",

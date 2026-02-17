@@ -2357,8 +2357,8 @@
       "error": "抱歉，發生了錯誤，請重試。"
     },
     "favorites": {
-      "name": "收藏夾",
-      "title": "收藏夾",
+      "name": "收藏盒",
+      "title": "收藏盒",
       "description": "集中管理你的書籤與便利貼",
       "search": "搜尋收藏...",
       "empty": "暫無收藏",

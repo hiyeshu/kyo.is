@@ -2663,11 +2663,11 @@
       "error": "Sorry, an error occurred. Please try again."
     },
     "favorites": {
-      "name": "Favorites",
-      "title": "Favorites",
+      "name": "Collection Box",
+      "title": "Collection Box",
       "description": "All your bookmarks and notes in one place",
-      "search": "Search favorites...",
-      "empty": "No favorites yet",
+      "search": "Search collection...",
+      "empty": "No items yet",
       "items": "items"
     },
     "whiteNoise": {
