@@ -82,7 +82,7 @@ export function AppleMenu() {
       url: "https://github.com/hiyeshu",
     },
     github: "https://github.com/hiyeshu/kyo.is",
-    icon: "/apple-touch-icon.png",
+    icon: "/favicon.svg",
   };
 
   // Recent items from store

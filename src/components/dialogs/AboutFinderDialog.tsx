@@ -1,13 +1,11 @@
 /**
- * [STUB] 简化的关于对话框 — Finder 已移除，保留接口让 AppleMenu / StartMenu 编译
+ * [INPUT]: 依赖 @/components/dialogs/AboutDialog
+ * [OUTPUT]: 对外提供 AboutFinderDialog 组件
+ * [POS]: components/dialogs 的兼容弹窗，Finder 移除后复用 AboutDialog 样式
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { AboutDialog } from "@/components/dialogs/AboutDialog";
 
 interface AboutFinderDialogProps {
   isOpen: boolean;
@@ -18,18 +16,22 @@ export function AboutFinderDialog({
   isOpen,
   onOpenChange,
 }: AboutFinderDialogProps) {
+  const kyoMetadata = {
+    name: "Kyo",
+    version: "1.0.0",
+    creator: {
+      name: "yeshu",
+      url: "https://github.com/hiyeshu",
+    },
+    github: "https://github.com/hiyeshu/kyo.is",
+    icon: "/favicon.svg",
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xs">
-        <DialogHeader>
-          <DialogTitle>About</DialogTitle>
-        </DialogHeader>
-        <div className="text-center text-sm text-muted-foreground py-4">
-          <p className="font-semibold text-foreground">Bookmark Board</p>
-          <p className="mt-1">Your spatial bookmark manager</p>
-          <p className="mt-2 text-xs opacity-60">Version 1.0</p>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <AboutDialog
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      metadata={kyoMetadata}
+    />
   );
 }

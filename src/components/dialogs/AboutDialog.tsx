@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 @/components/ui/dialog、@/components/shared/ThemedIcon、@/stores/useThemeStore、@/stores/useAppStore、@/utils/i18n、react-i18next
+ * [OUTPUT]: 对外提供 AboutDialog 组件
+ * [POS]: components/dialogs 的应用关于弹窗，展示名称/版本/描述，可按 appId 控制显示作者信息
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import {
   Dialog,
   DialogContent,
@@ -42,6 +49,7 @@ export function AboutDialog({
 
   const displayName = appId ? getTranslatedAppName(appId) : metadata.name;
   const displayVersion = liveVersion || metadata.version;
+  const showCredits = !appId;
 
   // 尝试从 i18n 获取描述，回退到 metadata.description
   const i18nDesc = appId ? t(`apps.${appId}.description`, "") : "";
@@ -90,19 +98,20 @@ export function AboutDialog({
           isXpTheme ? "text-[10px]" : "text-[9px] font-geneva-12"
         )}
       >
-        {metadata.creator.url ? (
-          <a
-            href={metadata.creator.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:underline"
-          >
-            {metadata.creator.name}
-          </a>
-        ) : metadata.creator.name ? (
-          <span className="text-gray-400">{metadata.creator.name}</span>
-        ) : null}
-        {metadata.github && (
+        {showCredits &&
+          (metadata.creator.url ? (
+            <a
+              href={metadata.creator.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline"
+            >
+              {metadata.creator.name}
+            </a>
+          ) : metadata.creator.name ? (
+            <span className="text-gray-400">{metadata.creator.name}</span>
+          ) : null)}
+        {showCredits && metadata.github && (
           <>
             <span className="text-gray-300">·</span>
             <a

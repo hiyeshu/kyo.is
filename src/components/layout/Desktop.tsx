@@ -387,19 +387,34 @@ export function Desktop({
                 theme={currentTheme}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedAppId(app.id);
-                  setSelectedBookmarkId(null);
+                  // Mobile: single tap opens app; Desktop: single click selects
+                  if (isMobile) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    toggleApp(app.id as AppId, undefined, {
+                      x: rect.left,
+                      y: rect.top,
+                      width: rect.width,
+                      height: rect.height,
+                    });
+                    setSelectedAppId(null);
+                  } else {
+                    setSelectedAppId(app.id);
+                    setSelectedBookmarkId(null);
+                  }
                 }}
                 onDoubleClick={(e) => {
                   e.stopPropagation();
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  toggleApp(app.id as AppId, undefined, {
-                    x: rect.left,
-                    y: rect.top,
-                    width: rect.width,
-                    height: rect.height,
-                  });
-                  setSelectedAppId(null);
+                  // Desktop: double click opens app
+                  if (!isMobile) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    toggleApp(app.id as AppId, undefined, {
+                      x: rect.left,
+                      y: rect.top,
+                      width: rect.width,
+                      height: rect.height,
+                    });
+                    setSelectedAppId(null);
+                  }
                 }}
                 onContextMenu={(e) => {
                   e.preventDefault();

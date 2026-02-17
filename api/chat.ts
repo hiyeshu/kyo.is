@@ -64,9 +64,13 @@ async function uploadImageToDify(
   type: string
 ): Promise<DifyFileUploadResponse> {
   const blob = dataUrlToBlob(dataUrl, type);
+  
+  console.log("[Dify Upload] name:", name, "type:", type, "blob.type:", blob.type, "blob.size:", blob.size);
 
   const formData = new FormData();
-  formData.append("file", blob, name);
+  // 使用 File 对象确保 filename 和 type 都正确传递
+  const file = new File([blob], name, { type: blob.type });
+  formData.append("file", file);
   formData.append("user", "kyo-user");
 
   const uploadRes = await fetch(`${DIFY_API_BASE}/files/upload`, {
@@ -77,10 +81,13 @@ async function uploadImageToDify(
 
   if (!uploadRes.ok) {
     const errorText = await uploadRes.text();
+    console.error("[Dify Upload] Failed:", uploadRes.status, errorText);
     throw new Error(`Dify file upload failed: ${uploadRes.status} ${errorText}`);
   }
 
-  return uploadRes.json() as Promise<DifyFileUploadResponse>;
+  const result = await uploadRes.json() as DifyFileUploadResponse;
+  console.log("[Dify Upload] Success:", result);
+  return result;
 }
 
 function dataUrlToBlob(dataUrl: string, fallbackType: string): Blob {

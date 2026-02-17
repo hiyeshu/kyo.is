@@ -99,6 +99,7 @@ export function ChatInput({
   const isWinTheme = currentTheme === "xp" || currentTheme === "win98";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasContent = input.trim() !== "" || pendingImages.length > 0;
+  const isActionDisabled = isLoading;
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     const items = e.clipboardData?.items;
@@ -128,22 +129,27 @@ export function ChatInput({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex gap-1.5 overflow-x-auto px-1 py-1"
+            className="flex gap-3 overflow-x-auto px-2 py-2"
           >
             {pendingImages.map((img) => (
-              <div key={img.id} className="relative flex-shrink-0 group">
+              <div
+                key={img.id}
+                className="relative flex-shrink-0 group chat-image-preview"
+              >
+                {/* 图片 */}
                 <img
                   src={img.dataUrl}
                   alt={img.name}
-                  className="h-16 w-16 object-cover rounded border border-gray-200"
+                  className="h-16 w-16 object-cover rounded-[12px]"
                 />
+                {/* 关闭按钮 */}
                 <button
                   type="button"
                   onClick={() => onRemoveImage(img.id)}
-                  className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="chat-image-close absolute flex items-center justify-center w-[18px] h-[18px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label={t("apps.chat.removeImage", "移除图片")}
                 >
-                  <X className="h-2.5 w-2.5" weight="bold" />
+                  <X className="h-2 w-2" weight="bold" />
                 </button>
               </div>
             ))}
@@ -160,6 +166,7 @@ export function ChatInput({
           accept="image/*"
           multiple
           className="hidden"
+          disabled={isActionDisabled}
           onChange={(e) => {
             if (e.target.files?.length) {
               onAddImages(e.target.files);
@@ -210,18 +217,28 @@ export function ChatInput({
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors w-6 h-6"
-                  aria-label={t("apps.chat.attachImage", "添加图片")}
-                >
+                   onClick={() => fileInputRef.current?.click()}
+                   disabled={isActionDisabled}
+                   className={`flex items-center justify-center transition-colors w-6 h-6 ${
+                     isActionDisabled
+                       ? "text-gray-300 cursor-not-allowed"
+                       : "text-gray-500 hover:text-gray-700"
+                   }`}
+                   aria-label={t("apps.chat.attachImage", "添加图片")}
+                 >
                   <ImageSquare className={isWinTheme ? "h-3.5 w-3.5" : "h-4 w-4"} weight="bold" />
                 </button>
                 <button
                   type="button"
-                  onClick={onMicClick}
-                  className="flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors w-6 h-6"
-                  aria-label={t("apps.chat.recording", "录音")}
-                >
+                   onClick={onMicClick}
+                   disabled={isActionDisabled}
+                   className={`flex items-center justify-center transition-colors w-6 h-6 ${
+                     isActionDisabled
+                       ? "text-gray-300 cursor-not-allowed"
+                       : "text-gray-500 hover:text-gray-700"
+                   }`}
+                   aria-label={t("apps.chat.recording", "录音")}
+                 >
                   <Microphone className={isWinTheme ? "h-3.5 w-3.5" : "h-4 w-4"} weight="bold" />
                 </button>
               </div>
@@ -268,13 +285,13 @@ export function ChatInput({
               <Button
                 type={isLoading ? "button" : "submit"}
                 onClick={isLoading ? onStop : undefined}
-                disabled={!isLoading && !hasContent}
-                className={`p-0 flex items-center justify-center ${
-                  isMacTheme
-                    ? "text-xs w-9 h-9 rounded-full relative overflow-hidden transition-transform hover:scale-105"
-                    : "w-9 h-9"
-                } ${!isLoading && !hasContent ? "opacity-50 cursor-not-allowed" : ""}`}
-                style={
+                 disabled={isActionDisabled || (!isLoading && !hasContent)}
+                 className={`p-0 flex items-center justify-center ${
+                   isMacTheme
+                     ? "text-xs w-9 h-9 rounded-full relative overflow-hidden transition-transform hover:scale-105"
+                     : "w-9 h-9"
+                 } ${isActionDisabled || (!isLoading && !hasContent) ? "opacity-50 cursor-not-allowed" : ""}`}
+                 style={
                   isMacTheme
                     ? {
                         background: isLoading

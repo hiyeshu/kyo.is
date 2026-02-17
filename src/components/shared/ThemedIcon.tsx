@@ -84,6 +84,7 @@ export const ThemedIcon: React.FC<ThemedIconProps> = ({
 
   // Check if name is a remote URL (for early return logic below)
   const isRemoteName = /^https?:\/\//i.test(name);
+  const isAbsoluteAsset = name.startsWith("/") && !name.startsWith("/icons/");
 
   // Legacy-aware initial resolution (may already be themed path or absolute /icons/...)
   // Skip resolution for remote URLs to avoid unnecessary processing
@@ -107,7 +108,7 @@ export const ThemedIcon: React.FC<ThemedIconProps> = ({
   const themedPath = useIconPath(logical, themeOverride ?? currentTheme);
 
   // Simple passthrough for remote resources (avoid theming logic entirely)
-  if (isRemoteName) {
+  if (isRemoteName || isAbsoluteAsset) {
     return (
       <img
         src={name}

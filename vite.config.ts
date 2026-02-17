@@ -167,7 +167,7 @@ export default defineConfig({
       manifestFilename: "manifest.json",
       includeAssets: [
         "favicon.svg",
-        "frame-8.svg",
+        "favicon.svg",
         "apple-touch-icon.png",
         "icons/*.png",
         "fonts/*.woff2",
