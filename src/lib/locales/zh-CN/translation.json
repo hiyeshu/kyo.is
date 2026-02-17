@@ -678,6 +678,7 @@
       }
     },
     "control-panels": {
+      "description": "自定义壁纸、音效和系统设置",
       "aiModel": "AI 模型",
       "aiModelDescription": "用于聊天、IE 等",
       "appearance": "外观",
@@ -1857,6 +1858,7 @@
     },
     "bookmarks": {
       "name": "收藏夹",
+      "description": "管理和整理你的网站书签",
       "search": "搜索书签...",
       "countBookmarks": "{{count}} 个书签",
       "addBookmark": "新增书签",
@@ -2354,7 +2356,12 @@
       "aiAssistant": "AI 助手",
       "copyMessage": "复制消息",
       "scrollToBottom": "滚动到底部",
-      "error": "抱歉，发生了错误，请重试。"
+      "error": "抱歉，发生了错误，请重试。",
+      "attachImage": "添加图片",
+      "removeImage": "移除图片",
+      "imageTooLarge": "图片不能超过 10MB",
+      "recording": "录音中",
+      "transcribing": "转录中..."
     },
     "favorites": {
       "name": "收藏盒",

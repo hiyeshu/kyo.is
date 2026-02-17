@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 react hooks，依赖 ../../base/types 的 AppProps
+ * [INPUT]: 依赖 react hooks，依赖 ../../base/types 的 AppProps，依赖 useAudioTranscription
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，ryOS 风格设计，对接 Dify Chatflow API
+ * [POS]: apps/chat/components 的主组件，对接 Dify Chatflow API，管理图片附件+语音转录
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -14,6 +14,12 @@ import { ChatInput } from "./ChatInput";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { detectIntent, executeIntent, getContextForIntent } from "../utils/chatTools";
+import { useAudioTranscription } from "@/hooks/useAudioTranscription";
+import {
+  preprocessImage,
+  validateImageFile,
+  type ImageAttachment,
+} from "../utils/imagePreprocessing";
 
 // ============================================================================
 // 主组件
@@ -43,6 +49,66 @@ export function ChatAppComponent({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
+  const [pendingImages, setPendingImages] = useState<ImageAttachment[]>([]);
+
+  // -------------------------------------------------------------------------
+  // 语音转录
+  // -------------------------------------------------------------------------
+
+  const {
+    isRecording,
+    frequencies,
+    isSilent,
+    startRecording,
+    stopRecording,
+  } = useAudioTranscription({
+    onTranscriptionComplete: (text) => {
+      if (text.trim()) {
+        setInput((prev) => (prev ? prev + " " + text : text));
+      }
+    },
+    onError: (error) => {
+      console.error("Audio transcription error:", error);
+    },
+    frequencyBands: 48,
+    silenceThreshold: 2000,
+  });
+
+  const handleMicClick = useCallback(() => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }, [isRecording, startRecording, stopRecording]);
+
+  // -------------------------------------------------------------------------
+  // 图片处理
+  // -------------------------------------------------------------------------
+
+  const handleAddImages = useCallback(
+    async (files: FileList) => {
+      for (const file of Array.from(files)) {
+        const error = validateImageFile(file);
+        if (error === "too_large") {
+          alert(t("apps.chat.imageTooLarge", "图片不能超过 10MB"));
+          continue;
+        }
+        if (error) continue;
+        try {
+          const attachment = await preprocessImage(file);
+          setPendingImages((prev) => [...prev, attachment]);
+        } catch {
+          console.error("Failed to preprocess image");
+        }
+      }
+    },
+    [t]
+  );
+
+  const handleRemoveImage = useCallback((id: string) => {
+    setPendingImages((prev) => prev.filter((img) => img.id !== id));
+  }, []);
 
   // -------------------------------------------------------------------------
   // 清除聊天
@@ -51,6 +117,7 @@ export function ChatAppComponent({
   const handleClear = useCallback(() => {
     setMessages([]);
     setConversationId(null);
+    setPendingImages([]);
   }, []);
 
   // -------------------------------------------------------------------------
@@ -60,7 +127,8 @@ export function ChatAppComponent({
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!input.trim() || isLoading) return;
+      const hasImages = pendingImages.length > 0;
+      if ((!input.trim() && !hasImages) || isLoading) return;
 
       const now = Date.now();
       const userMessage: Message = {
@@ -68,11 +136,14 @@ export function ChatAppComponent({
         role: "user",
         content: input.trim(),
         timestamp: now,
+        images: hasImages ? [...pendingImages] : undefined,
       };
 
       const updatedMessages = [...messages, userMessage];
       setMessages(updatedMessages);
       setInput("");
+      const imagesToSend = hasImages ? [...pendingImages] : [];
+      setPendingImages([]);
 
       // 意图检测：本地处理便签/书签/搜索等操作
       const intent = detectIntent(userMessage.content);
@@ -125,6 +196,11 @@ export function ChatAppComponent({
             })),
             conversationId: conversationId,
             context,
+            images: imagesToSend.map((img) => ({
+              dataUrl: img.dataUrl,
+              name: img.name,
+              type: img.type,
+            })),
           }),
           signal: controller.signal,
         });
@@ -241,7 +317,7 @@ export function ChatAppComponent({
         setAbortController(null);
       }
     },
-    [input, isLoading, messages, conversationId, t]
+    [input, isLoading, messages, conversationId, pendingImages, t]
   );
 
   // -------------------------------------------------------------------------
@@ -340,6 +416,13 @@ export function ChatAppComponent({
             onInputChange={handleInputChange}
             onSubmit={handleSubmit}
             onStop={handleStop}
+            pendingImages={pendingImages}
+            onAddImages={handleAddImages}
+            onRemoveImage={handleRemoveImage}
+            isRecording={isRecording}
+            frequencies={frequencies}
+            isSilent={isSilent}
+            onMicClick={handleMicClick}
           />
         </div>
       </div>

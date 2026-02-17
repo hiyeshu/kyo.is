@@ -5,6 +5,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { ThemedIcon } from "@/components/shared/ThemedIcon";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useAppStore } from "@/stores/useAppStore";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ interface AboutDialogProps {
     };
     github: string;
     icon: string;
+    description?: string;
   };
   appId?: AppId;
 }
@@ -37,24 +39,25 @@ export function AboutDialog({
   const currentTheme = useThemeStore((state) => state.current);
   const liveVersion = useAppStore((s) => s.ryOSVersion);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  
-  // Use translated app name if appId is provided, otherwise fall back to metadata.name
+
   const displayName = appId ? getTranslatedAppName(appId) : metadata.name;
-  // 优先使用 version.json 的动态版本
   const displayVersion = liveVersion || metadata.version;
 
+  // 尝试从 i18n 获取描述，回退到 metadata.description
+  const i18nDesc = appId ? t(`apps.${appId}.description`, "") : "";
+  const displayDescription = i18nDesc || metadata.description || "";
+
   const dialogContent = (
-    <div className="flex flex-col items-center justify-center space-y-2 py-8 px-6">
-      <div className="w-24 h-24 mx-auto flex items-center justify-center">
-        <img
-          src="/favicon.svg"
-          alt="Kyo"
-          className="w-full h-full object-contain"
-        />
-      </div>
+    <div className="flex flex-col items-center justify-center space-y-3 py-6 px-6">
+      <ThemedIcon
+        name={metadata.icon}
+        alt={displayName}
+        className="w-16 h-16"
+        style={{ imageRendering: "-webkit-optimize-contrast" }}
+      />
       <div
         className={cn(
-          "space-y-0 text-center",
+          "text-center space-y-1",
           isXpTheme
             ? "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
             : "font-geneva-12 text-[10px]"
@@ -68,17 +71,26 @@ export function AboutDialog({
       >
         <div
           className={cn(
-            "!text-3xl font-medium",
+            "!text-2xl font-medium",
             isXpTheme
-              ? "font-['Trebuchet MS'] !text-[17px]"
+              ? "font-['Trebuchet MS'] !text-[15px]"
               : "font-apple-garamond"
           )}
         >
           {displayName}
         </div>
-        <p className="text-gray-500 mb-2">{t("common.dialog.version")} {displayVersion}</p>
-        <p>
-          {t("common.dialog.madeBy")}{" "}
+        <p className="text-gray-500">{t("common.dialog.version")} {displayVersion}</p>
+        {displayDescription && (
+          <p className="text-gray-600 pt-1 max-w-[240px] leading-relaxed">{displayDescription}</p>
+        )}
+      </div>
+      <div
+        className={cn(
+          "flex items-center gap-3 pt-1 text-center",
+          isXpTheme ? "text-[10px]" : "text-[9px] font-geneva-12"
+        )}
+      >
+        {metadata.creator.url ? (
           <a
             href={metadata.creator.url}
             target="_blank"
@@ -87,17 +99,22 @@ export function AboutDialog({
           >
             {metadata.creator.name}
           </a>
-        </p>
-        <p>
-          <a
-            href={metadata.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:underline"
-          >
-            {t("common.dialog.openInGitHub")}
-          </a>
-        </p>
+        ) : metadata.creator.name ? (
+          <span className="text-gray-400">{metadata.creator.name}</span>
+        ) : null}
+        {metadata.github && (
+          <>
+            <span className="text-gray-300">·</span>
+            <a
+              href={metadata.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline"
+            >
+              GitHub
+            </a>
+          </>
+        )}
       </div>
     </div>
   );
@@ -105,7 +122,7 @@ export function AboutDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        className={cn("w-fit min-w-[280px] max-w-[400px]", isXpTheme && "p-0 overflow-hidden")}
+        className={cn("w-fit min-w-[280px] max-w-[360px]", isXpTheme && "p-0 overflow-hidden")}
         style={isXpTheme ? { fontSize: "11px" } : undefined}
       >
         {isXpTheme ? (

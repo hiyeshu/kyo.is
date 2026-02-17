@@ -78,11 +78,11 @@ export function AppleMenu() {
     name: "Kyo",
     version: "1.0.0",
     creator: {
-      name: "yeshu",
+      name: "Yeshu",
       url: "https://github.com/hiyeshu",
     },
     github: "https://github.com/hiyeshu/kyo.is",
-    icon: "/favicon.svg",
+    icon: "/apple-touch-icon.png",
   };
 
   // Recent items from store

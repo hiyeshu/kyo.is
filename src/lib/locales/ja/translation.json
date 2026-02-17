@@ -2348,7 +2348,12 @@
       "aiAssistant": "AIアシスタント",
       "copyMessage": "メッセージをコピー",
       "scrollToBottom": "一番下にスクロール",
-      "error": "申し訳ありません、エラーが発生しました。もう一度お試しください。"
+      "error": "申し訳ありません、エラーが発生しました。もう一度お試しください。",
+      "attachImage": "画像を添付",
+      "removeImage": "画像を削除",
+      "imageTooLarge": "画像は10MB以下にしてください",
+      "recording": "録音中",
+      "transcribing": "文字起こし中..."
     },
     "favorites": {
       "name": "コレクションボックス",

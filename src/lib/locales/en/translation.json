@@ -2660,7 +2660,12 @@
       "aiAssistant": "AI Assistant",
       "copyMessage": "Copy message",
       "scrollToBottom": "Scroll to bottom",
-      "error": "Sorry, an error occurred. Please try again."
+      "error": "Sorry, an error occurred. Please try again.",
+      "attachImage": "Attach image",
+      "removeImage": "Remove image",
+      "imageTooLarge": "Image must be under 10MB",
+      "recording": "Recording",
+      "transcribing": "Transcribing..."
     },
     "favorites": {
       "name": "Collection Box",

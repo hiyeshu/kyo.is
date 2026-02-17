@@ -2348,7 +2348,12 @@
       "aiAssistant": "AI 어시스턴트",
       "copyMessage": "메시지 복사",
       "scrollToBottom": "맨 아래로 스크롤",
-      "error": "죄송합니다. 오류가 발생했습니다. 다시 시도해 주세요."
+      "error": "죄송합니다. 오류가 발생했습니다. 다시 시도해 주세요.",
+      "attachImage": "이미지 첨부",
+      "removeImage": "이미지 제거",
+      "imageTooLarge": "이미지는 10MB 이하여야 합니다",
+      "recording": "녹음 중",
+      "transcribing": "텍스트 변환 중..."
     },
     "favorites": {
       "name": "컬렉션 박스",

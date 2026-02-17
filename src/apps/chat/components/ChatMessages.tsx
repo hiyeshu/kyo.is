@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 react, framer-motion, use-stick-to-bottom
- * [OUTPUT]: 对外提供 ChatMessages 组件
- * [POS]: apps/chat/components 的消息列表组件，ryOS 风格设计
+ * [INPUT]: 依赖 react, framer-motion, @phosphor-icons/react, useThemeStore, ImageAttachment
+ * [OUTPUT]: 对外提供 ChatMessages 组件, Message 类型
+ * [POS]: apps/chat/components 的消息列表组件，支持文本+图片消息渲染
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -11,16 +11,20 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CaretDown, Copy, Check } from "@phosphor-icons/react";
 
 import { useThemeStore } from "@/stores/useThemeStore";
+import type { ImageAttachment } from "../utils/imagePreprocessing";
 
 // ============================================================================
 // 类型定义
 // ============================================================================
+
+export type { ImageAttachment };
 
 export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp?: number;
+  images?: ImageAttachment[];
 }
 
 interface ChatMessagesProps {
@@ -282,7 +286,23 @@ export function ChatMessages({
                   )}
                 </div>
 
+                {/* 图片附件 */}
+                {message.images && message.images.length > 0 && (
+                  <div className={`flex flex-wrap gap-1 ${message.content ? "mb-1" : ""} max-w-[85%]`}>
+                    {message.images.map((img) => (
+                      <img
+                        key={img.id}
+                        src={img.dataUrl}
+                        alt={img.name}
+                        className="rounded object-contain"
+                        style={{ maxWidth: 280, maxHeight: 280 }}
+                      />
+                    ))}
+                  </div>
+                )}
+
                 {/* 消息气泡 */}
+                {message.content && (
                 <motion.div
                   className={`p-1.5 px-2 chat-bubble ${bgColorClass} w-fit max-w-[85%] min-h-[12px] rounded leading-snug font-geneva-12 break-words select-text ${
                     isEmojiOnly(message.content) ? "text-[24px]" : "text-[13px]"
@@ -292,6 +312,7 @@ export function ChatMessages({
                     {message.content}
                   </div>
                 </motion.div>
+                )}
               </motion.div>
             );
           })}

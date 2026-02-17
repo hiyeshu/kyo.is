@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 Dify Chatflow API，环境变量 DIFY_API_KEY
- * [OUTPUT]: 对外提供 POST /api/chat 端点，兼容 AI SDK useChat hook
+ * [OUTPUT]: 对外提供 POST /api/chat 端点，兼容 AI SDK useChat hook，支持图片上传
  * [POS]: api/ 的聊天 API 端点，代理请求到 Dify，转换 SSE 格式
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -41,6 +41,48 @@ interface ChatRequest {
   messages: Array<{ role: string; content: string }>;
   conversationId?: string;
   context?: string;
+  images?: Array<{ dataUrl: string; name: string; type: string }>;
+}
+
+// ============================================================================
+// 图片上传到 Dify
+// ============================================================================
+
+interface DifyFileUploadResponse {
+  id: string;
+  name: string;
+  size: number;
+  extension: string;
+  mime_type: string;
+  created_by: string;
+  created_at: number;
+}
+
+async function uploadImageToDify(
+  dataUrl: string,
+  name: string,
+  type: string
+): Promise<DifyFileUploadResponse> {
+  // data URL → Blob
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+
+  const formData = new FormData();
+  formData.append("file", blob, name);
+  formData.append("user", "kyo-user");
+
+  const uploadRes = await fetch(`${DIFY_API_BASE}/files/upload`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${DIFY_API_KEY}` },
+    body: formData,
+  });
+
+  if (!uploadRes.ok) {
+    const errorText = await uploadRes.text();
+    throw new Error(`Dify file upload failed: ${uploadRes.status} ${errorText}`);
+  }
+
+  return uploadRes.json() as Promise<DifyFileUploadResponse>;
 }
 
 // ============================================================================
@@ -62,7 +104,7 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const { messages, conversationId, context } = (await req.json()) as ChatRequest;
+    const { messages, conversationId, context, images } = (await req.json()) as ChatRequest;
 
     // 获取最后一条用户消息作为 query
     const lastUserMessage = messages?.filter((m) => m.role === "user").pop();
@@ -74,6 +116,22 @@ export default async function handler(req: Request) {
     const query = context
       ? `[用户收藏的相关内容]\n${context}\n\n[用户问题]\n${lastUserMessage.content}`
       : lastUserMessage.content;
+
+    // -------------------------------------------------------------------------
+    // 上传图片到 Dify（如果有）
+    // -------------------------------------------------------------------------
+
+    let difyFiles: Array<{ type: string; transfer_method: string; upload_file_id: string }> = [];
+    if (images && images.length > 0) {
+      const uploadResults = await Promise.all(
+        images.map((img) => uploadImageToDify(img.dataUrl, img.name, img.type))
+      );
+      difyFiles = uploadResults.map((r) => ({
+        type: "image",
+        transfer_method: "local_file",
+        upload_file_id: r.id,
+      }));
+    }
 
     // -------------------------------------------------------------------------
     // 调用 Dify API
@@ -91,6 +149,7 @@ export default async function handler(req: Request) {
         response_mode: "streaming",
         conversation_id: conversationId || "",
         user: "kyo-user",
+        ...(difyFiles.length > 0 ? { files: difyFiles } : {}),
       }),
     });
 
