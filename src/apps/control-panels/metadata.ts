@@ -14,7 +14,7 @@ export const appMetadata = {
   },
   github: "https://github.com/mrhyeshu/kyo.is",
   description: "Configure wallpaper, sound, and system settings",
-  icon: "/icons/macosx/control-panels/appearance-manager/app.png",
+  icon: "/icons/macosx/control-panels.png",
 };
 
 export const helpItems = [

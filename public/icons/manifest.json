@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-01-12T00:16:53.132Z",
+  "generatedAt": "2026-02-17T03:56:30.523Z",
   "themes": {
     "default": [
       "app.png",
@@ -49,6 +49,7 @@
       "ie.png",
       "image.png",
       "images.png",
+      "infinite-mac.png",
       "info.png",
       "internet.png",
       "ipod.png",
@@ -124,11 +125,22 @@
       "text-editor/unordered-list-depressed.png",
       "text-editor/unordered-list-off.png",
       "textedit.png",
+      "theme-editor.png",
       "trash-empty.png",
       "trash-full.png",
       "video-tape.png",
       "videos.png",
       "warn.png"
+    ],
+    "favicons": [
+      "bilibili.svg",
+      "douban.svg",
+      "flomo.svg",
+      "music163.svg",
+      "notion.svg",
+      "okjike.svg",
+      "xiaohongshu.svg",
+      "youmind.png"
     ],
     "macosx": [
       "app.png",
@@ -142,6 +154,7 @@
       "cdrom.png",
       "chess.png",
       "console.png",
+      "control-panels.png",
       "control-panels/appearance-manager/app.png",
       "desktop.png",
       "dictionary.png",
@@ -177,6 +190,7 @@
       "synth.png",
       "terminal.png",
       "textedit.png",
+      "theme-editor.png",
       "trash-empty.png",
       "trash-full.png",
       "video-tape.png",

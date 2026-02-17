@@ -1587,10 +1587,9 @@ function MacDock() {
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
       
-      // Add separator if there are apps
-      if (sortedApps.length > 0) {
-        // Create submenu items for apps
-        const submenuItems: MenuItem[] = sortedApps.map((app) => ({
+      // Add apps directly to the menu
+      for (const app of sortedApps) {
+        items.push({
           type: "item" as const,
           label: getTranslatedAppName(app.appId),
           icon: app.icon,
@@ -1598,13 +1597,6 @@ function MacDock() {
             focusOrLaunchApp(app.appId);
             setApplicationsContextMenuPos(null);
           },
-        }));
-        
-        // Add apps as submenu
-        items.push({
-          type: "submenu",
-          label: t("common.dock.folderContents", "应用程序"),
-          items: submenuItems,
         });
       }
       
