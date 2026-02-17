@@ -63,9 +63,7 @@ async function uploadImageToDify(
   name: string,
   type: string
 ): Promise<DifyFileUploadResponse> {
-  // data URL → Blob
-  const res = await fetch(dataUrl);
-  const blob = await res.blob();
+  const blob = dataUrlToBlob(dataUrl, type);
 
   const formData = new FormData();
   formData.append("file", blob, name);
@@ -83,6 +81,35 @@ async function uploadImageToDify(
   }
 
   return uploadRes.json() as Promise<DifyFileUploadResponse>;
+}
+
+function dataUrlToBlob(dataUrl: string, fallbackType: string): Blob {
+  if (!dataUrl.startsWith("data:")) {
+    throw new Error("Invalid data URL");
+  }
+
+  const commaIndex = dataUrl.indexOf(",");
+  if (commaIndex === -1) {
+    throw new Error("Invalid data URL");
+  }
+
+  const meta = dataUrl.slice(5, commaIndex);
+  const base64 = dataUrl.slice(commaIndex + 1);
+  const isBase64 = meta.includes(";base64");
+  const mimeType = meta.split(";")[0] || fallbackType || "application/octet-stream";
+
+  if (!isBase64) {
+    const bytes = new TextEncoder().encode(decodeURIComponent(base64));
+    return new Blob([bytes], { type: mimeType });
+  }
+
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mimeType });
 }
 
 // ============================================================================
