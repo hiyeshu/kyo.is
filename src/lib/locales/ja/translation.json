@@ -2363,6 +2363,7 @@
       "title": "ホワイトノイズ",
       "description": "集中とリラックスのための環境音",
       "selectSound": "音を選択して開始",
+      "togglePlayback": "再生を切り替え",
       "playing": "再生中...",
       "rain": "雨音",
       "ocean": "波音",

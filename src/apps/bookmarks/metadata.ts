@@ -33,5 +33,5 @@ export const appMetadata = {
   name: "Bookmark Board",
   creator: { name: "You", url: "" },
   github: "",
-  icon: "/icons/default/ie.png",
+  icon: "/icons/macosx/sites.png",
 };

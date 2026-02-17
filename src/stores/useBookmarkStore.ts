@@ -411,6 +411,7 @@ export interface Bookmark {
   summary: string;
   tags: string[];
   createdAt: string;
+  onDesktop?: boolean; // 是否显示在桌面
   favicon?: string; // 保留兼容性
   icon?: BookmarkIcon; // 新的图标配置
 }
@@ -483,7 +484,7 @@ const createBookmark = (
   title: string,
   url: string,
   favicon?: string,
-  meta?: { summary?: string; tags?: string[]; createdAt?: string }
+  meta?: { summary?: string; tags?: string[]; createdAt?: string; onDesktop?: boolean }
 ): Bookmark => ({
   id: generateId(),
   title,
@@ -491,6 +492,7 @@ const createBookmark = (
   summary: meta?.summary ?? "",
   tags: meta?.tags ?? [],
   createdAt: meta?.createdAt ?? new Date().toISOString(),
+  onDesktop: meta?.onDesktop ?? false,
   favicon: favicon || fav(new URL(url).hostname),
 });
 
@@ -521,10 +523,10 @@ interface BookmarkStore {
   items: BoardItem[];
 
   // 基础 CRUD
-  addBookmark: (title: string, url: string, favicon?: string, folderId?: string) => string; // 返回新书签 ID
-  addAiBookmark: (title: string, url: string, summary: string, tags: string[]) => string; // AI 写入
+  addBookmark: (title: string, url: string, favicon?: string, folderId?: string, options?: { onDesktop?: boolean }) => string; // 返回新书签 ID
+  addAiBookmark: (title: string, url: string, summary: string, tags: string[], options?: { onDesktop?: boolean }) => string; // AI 写入
   getBookmarkByUrl: (url: string) => Bookmark | undefined;
-  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags">>) => void;
+  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags" | "onDesktop">>) => void;
   removeBookmark: (id: string) => void;
   
   // 文件夹
@@ -549,8 +551,10 @@ export const useBookmarkStore = create<BookmarkStore>()(
     (set, get) => ({
       items: createDefaultItems(),
 
-      addBookmark: (title, url, favicon, folderId) => {
-        const newBookmark = createBookmark(title, url, favicon);
+      addBookmark: (title, url, favicon, folderId, options) => {
+        const newBookmark = createBookmark(title, url, favicon, {
+          onDesktop: options?.onDesktop,
+        });
         set((s) => {
           if (!folderId) {
             return { items: [...s.items, newBookmark] };
@@ -566,7 +570,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
         return newBookmark.id;
       },
 
-      addAiBookmark: (title, url, summary, tags) => {
+      addAiBookmark: (title, url, summary, tags, options) => {
         let hostname = "example.com";
         try {
           hostname = new URL(url).hostname;
@@ -576,6 +580,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           summary,
           tags,
           createdAt: new Date().toISOString(),
+          onDesktop: options?.onDesktop,
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
         return newBookmark.id;
@@ -730,7 +735,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
     }),
     {
       name: "kyo:bookmark-store",
-      version: 5, // v5: add ai metadata fields
+      version: 6, // v6: add onDesktop flag
       migrate: (persisted, version) => {
         const old = persisted as { items?: BoardItem[] };
         
@@ -825,6 +830,27 @@ export const useBookmarkStore = create<BookmarkStore>()(
                 summary: (item as Bookmark).summary ?? "",
                 tags: (item as Bookmark).tags ?? [],
                 createdAt: (item as Bookmark).createdAt ?? new Date().toISOString(),
+              } as Bookmark;
+            });
+          }
+        }
+
+        // v6: add onDesktop flag (default false for existing data)
+        if (version < 6) {
+          if (old.items) {
+            old.items = old.items.map((item) => {
+              if (isFolder(item)) {
+                return {
+                  ...item,
+                  bookmarks: item.bookmarks.map((b) => ({
+                    ...b,
+                    onDesktop: (b as Bookmark).onDesktop ?? false,
+                  })),
+                };
+              }
+              return {
+                ...item,
+                onDesktop: (item as Bookmark).onDesktop ?? false,
               } as Bookmark;
             });
           }

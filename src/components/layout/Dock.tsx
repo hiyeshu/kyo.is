@@ -1841,7 +1841,7 @@ function MacDock() {
                   
                   if (item.type === "app") {
                     const appId = item.id as AppId;
-                    const icon = getAppIconPath(appId);
+                    const icon = getAppIconPath(appId, currentTheme);
                     const isOpen = openAppsAllSet.has(appId);
                     const isLoading = Object.values(instances).some(
                       (i) => i.appId === appId && i.isOpen && i.isLoading
@@ -2002,7 +2002,7 @@ function MacDock() {
 
               {/* Open apps dynamically (excluding pinned) */}
               {openItems.map((item) => {
-                const icon = getAppIconPath(item.appId);
+                const icon = getAppIconPath(item.appId, currentTheme);
                 const label = getTranslatedAppName(item.appId);
                 const isLoading = Object.values(instances).some(
                   (i) => i.appId === item.appId && i.isOpen && i.isLoading

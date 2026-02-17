@@ -66,20 +66,34 @@ export function Desktop({
 
   const currentTheme = useThemeStore((state) => state.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  const isMacTheme = currentTheme === "macosx";
   const isTauriApp =
     typeof window !== "undefined" && "__TAURI__" in window;
   const isMobile = useIsMobile();
 
-  // ─── Bookmarks for desktop (non-macOS themes) ──────────────────────
+  // ─── Bookmarks for desktop (all themes) ────────────────────────────
   const bookmarkStore = useBookmarkStore();
   const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(null);
   const [contextMenuBookmark, setContextMenuBookmark] = useState<Bookmark | null>(null);
 
-  // Get top-level bookmarks (not in folders) for desktop display
-  const desktopBookmarks = !isMacTheme
-    ? (bookmarkStore.items.filter((item) => !isFolder(item)) as Bookmark[])
-    : [];
+  const handleDesktopClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement;
+      if (e.shiftKey) {
+        onClick?.();
+        return;
+      }
+      if (target.closest("[data-desktop-icon]")) return;
+      setSelectedAppId(null);
+      setSelectedBookmarkId(null);
+      onClick?.();
+    },
+    [onClick]
+  );
+
+  // Get top-level bookmarks (not in folders) marked for desktop
+  const desktopBookmarks = bookmarkStore.items.filter((item) =>
+    !isFolder(item) && (item as Bookmark).onDesktop
+  ) as Bookmark[];
 
   // ─── Video wallpaper playback ─────────────────────────────────────
   const resumeVideoPlayback = useCallback(async () => {
@@ -155,9 +169,7 @@ export function Desktop({
   // ─── App list (filtered) ──────────────────────────────────────────
   // Non-macOS themes: show bookmarks app on desktop
   // macOS theme: bookmarks is in the Dock, no desktop icons needed
-  const displayedApps: AnyApp[] = isMacTheme 
-    ? [] 
-    : _apps.filter(app => app.id === "bookmarks");
+  const displayedApps: AnyApp[] = _apps.filter((app) => app.id === "bookmarks");
 
   // ─── Context menu ─────────────────────────────────────────────────
   const getContextMenuItems = (): MenuItem[] => {
@@ -187,7 +199,7 @@ export function Desktop({
           type: "item",
           label: t("common.desktop.removeFromDesktop", "从桌面移除"),
           onSelect: () => {
-            bookmarkStore.removeBookmark(contextMenuBookmark.id);
+            bookmarkStore.updateBookmark(contextMenuBookmark.id, { onDesktop: false });
             setContextMenuPos(null);
             setContextMenuBookmark(null);
           },
@@ -258,7 +270,7 @@ export function Desktop({
   return (
     <div
       className="absolute inset-0 min-h-screen h-full z-0 desktop-background"
-      onClick={onClick}
+      onClick={handleDesktopClick}
       onDoubleClick={(e) => {
         const target = e.target as HTMLElement;
         if (!target.closest("[data-desktop-icon]") && onDoubleClick) {
@@ -346,74 +358,119 @@ export function Desktop({
         >
           {/* App icons */}
           {displayedApps.map((app) => (
-            <DesktopIcon
+            <div
               key={app.id}
-              label={getTranslatedAppName(app.id as AppId)}
-              icon={getAppIconPath(app.id as AppId)}
-              isSelected={selectedAppId === app.id}
-              theme={currentTheme}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedAppId(app.id);
-                setSelectedBookmarkId(null);
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData(
+                  "application/json",
+                  JSON.stringify({
+                    type: "app",
+                    appId: app.id,
+                    name: getTranslatedAppName(app.id as AppId),
+                  })
+                );
+                // Set drag image
+                const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
+                dragImage.style.position = "absolute";
+                dragImage.style.top = "-1000px";
+                document.body.appendChild(dragImage);
+                e.dataTransfer.setDragImage(dragImage, e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+                setTimeout(() => document.body.removeChild(dragImage), 0);
               }}
-              onDoubleClick={(e) => {
-                e.stopPropagation();
-                const rect = e.currentTarget.getBoundingClientRect();
-                toggleApp(app.id as AppId, undefined, {
-                  x: rect.left,
-                  y: rect.top,
-                  width: rect.width,
-                  height: rect.height,
-                });
-                setSelectedAppId(null);
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setContextMenuPos({ x: e.clientX, y: e.clientY });
-                setContextMenuAppId(app.id);
-                setContextMenuBookmark(null);
-                setSelectedAppId(app.id);
-              }}
-            />
+            >
+              <DesktopIcon
+                label={getTranslatedAppName(app.id as AppId)}
+                icon={getAppIconPath(app.id as AppId, currentTheme)}
+                isSelected={selectedAppId === app.id}
+                theme={currentTheme}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedAppId(app.id);
+                  setSelectedBookmarkId(null);
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  toggleApp(app.id as AppId, undefined, {
+                    x: rect.left,
+                    y: rect.top,
+                    width: rect.width,
+                    height: rect.height,
+                  });
+                  setSelectedAppId(null);
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setContextMenuPos({ x: e.clientX, y: e.clientY });
+                  setContextMenuAppId(app.id);
+                  setContextMenuBookmark(null);
+                  setSelectedAppId(app.id);
+                }}
+              />
+            </div>
           ))}
           
-          {/* Bookmark icons (non-macOS themes only) */}
+          {/* Bookmark icons (all themes, those marked onDesktop=true) */}
           {desktopBookmarks.map((bm) => (
-            <BookmarkDesktopIcon
+            <div
               key={bm.id}
-              bookmark={bm}
-              isSelected={selectedBookmarkId === bm.id}
-              theme={currentTheme}
-              onClick={(e) => {
-                e.stopPropagation();
-                // Mobile: single tap opens bookmark; Desktop: single click selects
-                if (isMobile) {
-                  openBookmarkUrl(bm.url);
-                  setSelectedBookmarkId(null);
-                } else {
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData(
+                  "application/json",
+                  JSON.stringify({
+                    type: "bookmark",
+                    id: bm.id,
+                    title: bm.title,
+                    url: bm.url,
+                  })
+                );
+                // Set drag image
+                const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
+                dragImage.style.position = "absolute";
+                dragImage.style.top = "-1000px";
+                document.body.appendChild(dragImage);
+                e.dataTransfer.setDragImage(dragImage, e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+                setTimeout(() => document.body.removeChild(dragImage), 0);
+              }}
+            >
+              <BookmarkDesktopIcon
+                bookmark={bm}
+                isSelected={selectedBookmarkId === bm.id}
+                theme={currentTheme}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Mobile: single tap opens bookmark; Desktop: single click selects
+                  if (isMobile) {
+                    openBookmarkUrl(bm.url);
+                    setSelectedBookmarkId(null);
+                  } else {
+                    setSelectedBookmarkId(bm.id);
+                    setSelectedAppId(null);
+                  }
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  // Desktop: double click opens bookmark
+                  if (!isMobile) {
+                    openBookmarkUrl(bm.url);
+                    setSelectedBookmarkId(null);
+                  }
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setContextMenuPos({ x: e.clientX, y: e.clientY });
+                  setContextMenuBookmark(bm);
+                  setContextMenuAppId(null);
                   setSelectedBookmarkId(bm.id);
-                  setSelectedAppId(null);
-                }
-              }}
-              onDoubleClick={(e) => {
-                e.stopPropagation();
-                // Desktop: double click opens bookmark
-                if (!isMobile) {
-                  openBookmarkUrl(bm.url);
-                  setSelectedBookmarkId(null);
-                }
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setContextMenuPos({ x: e.clientX, y: e.clientY });
-                setContextMenuBookmark(bm);
-                setContextMenuAppId(null);
-                setSelectedBookmarkId(bm.id);
-              }}
-            />
+                }}
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -437,6 +494,17 @@ export function Desktop({
   );
 }
 
+// ─── Desktop icon constants ───────────────────────────────────────────
+// Aqua 水晶高光渐变 —— 与 BookmarkIconDisplay 统一
+const AQUA_HIGHLIGHT =
+  "linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 50%, rgba(0,0,0,0.03) 100%)";
+
+// Text shadow (matches ryos FileIcon)
+// macOS: rgba(0,0,0,0.9) 0px 1px 0px, rgba(0,0,0,0.85) 0px 1px 3px, rgba(0,0,0,0.45) 0px 2px 3px
+// XP: 1px 1px 2px rgba(0,0,0,0.8)
+const MACOS_TEXT_SHADOW = "rgba(0, 0, 0, 0.9) 0px 1px 0px, rgba(0, 0, 0, 0.85) 0px 1px 3px, rgba(0, 0, 0, 0.45) 0px 2px 3px";
+const XP_TEXT_SHADOW = "1px 1px 2px rgba(0, 0, 0, 0.8)";
+
 // ─── Bookmark desktop icon ───────────────────────────────────────────
 
 function BookmarkDesktopIcon({
@@ -454,60 +522,46 @@ function BookmarkDesktopIcon({
   onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
   theme: string;
 }) {
-  const isXpTheme = theme === "xp" || theme === "win98";
+  const isMacTheme = theme === "macosx";
+  const isXpTheme = theme === "xp";
+  const isWin98Theme = theme === "win98";
   
   // 使用单一真相源获取图标信息
   const iconInfo = getBookmarkIconInfo(bookmark);
 
-  // 图标和容器样式 - 使用 CSS 变量
-  const iconStyle: React.CSSProperties = {
-    width: "var(--os-icon-desktop)",
-    height: "var(--os-icon-desktop)",
-  };
-
   return (
     <div
       data-desktop-icon="true"
-      className="flex flex-col items-center justify-start cursor-default select-none"
-      style={{ width: "calc(var(--os-icon-desktop) + 32px)" }}
+      className={`flex flex-col items-center justify-start cursor-default select-none ${
+        isMacTheme ? "gap-0 pb-3" : "gap-0"
+      }`}
+      style={{ width: "96px" }}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
-      {/* Icon container - 使用 CSS 变量 */}
+      {/* Icon container - 64x64 */}
       <div 
-        className="flex items-center justify-center mb-0.5 relative"
-        style={{ width: "calc(var(--os-icon-desktop) + 8px)", height: "calc(var(--os-icon-desktop) + 8px)" }}
+        className={`flex items-center justify-center w-16 h-16 ${
+          isSelected ? "brightness-[0.65]" : ""
+        }`}
       >
         {iconInfo.isEmoji ? (
           // Emoji 图标
           <span 
-            className="flex items-center justify-center text-3xl"
-            style={iconStyle}
+            className="flex items-center justify-center leading-none"
+            style={{ fontSize: 48 }}
           >
             {iconInfo.value}
           </span>
-        ) : isXpTheme ? (
-          // XP/Win98: 直接显示图标，无圆角
-          <img
-            src={iconInfo.value}
-            alt=""
-            className="object-contain"
-            style={iconStyle}
-            draggable={false}
-            loading="lazy"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "/icons/xp/ie-site.png";
-            }}
-          />
-        ) : (
-          // macOS Aqua: 圆角 + 阴影
+        ) : isMacTheme ? (
+          // macOS Aqua: iOS 风格圆角 + 白底 + 水晶高光
           <div
-            className="rounded-xl bg-white flex items-center justify-center overflow-hidden"
+            className="relative overflow-hidden w-12 h-12"
             style={{
-              ...iconStyle,
-              boxShadow: "0 2px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1)",
+              borderRadius: "22%",
+              backgroundColor: "#ffffff",
+              boxShadow: "0 1px 0 rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.12)",
             }}
           >
             <img
@@ -518,26 +572,58 @@ function BookmarkDesktopIcon({
               draggable={false}
               loading="lazy"
               onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-                (e.target as HTMLImageElement).parentElement!.innerHTML = '<span class="text-2xl">🌐</span>';
+                const target = e.target as HTMLImageElement;
+                target.style.display = "none";
+                const span = document.createElement("span");
+                span.className = "flex items-center justify-center w-full h-full text-2xl";
+                span.textContent = "🌐";
+                target.parentElement?.appendChild(span);
+              }}
+            />
+            {/* Aqua 水晶高光 */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                borderRadius: "22%",
+                background: AQUA_HIGHLIGHT,
               }}
             />
           </div>
+        ) : (
+          // XP/Win98: 直接显示图标
+          <img
+            src={iconInfo.value}
+            alt=""
+            className="w-12 h-12 object-contain"
+            style={{ imageRendering: "auto" }}
+            draggable={false}
+            loading="lazy"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = isXpTheme ? "/icons/xp/ie-site.png" : "/icons/win98/ie-site.png";
+            }}
+          />
         )}
       </div>
       
-      {/* Label - 使用 CSS 变量 */}
+      {/* Label */}
       <span
-        className={`leading-tight text-center break-words max-w-full px-0.5 rounded ${
-          isSelected
-            ? "bg-[Highlight] text-[HighlightText]"
-            : isXpTheme
-            ? "text-white [text-shadow:_1px_1px_1px_rgb(0_0_0_/_90%)]"
-            : "text-gray-900 [text-shadow:_0_1px_1px_rgb(255_255_255_/_80%)]"
+        className={`px-1 text-center truncate text-xs max-w-[96px] ${
+          isMacTheme ? "rounded font-bold" : ""
+        } ${
+          isSelected ? "" : isWin98Theme ? "bg-white text-black" : "bg-transparent text-white"
         }`}
-        style={{ 
-          fontSize: "var(--os-text-xs)",
-          fontFamily: isXpTheme ? '"Pixelated MS Sans Serif", Arial' : undefined,
+        style={{
+          ...(isSelected
+            ? {
+                background: "var(--os-color-selection-bg)",
+                color: "var(--os-color-selection-text)",
+              }
+            : {}),
+          ...(!isSelected && (isXpTheme || isMacTheme)
+            ? { textShadow: isMacTheme ? MACOS_TEXT_SHADOW : XP_TEXT_SHADOW }
+            : {}),
+          fontFamily: (isXpTheme || isWin98Theme) ? '"Pixelated MS Sans Serif", Arial' : undefined,
         }}
       >
         {bookmark.title}
@@ -545,6 +631,7 @@ function BookmarkDesktopIcon({
     </div>
   );
 }
+
 
 // ─── Simple desktop icon (replaces Finder's FileIcon) ───────────────
 
@@ -565,67 +652,52 @@ function DesktopIcon({
   onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
   theme: string;
 }) {
-  const isXpTheme = theme === "xp" || theme === "win98";
-  
-  // 图标样式 - 使用 CSS 变量
-  const iconStyle: React.CSSProperties = {
-    width: "var(--os-icon-desktop)",
-    height: "var(--os-icon-desktop)",
-  };
+  const isMacTheme = theme === "macosx";
+  const isXpTheme = theme === "xp";
+  const isWin98Theme = theme === "win98";
   
   return (
     <div
       data-desktop-icon="true"
-      className="flex flex-col items-center justify-start cursor-default select-none"
-      style={{ width: "calc(var(--os-icon-desktop) + 32px)" }}
+      className={`flex flex-col items-center justify-start cursor-default select-none ${
+        isMacTheme ? "gap-0 pb-3" : "gap-0"
+      }`}
+      style={{ width: "96px" }}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
-      {/* 图标容器 - 使用 CSS 变量 */}
+      {/* Icon container - 64x64 */}
       <div 
-        className="flex items-center justify-center mb-0.5 relative"
-        style={{ width: "calc(var(--os-icon-desktop) + 8px)", height: "calc(var(--os-icon-desktop) + 8px)" }}
+        className={`flex items-center justify-center w-16 h-16 ${
+          isSelected ? "brightness-[0.65]" : ""
+        }`}
       >
-        {isXpTheme ? (
-          // XP/Win98: 直接显示图标，无圆角
-          <img
-            src={icon}
-            alt={label}
-            className="object-contain pointer-events-none"
-            style={iconStyle}
-            draggable={false}
-          />
-        ) : (
-          // macOS Aqua: 圆角 + 阴影
-          <div
-            className="rounded-xl bg-white flex items-center justify-center overflow-hidden"
-            style={{
-              ...iconStyle,
-              boxShadow: "0 2px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1)",
-            }}
-          >
-            <img
-              src={icon}
-              alt={label}
-              className="w-full h-full object-cover pointer-events-none"
-              style={{ imageRendering: "-webkit-optimize-contrast" }}
-              draggable={false}
-            />
-          </div>
-        )}
+        <img
+          src={icon}
+          alt={label}
+          className="w-12 h-12 object-contain pointer-events-none"
+          style={{ imageRendering: "auto" }}
+          draggable={false}
+        />
       </div>
       <span
-        className={`leading-tight text-center break-words max-w-full px-0.5 rounded ${
-          isSelected
-            ? "bg-[Highlight] text-[HighlightText]"
-            : isXpTheme
-            ? "text-white [text-shadow:_1px_1px_1px_rgb(0_0_0_/_90%)]"
-            : "text-gray-900 [text-shadow:_0_1px_1px_rgb(255_255_255_/_80%)]"
+        className={`px-1 text-center truncate text-xs max-w-[96px] ${
+          isMacTheme ? "rounded font-bold" : ""
+        } ${
+          isSelected ? "" : isWin98Theme ? "bg-white text-black" : "bg-transparent text-white"
         }`}
-        style={{ 
-          fontSize: "var(--os-text-xs)",
-          fontFamily: isXpTheme ? '"Pixelated MS Sans Serif", Arial' : undefined,
+        style={{
+          ...(isSelected
+            ? {
+                background: "var(--os-color-selection-bg)",
+                color: "var(--os-color-selection-text)",
+              }
+            : {}),
+          ...(!isSelected && (isXpTheme || isMacTheme)
+            ? { textShadow: isMacTheme ? MACOS_TEXT_SHADOW : XP_TEXT_SHADOW }
+            : {}),
+          fontFamily: (isXpTheme || isWin98Theme) ? '"Pixelated MS Sans Serif", Arial' : undefined,
         }}
       >
         {label}
@@ -633,5 +705,3 @@ function DesktopIcon({
     </div>
   );
 }
-
-

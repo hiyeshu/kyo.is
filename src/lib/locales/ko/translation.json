@@ -2363,6 +2363,7 @@
       "title": "화이트 노이즈",
       "description": "집중과 휴식을 위한 환경음",
       "selectSound": "소리를 선택해 시작",
+      "togglePlayback": "재생 전환",
       "playing": "재생 중...",
       "rain": "빗소리",
       "ocean": "파도",

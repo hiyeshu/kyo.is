@@ -244,18 +244,45 @@ export const appRegistry = {
 
 const FALLBACK_ICON = "/icons/default/application.png";
 
-export const getAppIconPath = (appId: AppId): string => {
+/**
+ * 获取应用图标路径 - 支持主题感知
+ * @param appId 应用 ID
+ * @param theme 可选主题，不传则返回 metadata 中定义的默认路径
+ * @returns 图标路径
+ * 
+ * 图标路径解析规则：
+ * 1. 如果 metadata.icon 是完整路径（以 /icons/ 开头），提取文件名
+ * 2. 根据主题构建路径：/icons/{theme}/{filename}
+ * 3. 如果主题图标不存在，回退到 default
+ */
+export const getAppIconPath = (appId: AppId, theme?: string): string => {
   const app = appRegistry[appId as keyof typeof appRegistry];
   if (!app?.icon) return FALLBACK_ICON;
-  if (typeof app.icon === "string") return app.icon;
-  return app.icon.type === "image" ? app.icon.src : FALLBACK_ICON;
+  
+  let iconPath: string;
+  if (typeof app.icon === "string") {
+    iconPath = app.icon;
+  } else {
+    iconPath = app.icon.type === "image" ? app.icon.src : FALLBACK_ICON;
+  }
+  
+  // 如果没有指定主题，返回原始路径
+  if (!theme) return iconPath;
+  
+  // 提取文件名并根据主题构建路径
+  const filename = iconPath.split("/").pop();
+  if (!filename) return iconPath;
+  
+  // 构建主题路径
+  return `/icons/${theme}/${filename}`;
 };
 
 export const getNonFinderApps = (
-  _isAdmin = false
+  _isAdmin = false,
+  theme?: string
 ): Array<{ icon: string; id: AppId }> =>
   Object.entries(appRegistry).map(([id]) => ({
-    icon: getAppIconPath(id as AppId),
+    icon: getAppIconPath(id as AppId, theme),
     id: id as AppId,
   }));
 

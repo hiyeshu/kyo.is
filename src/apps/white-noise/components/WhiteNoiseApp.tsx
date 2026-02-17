@@ -23,12 +23,14 @@ interface SoundOption {
   src: string;
 }
 
+const BASE_SOUND_PATH = `${import.meta.env.BASE_URL}sounds/ambient/`;
+
 const SOUNDS: SoundOption[] = [
-  { id: "rain", labelKey: "apps.whiteNoise.rain", fallback: "Rain", src: "/sounds/ambient/rain.mp3" },
-  { id: "ocean", labelKey: "apps.whiteNoise.ocean", fallback: "Ocean", src: "/sounds/ambient/ocean.mp3" },
-  { id: "forest", labelKey: "apps.whiteNoise.forest", fallback: "Forest", src: "/sounds/ambient/forest.mp3" },
-  { id: "fire", labelKey: "apps.whiteNoise.fire", fallback: "Fire", src: "/sounds/ambient/fire.mp3" },
-  { id: "wind", labelKey: "apps.whiteNoise.wind", fallback: "Wind", src: "/sounds/ambient/wind.mp3" },
+  { id: "rain", labelKey: "apps.whiteNoise.rain", fallback: "Rain", src: `${BASE_SOUND_PATH}rain.mp3` },
+  { id: "ocean", labelKey: "apps.whiteNoise.ocean", fallback: "Ocean", src: `${BASE_SOUND_PATH}ocean.mp3` },
+  { id: "forest", labelKey: "apps.whiteNoise.forest", fallback: "Forest", src: `${BASE_SOUND_PATH}forest.mp3` },
+  { id: "fire", labelKey: "apps.whiteNoise.fire", fallback: "Fire", src: `${BASE_SOUND_PATH}fire.mp3` },
+  { id: "wind", labelKey: "apps.whiteNoise.wind", fallback: "Wind", src: `${BASE_SOUND_PATH}wind.mp3` },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -255,6 +257,7 @@ export function WhiteNoiseApp({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const dialRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const lastSoundRef = useRef<SoundOption>(SOUNDS[0]);
 
   const activeSoundName = useMemo(() => {
     if (!activeSound) return null;
@@ -262,14 +265,18 @@ export function WhiteNoiseApp({
     return sound ? t(sound.labelKey, sound.fallback) : null;
   }, [activeSound, t]);
 
-  const playSound = useCallback((sound: SoundOption) => {
+  const stopPlayback = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
+    setActiveSound(null);
+  }, []);
+
+  const playSound = useCallback((sound: SoundOption) => {
+    stopPlayback();
 
     if (activeSound === sound.id) {
-      setActiveSound(null);
       return;
     }
 
@@ -279,7 +286,17 @@ export function WhiteNoiseApp({
     audio.play().catch(() => {});
     audioRef.current = audio;
     setActiveSound(sound.id);
-  }, [activeSound, volume]);
+    lastSoundRef.current = sound;
+  }, [activeSound, stopPlayback, volume]);
+
+  const handleTogglePlayback = useCallback(() => {
+    if (activeSound) {
+      stopPlayback();
+      return;
+    }
+
+    playSound(lastSoundRef.current ?? SOUNDS[0]);
+  }, [activeSound, playSound, stopPlayback]);
 
   const handleDialInteraction = useCallback((clientX: number, clientY: number) => {
     if (!dialRef.current) return;
@@ -325,25 +342,27 @@ export function WhiteNoiseApp({
     document.addEventListener("mouseup", handleMouseUp);
   }, [handleDialInteraction]);
 
-  if (!isWindowOpen) {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+  useEffect(() => {
+    if (!isWindowOpen) {
+      stopPlayback();
     }
+
+    return () => {
+      stopPlayback();
+    };
+  }, [isWindowOpen, stopPlayback]);
+
+  if (!isWindowOpen) {
     return null;
   }
 
   return (
-    <WindowFrame
-      title={t("apps.whiteNoise.title", "白噪音")}
-      onClose={() => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current = null;
-        }
-        setActiveSound(null);
-        onClose();
-      }}
+      <WindowFrame
+        title={t("apps.whiteNoise.title", "白噪音")}
+        onClose={() => {
+          stopPlayback();
+          onClose();
+        }}
       isForeground={isForeground}
       appId="white-noise"
       skipInitialSound={skipInitialSound}
@@ -406,12 +425,15 @@ export function WhiteNoiseApp({
          * ───────────────────────────────────────────────────────────────────── */}
         <div
           className="relative flex items-center flex-shrink-0"
+          onClick={handleTogglePlayback}
           style={{
             background: theme.screenBg,
             height: "36px",
             borderTop: `1px solid ${theme.screenBorder}`,
             borderBottom: `1px solid ${theme.screenBorder}`,
+            cursor: "pointer",
           }}
+          aria-label={t("apps.whiteNoise.togglePlayback", "切换播放")}
         >
           {/* 显示内容：声音名 + 波形组（音量 & 音频） */}
           <div className="flex items-center justify-between w-full h-full px-3">

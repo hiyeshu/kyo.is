@@ -2369,6 +2369,7 @@
       "title": "白噪音",
       "description": "帮助专注与放松的环境音",
       "selectSound": "选择一个声音开始",
+      "togglePlayback": "切换播放",
       "playing": "正在播放...",
       "rain": "雨声",
       "ocean": "海浪",

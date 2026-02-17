@@ -745,7 +745,7 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
                 const isMinimized = instance.isMinimized ?? false;
 
                 // Get icon and label (Kyo only has bookmarks, no special handling needed)
-                const displayIcon = getAppIconPath(instance.appId);
+                const displayIcon = getAppIconPath(instance.appId, currentTheme);
                 const displayLabel = instance.title || getAppName(instance.appId);
                 const isEmoji = false;
 
@@ -934,7 +934,7 @@ export function MenuBar({ children, inWindowFrame = false }: MenuBarProps) {
                     if (!instance || !instance.isOpen) return null;
 
                     const isMinimized = instance.isMinimized ?? false;
-                    const displayIcon = getAppIconPath(instance.appId);
+                    const displayIcon = getAppIconPath(instance.appId, currentTheme);
                     const displayLabel = instance.title || getAppName(instance.appId);
                     const isEmoji = false;
 

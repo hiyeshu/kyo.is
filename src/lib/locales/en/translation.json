@@ -2675,6 +2675,7 @@
       "title": "White Noise",
       "description": "Ambient sounds for focus and relaxation",
       "selectSound": "Select a sound to start",
+      "togglePlayback": "Toggle playback",
       "playing": "Playing...",
       "rain": "Rain",
       "ocean": "Ocean",

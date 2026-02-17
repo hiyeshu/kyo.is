@@ -63,13 +63,13 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
 
-  // 应用列表
+  // 应用列表 - 使用主题感知图标
   const appList = Object.entries(appRegistry).map(([id]) => {
     const appId = id as AppId;
     return {
       id: appId,
       name: getTranslatedAppName(appId),
-      icon: getAppIconPath(appId),
+      icon: getAppIconPath(appId, currentTheme),
       searchLabel: `${getTranslatedAppName(appId)} ${appId}`,
     };
   });

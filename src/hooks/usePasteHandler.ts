@@ -75,7 +75,7 @@ function handleUrlPaste(url: string, t: (key: string, fallback?: string) => stri
   // 有缓存直接用
   if (linkMetaStore.has(url)) {
     const meta = linkMetaStore.get(url)!;
-    addAiBookmark(meta.title, url, meta.summary, meta.tags);
+    addAiBookmark(meta.title, url, meta.summary, meta.tags, { onDesktop: true });
     toast(t("paste.bookmarkAdded", "书签已添加"));
     return;
   }
@@ -83,7 +83,7 @@ function handleUrlPaste(url: string, t: (key: string, fallback?: string) => stri
   // 先创建占位书签，异步抓取
   let hostname = "example.com";
   try { hostname = new URL(url).hostname; } catch { /* noop */ }
-  const tempId = addBookmark(hostname, url);
+  const tempId = addBookmark(hostname, url, undefined, undefined, { onDesktop: true });
   toast(t("paste.fetchingMeta", "正在获取网页信息..."));
 
   fetchLinkMeta(url)

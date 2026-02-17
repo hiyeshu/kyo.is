@@ -149,7 +149,7 @@ export function ExposeView({ isOpen, onClose }: ExposeViewProps) {
           >
             {openInstances.map((instance, index) => {
               // Kyo only has bookmarks, no special handling needed
-              const displayIcon = getAppIconPath(instance.appId);
+              const displayIcon = getAppIconPath(instance.appId, currentTheme);
               const displayLabel =
                 instance.title ||
                 instance.displayTitle ||
