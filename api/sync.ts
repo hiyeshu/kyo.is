@@ -121,36 +121,14 @@ export default async function handler(req: Request) {
       return json({ uploaded: 0 });
     }
 
-    // 分开处理书签和便签
-    // 书签：用 url 去重
-    // 便签：直接插入
-    const bookmarkItems = itemsToInsert.filter(i => i.type === "bookmark");
-    const noteItems = itemsToInsert.filter(i => i.type === "note");
+    // 直接插入所有数据
+    const { error: dbErr } = await client
+      .from("kyo_items")
+      .insert(itemsToInsert);
 
-    let uploadedCount = 0;
+    if (dbErr) return error(dbErr.message, 500);
 
-    // 插入书签（有 url 去重）
-    if (bookmarkItems.length > 0) {
-      const { error: bookmarkErr } = await client
-        .from("kyo_items")
-        .upsert(bookmarkItems, {
-          onConflict: "user_id,url",
-          ignoreDuplicates: true,
-        });
-      if (bookmarkErr) return error(bookmarkErr.message, 500);
-      uploadedCount += bookmarkItems.length;
-    }
-
-    // 插入便签（直接插入，不去重）
-    if (noteItems.length > 0) {
-      const { error: noteErr } = await client
-        .from("kyo_items")
-        .insert(noteItems);
-      if (noteErr) return error(noteErr.message, 500);
-      uploadedCount += noteItems.length;
-    }
-
-    return json({ uploaded: uploadedCount }, 201);
+    return json({ uploaded: itemsToInsert.length }, 201);
   }
 
   // ─── DELETE: 清空云端数据（危险操作，用于"使用本地数据覆盖"场景） ──────────
