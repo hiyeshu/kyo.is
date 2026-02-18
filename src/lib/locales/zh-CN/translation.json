@@ -2466,6 +2466,21 @@
       "signupDescription": "建立账户以访问聊天室并保存您的设定",
       "username": "用户名称"
     },
+    "sync": {
+      "title": "数据同步",
+      "description": "检测到本地和云端都有数据，请选择保留哪一份：",
+      "local": "本地数据",
+      "cloud": "云端数据",
+      "bookmarkCount": "{{count}} 个书签",
+      "noteCount": "{{count}} 个便签",
+      "useLocal": "使用本地数据",
+      "useCloud": "使用云端数据",
+      "warning": "选择后另一份数据将被覆盖，此操作不可撤销",
+      "syncing": "正在同步...",
+      "syncComplete": "同步完成",
+      "syncFailed": "同步失败",
+      "errorNotAuthenticated": "未登录，请先登录"
+    },
     "colors": {
       "blue": "蓝色",
       "green": "绿色",

@@ -13,6 +13,9 @@ useDockStore.ts: Dock 栏状态，固定应用列表、拖拽排序、显示/隐
 useThemeStore.ts: 主题状态，当前主题，存储键 kyo:theme 和 kyo:theme-sync-wallpaper
 useCustomThemeStore.ts: 自定义主题状态，基于 themeSchema 管理用户自定义主题，编辑器临时状态
 useStickiesStore.ts: 便利贴状态，便签列表、颜色、位置与尺寸，持久化
+useSyncStore.ts: 数据同步状态，登录后本地/云端数据检测、上传/下载选择、同步弹窗控制
+useKyoItemStore.ts: KyoItem 统一查询层，不持有数据，从 bookmark + stickies 派生 KyoItem 格式
+useLinkMetaStore.ts: 链接元数据缓存，URL 预览信息（标题、描述、图片）
 
 ## 已删除文件（Phase 1 清理）
 - useFilesStore.ts (文件系统，Kyo 无文件系统)

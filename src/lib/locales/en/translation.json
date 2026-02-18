@@ -42,6 +42,21 @@
       "purple": "purple",
       "orange": "orange"
     },
+    "sync": {
+      "title": "Data Sync",
+      "description": "Both local and cloud have data. Choose which to keep:",
+      "local": "Local Data",
+      "cloud": "Cloud Data",
+      "bookmarkCount": "{{count}} bookmarks",
+      "noteCount": "{{count}} notes",
+      "useLocal": "Use Local Data",
+      "useCloud": "Use Cloud Data",
+      "warning": "The other data will be overwritten. This cannot be undone.",
+      "syncing": "Syncing...",
+      "syncComplete": "Sync complete",
+      "syncFailed": "Sync failed",
+      "errorNotAuthenticated": "Not logged in. Please log in first."
+    },
     "menu": {
       "file": "File",
       "edit": "Edit",

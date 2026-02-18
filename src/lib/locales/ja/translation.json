@@ -2458,6 +2458,17 @@
       "signupDescription": "チャットルームにアクセスし、設定を保存するためにアカウントを作成してください",
       "username": "ユーザー名"
     },
+    "sync": {
+      "title": "データ同期",
+      "description": "ローカルとクラウドの両方にデータがあります。どちらを保持しますか：",
+      "local": "ローカルデータ",
+      "cloud": "クラウドデータ",
+      "bookmarkCount": "{{count}} 件のブックマーク",
+      "noteCount": "{{count}} 件の付箋",
+      "useLocal": "ローカルを使用",
+      "useCloud": "クラウドを使用",
+      "warning": "選択後、もう一方のデータは上書きされます"
+    },
     "colors": {
       "blue": "青",
       "green": "緑",

@@ -2464,6 +2464,17 @@
       "signupDescription": "建立帳戶以存取聊天室並儲存您的設定",
       "username": "使用者名稱"
     },
+    "sync": {
+      "title": "資料同步",
+      "description": "偵測到本機和雲端都有資料，請選擇保留哪一份：",
+      "local": "本機資料",
+      "cloud": "雲端資料",
+      "bookmarkCount": "{{count}} 個書籤",
+      "noteCount": "{{count}} 個便利貼",
+      "useLocal": "使用本機資料",
+      "useCloud": "使用雲端資料",
+      "warning": "選擇後另一份資料將被覆蓋，此操作無法復原"
+    },
     "colors": {
       "blue": "藍色",
       "green": "綠色",

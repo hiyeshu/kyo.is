@@ -2458,6 +2458,17 @@
       "signupDescription": "채팅방에 접속하고 설정을 저장하려면 계정을 만드세요.",
       "username": "사용자 이름"
     },
+    "sync": {
+      "title": "데이터 동기화",
+      "description": "로컬과 클라우드 모두 데이터가 있습니다. 어느 것을 유지하시겠습니까:",
+      "local": "로컬 데이터",
+      "cloud": "클라우드 데이터",
+      "bookmarkCount": "{{count}}개의 북마크",
+      "noteCount": "{{count}}개의 메모",
+      "useLocal": "로컬 사용",
+      "useCloud": "클라우드 사용",
+      "warning": "선택 후 다른 데이터는 덮어씌워집니다"
+    },
     "colors": {
       "blue": "파란색",
       "green": "초록색",
