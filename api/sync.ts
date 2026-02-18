@@ -40,11 +40,12 @@ interface SyncPayload {
 // ─── Handler ─────────────────────────────────────────────────────────────────
 
 export default async function handler(req: Request) {
-  const { client } = createSupabaseFromRequest(req);
+  try {
+    const { client } = createSupabaseFromRequest(req);
 
-  // 验证用户身份
-  const { data: { user }, error: authErr } = await client.auth.getUser();
-  if (authErr || !user) return error("Unauthorized", 401);
+    // 验证用户身份
+    const { data: { user }, error: authErr } = await client.auth.getUser();
+    if (authErr || !user) return error("Unauthorized", 401);
 
   // ─── GET: 获取云端所有数据 ─────────────────────────────────────────────────
   if (req.method === "GET") {
@@ -146,4 +147,7 @@ export default async function handler(req: Request) {
   }
 
   return error("Method not allowed", 405);
+  } catch (e) {
+    return error(e instanceof Error ? e.message : "Internal server error", 500);
+  }
 }
