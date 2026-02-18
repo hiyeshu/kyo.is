@@ -5,7 +5,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { createSupabaseFromRequest, json, error } from "../_utils";
+import { createSupabaseFromRequest, json, error } from "../_utils.js";
 
 export const config = { runtime: "edge" };
 
