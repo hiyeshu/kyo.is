@@ -1,13 +1,13 @@
 /**
- * [INPUT]: 依赖 @/lib/supabase 的客户端，依赖 @supabase/supabase-js 的 Auth 类型
+ * [INPUT]: 依赖 @/lib/supabase 的客户端
  * [OUTPUT]: 对外提供 useAuthStore — user / loading / signInWithGoogle / signOut
- * [POS]: stores/ 的认证状态管理，被 App.tsx 的登录门控消费
+ * [POS]: stores/ 的认证状态管理，被 App.tsx 和 AppleMenu 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
+import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 interface AuthState {
   user: User | null;
@@ -22,13 +22,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
 
   init: () => {
-    // 获取当前 session
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       set({ user: data.session?.user ?? null, loading: false });
     });
 
-    // 监听登录/登出事件
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       set({ user: session?.user ?? null, loading: false });
     });
   },
