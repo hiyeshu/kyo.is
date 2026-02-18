@@ -2457,6 +2457,7 @@
       "logOutDescription": "您確定要登出嗎？您將會從您的帳戶登出。",
       "loggingIn": "正在登入...",
       "loginDescription": "登入您的帳戶",
+      "signInWithGoogle": "使用 Google 登入",
       "password": "密碼",
       "setPasswordRequired": "需要設定密碼",
       "setPasswordRequiredDescription": "您需要在登出前設定密碼，以確保您可以復原您的帳戶。您現在要設定密碼嗎？",

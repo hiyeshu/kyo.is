@@ -45,17 +45,17 @@ export function ConfirmDialog({
 
   const dialogContent = (
     <div className={isXpTheme ? "p-2 px-4" : "p-6"}>
-      <div className="flex gap-3 items-start">
+      <div className="flex gap-3 items-center">
         <ThemedIcon
           name="warn.png"
           alt="Warning"
-          className="w-[32px] h-[32px] mt-0.5 [image-rendering:pixelated]"
+          className="w-[32px] h-[32px] shrink-0 [image-rendering:pixelated]"
           width={32}
           height={32}
         />
         <p
           className={cn(
-            "text-gray-900 mb-2 leading-tight",
+            "text-gray-900 leading-tight",
             isXpTheme
               ? "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
               : "font-geneva-12 text-[12px]"

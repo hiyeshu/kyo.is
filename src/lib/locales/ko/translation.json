@@ -2451,6 +2451,7 @@
       "logOutDescription": "로그아웃하시겠습니까? 계정에서 로그아웃됩니다.",
       "loggingIn": "로그인 중...",
       "loginDescription": "계정에 로그인",
+      "signInWithGoogle": "Google로 로그인",
       "password": "비밀번호",
       "setPasswordRequired": "비밀번호 설정 필요",
       "setPasswordRequiredDescription": "계정 복구를 위해 로그아웃하기 전에 비밀번호를 설정해야 합니다. 지금 비밀번호를 설정하시겠습니까?",

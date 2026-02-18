@@ -240,6 +240,7 @@
       "loggingIn": "Logging in...",
       "creatingAccount": "Creating...",
       "loginDescription": "Log in to your account",
+      "signInWithGoogle": "Sign in with Google",
       "signupDescription": "Create an account to access chat rooms and save your settings",
       "setPasswordRequired": "Set Password Required",
       "setPasswordRequiredDescription": "You need to set a password before logging out to ensure you can recover your account. Would you like to set a password now?",

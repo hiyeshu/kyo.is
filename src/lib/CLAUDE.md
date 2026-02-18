@@ -7,6 +7,7 @@ audioContext.ts: Web Audio API 上下文管理，单例模式，音频处理、�
 i18n.ts: 国际化配置，i18next 初始化，语言检测，导出 SUPPORTED_LANGUAGES/LANGUAGE_LABELS/changeLanguage
 pusherClient.ts: Pusher 客户端单例，WebSocket 连接管理，实时通信
 reactResources.ts: React 资源管理，i18next React 集成，Suspense 支持
+supabase.ts: Supabase 客户端单例，浏览器端初始化，被 useAuthStore 和 API 层消费
 utils.ts: 通用工具函数，字符串处理、日期格式化、URL 解析、文件大小格式化
 webglFilterRunner.ts: WebGL 滤镜运行器，实时图像处理、着色器应用、性能优化
 

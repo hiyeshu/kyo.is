@@ -2459,6 +2459,7 @@
       "logOutDescription": "您确定要退出吗？您将会从您的账户退出。",
       "loggingIn": "正在登录...",
       "loginDescription": "登录您的账户",
+      "signInWithGoogle": "使用 Google 登录",
       "password": "密码",
       "setPasswordRequired": "需要设定密码",
       "setPasswordRequiredDescription": "您需要在退出前设定密码，以确保您可以恢复您的账户。您现在要设定密码吗？",
