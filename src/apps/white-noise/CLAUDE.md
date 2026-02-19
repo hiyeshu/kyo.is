@@ -9,17 +9,18 @@ metadata.ts: 应用元数据，版本、名称、图标、帮助项
 
 ### 子目录模块
 components/ - 应用组件
-  WhiteNoiseApp.tsx: Braun 风格白噪音收音机，频道按钮、旋钮音量控制
+  WhiteNoiseApp.tsx: Braun 风格白噪音收音机，频道按钮、旋钮音量控制、实时音频频谱可视化
 
 ## 应用功能
 - 5 种环境音：雨声、海浪、森林、篝火、风声
 - 循环播放，旋钮拖拽控制音量
 - 频道按钮切换声音
 - 窗口关闭自动停止播放
+- 实时音频频谱可视化（格栅区域显示 8 段波形，使用主题色）
 
 ## 依赖关系
 - 依赖 @/components/layout/WindowFrame 窗口框架
-- 依赖 Web Audio API (HTMLAudioElement)
+- 依赖 Web Audio API (AudioContext + AnalyserNode + MediaElementSource)
 - 被 appRegistry 注册
 
 ## 音频资源

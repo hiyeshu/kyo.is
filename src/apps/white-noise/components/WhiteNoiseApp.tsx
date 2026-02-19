@@ -1,6 +1,6 @@
 /**
- * [INPUT]: 依赖 AppProps, WindowFrame, useThemeStore
- * [OUTPUT]: WhiteNoiseApp 组件 — 主题适配的复古收音机
+ * [INPUT]: 依赖 AppProps, WindowFrame, useThemeStore, Web Audio API (AnalyserNode)
+ * [OUTPUT]: WhiteNoiseApp 组件 — 主题适配的复古收音机，实时音频频谱可视化
  * [POS]: apps/white-noise/components 的主组件
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -78,42 +78,6 @@ interface RadioTheme {
   // 圆角
   borderRadius: string;
   buttonRadius: string;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
- * 波形动画组件 - 简约跳动条
- * ═══════════════════════════════════════════════════════════════════════════════ */
-function WaveformBars({ color, dimColor, isPlaying }: { color: string; dimColor: string; isPlaying: boolean }) {
-  const [heights, setHeights] = useState<number[]>([40, 60, 40, 70, 50, 65, 45, 55]);
-  
-  useEffect(() => {
-    if (!isPlaying) {
-      setHeights([20, 20, 20, 20, 20, 20, 20, 20]);
-      return;
-    }
-    
-    const interval = setInterval(() => {
-      setHeights(prev => prev.map(() => 25 + Math.random() * 55));
-    }, 120);
-    
-    return () => clearInterval(interval);
-  }, [isPlaying]);
-  
-  return (
-    <div className="flex items-end justify-center gap-[2px] h-full">
-      {heights.map((h, i) => (
-        <div
-          key={i}
-          className="w-[2px] transition-all duration-100"
-          style={{
-            height: `${h}%`,
-            background: isPlaying ? color : dimColor,
-            boxShadow: isPlaying ? `0 0 3px ${color}` : "none",
-          }}
-        />
-      ))}
-    </div>
-  );
 }
 
 const THEMES: Record<string, RadioTheme> = {
@@ -254,10 +218,18 @@ export function WhiteNoiseApp({
   const [activeSound, setActiveSound] = useState<string | null>(null);
   const [volume, setVolume] = useState(0.5);
   const [dialRotation, setDialRotation] = useState(-135 + (0.5 * 270));
+  const [frequencies, setFrequencies] = useState<number[]>(Array(8).fill(0));
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const dialRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
   const lastSoundRef = useRef<SoundOption>(SOUNDS[0]);
+  
+  // 音频分析
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   const activeSoundName = useMemo(() => {
     if (!activeSound) return null;
@@ -265,13 +237,79 @@ export function WhiteNoiseApp({
     return sound ? t(sound.labelKey, sound.fallback) : null;
   }, [activeSound, t]);
 
+  // 停止频谱分析
+  const stopAnalysis = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    setFrequencies(Array(8).fill(0));
+  }, []);
+
+  // 开始频谱分析
+  const startAnalysis = useCallback((audio: HTMLAudioElement) => {
+    // 创建或复用 AudioContext
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext();
+    }
+    const ctx = audioContextRef.current;
+    
+    // 创建 Analyser
+    if (!analyserRef.current) {
+      analyserRef.current = ctx.createAnalyser();
+      analyserRef.current.fftSize = 64; // 小 FFT 用于简洁波形
+      analyserRef.current.smoothingTimeConstant = 0.7;
+    }
+    
+    // 连接音频源（只能连接一次）
+    if (!sourceRef.current) {
+      sourceRef.current = ctx.createMediaElementSource(audio);
+      sourceRef.current.connect(analyserRef.current);
+      analyserRef.current.connect(ctx.destination);
+    }
+    
+    // 频谱数据读取循环
+    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+    const numBands = 8;
+    
+    const analyze = () => {
+      if (!analyserRef.current) return;
+      
+      analyserRef.current.getByteFrequencyData(dataArray);
+      
+      // 将频谱数据映射到 8 个条
+      const bands: number[] = [];
+      const binCount = dataArray.length;
+      const binsPerBand = Math.floor(binCount / numBands);
+      
+      for (let i = 0; i < numBands; i++) {
+        let sum = 0;
+        const start = i * binsPerBand;
+        const end = start + binsPerBand;
+        for (let j = start; j < end && j < binCount; j++) {
+          sum += dataArray[j];
+        }
+        // 归一化到 0-1
+        bands.push((sum / binsPerBand) / 255);
+      }
+      
+      setFrequencies(bands);
+      animationFrameRef.current = requestAnimationFrame(analyze);
+    };
+    
+    analyze();
+  }, []);
+
   const stopPlayback = useCallback(() => {
+    stopAnalysis();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
+    // 重置音频源（下次播放需要重新创建）
+    sourceRef.current = null;
     setActiveSound(null);
-  }, []);
+  }, [stopAnalysis]);
 
   const playSound = useCallback((sound: SoundOption) => {
     stopPlayback();
@@ -283,11 +321,14 @@ export function WhiteNoiseApp({
     const audio = new Audio(sound.src);
     audio.loop = true;
     audio.volume = volume;
-    audio.play().catch(() => {});
+    audio.crossOrigin = "anonymous"; // 需要 CORS 才能分析音频
+    audio.play().then(() => {
+      startAnalysis(audio);
+    }).catch(() => {});
     audioRef.current = audio;
     setActiveSound(sound.id);
     lastSoundRef.current = sound;
-  }, [activeSound, stopPlayback, volume]);
+  }, [activeSound, startAnalysis, stopPlayback, volume]);
 
   const handleTogglePlayback = useCallback(() => {
     if (activeSound) {
@@ -382,7 +423,8 @@ export function WhiteNoiseApp({
         }}
       >
         {/* ─────────────────────────────────────────────────────────────────────
-         * 第一段：扬声器格栅（主体，flex-1 占满剩余空间）
+         * 第一段：扬声器格栅（主体）- 音频叠加在条纹上
+         * 迪特·拉姆斯: 形式追随功能，克制的动态
          * ───────────────────────────────────────────────────────────────────── */}
         <div
           className="relative overflow-hidden flex-1"
@@ -391,7 +433,7 @@ export function WhiteNoiseApp({
             minHeight: "80px",
           }}
         >
-          {/* 格栅线条 */}
+          {/* 格栅背景 - 保持不变 */}
           <div
             className="absolute inset-0"
             style={{
@@ -405,9 +447,11 @@ export function WhiteNoiseApp({
             }}
           />
           
+
+          
           {/* 品牌标识 - 右下角 */}
           <div
-            className="absolute bottom-2 right-3"
+            className="absolute bottom-2 right-3 z-10"
             style={{
               fontSize: "8px",
               fontWeight: 500,
@@ -452,10 +496,10 @@ export function WhiteNoiseApp({
               {activeSound ? activeSoundName : "—"}
             </div>
             
-            {/* 右侧：播放时显示音量波形 + 音频波形 */}
+            {/* 右侧：音量 + 波形 */}
             {activeSound && (
-              <div className="flex items-center gap-3 h-full py-2">
-                {/* 音量指示 - 静态阶梯状 */}
+              <div className="flex items-end gap-3 h-full py-2">
+                {/* 音量指示 */}
                 <div className="flex items-end gap-[2px] h-full">
                   {Array.from({ length: 6 }).map((_, i) => {
                     const barHeight = 40 + i * 10;
@@ -476,17 +520,26 @@ export function WhiteNoiseApp({
                 
                 {/* 分隔点 */}
                 <div
-                  className="w-[2px] h-[2px] rounded-full"
+                  className="w-[2px] h-[2px] rounded-full self-center"
                   style={{ background: theme.displayTextDim }}
                 />
                 
-                {/* 音频波形 - 动态跳动 */}
-                <div className="w-10 h-full">
-                  <WaveformBars
-                    color={theme.displayText}
-                    dimColor={theme.displayTextDim}
-                    isPlaying={true}
-                  />
+                {/* 波形 - 动态跳动 */}
+                <div className="flex items-end gap-[2px] h-full">
+                  {frequencies.map((freq, i) => {
+                    const height = 15 + freq * 80;
+                    return (
+                      <div
+                        key={i}
+                        className="w-[2px] transition-all duration-75"
+                        style={{
+                          height: `${height}%`,
+                          background: theme.displayText,
+                          boxShadow: freq > 0.2 ? `0 0 3px ${theme.displayText}` : "none",
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}
