@@ -2400,7 +2400,8 @@
       "bookmarksGroup": "북마크",
       "notesGroup": "메모",
       "emptyNote": "빈 메모",
-      "noResults": "결과를 찾을 수 없습니다"
+      "noResults": "결과를 찾을 수 없습니다",
+      "askKyo": "Kyo에게 물어보기"
     },
     "aboutThisMac": {
       "builtInMemory": "내장 메모리",

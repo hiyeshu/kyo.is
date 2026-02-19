@@ -2406,7 +2406,8 @@
       "bookmarksGroup": "書籤",
       "notesGroup": "便利貼",
       "emptyNote": "空白便利貼",
-      "noResults": "找不到結果"
+      "noResults": "找不到結果",
+      "askKyo": "問問 Kyo"
     },
     "aboutThisMac": {
       "builtInMemory": "內建記憶體",

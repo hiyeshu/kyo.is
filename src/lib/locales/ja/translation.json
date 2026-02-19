@@ -2400,7 +2400,8 @@
       "bookmarksGroup": "ブックマーク",
       "notesGroup": "付箋",
       "emptyNote": "空の付箋",
-      "noResults": "結果が見つかりません"
+      "noResults": "結果が見つかりません",
+      "askKyo": "Kyoに聞く"
     },
     "aboutThisMac": {
       "builtInMemory": "内蔵メモリ",

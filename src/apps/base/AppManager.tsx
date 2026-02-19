@@ -58,6 +58,7 @@ export function AppManager({ apps }: AppManagerProps) {
   const [isExposeViewOpen, setIsExposeViewOpen] = useState(false);
   const [isAddWebsiteDialogOpen, setIsAddWebsiteDialogOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [initialSearch, setInitialSearch] = useState("");
   const [desktopContextMenuPos, setDesktopContextMenuPos] = useState<{ x: number; y: number } | null>(null);
 
 
@@ -211,6 +212,7 @@ export function AppManager({ apps }: AppManagerProps) {
       // ⌘K / Ctrl+K to toggle Command Palette
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
+        setInitialSearch("");
         setIsCommandPaletteOpen((prev) => !prev);
       }
       // Shift+F to toggle Command Palette (exclude input/textarea/contentEditable)
@@ -219,7 +221,21 @@ export function AppManager({ apps }: AppManagerProps) {
         const tag = target.tagName.toLowerCase();
         if (tag !== "input" && tag !== "textarea" && !target.isContentEditable) {
           e.preventDefault();
+          setInitialSearch("");
           setIsCommandPaletteOpen((prev) => !prev);
+        }
+      }
+      // 任意可打印字符 → 打开搜索浮层并填入该字符
+      if (
+        e.key.length === 1 &&
+        !e.metaKey && !e.ctrlKey && !e.altKey &&
+        !(e.shiftKey && e.key === "F") // 已被上面处理
+      ) {
+        const target = e.target as HTMLElement;
+        const tag = target.tagName.toLowerCase();
+        if (tag !== "input" && tag !== "textarea" && !target.isContentEditable) {
+          setInitialSearch(e.key);
+          setIsCommandPaletteOpen(true);
         }
       }
     };
@@ -355,10 +371,14 @@ export function AppManager({ apps }: AppManagerProps) {
         items={getDesktopContextMenuItems()}
       />
 
-      {/* Command Palette - ⌘K to search apps & bookmarks */}
+      {/* Command Palette - ⌘K / any key to search apps & bookmarks */}
       <CommandPalette
         isOpen={isCommandPaletteOpen}
-        onOpenChange={setIsCommandPaletteOpen}
+        onOpenChange={(open) => {
+          setIsCommandPaletteOpen(open);
+          if (!open) setInitialSearch("");
+        }}
+        initialSearch={initialSearch}
       />
     </>
   );

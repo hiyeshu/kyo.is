@@ -1,7 +1,7 @@
 /**
- * [INPUT]: cmdk, useBookmarkStore, useThemeStore, appRegistry, useAppStore, i18n utils
+ * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useThemeStore, appRegistry, useAppStore, i18n, usePasteHandler logic
  * [OUTPUT]: CommandPalette 组件
- * [POS]: 统一搜索浮层，搜索应用 + 书签，被 AppManager 挂载，⌘K / Shift+F / 双击桌面触发
+ * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签，支持 URL 添加书签 + Ask AI 兜底，被 AppManager 挂载
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -9,6 +9,7 @@ import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
 import { useBookmarkStore, isFolder, getBookmarkIconInfo, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
 import { useStickiesStore } from "@/stores/useStickiesStore";
+import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useAppStore } from "@/stores/useAppStore";
 import { appRegistry, getAppIconPath } from "@/config/appRegistry";
@@ -16,17 +17,29 @@ import type { AppId } from "@/config/appRegistry";
 import { getTranslatedAppName } from "@/utils/i18n";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface CommandPaletteProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  initialSearch?: string;
 }
 
 interface FlatBookmark extends Bookmark {
   folderTitle?: string;
+}
+
+// URL 检测：有协议头，或者 xxx.xxx 格式（无空格）
+function looksLikeUrl(input: string): boolean {
+  if (/^https?:\/\//i.test(input)) return true;
+  return /^[^\s]+\.[a-z]{2,}(\/\S*)?$/i.test(input);
+}
+
+function normalizeUrl(input: string): string {
+  return /^https?:\/\//i.test(input) ? input : `https://${input}`;
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
@@ -55,13 +68,14 @@ const xpPanelStyle: React.CSSProperties = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
+export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: CommandPaletteProps) {
   const { t } = useTranslation();
-  const { items } = useBookmarkStore();
+  const { items, getBookmarkByUrl, addBookmark, updateBookmark } = useBookmarkStore();
   const { notes } = useStickiesStore();
   const currentTheme = useThemeStore((s) => s.current);
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
+  const searchRef = useRef("");
 
   // 应用列表 - 使用主题感知图标
   const appList = Object.entries(appRegistry).map(([id]) => {
@@ -81,23 +95,38 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
       : [item]
   );
 
-  // 打开时聚焦输入框 + ESC 关闭
+  // 打开时聚焦输入框 + 填入初始字符 + ESC/Tab 处理
   useEffect(() => {
     if (!isOpen) return;
 
-    setSearch("");
-    setTimeout(() => inputRef.current?.focus(), 0);
+    setSearch(initialSearch);
+    searchRef.current = initialSearch;
+    setTimeout(() => {
+      const input = inputRef.current;
+      if (input) {
+        input.focus();
+        // 光标移到末尾
+        input.setSelectionRange(initialSearch.length, initialSearch.length);
+      }
+    }, 0);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         onOpenChange(false);
       }
+      // Tab → 问问 AI（有输入且非 URL）
+      const q = searchRef.current.trim();
+      if (e.key === "Tab" && q && !looksLikeUrl(q)) {
+        e.preventDefault();
+        useAppStore.getState().launchApp("chat" as AppId, { autoSend: q });
+        onOpenChange(false);
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onOpenChange]);
+  }, [isOpen, onOpenChange, initialSearch]);
 
   // 选中应用 → 启动
   const handleSelectApp = (appId: AppId) => {
@@ -111,6 +140,12 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
     onOpenChange(false);
   };
 
+  // 问问 Kyo → 打开聊天窗口并自动发送
+  const handleAskAi = () => {
+    useAppStore.getState().launchApp("chat" as AppId, { autoSend: search.trim() });
+    onOpenChange(false);
+  };
+
   // 选中便签 → 聚焦
   const handleSelectNote = (noteId: string) => {
     useStickiesStore.getState().bringToFront(noteId);
@@ -118,6 +153,49 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
     useAppStore.getState().launchApp("stickies" as AppId);
     onOpenChange(false);
   };
+
+  // 输入是 URL → 添加书签 + 打开
+  const handleAddBookmarkFromUrl = () => {
+    const url = normalizeUrl(search.trim());
+
+    // 去重
+    if (getBookmarkByUrl(url)) {
+      openBookmarkUrl(url);
+      onOpenChange(false);
+      return;
+    }
+
+    // 先创建占位书签
+    let hostname = "example.com";
+    try { hostname = new URL(url).hostname; } catch { /* noop */ }
+    const tempId = addBookmark(hostname, url, undefined, undefined, { onDesktop: true });
+    toast(t("paste.fetchingMeta", "正在获取网页信息..."));
+
+    // 异步抓取元数据
+    fetch("/api/scrape", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    })
+      .then((res) => res.ok ? res.json() : Promise.reject())
+      .then((meta) => {
+        useLinkMetaStore.getState().set(url, meta);
+        updateBookmark(tempId, {
+          title: meta.title,
+          summary: meta.summary,
+          tags: meta.tags,
+        });
+        toast(t("paste.bookmarkUpdated", "书签信息已更新"));
+      })
+      .catch(() => {});
+
+    openBookmarkUrl(url);
+    onOpenChange(false);
+  };
+
+  // 是否显示 URL 添加选项
+  const trimmedSearch = search.trim();
+  const isUrlInput = trimmedSearch.length > 0 && looksLikeUrl(trimmedSearch);
 
   // 主题判断
   const isMacTheme = currentTheme === "macosx";
@@ -185,7 +263,7 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
             <Command.Input
               ref={inputRef}
               value={search}
-              onValueChange={setSearch}
+              onValueChange={(v) => { setSearch(v); searchRef.current = v; }}
               placeholder={t("common.search.appsAndBookmarks", "搜索应用和书签...")}
               className="w-full py-3 bg-transparent outline-none"
               style={isMacTheme ? macInputStyle : {
@@ -232,6 +310,26 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
             >
               {t("common.search.noResults", "找不到结果")}
             </Command.Empty>
+
+            {/* URL 检测 → 添加书签 */}
+            {isUrlInput && (
+              <Command.Group heading={t("common.search.actions", "操作")}>
+                <Command.Item
+                  value={`__add_url__ ${trimmedSearch}`}
+                  onSelect={handleAddBookmarkFromUrl}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                    "data-[selected=true]:text-white"
+                  )}
+                  style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                >
+                  <Plus className="w-4 h-4 shrink-0" weight="bold" />
+                  <span className="truncate">
+                    {t("common.search.addBookmark", "添加到收藏")} — {trimmedSearch}
+                  </span>
+                </Command.Item>
+              </Command.Group>
+            )}
 
             {/* 应用组 */}
             <Command.Group heading={t("common.search.appsGroup", "应用")}>
@@ -348,6 +446,47 @@ export function CommandPalette({ isOpen, onOpenChange }: CommandPaletteProps) {
                     />
                   </Command.Item>
                 ))}
+              </Command.Group>
+            )}
+
+            {/* 问问 Kyo 兜底 — 有输入且非 URL 时始终显示 */}
+            {trimmedSearch && !isUrlInput && (
+              <Command.Group heading="Kyo">
+                <Command.Item
+                  value={`__ask_ai__ ${trimmedSearch}`}
+                  onSelect={handleAskAi}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                    "data-[selected=true]:text-white"
+                  )}
+                  style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                >
+                  <img
+                    src="/favicon.svg"
+                    alt=""
+                    className="w-4 h-4 shrink-0 object-contain"
+                  />
+                  <span className="flex-1 truncate">
+                    {t("common.search.askKyo", "问问 Kyo")} → {trimmedSearch}
+                  </span>
+                  <kbd
+                    className="shrink-0"
+                    style={{
+                      padding: "1px 5px",
+                      borderRadius: isMacTheme ? "4px" : "2px",
+                      fontSize: "10px",
+                      backgroundColor: isMacTheme
+                        ? "rgba(0, 0, 0, 0.06)"
+                        : isXpTheme
+                        ? "#D4D0C8"
+                        : "#f0f0f0",
+                      color: isMacTheme ? "rgba(0, 0, 0, 0.4)" : "#666666",
+                      border: isXpTheme ? "1px solid #808080" : undefined,
+                    }}
+                  >
+                    Tab
+                  </kbd>
+                </Command.Item>
               </Command.Group>
             )}
           </Command.List>

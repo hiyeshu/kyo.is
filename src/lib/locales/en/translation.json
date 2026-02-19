@@ -13,7 +13,8 @@
       "bookmarksGroup": "Bookmarks",
       "notesGroup": "Notes",
       "emptyNote": "Empty note",
-      "noResults": "No results found"
+      "noResults": "No results found",
+      "askKyo": "Ask Kyo"
     },
     "loading": {
       "openingAppletStore": "Opening Applet Store...",

@@ -2408,7 +2408,8 @@
       "bookmarksGroup": "书签",
       "notesGroup": "便签",
       "emptyNote": "空便签",
-      "noResults": "找不到书签"
+      "noResults": "找不到书签",
+      "askKyo": "问问 Kyo"
     },
     "aboutThisMac": {
       "builtInMemory": "内建记忆体",

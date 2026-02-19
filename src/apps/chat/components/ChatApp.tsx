@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 react hooks，依赖 ../../base/types 的 AppProps，依赖 useAudioTranscription
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，对接 Dify Chatflow API，管理图片附件+语音转录
+ * [POS]: apps/chat/components 的主组件，对接 Dify Chatflow API，管理图片附件+语音转录+autoSend（从 CommandPalette 等入口自动发送）
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -30,6 +30,7 @@ export function ChatAppComponent({
   onClose,
   isForeground,
   skipInitialSound,
+  initialData,
   instanceId,
   onNavigateNext,
   onNavigatePrevious,
@@ -40,6 +41,7 @@ export function ChatAppComponent({
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   const persistTimeoutRef = useRef<number | null>(null);
   const hasLoadedRef = useRef(false);
+  const autoSendRef = useRef<string | null>(null);
 
   const storageKey = "kyo.chat.session";
   const historyStorageKey = "kyo.chat.history";
@@ -140,6 +142,32 @@ export function ChatAppComponent({
       }
     };
   }, [messages, input, conversationId, pendingImages, storageKey]);
+
+  // -------------------------------------------------------------------------
+  // autoSend：从 CommandPalette 等入口传入的自动发送
+  // -------------------------------------------------------------------------
+
+  useEffect(() => {
+    const data = initialData as { autoSend?: string } | undefined;
+    if (data?.autoSend) {
+      setInput(data.autoSend);
+      autoSendRef.current = data.autoSend;
+    }
+  }, [initialData]);
+
+  // 监听 updateApp 事件（聊天窗口已打开时再次触发）
+  useEffect(() => {
+    const handleUpdate = (e: CustomEvent<{ appId: string; initialData: unknown }>) => {
+      if (e.detail.appId !== "chat") return;
+      const data = e.detail.initialData as { autoSend?: string } | undefined;
+      if (data?.autoSend) {
+        setInput(data.autoSend);
+        autoSendRef.current = data.autoSend;
+      }
+    };
+    window.addEventListener("updateApp", handleUpdate as EventListener);
+    return () => window.removeEventListener("updateApp", handleUpdate as EventListener);
+  }, []);
 
   // -------------------------------------------------------------------------
   // 语音转录
@@ -446,6 +474,14 @@ export function ChatAppComponent({
     },
     [input, isLoading, messages, conversationId, pendingImages, t]
   );
+
+  // autoSend: input 就绪后自动触发发送
+  useEffect(() => {
+    if (autoSendRef.current && input === autoSendRef.current) {
+      autoSendRef.current = null;
+      handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+    }
+  }, [input, handleSubmit]);
 
   // -------------------------------------------------------------------------
   // 停止生成
