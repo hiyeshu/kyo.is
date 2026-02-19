@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 OpenAI Whisper API，环境变量 OPENAI_API_KEY
+ * [INPUT]: 依赖 Dify Audio-to-Text API，环境变量 DIFY_API_KEY
  * [OUTPUT]: 对外提供 POST /api/audio-transcribe 端点，音频转文字
- * [POS]: api/ 的音频转录端点，代理请求到 OpenAI Whisper
+ * [POS]: api/ 的音频转录端点，代理请求到 Dify STT
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -9,7 +9,8 @@ export const config = {
   runtime: "edge",
 };
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const DIFY_API_BASE = "https://api.dify.ai/v1";
+const DIFY_API_KEY = process.env.DIFY_API_KEY;
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 export default async function handler(req: Request) {
@@ -17,9 +18,9 @@ export default async function handler(req: Request) {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  if (!OPENAI_API_KEY) {
+  if (!DIFY_API_KEY) {
     return new Response(
-      JSON.stringify({ error: "OpenAI API key not configured" }),
+      JSON.stringify({ error: "Dify API key not configured" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -49,23 +50,19 @@ export default async function handler(req: Request) {
       );
     }
 
-    // Forward to OpenAI Whisper API
-    const whisperForm = new FormData();
-    whisperForm.append("file", audioFile, audioFile.name || "recording.webm");
-    whisperForm.append("model", "whisper-1");
+    // Forward to Dify Audio-to-Text API
+    const difyForm = new FormData();
+    difyForm.append("file", audioFile, audioFile.name || "recording.webm");
 
-    const response = await fetch(
-      "https://api.openai.com/v1/audio/transcriptions",
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
-        body: whisperForm,
-      }
-    );
+    const response = await fetch(`${DIFY_API_BASE}/audio-to-text`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${DIFY_API_KEY}` },
+      body: difyForm,
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Whisper API error:", response.status, errorText);
+      console.error("Dify STT error:", response.status, errorText);
       return new Response(
         JSON.stringify({ error: "Transcription failed" }),
         { status: response.status, headers: { "Content-Type": "application/json" } }
