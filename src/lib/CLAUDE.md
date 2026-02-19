@@ -4,6 +4,7 @@
 ## 成员清单
 
 audioContext.ts: Web Audio API 上下文管理，单例模式，音频处理、合成、分析
+cloudSync.ts: 云端数据层，Supabase 直连 CRUD + 全量拉取/批量上传，被 stores 消费
 i18n.ts: 国际化配置，i18next 初始化，语言检测，导出 SUPPORTED_LANGUAGES/LANGUAGE_LABELS/changeLanguage
 pusherClient.ts: Pusher 客户端单例，WebSocket 连接管理，实时通信
 reactResources.ts: React 资源管理，i18next React 集成，Suspense 支持

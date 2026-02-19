@@ -14,7 +14,9 @@ InputDialog.tsx: 输入对话框，通用输入弹窗，支持文本输入、验
 LoginDialog.tsx: 登录对话框，用户登录界面，用户名密码输入、注册链接
 LogoutDialog.tsx: 登出对话框，确认登出、清除会话
 ShareItemDialog.tsx: 分享对话框，生成分享链接、二维码、社交分享
-SyncDialog.tsx: 数据同步对话框，登录后本地/云端数据冲突选择弹窗
+
+## 已删除文件
+- SyncDialog.tsx (数据同步弹窗，已改为云端直写模式，无需用户选择)
 
 ## 依赖关系
 - 依赖 @/components/ui/dialog Dialog 组件

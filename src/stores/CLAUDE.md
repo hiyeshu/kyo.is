@@ -6,14 +6,14 @@
 helpers.ts: Zustand 浅比较辅助函数，优化 store 订阅性能，避免不必要的重渲染
 useAppStore.ts: 应用管理核心状态，窗口实例、最近应用、AI 模型选择，存储键 kyo:app-store
 useAudioSettingsStore.ts: 音频设置状态，系统音效开关、音量控制，持久化
-useAuthStore.ts: 认证状态管理，Google OAuth 登录/登出，Supabase Auth 监听，被 App.tsx 门控消费
-useBookmarkStore.ts: 书签管理状态，书签列表、分类、拖拽排序、导入导出、桌面显示标记，持久化
+useAuthStore.ts: 认证状态管理，Google OAuth 登录/登出，Supabase Auth 监听，登录时触发 initialSync
+useBookmarkStore.ts: 书签管理状态，书签列表、分类、拖拽排序、桌面显示标记，持久化，每次增删改同步写云端
 useDisplaySettingsStore.ts: 显示设置状态，显示模式、壁纸、屏保，存储键 kyo:display-settings
 useDockStore.ts: Dock 栏状态，固定应用列表、拖拽排序、显示/隐藏，持久化
 useThemeStore.ts: 主题状态，当前主题，存储键 kyo:theme 和 kyo:theme-sync-wallpaper
 useCustomThemeStore.ts: 自定义主题状态，基于 themeSchema 管理用户自定义主题，编辑器临时状态
-useStickiesStore.ts: 便利贴状态，便签列表、颜色、位置与尺寸，持久化
-useSyncStore.ts: 数据同步状态，登录后本地/云端数据检测、上传/下载选择、同步弹窗控制
+useStickiesStore.ts: 便利贴状态，便签列表、颜色、位置与尺寸，持久化，每次增删改同步写云端
+useSyncStore.ts: 云端数据加载，登录时 initialSync 拉取云端覆盖本地，首次登录推送本地到云端
 useKyoItemStore.ts: KyoItem 统一查询层，不持有数据，从 bookmark + stickies 派生 KyoItem 格式
 useLinkMetaStore.ts: 链接元数据缓存，URL 预览信息（标题、描述、图片）
 

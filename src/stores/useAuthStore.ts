@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 依赖 @/lib/supabase 的客户端，依赖 useSyncStore 的同步检测
+ * [INPUT]: 依赖 @/lib/supabase 的客户端，依赖 useSyncStore 的 initialSync
  * [OUTPUT]: 对外提供 useAuthStore — user / loading / signInWithGoogle / signOut
  * [POS]: stores/ 的认证状态管理，被 App.tsx 和 AppleMenu 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -10,8 +10,8 @@ import { supabase } from "@/lib/supabase";
 import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useSyncStore } from "./useSyncStore";
 
-// 记录是否已经对当前会话执行过同步检测
-const SYNC_CHECKED_KEY = "kyo:sync-checked-session";
+// 记录是否已经对当前会话执行过初始同步
+const SYNC_DONE_KEY = "kyo:sync-done-session";
 
 interface AuthState {
   user: User | null;
@@ -29,32 +29,26 @@ export const useAuthStore = create<AuthState>((set) => ({
     supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       const user = data.session?.user ?? null;
       set({ user, loading: false });
-      
-      // 首次加载时，如果已登录且未检查过同步，触发同步检测
-      if (user) {
-        const checkedSession = sessionStorage.getItem(SYNC_CHECKED_KEY);
-        if (!checkedSession) {
-          sessionStorage.setItem(SYNC_CHECKED_KEY, "true");
-          useSyncStore.getState().checkSyncStatus();
-        }
+
+      // 已登录且本次会话未同步过 → 拉取云端数据
+      if (user && !sessionStorage.getItem(SYNC_DONE_KEY)) {
+        sessionStorage.setItem(SYNC_DONE_KEY, "true");
+        useSyncStore.getState().initialSync();
       }
     });
 
     supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       set({ user: session?.user ?? null, loading: false });
-      
-      // SIGNED_IN 事件：用户刚刚登录（OAuth 重定向回来）
+
       if (event === "SIGNED_IN" && session?.user) {
-        const checkedSession = sessionStorage.getItem(SYNC_CHECKED_KEY);
-        if (!checkedSession) {
-          sessionStorage.setItem(SYNC_CHECKED_KEY, "true");
-          useSyncStore.getState().checkSyncStatus();
+        if (!sessionStorage.getItem(SYNC_DONE_KEY)) {
+          sessionStorage.setItem(SYNC_DONE_KEY, "true");
+          useSyncStore.getState().initialSync();
         }
       }
-      
-      // SIGNED_OUT 事件：清除标记，下次登录重新检测
+
       if (event === "SIGNED_OUT") {
-        sessionStorage.removeItem(SYNC_CHECKED_KEY);
+        sessionStorage.removeItem(SYNC_DONE_KEY);
       }
     });
   },

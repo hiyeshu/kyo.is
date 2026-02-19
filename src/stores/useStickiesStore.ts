@@ -1,12 +1,13 @@
 /**
- * [INPUT]: 依赖 zustand create 与 persist 中间件，依赖浏览器 crypto
+ * [INPUT]: 依赖 zustand create 与 persist 中间件，依赖浏览器 crypto，依赖 @/lib/cloudSync 云端写入
  * [OUTPUT]: 对外提供 useStickiesStore、StickyColor、StickyNote 类型
- * [POS]: stores/ 中便利贴状态中心，被 stickies 应用与聊天工具消费
+ * [POS]: stores/ 中便利贴状态中心，被 stickies 应用与聊天工具消费，每次变更同步写云端
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { cloudUpsertItem, cloudUpdateItem, cloudDeleteItem, cloudDeleteByType } from "@/lib/cloudSync";
 
 export type StickyColor = "yellow" | "blue" | "green" | "pink" | "purple" | "orange";
 
@@ -32,6 +33,28 @@ interface StickiesState {
 }
 
 const DEFAULT_NOTE_SIZE = { width: 220, height: 240 };
+
+// ─── 云端字段映射 ─────────────────────────────────────────────────────────────
+
+function noteToCloud(n: StickyNote) {
+  return {
+    id: n.id,
+    type: "note" as const,
+    text: n.content,
+    color: n.color,
+    tags: n.tags || [],
+    on_desktop: n.onDesktop || false,
+    created_at: new Date(n.createdAt).toISOString(),
+    updated_at: new Date(n.updatedAt).toISOString(),
+  };
+}
+
+const NOTE_FIELD_MAP: Record<string, string> = {
+  content: "text",
+  color: "color",
+  tags: "tags",
+  onDesktop: "on_desktop",
+};
 
 // Stack new notes with slight offset from existing notes
 const getNextPosition = (existingNotes: StickyNote[], anchorId?: string | null) => {
@@ -91,6 +114,7 @@ export const useStickiesStore = create<StickiesState>()(
         set((state) => ({
           notes: [...state.notes, newNote],
         }));
+        cloudUpsertItem(noteToCloud(newNote)).catch(() => {});
         return id;
       },
 
@@ -102,12 +126,23 @@ export const useStickiesStore = create<StickiesState>()(
               : note
           ),
         }));
+        // 映射字段名到云端格式（跳过 position/size，云端不存）
+        const mapped: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(updates)) {
+          const cloudKey = NOTE_FIELD_MAP[k];
+          if (cloudKey) mapped[cloudKey] = v;
+        }
+        if (Object.keys(mapped).length > 0) {
+          mapped.updated_at = new Date().toISOString();
+          cloudUpdateItem(id, mapped).catch(() => {});
+        }
       },
 
       deleteNote: (id) => {
         set((state) => ({
           notes: state.notes.filter((note) => note.id !== id),
         }));
+        cloudDeleteItem(id).catch(() => {});
       },
 
       bringToFront: (id) => {
@@ -125,6 +160,7 @@ export const useStickiesStore = create<StickiesState>()(
 
       clearAllNotes: () => {
         set({ notes: [] });
+        cloudDeleteByType("note").catch(() => {});
       },
     }),
     {

@@ -1,12 +1,13 @@
 /**
- * [INPUT]: zustand + zustand/middleware(persist)
+ * [INPUT]: zustand + zustand/middleware(persist)，依赖 @/lib/cloudSync 云端写入
  * [OUTPUT]: useBookmarkStore, Bookmark, BookmarkFolder, BoardItem, isFolder, isBookmark, openBookmarkUrl
- * [POS]: 书签数据的单一真相源，被 bookmark-board 和 Dock 消费
+ * [POS]: 书签数据的单一真相源，被 bookmark-board 和 Dock 消费，每次变更同步写云端
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { cloudUpsertItem, cloudUpdateItem, cloudDeleteItem } from "@/lib/cloudSync";
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
@@ -118,6 +119,31 @@ if (typeof window !== "undefined") {
 export { getFaviconUrl };
 
 const fav = (domain: string) => getFaviconUrl(domain);
+
+// ─── 云端字段映射 ─────────────────────────────────────────────────────────────
+
+function bookmarkToCloud(b: Bookmark) {
+  return {
+    id: b.id,
+    type: "bookmark" as const,
+    title: b.title,
+    url: b.url,
+    summary: b.summary || null,
+    favicon: b.favicon || null,
+    tags: b.tags || [],
+    on_desktop: b.onDesktop || false,
+    created_at: b.createdAt || new Date().toISOString(),
+  };
+}
+
+const BOOKMARK_FIELD_MAP: Record<string, string> = {
+  title: "title",
+  url: "url",
+  summary: "summary",
+  favicon: "favicon",
+  tags: "tags",
+  onDesktop: "on_desktop",
+};
 
 // ─── iOS PWA Deep Link ──────────────────────────────────────────────────────
 // 热门 App 的 URL scheme 映射，用于 iOS PWA 下直接唤起原生 App
@@ -567,6 +593,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
             ),
           };
         });
+        cloudUpsertItem(bookmarkToCloud(newBookmark)).catch(() => {});
         return newBookmark.id;
       },
 
@@ -583,6 +610,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           onDesktop: options?.onDesktop,
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
+        cloudUpsertItem(bookmarkToCloud(newBookmark)).catch(() => {});
         return newBookmark.id;
       },
 
@@ -597,7 +625,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
         return undefined;
       },
 
-      updateBookmark: (id, updates) =>
+      updateBookmark: (id, updates) => {
         set((s) => ({
           items: s.items.map((item) => {
             if (isBookmark(item) && item.id === id) {
@@ -613,9 +641,19 @@ export const useBookmarkStore = create<BookmarkStore>()(
             }
             return item;
           }),
-        })),
+        }));
+        // 映射字段名到云端格式
+        const mapped: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(updates)) {
+          const cloudKey = BOOKMARK_FIELD_MAP[k];
+          if (cloudKey) mapped[cloudKey] = v;
+        }
+        if (Object.keys(mapped).length > 0) {
+          cloudUpdateItem(id, mapped).catch(() => {});
+        }
+      },
 
-      removeBookmark: (id) =>
+      removeBookmark: (id) => {
         set((s) => ({
           items: s.items
             .filter((item) => !(isBookmark(item) && item.id === id))
@@ -624,7 +662,9 @@ export const useBookmarkStore = create<BookmarkStore>()(
                 ? { ...item, bookmarks: item.bookmarks.filter((b) => b.id !== id) }
                 : item
             ),
-        })),
+        }));
+        cloudDeleteItem(id).catch(() => {});
+      },
 
       addFolder: (title) => {
         const newFolder = createFolder(title);
@@ -639,8 +679,16 @@ export const useBookmarkStore = create<BookmarkStore>()(
           ),
         })),
 
-      removeFolder: (id) =>
-        set((s) => ({ items: s.items.filter((i) => !(isFolder(i) && i.id === id)) })),
+      removeFolder: (id) => {
+        // 删除文件夹内所有书签的云端记录
+        const folder = get().items.find((i) => isFolder(i) && i.id === id) as BookmarkFolder | undefined;
+        if (folder) {
+          for (const b of folder.bookmarks) {
+            cloudDeleteItem(b.id).catch(() => {});
+          }
+        }
+        set((s) => ({ items: s.items.filter((i) => !(isFolder(i) && i.id === id)) }));
+      },
 
       reorderItems: (fromIndex, toIndex) =>
         set((s) => {
