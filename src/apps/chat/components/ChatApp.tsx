@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 react hooks，依赖 ../../base/types 的 AppProps，依赖 useAudioTranscription
+ * [INPUT]: 依赖 react hooks，依赖 ../../base/types 的 AppProps
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，对接 Dify Chatflow API，管理图片附件+语音转录+autoSend（从 CommandPalette 等入口自动发送）
+ * [POS]: apps/chat/components 的主组件，对接 Dify Chatflow API，管理图片附件+autoSend（从 CommandPalette 等入口自动发送）
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -14,7 +14,6 @@ import { ChatInput } from "./ChatInput";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { detectIntent, executeIntent, getContextForIntent } from "../utils/chatTools";
-import { useAudioTranscription } from "@/hooks/useAudioTranscription";
 import {
   preprocessImage,
   validateImageFile,
@@ -168,37 +167,6 @@ export function ChatAppComponent({
     window.addEventListener("updateApp", handleUpdate as EventListener);
     return () => window.removeEventListener("updateApp", handleUpdate as EventListener);
   }, []);
-
-  // -------------------------------------------------------------------------
-  // 语音转录
-  // -------------------------------------------------------------------------
-
-  const {
-    isRecording,
-    frequencies,
-    isSilent,
-    startRecording,
-    stopRecording,
-  } = useAudioTranscription({
-    onTranscriptionComplete: (text) => {
-      if (text.trim()) {
-        setInput((prev) => (prev ? prev + " " + text : text));
-      }
-    },
-    onError: (error) => {
-      console.error("Audio transcription error:", error);
-    },
-    frequencyBands: 48,
-    silenceThreshold: 2000,
-  });
-
-  const handleMicClick = useCallback(() => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }, [isRecording, startRecording, stopRecording]);
 
   // -------------------------------------------------------------------------
   // 图片处理
@@ -707,15 +675,11 @@ export function ChatAppComponent({
             input={input}
             isLoading={isLoading}
             onInputChange={handleInputChange}
-              onSubmit={handleSubmit}
+            onSubmit={handleSubmit}
             onStop={handleStop}
             pendingImages={pendingImages}
             onAddImages={handleAddImages}
             onRemoveImage={handleRemoveImage}
-            isRecording={isRecording}
-            frequencies={frequencies}
-            isSilent={isSilent}
-            onMicClick={handleMicClick}
           />
         </div>
       </div>
