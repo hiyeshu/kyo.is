@@ -102,7 +102,7 @@ interface LinkMetaApiResponse {
 }
 
 async function fetchFromLinkMeta(targetUrl: string): Promise<LinkMetaApiResponse> {
-  const apiUrl = `https://api.linkmeta.io/v1?url=${encodeURIComponent(targetUrl)}`;
+  const apiUrl = `https://linkmeta.dev/api/v1/extract?url=${encodeURIComponent(targetUrl)}`;
   const res = await fetch(apiUrl, {
     signal: AbortSignal.timeout(8000),
   });
@@ -115,7 +115,9 @@ async function fetchFromLinkMeta(targetUrl: string): Promise<LinkMetaApiResponse
     throw new Error(`LinkMeta API error: ${res.status}`);
   }
 
-  return res.json();
+  const json = await res.json();
+  // LinkMeta 响应格式: { status: "success", data: { title, description, image, favicon, ... } }
+  return json.data || {};
 }
 
 // ─── AI 摘要生成（可选，Dify 不可用时降级） ──────────────────────────────────
