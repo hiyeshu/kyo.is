@@ -6,6 +6,7 @@
 audioContext.ts: Web Audio API 上下文管理，单例模式，音频处理、合成、分析
 cloudSync.ts: 云端数据层，Supabase 直连 CRUD + 全量拉取/批量上传，被 stores 消费
 i18n.ts: 国际化配置，i18next 初始化，语言检测，导出 SUPPORTED_LANGUAGES/LANGUAGE_LABELS/changeLanguage
+linkMeta.ts: 链接元数据获取，三层缓存（本地 store → Supabase → LinkMeta API），被 usePasteHandler 和 AddWebsiteDialog 消费
 pusherClient.ts: Pusher 客户端单例，WebSocket 连接管理，实时通信
 reactResources.ts: React 资源管理，i18next React 集成，Suspense 支持
 supabase.ts: Supabase 客户端单例，浏览器端初始化，被 useAuthStore 和 API 层消费

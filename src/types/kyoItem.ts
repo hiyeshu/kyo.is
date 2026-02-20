@@ -12,6 +12,9 @@ export interface LinkMeta {
   title: string;
   description: string;
   ogImage?: string;
+  faviconUrl?: string;    // LinkMeta API 返回的 favicon
+  siteName?: string;      // 网站名称（og:site_name）
+  themeColor?: string;    // 主题色
   summary: string;
   tags: string[];
   fetchedAt: number;

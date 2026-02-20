@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 依赖 useBookmarkStore, useStickiesStore, useLinkMetaStore, sonner toast
+ * [INPUT]: 依赖 useBookmarkStore, useStickiesStore, useLinkMetaStore, @/lib/linkMeta, sonner toast
  * [OUTPUT]: usePasteHandler hook — 全局 ⌘V 粘贴监听
  * [POS]: hooks/ 的全局粘贴处理器，URL→书签，文本→便签
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useBookmarkStore } from "@/stores/useBookmarkStore";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
+import { fetchLinkMeta } from "@/lib/linkMeta";
 import { useTranslation } from "react-i18next";
 
 const URL_REGEX = /^https?:\/\/\S+$/i;
@@ -23,16 +24,6 @@ function isInputFocused(): boolean {
     tag === "textarea" ||
     (el as HTMLElement).isContentEditable
   );
-}
-
-async function fetchLinkMeta(url: string) {
-  const res = await fetch("/api/scrape", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
-  });
-  if (!res.ok) throw new Error("Scrape failed");
-  return res.json();
 }
 
 export function usePasteHandler() {
@@ -89,11 +80,17 @@ function handleUrlPaste(url: string, t: (key: string, fallback?: string) => stri
   fetchLinkMeta(url)
     .then((meta) => {
       linkMetaStore.set(url, meta);
-      useBookmarkStore.getState().updateBookmark(tempId, {
+      const updates: Record<string, unknown> = {
         title: meta.title,
         summary: meta.summary,
         tags: meta.tags,
-      });
+      };
+      // 仅在用户未自定义图标时，用 LinkMeta favicon 覆盖
+      const bookmark = useBookmarkStore.getState().getBookmarkById(tempId);
+      if (meta.faviconUrl && bookmark && !bookmark.icon) {
+        updates.favicon = meta.faviconUrl;
+      }
+      useBookmarkStore.getState().updateBookmark(tempId, updates);
       toast(t("paste.bookmarkUpdated", "书签信息已更新"));
     })
     .catch(() => {

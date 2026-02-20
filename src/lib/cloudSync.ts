@@ -19,19 +19,22 @@ async function getUserId(): Promise<string | null> {
 export async function cloudUpsertItem(item: Record<string, unknown>) {
   const userId = await getUserId();
   if (!userId) return;
-  await supabase.from("kyo_items").upsert({ ...item, user_id: userId });
+  const { error } = await supabase.from("kyo_items").upsert({ ...item, user_id: userId });
+  if (error) console.error("[cloudSync] upsert failed:", error.message, item);
 }
 
 export async function cloudUpdateItem(id: string, updates: Record<string, unknown>) {
   const userId = await getUserId();
   if (!userId) return;
-  await supabase.from("kyo_items").update(updates).eq("id", id);
+  const { error } = await supabase.from("kyo_items").update(updates).eq("id", id);
+  if (error) console.error("[cloudSync] update failed:", error.message, { id, updates });
 }
 
 export async function cloudDeleteItem(id: string) {
   const userId = await getUserId();
   if (!userId) return;
-  await supabase.from("kyo_items").delete().eq("id", id);
+  const { error } = await supabase.from("kyo_items").delete().eq("id", id);
+  if (error) console.error("[cloudSync] delete failed:", error.message, { id });
 }
 
 export async function cloudDeleteByType(type: "bookmark" | "note") {
@@ -83,12 +86,17 @@ export async function cloudFetchAll(): Promise<CloudFetchResult | null> {
     .select("*")
     .order("created_at", { ascending: true });
 
-  if (error || !data) return null;
+  if (error || !data) {
+    console.error("[cloudSync] fetchAll failed:", error?.message);
+    return null;
+  }
 
-  return {
+  const result = {
     bookmarks: data.filter((i: { type: string }) => i.type === "bookmark"),
     notes: data.filter((i: { type: string }) => i.type === "note"),
   };
+  console.log("[cloudSync] fetchAll:", { bookmarks: result.bookmarks.length, notes: result.notes.length });
+  return result;
 }
 
 // ─── 批量上传（首次登录用） ─────────────────────────────────────────────────
@@ -98,5 +106,6 @@ export async function cloudBatchInsert(items: Record<string, unknown>[]) {
   if (!userId || items.length === 0) return;
 
   const withUser = items.map((item) => ({ ...item, user_id: userId }));
-  await supabase.from("kyo_items").insert(withUser);
+  const { error } = await supabase.from("kyo_items").insert(withUser);
+  if (error) console.error("[cloudSync] batchInsert failed:", error.message, { count: items.length });
 }

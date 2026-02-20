@@ -62,12 +62,14 @@ export const useSyncStore = create<SyncState>((set) => ({
     try {
       const result = await cloudFetchAll();
       if (!result) {
+        console.warn("[sync] cloudFetchAll returned null (not logged in?)");
         set({ status: "idle" });
         return;
       }
 
       const { bookmarks: cloudBookmarks, notes: cloudNotes } = result;
       const hasCloud = cloudBookmarks.length > 0 || cloudNotes.length > 0;
+      console.log("[sync] cloud data:", { bookmarks: cloudBookmarks.length, notes: cloudNotes.length, hasCloud });
 
       if (hasCloud) {
         // 云端有数据 → 覆盖本地
@@ -100,6 +102,7 @@ export const useSyncStore = create<SyncState>((set) => ({
         const localBookmarks = getLocalBookmarks();
         const localNotes = getLocalNotes();
         const hasLocal = localBookmarks.length > 0 || localNotes.length > 0;
+        console.log("[sync] cloud empty, local data:", { bookmarks: localBookmarks.length, notes: localNotes.length, hasLocal });
 
         if (hasLocal) {
           await cloudDeleteAll();

@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 依赖 @/components/ui/dialog, @/stores/useDockStore, @/stores/useBookmarkStore
+ * [INPUT]: 依赖 @/components/ui/dialog, @/stores/useDockStore, @/stores/useBookmarkStore, @/lib/linkMeta
  * [OUTPUT]: 对外提供 AddWebsiteDialog 组件，用于添加网站到书签并固定到 Dock
  * [POS]: components/dialogs/ 的网站添加对话框，被 Dock 组件调用
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useDockStore } from "@/stores/useDockStore";
 import { useBookmarkStore, getFaviconUrl as getBookmarkFaviconUrl } from "@/stores/useBookmarkStore";
+import { fetchLinkMeta } from "@/lib/linkMeta";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
@@ -91,18 +92,27 @@ export function AddWebsiteDialog({
 
       // 2. macOS 主题：同时添加到 Dock
       if (isMacTheme) {
-        const success = addDockItem({
+        addDockItem({
           type: "bookmark",
           id: bookmarkId,
         });
-
-        if (!success) {
-          // 书签已添加，但 Dock 里已存在（不是错误）
-          setUrl("");
-          onOpenChange(false);
-          return;
-        }
       }
+
+      // 3. 后台异步获取元数据，更新 title 和 favicon
+      fetchLinkMeta(normalizedUrl)
+        .then((meta) => {
+          const updates: Record<string, unknown> = {};
+          if (meta.title) updates.title = meta.title;
+          if (meta.faviconUrl) updates.favicon = meta.faviconUrl;
+          if (meta.summary) updates.summary = meta.summary;
+          if (meta.tags?.length) updates.tags = meta.tags;
+          if (Object.keys(updates).length > 0) {
+            useBookmarkStore.getState().updateBookmark(bookmarkId, updates);
+          }
+        })
+        .catch(() => {
+          // 元数据获取失败不影响书签创建
+        });
 
       // 成功
       setUrl("");
