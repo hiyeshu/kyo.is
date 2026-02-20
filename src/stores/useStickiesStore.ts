@@ -56,6 +56,24 @@ const NOTE_FIELD_MAP: Record<string, string> = {
   onDesktop: "on_desktop",
 };
 
+// ─── 内容同步 debounce（500ms，避免每次按键都写云端） ─────────────────────────
+
+const contentSyncTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function debouncedContentSync(id: string) {
+  const existing = contentSyncTimers.get(id);
+  if (existing) clearTimeout(existing);
+  contentSyncTimers.set(id, setTimeout(() => {
+    contentSyncTimers.delete(id);
+    // 取最新的 note 做 upsert（而非 update），确保行不存在时也能写入
+    const note = useStickiesStore.getState().notes.find((n) => n.id === id);
+    if (!note) return;
+    cloudUpsertItem(noteToCloud(note)).catch((e) =>
+      console.error("[stickies] content sync failed:", e)
+    );
+  }, 500));
+}
+
 // Stack new notes with slight offset from existing notes
 const getNextPosition = (existingNotes: StickyNote[], anchorId?: string | null) => {
   const baseX = 100;
@@ -114,7 +132,9 @@ export const useStickiesStore = create<StickiesState>()(
         set((state) => ({
           notes: [...state.notes, newNote],
         }));
-        cloudUpsertItem(noteToCloud(newNote)).catch(() => {});
+        cloudUpsertItem(noteToCloud(newNote)).catch((e) =>
+          console.error("[stickies] upsert failed:", e)
+        );
         return id;
       },
 
@@ -134,7 +154,14 @@ export const useStickiesStore = create<StickiesState>()(
         }
         if (Object.keys(mapped).length > 0) {
           mapped.updated_at = new Date().toISOString();
-          cloudUpdateItem(id, mapped).catch(() => {});
+          // 内容更新用 debounce（避免每次按键都写），其他立即同步
+          if ("text" in mapped) {
+            debouncedContentSync(id);
+          } else {
+            cloudUpdateItem(id, mapped).catch((e) =>
+              console.error("[stickies] sync failed:", e)
+            );
+          }
         }
       },
 
@@ -142,7 +169,9 @@ export const useStickiesStore = create<StickiesState>()(
         set((state) => ({
           notes: state.notes.filter((note) => note.id !== id),
         }));
-        cloudDeleteItem(id).catch(() => {});
+        cloudDeleteItem(id).catch((e) =>
+          console.error("[stickies] delete failed:", e)
+        );
       },
 
       bringToFront: (id) => {
@@ -160,7 +189,9 @@ export const useStickiesStore = create<StickiesState>()(
 
       clearAllNotes: () => {
         set({ notes: [] });
-        cloudDeleteByType("note").catch(() => {});
+        cloudDeleteByType("note").catch((e) =>
+          console.error("[stickies] clearAll failed:", e)
+        );
       },
     }),
     {
