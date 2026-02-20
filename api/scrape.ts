@@ -6,6 +6,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { waitUntil } from "@vercel/functions";
 
 export const config = {
   runtime: "edge",
@@ -59,8 +60,8 @@ async function readCache(targetUrl: string): Promise<ScrapeResult | null> {
       faviconUrl: data.favicon_url || undefined,
       siteName: data.site_name || undefined,
       themeColor: data.theme_color || undefined,
-      summary: data.description?.slice(0, 200) || "",
-      tags: [],
+      summary: data.summary || data.description?.slice(0, 200) || "",
+      tags: data.tags || [],
       fetchedAt: new Date(data.fetched_at).getTime(),
     };
   } catch {
@@ -70,21 +71,12 @@ async function readCache(targetUrl: string): Promise<ScrapeResult | null> {
 
 // ─── Supabase 缓存：写 ──────────────────────────────────────────────────────
 
-async function writeCache(result: ScrapeResult): Promise<void> {
+async function writeCache(data: Record<string, unknown>): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;
 
   try {
-    await sb.from("link_meta").upsert({
-      url: result.url,
-      title: result.title,
-      description: result.description,
-      og_image: result.ogImage || null,
-      favicon_url: result.faviconUrl || null,
-      site_name: result.siteName || null,
-      theme_color: result.themeColor || null,
-      fetched_at: new Date().toISOString(),
-    });
+    await sb.from("link_meta").upsert(data);
   } catch {
     // 写缓存失败不影响主流程
   }
@@ -202,14 +194,12 @@ export default async function handler(req: Request) {
       }
     }
 
-    // 2. 调 LinkMeta API
+    // 2. 调 LinkMeta API（同步，快）
     const meta = await fetchFromLinkMeta(url);
     const title = meta.title || new URL(url).hostname;
     const description = meta.description || "";
 
-    // 3. AI 生成摘要和标签
-    const { summary, tags } = await generateAiMeta(title, description, url);
-
+    // 3. 立刻返回 LinkMeta 结果，summary 用 description 截断兜底
     const result: ScrapeResult = {
       url,
       title,
@@ -218,13 +208,32 @@ export default async function handler(req: Request) {
       faviconUrl: meta.favicon || undefined,
       siteName: meta.siteName || undefined,
       themeColor: meta.themeColor || undefined,
-      summary,
-      tags,
+      summary: description.slice(0, 200),
+      tags: [],
       fetchedAt: Date.now(),
     };
 
-    // 4. 写入缓存（不阻塞响应）
-    writeCache(result);
+    // 4. 写入 LinkMeta 基础缓存
+    const cacheRow: Record<string, unknown> = {
+      url,
+      title,
+      description,
+      og_image: meta.image || null,
+      favicon_url: meta.favicon || null,
+      site_name: meta.siteName || null,
+      theme_color: meta.themeColor || null,
+      fetched_at: new Date().toISOString(),
+    };
+    writeCache(cacheRow);
+
+    // 5. Dify AI 摘要异步后台执行，完成后更新缓存
+    waitUntil(
+      generateAiMeta(title, description, url).then(({ summary, tags }) => {
+        if (summary || tags.length > 0) {
+          writeCache({ url, summary, tags });
+        }
+      })
+    );
 
     return new Response(JSON.stringify(result), {
       headers: { "Content-Type": "application/json" },
