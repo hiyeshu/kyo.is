@@ -87,7 +87,6 @@ export function ChatInput({
   const isWinTheme = currentTheme === "xp" || currentTheme === "win98";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasContent = input.trim() !== "" || pendingImages.length > 0;
-  const isActionDisabled = isLoading;
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     const items = e.clipboardData?.items;
@@ -208,12 +207,12 @@ export function ChatInput({
             <Button
               type={isLoading ? "button" : "submit"}
               onClick={isLoading ? onStop : undefined}
-              disabled={isActionDisabled || (!isLoading && !hasContent)}
+              disabled={!isLoading && !hasContent}
               className={`p-0 flex items-center justify-center ${
                 isMacTheme
                   ? "text-xs w-9 h-9 rounded-full relative overflow-hidden transition-transform hover:scale-105"
                   : "w-9 h-9"
-              } ${isActionDisabled || (!isLoading && !hasContent) ? "opacity-50 cursor-not-allowed" : ""}`}
+              } ${!isLoading && !hasContent ? "opacity-50 cursor-not-allowed" : ""}`}
               style={
                 isMacTheme
                   ? {
