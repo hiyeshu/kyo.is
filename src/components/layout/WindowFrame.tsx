@@ -987,6 +987,7 @@ export function WindowFrame({
             // Disable pointer events on content in expose mode
             exposeMode && "pointer-events-none"
           )}
+          onContextMenu={(e) => e.stopPropagation()}
           onClick={() => {
             if (!isForeground) {
               if (instanceId) {
