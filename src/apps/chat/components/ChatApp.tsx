@@ -38,15 +38,10 @@ export function ChatAppComponent({
   const currentTheme = useThemeStore((s) => s.current);
   const isMacTheme = currentTheme === "macosx";
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  const persistTimeoutRef = useRef<number | null>(null);
-  const hasLoadedRef = useRef(false);
   const autoSendRef = useRef<string | null>(null);
 
-  const storageKey = "kyo.chat.session";
-  const historyStorageKey = "kyo.chat.history";
-
   // -------------------------------------------------------------------------
-  // 状态管理
+  // 状态管理（session 级别，关窗即清）
   // -------------------------------------------------------------------------
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -56,91 +51,14 @@ export function ChatAppComponent({
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
   const [pendingImages, setPendingImages] = useState<ImageAttachment[]>([]);
-  const [historySessions, setHistorySessions] = useState<
-    Array<{
-      id: string;
-      createdAt: number;
-      messages: Message[];
-    }>
-  >([]);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
-  // -------------------------------------------------------------------------
-  // 会话持久化
-  // -------------------------------------------------------------------------
-
+  // 清理旧版本遗留的 localStorage
   useEffect(() => {
-    if (hasLoadedRef.current) return;
-    hasLoadedRef.current = true;
     try {
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as {
-        messages?: Message[];
-        input?: string;
-        conversationId?: string | null;
-        pendingImages?: ImageAttachment[];
-      };
-
-      if (parsed.messages && Array.isArray(parsed.messages)) {
-        setMessages(parsed.messages);
-      }
-      if (typeof parsed.input === "string") {
-        setInput(parsed.input);
-      }
-      if (typeof parsed.conversationId !== "undefined") {
-        setConversationId(parsed.conversationId ?? null);
-      }
-      if (parsed.pendingImages && Array.isArray(parsed.pendingImages)) {
-        setPendingImages(parsed.pendingImages);
-      }
-    } catch {
-      // ignore invalid storage
-    }
-
-    try {
-      const rawHistory = localStorage.getItem(historyStorageKey);
-      if (!rawHistory) return;
-      const parsedHistory = JSON.parse(rawHistory) as Array<{
-        id: string;
-        createdAt: number;
-        messages: Message[];
-      }>;
-      if (Array.isArray(parsedHistory)) {
-        setHistorySessions(parsedHistory);
-      }
-    } catch {
-      // ignore invalid history storage
-    }
-  }, [historyStorageKey, storageKey]);
-
-  useEffect(() => {
-    if (!hasLoadedRef.current) return;
-    if (persistTimeoutRef.current) {
-      window.clearTimeout(persistTimeoutRef.current);
-    }
-
-    persistTimeoutRef.current = window.setTimeout(() => {
-      const payload = {
-        messages,
-        input,
-        conversationId,
-        pendingImages,
-      };
-
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(payload));
-      } catch {
-        // ignore quota errors
-      }
-    }, 250);
-
-    return () => {
-      if (persistTimeoutRef.current) {
-        window.clearTimeout(persistTimeoutRef.current);
-      }
-    };
-  }, [messages, input, conversationId, pendingImages, storageKey]);
+      localStorage.removeItem("kyo.chat.session");
+      localStorage.removeItem("kyo.chat.history");
+    } catch { /* ignore */ }
+  }, []);
 
   // -------------------------------------------------------------------------
   // autoSend：从 CommandPalette 等入口传入的自动发送
@@ -201,47 +119,10 @@ export function ChatAppComponent({
   // -------------------------------------------------------------------------
 
   const handleClear = useCallback(() => {
-    if (messages.length > 0) {
-      const entry = {
-        id: `history-${Date.now()}`,
-        createdAt: Date.now(),
-        messages,
-      };
-      setHistorySessions((prev) => {
-        const next = [entry, ...prev].slice(0, 50);
-        try {
-          localStorage.setItem(historyStorageKey, JSON.stringify(next));
-        } catch {
-          // ignore storage errors
-        }
-        return next;
-      });
-    }
-
     setMessages([]);
     setConversationId(null);
     setPendingImages([]);
-    try {
-      localStorage.removeItem(storageKey);
-    } catch {
-      // ignore storage errors
-    }
-  }, [historyStorageKey, messages, storageKey]);
-
-  const handleToggleHistory = useCallback(() => {
-    setIsHistoryOpen((prev) => !prev);
   }, []);
-
-  const handleViewHistory = useCallback(
-    (entryId: string) => {
-      const entry = historySessions.find((item) => item.id === entryId);
-      if (!entry) return;
-      setMessages(entry.messages);
-      setIsLoading(false);
-      setIsHistoryOpen(false);
-    },
-    [historySessions]
-  );
 
   // -------------------------------------------------------------------------
   // 消息发送处理
@@ -470,32 +351,6 @@ export function ChatAppComponent({
     setInput(e.target.value);
   };
 
-  const groupedHistory = historySessions.reduce(
-    (acc, entry) => {
-      const entryDate = new Date(entry.createdAt);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      let dateLabel: string;
-      if (entryDate.toDateString() === today.toDateString()) {
-        dateLabel = t("apps.chat.historyToday", "今天");
-      } else if (entryDate.toDateString() === yesterday.toDateString()) {
-        dateLabel = t("apps.chat.historyYesterday", "昨天");
-      } else {
-        dateLabel = entryDate.toLocaleDateString(i18n.language, {
-          month: "short",
-          day: "numeric",
-        });
-      }
-
-      if (!acc[dateLabel]) acc[dateLabel] = [];
-      acc[dateLabel].push(entry);
-      return acc;
-    },
-    {} as Record<string, Array<{ id: string; createdAt: number; messages: Message[] }>>
-  );
-
   // -------------------------------------------------------------------------
   // 渲染
   // -------------------------------------------------------------------------
@@ -514,7 +369,7 @@ export function ChatAppComponent({
       onNavigatePrevious={onNavigatePrevious}
     >
       <div className="relative flex flex-col h-full w-full bg-white/85">
-        {/* 头部栏 - ryOS 风格 */}
+        {/* 头部栏 */}
         <div
           className={`sticky top-0 z-10 flex items-center justify-between px-2 py-1 border-b ${
             isMacTheme ? "" : "bg-neutral-200/90 backdrop-blur-lg"
@@ -531,119 +386,19 @@ export function ChatAppComponent({
               : undefined),
           }}
         >
-          {/* 左侧：日期按钮 */}
-          <div className="relative flex items-center gap-1 px-2">
-            <button
-              type="button"
-              onClick={handleToggleHistory}
-              className={`flex items-center gap-1.5 cursor-pointer select-none ${
-                isMacTheme
-                  ? "px-2 py-0.5 rounded hover:bg-black/5 active:bg-black/10"
-                  : isXpTheme
-                    ? "px-2 py-0.5 border border-[#003c74] rounded bg-gradient-to-b from-[#fff] to-[#e3dcd4] shadow-[inset_0_1px_0_#fff,0_1px_2px_rgba(0,0,0,0.2)] hover:from-[#fefefe] hover:to-[#d6cfc7] active:from-[#e3dcd4] active:to-[#fff] active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]"
-                    : "px-1.5 py-0.5 border-t border-l border-white border-r-[#808080] border-b-[#808080] bg-[#c0c0c0] shadow-[inset_-1px_-1px_0_#404040,inset_1px_1px_0_#dfdfdf] active:shadow-[inset_1px_1px_0_#404040,inset_-1px_-1px_0_#dfdfdf]"
+          {/* 左侧：日期 */}
+          <div className="flex items-center px-2">
+            <span
+              className={`font-geneva-12 text-[11px] select-none ${
+                isMacTheme ? "text-neutral-600" : isXpTheme ? "text-[#003c74]" : "text-black"
               }`}
-              aria-label={t("apps.chat.history", "历史")}
             >
-              <span
-                className={`font-geneva-12 text-[11px] ${
-                  isMacTheme ? "text-neutral-600" : isXpTheme ? "text-[#003c74]" : "text-black"
-                }`}
-              >
-                {new Date().toLocaleDateString(i18n.language, {
-                  month: "short",
-                  day: "numeric",
-                  weekday: "short",
-                })}
-              </span>
-              <span className="inline-flex items-center">
-                <svg
-                  width="8"
-                  height="5"
-                  viewBox="0 0 8 5"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M0.5 0.5l3.5 4 3.5-4"
-                    fill="none"
-                    stroke={isMacTheme ? "#666" : isXpTheme ? "#003c74" : "#000"}
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            </button>
-
-            {isHistoryOpen && (
-              <div
-                className={`absolute left-0 top-full mt-1 w-64 z-20 ${
-                  isMacTheme
-                    ? "rounded-lg border border-black/20 bg-white/95 backdrop-blur-xl shadow-lg"
-                    : isXpTheme
-                      ? "rounded border border-[#919b9c] bg-white shadow-md"
-                      : "border border-black bg-white shadow-[2px_2px_0_0_#000]"
-                }`}
-              >
-                <div className="max-h-52 overflow-y-auto">
-                  {historySessions.length === 0 ? (
-                    <div className="px-3 py-4 text-[11px] text-neutral-500 font-geneva-12 text-center">
-                      {t("apps.chat.historyEmpty", "暂无历史")}
-                    </div>
-                  ) : (
-                    Object.entries(groupedHistory).map(([dateLabel, entries]) => (
-                      <div
-                        key={dateLabel}
-                        className={`${
-                          isMacTheme
-                            ? "border-b border-black/10 last:border-b-0"
-                            : isXpTheme
-                              ? "border-b border-[#d4d0c8] last:border-b-0"
-                              : "border-b border-neutral-300 last:border-b-0"
-                        }`}
-                      >
-                        <div
-                          className={`px-3 py-1.5 text-[10px] font-geneva-12 ${
-                            isMacTheme
-                              ? "text-neutral-400 uppercase tracking-wide"
-                              : "text-neutral-500"
-                          }`}
-                        >
-                          {dateLabel}
-                        </div>
-                        {entries.map((entry) => {
-                          const firstText =
-                            entry.messages.find((msg) => msg.content.trim())?.content ??
-                            t("apps.chat.historyCurrent", "空对话");
-                          return (
-                            <button
-                              key={entry.id}
-                              type="button"
-                              onClick={() => handleViewHistory(entry.id)}
-                              className={`w-full text-left px-3 py-2 text-[11px] font-geneva-12 transition-colors ${
-                                isMacTheme
-                                  ? "hover:bg-blue-500/10 active:bg-blue-500/20"
-                                  : isXpTheme
-                                    ? "hover:bg-[#316ac5] hover:text-white"
-                                    : "hover:bg-neutral-200"
-                              }`}
-                            >
-                              <div
-                                className={`truncate ${
-                                  isMacTheme ? "text-neutral-700" : "text-neutral-600"
-                                }`}
-                              >
-                                {firstText}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+              {new Date().toLocaleDateString(i18n.language, {
+                month: "short",
+                day: "numeric",
+                weekday: "short",
+              })}
+            </span>
           </div>
 
           {/* 右侧：清除按钮 */}
