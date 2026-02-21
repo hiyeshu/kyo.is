@@ -389,6 +389,9 @@ export function StickyNote({
       <textarea
         value={note.content}
         onChange={handleContentChange}
+        onBlur={() => {
+          if (note.content.trim() === "") onDelete();
+        }}
         placeholder={t("apps.stickies.placeholder", "Write a note...")}
         className={cn(
           "flex-1 px-2 pt-1 pb-2 resize-none outline-none bg-transparent font-geneva-12",
