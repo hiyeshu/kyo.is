@@ -12,6 +12,144 @@ import { useThemeStore } from "@/stores/useThemeStore";
 import { useTranslation } from "react-i18next";
 
 /* ═══════════════════════════════════════════════════════════════════════════════
+ * 点阵波形 Canvas — 播放时格栅的点通过颜色深浅形成流动波形
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+function DotMatrixCanvas({
+  frequencies,
+  isPlaying,
+  dotColor,
+  accentColor,
+  bgColor,
+}: {
+  frequencies: number[];
+  isPlaying: boolean;
+  dotColor: string;
+  accentColor: string;
+  bgColor: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animRef = useRef<number>(0);
+  const freqRef = useRef(frequencies);
+  const smoothedRef = useRef<number[]>([]);
+  const timeRef = useRef(0);
+
+  freqRef.current = frequencies;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const GAP = 6;
+    const DOT_R = 1.5;
+    const ACCENT_R = 1.8;
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(container);
+
+    const draw = () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      const cols = Math.floor(w / GAP);
+      const rows = Math.floor(h / GAP);
+      const freq = freqRef.current;
+
+      // 平滑频谱
+      if (smoothedRef.current.length !== cols) {
+        smoothedRef.current = new Array(cols).fill(0);
+      }
+
+      ctx.clearRect(0, 0, w, h);
+
+      // 背景填充
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, w, h);
+
+      timeRef.current += 0.012;
+
+      for (let col = 0; col < cols; col++) {
+        // 将列映射到频谱 band
+        const freqIdx = Math.floor((col / cols) * freq.length);
+        const freqVal = freq[freqIdx] || 0;
+
+        // 加入微小的正弦波动，让静态时也有呼吸感
+        const waveOffset = isPlaying
+          ? Math.sin(timeRef.current * 1.2 + col * 0.15) * 0.08
+          : Math.sin(timeRef.current * 0.3 + col * 0.1) * 0.02;
+
+        // 目标波高（从底部往上）
+        const targetHeight = isPlaying
+          ? Math.min(0.95, freqVal * 0.8 + waveOffset + 0.05)
+          : 0;
+
+        // 平滑过渡（lerp 系数越小越丝滑）
+        smoothedRef.current[col] += (targetHeight - smoothedRef.current[col]) * 0.06;
+        const waveHeight = smoothedRef.current[col];
+
+        // 波高对应的行数（从底部算起）
+        const waveRows = Math.floor(waveHeight * rows);
+
+        for (let row = 0; row < rows; row++) {
+          const x = col * GAP + GAP / 2;
+          const y = row * GAP + GAP / 2;
+          const rowFromBottom = rows - 1 - row;
+          const inWave = rowFromBottom < waveRows;
+
+          if (inWave && isPlaying) {
+            // 波形区域 — 渐变: 底部最亮，顶部边缘渐暗
+            const intensity = 1 - (rowFromBottom / Math.max(waveRows, 1)) * 0.5;
+            ctx.globalAlpha = 0.4 + intensity * 0.6;
+            ctx.fillStyle = accentColor;
+            ctx.beginPath();
+            ctx.arc(x, y, ACCENT_R, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            // 普通点阵
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = dotColor;
+            ctx.beginPath();
+            ctx.arc(x, y, DOT_R, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      ctx.globalAlpha = 1;
+      animRef.current = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      ro.disconnect();
+    };
+  }, [dotColor, accentColor, bgColor, isPlaying]);
+
+  return (
+    <div ref={containerRef} className="absolute inset-0">
+      <canvas ref={canvasRef} className="absolute inset-0" />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
  * 三段式布局：格栅 + 显示屏 + 控制面板
  * 致敬 Braun SK4、Sony TR-610、Tivoli Audio
  * ═══════════════════════════════════════════════════════════════════════════════ */
@@ -85,37 +223,37 @@ const THEMES: Record<string, RadioTheme> = {
    * macOS Aqua: Braun SK4 风格 - 迪特·拉姆斯
    * ───────────────────────────────────────────────────────────────────────────── */
   macosx: {
-    body: "#F5F5F0",
-    panel: "#E8E4DC",
-    panelBorder: "#D4D0C8",
-    grilleBg: "#3D3D3D",
-    grilleDark: "#2D2D2D",
-    grilleLight: "#4D4D4D",
-    screenBg: "#1C1C1C",
+    body: "#EAE8E3",
+    panel: "#EBE8DF",
+    panelBorder: "#D6D3C8",
+    grilleBg: "#EBE8DF",
+    grilleDark: "rgba(0,0,0,0.4)",
+    grilleLight: "transparent",
+    screenBg: "#161618",
     screenBorder: "#0C0C0C",
-    buttonBg: "#F5F5F0",
-    buttonActiveBg: "#2D2D2D",
-    buttonBorder: "#D4D0C8",
-    buttonText: "#2D2D2D",
-    buttonActiveText: "#F5F5F0",
-    buttonShadow: "0 1px 2px rgba(0,0,0,0.1)",
-    buttonActiveShadow: "inset 0 1px 3px rgba(0,0,0,0.3)",
-    dialBase: "linear-gradient(145deg, #FFFFFF, #A8A4A0)",
-    dialBody: "linear-gradient(145deg, #C8C4BC, #E8E4DC)",
-    dialIndicator: "#E85D04",
-    dialShadow: "0 2px 4px rgba(0,0,0,0.2)",
+    buttonBg: "#FDFDFD",
+    buttonActiveBg: "#2B2A28",
+    buttonBorder: "#E2DED5",
+    buttonText: "#888888",
+    buttonActiveText: "#FF5000",
+    buttonShadow: "0 4px 6px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.8), inset 0 -2px 4px rgba(0,0,0,0.1)",
+    buttonActiveShadow: "inset 0 4px 8px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.4)",
+    dialBase: "linear-gradient(135deg, #FF6B22, #E64800)",
+    dialBody: "linear-gradient(135deg, #FF6B22, #E64800)",
+    dialIndicator: "#FFFFFF",
+    dialShadow: "0 8px 16px rgba(255,80,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 4px rgba(0,0,0,0.2)",
     textPrimary: "#2D2D2D",
     textSecondary: "#6B6B6B",
     textMuted: "#9A9A9A",
-    displayText: "#E85D04",
-    displayTextDim: "rgba(232, 93, 4, 0.25)",
-    displayGlow: "0 0 8px rgba(232, 93, 4, 0.4)",
-    indicator: "#E85D04",
+    displayText: "#FF5000",
+    displayTextDim: "rgba(255, 80, 0, 0.2)",
+    displayGlow: "0 0 8px rgba(255, 80, 0, 0.4)",
+    indicator: "#52C41A",
     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-    fontWeight: 300,
+    fontWeight: 500,
     displayFont: "'Helvetica Neue', Helvetica, monospace",
-    borderRadius: "3px",
-    buttonRadius: "2px",
+    borderRadius: "6px",
+    buttonRadius: "4px",
   },
 
   /* ─────────────────────────────────────────────────────────────────────────────
@@ -218,7 +356,7 @@ export function WhiteNoiseApp({
   const [activeSound, setActiveSound] = useState<string | null>(null);
   const [volume, setVolume] = useState(0.5);
   const [dialRotation, setDialRotation] = useState(-135 + (0.5 * 270));
-  const [frequencies, setFrequencies] = useState<number[]>(Array(8).fill(0));
+  const [frequencies, setFrequencies] = useState<number[]>(Array(6).fill(0));
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const dialRef = useRef<HTMLDivElement>(null);
@@ -243,7 +381,7 @@ export function WhiteNoiseApp({
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-    setFrequencies(Array(8).fill(0));
+    setFrequencies(Array(6).fill(0));
   }, []);
 
   // 开始频谱分析
@@ -257,7 +395,7 @@ export function WhiteNoiseApp({
     // 创建 Analyser
     if (!analyserRef.current) {
       analyserRef.current = ctx.createAnalyser();
-      analyserRef.current.fftSize = 64; // 小 FFT 用于简洁波形
+      analyserRef.current.fftSize = 64;
       analyserRef.current.smoothingTimeConstant = 0.7;
     }
     
@@ -270,27 +408,29 @@ export function WhiteNoiseApp({
     
     // 频谱数据读取循环
     const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-    const numBands = 8;
+    const numBands = 6;
     
     const analyze = () => {
       if (!analyserRef.current) return;
       
       analyserRef.current.getByteFrequencyData(dataArray);
       
-      // 将频谱数据映射到 8 个条
+      // 将频谱数据映射到 12 个条
       const bands: number[] = [];
       const binCount = dataArray.length;
-      const binsPerBand = Math.floor(binCount / numBands);
+      const binsPerBand = Math.max(1, Math.floor(binCount / numBands));
       
       for (let i = 0; i < numBands; i++) {
         let sum = 0;
         const start = i * binsPerBand;
-        const end = start + binsPerBand;
-        for (let j = start; j < end && j < binCount; j++) {
+        const end = Math.min(start + binsPerBand, binCount);
+        let count = 0;
+        for (let j = start; j < end; j++) {
           sum += dataArray[j];
+          count++;
         }
         // 归一化到 0-1
-        bands.push((sum / binsPerBand) / 255);
+        bands.push(count > 0 ? (sum / count) / 255 : 0);
       }
       
       setFrequencies(bands);
@@ -383,6 +523,29 @@ export function WhiteNoiseApp({
     document.addEventListener("mouseup", handleMouseUp);
   }, [handleDialInteraction]);
 
+  // Touch support for volume knob
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    isDraggingRef.current = true;
+    const touch = e.touches[0];
+    handleDialInteraction(touch.clientX, touch.clientY);
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDraggingRef.current) {
+        const touch = e.touches[0];
+        handleDialInteraction(touch.clientX, touch.clientY);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingRef.current = false;
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("touchend", handleTouchEnd);
+  }, [handleDialInteraction]);
+
   useEffect(() => {
     if (!isWindowOpen) {
       stopPlayback();
@@ -422,46 +585,45 @@ export function WhiteNoiseApp({
           fontWeight: theme.fontWeight,
         }}
       >
-        {/* ─────────────────────────────────────────────────────────────────────
-         * 第一段：扬声器格栅（主体）- 音频叠加在条纹上
-         * 迪特·拉姆斯: 形式追随功能，克制的动态
-         * ───────────────────────────────────────────────────────────────────── */}
+        {/* 第一段：扬声器格栅 — Canvas 点阵波形可视化 */}
         <div
           className="relative overflow-hidden flex-1"
           style={{
             background: theme.grilleBg,
-            minHeight: "80px",
+            minHeight: "100px",
           }}
         >
-          {/* 格栅背景 - 保持不变 */}
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `repeating-linear-gradient(
-                0deg,
-                ${theme.grilleDark} 0px,
-                ${theme.grilleDark} 2px,
-                ${theme.grilleLight} 2px,
-                ${theme.grilleLight} 5px
-              )`,
-            }}
-          />
-          
+          {!isClassicTheme ? (
+            <DotMatrixCanvas
+              frequencies={frequencies}
+              isPlaying={!!activeSound}
+              dotColor={theme.grilleDark}
+              accentColor="rgba(0,0,0,0.30)"
+              bgColor={theme.grilleBg}
+            />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  0deg,
+                  ${theme.grilleDark} 0px,
+                  ${theme.grilleDark} 2px,
+                  ${theme.grilleLight} 2px,
+                  ${theme.grilleLight} 5px
+                )`,
+              }}
+            />
+          )}
 
-          
-          {/* 品牌标识 - 右下角 */}
-          <div
-            className="absolute bottom-2 right-3 z-10"
-            style={{
-              fontSize: "8px",
-              fontWeight: 500,
-              letterSpacing: "0.2em",
-              color: "rgba(255,255,255,0.4)",
-              textTransform: "uppercase",
-            }}
-          >
-            {isClassicTheme ? "AMBIENT" : "braun"}
-          </div>
+          {/* 品牌标识 */}
+          {isClassicTheme && (
+            <div className="absolute bottom-2 right-3 z-10">
+              <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.2em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
+                AMBIENT
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ─────────────────────────────────────────────────────────────────────
@@ -472,28 +634,29 @@ export function WhiteNoiseApp({
           onClick={handleTogglePlayback}
           style={{
             background: theme.screenBg,
-            height: "36px",
+            height: !isClassicTheme ? "28px" : "32px",
             borderTop: `1px solid ${theme.screenBorder}`,
             borderBottom: `1px solid ${theme.screenBorder}`,
+            boxShadow: !isClassicTheme ? "inset 0 4px 8px rgba(0,0,0,0.6)" : "none",
             cursor: "pointer",
           }}
           aria-label={t("apps.whiteNoise.togglePlayback", "切换播放")}
         >
           {/* 显示内容：声音名 + 波形组（音量 & 音频） */}
-          <div className="flex items-center justify-between w-full h-full px-3">
+          <div className="flex items-center justify-between w-full h-full px-4">
             {/* 左侧：声音名称 */}
             <div
               style={{
                 fontFamily: theme.displayFont,
-                fontSize: isClassicTheme ? "11px" : "12px",
-                fontWeight: 300,
-                letterSpacing: "0.1em",
+                fontSize: !isClassicTheme ? "14px" : "11px",
+                fontWeight: !isClassicTheme ? 500 : 300,
+                letterSpacing: "0.15em",
                 color: activeSound ? theme.displayText : theme.displayTextDim,
                 textShadow: activeSound ? theme.displayGlow : "none",
                 textTransform: "uppercase",
               }}
             >
-              {activeSound ? activeSoundName : "—"}
+              {activeSound ? activeSoundName : "OFF"}
             </div>
             
             {/* 右侧：音量 + 波形 */}
@@ -507,11 +670,13 @@ export function WhiteNoiseApp({
                     return (
                       <div
                         key={i}
-                        className="w-[2px] transition-all duration-150"
+                        className="transition-all duration-150"
                         style={{
+                          width: !isClassicTheme ? "2.5px" : "2px",
                           height: `${barHeight}%`,
                           background: isActive ? theme.displayText : theme.displayTextDim,
                           boxShadow: isActive ? `0 0 3px ${theme.displayText}` : "none",
+                          borderRadius: "1px",
                         }}
                       />
                     );
@@ -525,17 +690,19 @@ export function WhiteNoiseApp({
                 />
                 
                 {/* 波形 - 动态跳动 */}
-                <div className="flex items-end gap-[2px] h-full">
+                <div className="flex items-end gap-[1px] h-full">
                   {frequencies.map((freq, i) => {
                     const height = 15 + freq * 80;
                     return (
                       <div
                         key={i}
-                        className="w-[2px] transition-all duration-75"
+                        className="transition-all duration-75"
                         style={{
+                          width: !isClassicTheme ? "2.5px" : "2px",
                           height: `${height}%`,
                           background: theme.displayText,
                           boxShadow: freq > 0.2 ? `0 0 3px ${theme.displayText}` : "none",
+                          borderRadius: "1px",
                         }}
                       />
                     );
@@ -545,8 +712,8 @@ export function WhiteNoiseApp({
             )}
           </div>
           
-          {/* 扫描线效果 (仅 Aqua) */}
-          {!isClassicTheme && (
+          {/* 扫描线效果 (仅 Aqua/经典) */}
+          {isClassicTheme && (
             <div
               className="absolute inset-0 pointer-events-none opacity-30"
               style={{
@@ -566,7 +733,7 @@ export function WhiteNoiseApp({
          * 第三段：控制面板（紧凑）
          * ───────────────────────────────────────────────────────────────────── */}
         <div
-          className="flex flex-col justify-center px-3 py-2 flex-shrink-0"
+          className="flex flex-col justify-center px-4 py-3 flex-shrink-0"
           style={{
             background: theme.panel,
             borderTop: `1px solid ${theme.panelBorder}`,
@@ -575,7 +742,7 @@ export function WhiteNoiseApp({
           {/* 频道按钮 + 旋钮 一行布局 */}
           <div className="flex items-center justify-between">
             {/* 频道选择按钮 */}
-            <div className="flex gap-1">
+            <div className="flex gap-1.5 px-1 py-1">
               {SOUNDS.map((sound, index) => {
                 const isActive = activeSound === sound.id;
                 return (
@@ -583,49 +750,54 @@ export function WhiteNoiseApp({
                     key={sound.id}
                     type="button"
                     onClick={() => playSound(sound)}
-                    className="relative group"
+                    className="relative group cursor-pointer"
                     style={{
-                      width: "32px",
-                      height: "24px",
+                      width: !isClassicTheme ? "36px" : "32px",
+                      height: !isClassicTheme ? "40px" : "24px",
                       background: isActive ? theme.buttonActiveBg : theme.buttonBg,
                       border: isClassicTheme ? "none" : `1px solid ${theme.buttonBorder}`,
                       borderRadius: theme.buttonRadius,
                       transition: "all 0.1s ease",
                       boxShadow: isActive ? theme.buttonActiveShadow : theme.buttonShadow,
+                      transform: isActive && !isClassicTheme ? "translateY(2px)" : "translateY(0)",
                     }}
                   >
                     <span
                       style={{
-                        fontSize: "11px",
-                        fontWeight: 500,
+                        fontSize: !isClassicTheme ? "9px" : "11px",
+                        fontWeight: !isClassicTheme ? 700 : 500,
+                        letterSpacing: !isClassicTheme ? "1px" : "normal",
                         color: isActive ? theme.buttonActiveText : theme.buttonText,
                       }}
                     >
-                      {index + 1}
+                      {!isClassicTheme ? sound.fallback.substring(0, 3).toUpperCase() : index + 1}
                     </span>
                     
-                    {/* Tooltip */}
-                    <div
-                      className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10"
-                      style={{
-                        background: "rgba(0,0,0,0.8)",
-                        color: "#fff",
-                        fontSize: "9px",
-                        borderRadius: "2px",
-                      }}
-                    >
-                      {t(sound.labelKey, sound.fallback)}
-                    </div>
+              {/* 工具提示 (Hover) */}
+              {isClassicTheme && (
+                <div
+                  className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10"
+                  style={{
+                    background: "rgba(0,0,0,0.8)",
+                    color: "#fff",
+                    fontSize: "9px",
+                    borderRadius: "2px",
+                  }}
+                >
+                  {t(sound.labelKey, sound.fallback)}
+                </div>
+              )}
                   </button>
                 );
               })}
             </div>
 
             {/* 音量旋钮 */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <span
                 style={{
-                  fontSize: "8px",
+                  fontSize: "9px",
+                  fontWeight: 600,
                   color: theme.textMuted,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
@@ -636,15 +808,16 @@ export function WhiteNoiseApp({
               <div
                 ref={dialRef}
                 onMouseDown={handleMouseDown}
-                className="relative cursor-pointer"
+                onTouchStart={handleTouchStart}
+                className="relative cursor-ns-resize touch-none active:scale-[0.98] transition-transform"
                 style={{
-                  width: "36px",
-                  height: "36px",
+                  width: !isClassicTheme ? "40px" : "36px",
+                  height: !isClassicTheme ? "40px" : "36px",
                 }}
               >
                 {/* 旋钮底座 */}
                 <div
-                  className="absolute inset-0 rounded-full"
+                  className="absolute inset-0 rounded-full pointer-events-none"
                   style={{
                     background: theme.dialBase,
                     boxShadow: theme.dialShadow,
@@ -653,7 +826,7 @@ export function WhiteNoiseApp({
                 
                 {/* 旋钮主体 */}
                 <div
-                  className="absolute rounded-full"
+                  className="absolute rounded-full pointer-events-none"
                   style={{
                     inset: "3px",
                     background: theme.dialBody,
@@ -662,15 +835,16 @@ export function WhiteNoiseApp({
                     transition: isDraggingRef.current ? "none" : "transform 0.1s ease",
                   }}
                 >
-                  {/* 旋钮指示线 */}
+                  {/* 旋钮指示线/点 */}
                   <div
                     className="absolute left-1/2 -translate-x-1/2"
                     style={{
-                      top: "4px",
-                      width: "2px",
-                      height: "6px",
+                      top: !isClassicTheme ? "6px" : "4px",
+                      width: !isClassicTheme ? "4px" : "2px",
+                      height: !isClassicTheme ? "4px" : "6px",
                       background: theme.dialIndicator,
-                      borderRadius: "1px",
+                      borderRadius: !isClassicTheme ? "50%" : "1px",
+                      boxShadow: !isClassicTheme ? "0 1px 2px rgba(0,0,0,0.3)" : "none",
                     }}
                   />
                 </div>
