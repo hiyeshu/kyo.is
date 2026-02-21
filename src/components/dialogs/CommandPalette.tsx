@@ -98,7 +98,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
   // ─── 服务端搜索状态 ──────────────────────────────────────────────────────────
   const [serverResults, setServerResults] = useState<ServerItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const q = search.trim().toLowerCase();
 
