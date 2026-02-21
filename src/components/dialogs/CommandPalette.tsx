@@ -1,7 +1,8 @@
 /**
  * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useAuthStore, supabase, useThemeStore, appRegistry, useAppStore, i18n
- * [OUTPUT]: CommandPalette 组件
- * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签，已登录时 debounced Supabase RPC ILIKE 搜索，未登录时客户端过滤，被 AppManager 挂载
+ * [OUTPUT]: CommandPalette 组件, getMatchInfo 命中推断, HighlightText 关键词高亮
+ * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签，已登录时 debounced Supabase RPC ILIKE 搜索，未登录时客户端过滤，
+ *        搜索结果根据命中字段（title/summary/text/tags/url）展示命中原因 + 关键词高亮，被 AppManager 挂载
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -57,6 +58,68 @@ function looksLikeUrl(input: string): boolean {
 
 function normalizeUrl(input: string): string {
   return /^https?:\/\//i.test(input) ? input : `https://${input}`;
+}
+
+// ─── 搜索命中推断 ─────────────────────────────────────────────────────────────
+
+type MatchField = "title" | "summary" | "text" | "tags" | "url" | "none";
+
+interface MatchInfo {
+  field: MatchField;
+  /** 需要展示给用户的命中文本（title 命中时为 null，不需要副文本） */
+  text: string | null;
+}
+
+/**
+ * 按优先级推断搜索命中的字段，返回应展示的文本
+ * - title 命中 → 不显示副文本（标题已足够说明）
+ * - summary/text/url 命中 → 显示该字段内容
+ * - tags 命中 → 显示 summary（tag 不直接暴露给用户）
+ */
+function getMatchInfo(
+  query: string,
+  fields: { title?: string | null; summary?: string | null; text?: string | null; tags?: string[] | null; url?: string | null },
+): MatchInfo {
+  const q = query.toLowerCase();
+  if (fields.title && fields.title.toLowerCase().includes(q)) return { field: "title", text: null };
+  if (fields.summary && fields.summary.toLowerCase().includes(q)) return { field: "summary", text: fields.summary };
+  if (fields.text && fields.text.toLowerCase().includes(q)) return { field: "text", text: fields.text };
+  if (fields.tags?.some((t) => t.toLowerCase().includes(q))) return { field: "tags", text: fields.summary || null };
+  if (fields.url && fields.url.toLowerCase().includes(q)) return { field: "url", text: fields.url };
+  return { field: "none", text: null };
+}
+
+/**
+ * 高亮文本中的搜索关键词
+ * 截取关键词附近的片段（前后各 30 字符），用 <mark> 高亮
+ */
+function HighlightText({ text, query, maxLen = 80 }: { text: string; query: string; maxLen?: number }) {
+  const lower = text.toLowerCase();
+  const q = query.toLowerCase();
+  const idx = lower.indexOf(q);
+
+  if (idx === -1) {
+    // 未命中（tags → summary 场景），直接截取
+    return <span>{text.length > maxLen ? text.slice(0, maxLen) + "…" : text}</span>;
+  }
+
+  // 计算截取窗口：以命中位置为中心
+  const pad = Math.floor((maxLen - query.length) / 2);
+  const start = Math.max(0, idx - pad);
+  const end = Math.min(text.length, idx + query.length + pad);
+  const before = (start > 0 ? "…" : "") + text.slice(start, idx);
+  const match = text.slice(idx, idx + query.length);
+  const after = text.slice(idx + query.length, end) + (end < text.length ? "…" : "");
+
+  return (
+    <span>
+      {before}
+      <mark style={{ backgroundColor: "rgba(255, 210, 0, 0.35)", color: "inherit", borderRadius: "2px", padding: "0 1px" }}>
+        {match}
+      </mark>
+      {after}
+    </span>
+  );
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
@@ -459,37 +522,43 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
             {displayBookmarks ? (
               displayBookmarks.length > 0 && (
                 <Command.Group heading={t("common.search.bookmarksGroup", "书签")}>
-                  {displayBookmarks.map((item) => (
-                    <Command.Item
-                      key={item.id}
-                      value={`${item.title || ""} ${item.url || ""}`}
-                      onSelect={() => item.url && handleSelectBookmark(item.url)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 cursor-pointer",
-                        "data-[selected=true]:text-white"
-                      )}
-                      style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
-                    >
-                      <img
-                        src={item.favicon || "/icons/default/internet.png"}
-                        alt=""
-                        className="w-4 h-4 shrink-0 object-contain"
-                        style={{ borderRadius: "3px" }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/icons/default/internet.png";
-                        }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate">{item.title || item.url}</div>
-                        <div
-                          className="truncate"
-                          style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}
-                        >
-                          {item.url}
+                  {displayBookmarks.map((item) => {
+                    const match = q ? getMatchInfo(q, { title: item.title, summary: item.summary, text: item.text, tags: item.tags, url: item.url }) : null;
+                    return (
+                      <Command.Item
+                        key={item.id}
+                        value={`${item.title || ""} ${item.url || ""}`}
+                        onSelect={() => item.url && handleSelectBookmark(item.url)}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                          "data-[selected=true]:text-white"
+                        )}
+                        style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                      >
+                        <img
+                          src={item.favicon || "/icons/default/internet.png"}
+                          alt=""
+                          className="w-4 h-4 shrink-0 object-contain self-start mt-0.5"
+                          style={{ borderRadius: "3px" }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/icons/default/internet.png";
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate">{item.title || item.url}</div>
+                          {match?.text && match.field !== "title" ? (
+                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.6 }}>
+                              <HighlightText text={match.text} query={q} />
+                            </div>
+                          ) : (
+                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}>
+                              {item.url}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </Command.Item>
-                  ))}
+                      </Command.Item>
+                    );
+                  })}
                 </Command.Group>
               )
             ) : (
@@ -497,6 +566,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                 <Command.Group heading={t("common.search.bookmarksGroup", "书签")}>
                   {filteredBookmarks.map((bm) => {
                     const iconInfo = getBookmarkIconInfo(bm);
+                    const match = q ? getMatchInfo(q, { title: bm.title, summary: bm.summary, tags: bm.tags, url: bm.url }) : null;
                     return (
                       <Command.Item
                         key={bm.url}
@@ -516,7 +586,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                           <img
                             src={iconInfo.value}
                             alt=""
-                            className="w-4 h-4 shrink-0 object-contain"
+                            className="w-4 h-4 shrink-0 object-contain self-start mt-0.5"
                             style={{ borderRadius: "3px" }}
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = "/icons/default/internet.png";
@@ -525,12 +595,15 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="truncate">{bm.title}</div>
-                          <div
-                            className="truncate"
-                            style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}
-                          >
-                            {bm.url}
-                          </div>
+                          {match?.text && match.field !== "title" ? (
+                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.6 }}>
+                              <HighlightText text={match.text} query={q} />
+                            </div>
+                          ) : (
+                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}>
+                              {bm.url}
+                            </div>
+                          )}
                         </div>
                         {bm.folderTitle && (
                           <span
@@ -573,7 +646,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="truncate">
-                          {(item.text || "").slice(0, 60)}
+                          {q ? <HighlightText text={(item.text || "").slice(0, 120)} query={q} /> : (item.text || "").slice(0, 60)}
                         </div>
                       </div>
                       <span
@@ -603,7 +676,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="truncate">
-                          {note.content.slice(0, 60)}
+                          {q ? <HighlightText text={note.content.slice(0, 120)} query={q} /> : note.content.slice(0, 60)}
                         </div>
                       </div>
                       <span
@@ -697,6 +770,10 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
         }
         [cmdk-item][data-selected=true] span {
           color: rgba(255, 255, 255, 0.7) !important;
+        }
+        [cmdk-item][data-selected=true] mark {
+          background-color: rgba(255, 255, 255, 0.2) !important;
+          color: #ffffff !important;
         }
         [cmdk-group-heading] {
           padding: 4px 8px;
