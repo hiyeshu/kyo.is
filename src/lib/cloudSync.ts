@@ -26,8 +26,13 @@ export async function cloudUpsertItem(item: Record<string, unknown>) {
 export async function cloudUpdateItem(id: string, updates: Record<string, unknown>) {
   const userId = await getUserId();
   if (!userId) return;
-  const { error } = await supabase.from("kyo_items").update(updates).eq("id", id);
-  if (error) console.error("[cloudSync] update failed:", error.message, { id, updates });
+  const { error } = await supabase.from("kyo_items").update(updates).eq("id", id).eq("user_id", userId);
+  if (error) {
+    // insert 可能还在路上，重试一次
+    await new Promise(r => setTimeout(r, 1000));
+    const { error: retry } = await supabase.from("kyo_items").update(updates).eq("id", id).eq("user_id", userId);
+    if (retry) console.error("[cloudSync] update failed after retry:", retry.message, { id, updates });
+  }
 }
 
 export async function cloudDeleteItem(id: string) {

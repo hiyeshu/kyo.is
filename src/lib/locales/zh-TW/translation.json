@@ -823,7 +823,9 @@
       "invalidBackupFile": "無效的備份檔案",
       "backupRestoredReloading": "備份已還原，正在重新載入...",
       "failedToParseBackup": "無法解析備份檔案",
-      "settingsResetReloading": "所有設定已重設，正在重新載入..."
+      "settingsResetReloading": "所有設定已重設，正在重新載入...",
+      "fileSystemFormattedReloading": "檔案系統已格式化，正在重新啟動...",
+      "formatFileSystemConfirmDesc": "確定要格式化檔案系統嗎？這將清除所有檔案（範例文件除外）、圖片和自訂桌布。格式化後 kyo 將重新啟動。"
     },
     "finder": {
       "contextMenu": {

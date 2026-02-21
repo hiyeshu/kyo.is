@@ -199,7 +199,9 @@ export default async function handler(req: Request) {
     const title = meta.title || new URL(url).hostname;
     const description = meta.description || "";
 
-    // 3. 立刻返回 LinkMeta 结果，summary 用 description 截断兜底
+    // 3. 调 Dify AI 生成摘要和标签（带超时保护，失败则降级）
+    const aiMeta = await generateAiMeta(title, description, url);
+
     const result: ScrapeResult = {
       url,
       title,
@@ -208,12 +210,12 @@ export default async function handler(req: Request) {
       faviconUrl: meta.favicon || undefined,
       siteName: meta.siteName || undefined,
       themeColor: meta.themeColor || undefined,
-      summary: description.slice(0, 200),
-      tags: [],
+      summary: aiMeta.summary,
+      tags: aiMeta.tags,
       fetchedAt: Date.now(),
     };
 
-    // 4. 写入 LinkMeta 基础缓存
+    // 4. 写入 LinkMeta 缓存（含 AI 摘要和标签）
     const cacheRow: Record<string, unknown> = {
       url,
       title,
@@ -222,18 +224,11 @@ export default async function handler(req: Request) {
       favicon_url: meta.favicon || null,
       site_name: meta.siteName || null,
       theme_color: meta.themeColor || null,
+      summary: aiMeta.summary,
+      tags: aiMeta.tags,
       fetched_at: new Date().toISOString(),
     };
-    writeCache(cacheRow);
-
-    // 5. Dify AI 摘要异步后台执行，完成后更新缓存
-    waitUntil(
-      generateAiMeta(title, description, url).then(({ summary, tags }) => {
-        if (summary || tags.length > 0) {
-          writeCache({ url, summary, tags });
-        }
-      })
-    );
+    waitUntil(writeCache(cacheRow));
 
     return new Response(JSON.stringify(result), {
       headers: { "Content-Type": "application/json" },

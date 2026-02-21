@@ -37,22 +37,28 @@ import { toast } from "sonner";
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS, changeLanguage } from "@/lib/i18n";
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Backup / Restore
+// Backup / Restore / Reset / Format
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const BACKUP_KEYS = [
   "kyo:theme",
   "kyo:theme-sync-wallpaper",
   "kyo:display-settings",
-  "kyo:dock",
-  "kyo:bookmarks",
+  "kyo:dock-storage",
+  "kyo:bookmark-store",
+  "kyo:stickies-store",
+  "kyo:app-store",
+  "kyo:linkmeta-store",
   "audio-settings",
+  "custom-theme-store",
+  "ryos:language",
+  "ryos:language-initialized",
 ];
 
 function createBackup(): string {
   const backup: Record<string, unknown> = {
     _meta: {
-      version: 1,
+      version: 2,
       timestamp: new Date().toISOString(),
       app: "kyo.is",
     },
@@ -94,14 +100,14 @@ function restoreBackup(json: string, t: (key: string) => string): boolean {
   }
 }
 
-function resetAllSettings(t: (key: string) => string) {
-  for (const key of BACKUP_KEYS) {
-    localStorage.removeItem(key);
-  }
-  // Clear IndexedDB
+function resetAllSettings() {
+  localStorage.clear();
+  location.reload();
+}
+
+function formatFileSystem() {
   indexedDB.deleteDatabase("Kyo");
-  toast.success(t("apps.control-panels.settingsResetReloading"));
-  setTimeout(() => window.location.reload(), 1000);
+  location.reload();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -122,7 +128,7 @@ export function ControlPanelsApp({
   // ─── Dialog States ───────────────────────────────────────────────────────────
   const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
-  const [isConfirmResetOpen, setIsConfirmResetOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"reset" | "format" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ─── Theme ───────────────────────────────────────────────────────────────────
@@ -174,9 +180,10 @@ export function ControlPanelsApp({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleConfirmReset = () => {
-    setIsConfirmResetOpen(false);
-    resetAllSettings(t);
+  const handleConfirm = () => {
+    if (confirmAction === "reset") resetAllSettings();
+    else if (confirmAction === "format") formatFileSystem();
+    setConfirmAction(null);
   };
 
   // ─── Menu Bar ────────────────────────────────────────────────────────────────
@@ -385,17 +392,31 @@ export function ControlPanelsApp({
                   </p>
                 </div>
 
-                {/* Reset All */}
+                {/* Reset All Settings */}
                 <div className="space-y-2">
                   <Button
                     variant="retro"
-                    onClick={() => setIsConfirmResetOpen(true)}
+                    onClick={() => setConfirmAction("reset")}
                     className="w-full"
                   >
                     {t("apps.control-panels.resetAllSettings")}
                   </Button>
                   <p className="text-[11px] text-neutral-600 font-geneva-12">
                     {t("apps.control-panels.resetAllSettingsDescription")}
+                  </p>
+                </div>
+
+                {/* Format File System */}
+                <div className="space-y-2">
+                  <Button
+                    variant="retro"
+                    onClick={() => setConfirmAction("format")}
+                    className="w-full"
+                  >
+                    {t("apps.control-panels.formatFileSystem")}
+                  </Button>
+                  <p className="text-[11px] text-neutral-600 font-geneva-12">
+                    {t("apps.control-panels.formatFileSystemDescription")}
                   </p>
                 </div>
 
@@ -434,11 +455,15 @@ export function ControlPanelsApp({
           appId="control-panels"
         />
         <ConfirmDialog
-          isOpen={isConfirmResetOpen}
-          onOpenChange={setIsConfirmResetOpen}
-          onConfirm={handleConfirmReset}
-          title={t("common.system.resetAllSettings")}
-          description={t("common.system.resetAllSettingsDesc")}
+          isOpen={confirmAction !== null}
+          onOpenChange={(open) => { if (!open) setConfirmAction(null); }}
+          onConfirm={handleConfirm}
+          title={t(confirmAction === "format"
+            ? "apps.control-panels.formatFileSystem"
+            : "common.system.resetAllSettings")}
+          description={t(confirmAction === "format"
+            ? "apps.control-panels.formatFileSystemConfirmDesc"
+            : "common.system.resetAllSettingsDesc")}
         />
       </WindowFrame>
     </>

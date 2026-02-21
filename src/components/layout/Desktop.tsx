@@ -284,15 +284,11 @@ export function Desktop({
           try {
             const text = await navigator.clipboard.readText();
             if (/^https?:\/\/\S+$/i.test(text.trim())) {
+              const dt = new DataTransfer();
+              dt.setData("text/plain", text.trim());
               document.dispatchEvent(
-                new ClipboardEvent("paste", {
-                  clipboardData: new DataTransfer(),
-                })
+                new ClipboardEvent("paste", { clipboardData: dt })
               );
-              // 触发粘贴处理器
-              const event = new Event("kyo:paste-url");
-              (event as unknown as { url: string }).url = text.trim();
-              document.dispatchEvent(event);
             }
           } catch { /* clipboard permission denied */ }
         },
