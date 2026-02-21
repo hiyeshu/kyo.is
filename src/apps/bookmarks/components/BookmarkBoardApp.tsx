@@ -48,6 +48,7 @@ function BookmarkCard({
   onDragEnd,
   isDragging,
   isDragOver,
+  isContextTarget,
   isMacTheme,
 }: {
   bm: Bookmark;
@@ -62,6 +63,7 @@ function BookmarkCard({
   onDragEnd: (e: React.DragEvent) => void;
   isDragging: boolean;
   isDragOver: boolean;
+  isContextTarget: boolean;
   isMacTheme: boolean;
 }) {
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -100,6 +102,7 @@ function BookmarkCard({
       className={cn(
         "flex flex-col items-center gap-1.5 p-2 rounded-xl cursor-pointer group relative transition-all",
         isDragging ? "opacity-50 scale-95" : "hover:bg-black/[0.06] active:bg-black/10",
+        isContextTarget && "bg-black/[0.06]",
         isDragOver && "ring-2 ring-blue-500 ring-offset-1"
       )}
       onClick={onClick}
@@ -124,6 +127,7 @@ function BookmarkCard({
           "border border-black/10",
           "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]",
           "group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)]",
+          isContextTarget && "shadow-[0_2px_8px_rgba(0,0,0,0.12)]",
           "transition-shadow"
         )}
         style={{
@@ -142,7 +146,7 @@ function BookmarkCard({
         )}
       </div>
       <span 
-        className="text-center line-clamp-2 w-full font-geneva-12 leading-tight text-black/70 group-hover:text-black/90"
+        className={cn("text-center line-clamp-2 w-full font-geneva-12 leading-tight text-black/70 group-hover:text-black/90", isContextTarget && "text-black/90")}
         style={{ fontSize: "var(--os-text-xs)" }}
       >
         {bm.title}
@@ -185,6 +189,7 @@ function BookmarkGrid({
           onDragEnd={h.handleDragEnd}
           isDragging={h.draggedItem?.item.id === bm.id}
           isDragOver={h.dragOverIndex === index}
+          isContextTarget={h.contextMenu?.target.kind === "bookmark" && h.contextMenu.target.item.id === bm.id}
           isMacTheme={isMacTheme}
         />
       ))}
