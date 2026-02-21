@@ -500,9 +500,7 @@ export function Desktop({
                   "application/json",
                   JSON.stringify({
                     type: "bookmark",
-                    id: bm.id,
-                    title: bm.title,
-                    url: bm.url,
+                    bookmarkId: bm.id,
                   })
                 );
                 // Set drag image

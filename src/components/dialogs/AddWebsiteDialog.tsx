@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 @/components/ui/dialog, @/stores/useDockStore, @/stores/useBookmarkStore, @/lib/linkMeta
- * [OUTPUT]: 对外提供 AddWebsiteDialog 组件，用于添加网站到书签并固定到 Dock
- * [POS]: components/dialogs/ 的网站添加对话框，被 Dock 组件调用
+ * [INPUT]: 依赖 @/components/ui/dialog, @/stores/useBookmarkStore, @/lib/linkMeta
+ * [OUTPUT]: 对外提供 AddWebsiteDialog 组件，用于添加网站到书签（macOS 主题自动 inDock）
+ * [POS]: components/dialogs/ 的网站添加对话框，被 Dock 和 Desktop 组件调用
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -17,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
-import { useDockStore } from "@/stores/useDockStore";
 import { useBookmarkStore, getFaviconUrl as getBookmarkFaviconUrl } from "@/stores/useBookmarkStore";
 import { fetchLinkMeta } from "@/lib/linkMeta";
 import { cn } from "@/lib/utils";
@@ -34,7 +33,6 @@ export function AddWebsiteDialog({
 }: AddWebsiteDialogProps) {
   const { t } = useTranslation();
   const currentTheme = useThemeStore((state) => state.current);
-  const addDockItem = useDockStore((state) => state.addItem);
   const addBookmark = useBookmarkStore((state) => state.addBookmark);
 
   const [url, setUrl] = useState("");
@@ -87,16 +85,10 @@ export function AddWebsiteDialog({
       const faviconUrl = getFaviconUrl(normalizedUrl);
       const title = getWebsiteTitle(normalizedUrl);
 
-      // 1. 创建书签
-      const bookmarkId = addBookmark(title, normalizedUrl, faviconUrl);
-
-      // 2. macOS 主题：同时添加到 Dock
-      if (isMacTheme) {
-        addDockItem({
-          type: "bookmark",
-          id: bookmarkId,
-        });
-      }
+      // 创建书签（macOS 主题直接固定到 Dock）
+      const bookmarkId = addBookmark(title, normalizedUrl, faviconUrl, undefined, {
+        inDock: isMacTheme,
+      });
 
       // 3. 后台异步获取元数据，更新 title 和 favicon
       fetchLinkMeta(normalizedUrl)

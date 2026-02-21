@@ -34,9 +34,8 @@ import { RightClickMenu, type MenuItem } from "@/components/ui/right-click-menu"
 import { appMetadata, helpItems } from "../metadata";
 import { BookmarkBoardMenuBar } from "./BookmarkBoardMenuBar";
 import { useBookmarkBoard } from "../hooks/useBookmarkBoard";
-import { isFolder, type Bookmark, type BookmarkFolder } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, isFolder, type Bookmark, type BookmarkFolder } from "@/stores/useBookmarkStore";
 import { BookmarkIconDisplay } from "./BookmarkIconDisplay";
-import { useDockStore } from "@/stores/useDockStore";
 import { useTranslation } from "react-i18next";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { cn } from "@/lib/utils";
@@ -285,7 +284,7 @@ export function BookmarkBoardApp({
 }: AppProps<unknown>) {
   const { t } = useTranslation();
   const h = useBookmarkBoard();
-  const addDockItem = useDockStore((s) => s.addItem);
+  const updateBookmark = useBookmarkStore((s) => s.updateBookmark);
   const currentTheme = useThemeStore((s) => s.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   const isMacTheme = currentTheme === "macosx";
@@ -377,10 +376,7 @@ export function BookmarkBoardApp({
         label: t("apps.bookmarks.addToDock", "加入 Dock"),
         icon: "📌",
         onSelect: () => {
-          addDockItem({
-            type: "bookmark",
-            id: item.id,
-          });
+          updateBookmark(item.id, { inDock: true, onDesktop: false });
           h.closeContextMenu();
         },
       },

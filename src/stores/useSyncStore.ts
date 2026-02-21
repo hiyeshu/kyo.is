@@ -82,6 +82,7 @@ export const useSyncStore = create<SyncState>((set) => ({
           favicon: b.favicon || "",
           createdAt: b.created_at,
           onDesktop: b.on_desktop || false,
+          inDock: b.in_dock || false,
         }));
         useBookmarkStore.setState({ items: bookmarkItems });
 
@@ -116,6 +117,7 @@ export const useSyncStore = create<SyncState>((set) => ({
               favicon: b.favicon || null,
               tags: b.tags || [],
               on_desktop: b.onDesktop || false,
+              in_dock: b.inDock || false,
               created_at: b.createdAt || new Date().toISOString(),
             })),
             ...localNotes.map((n) => ({

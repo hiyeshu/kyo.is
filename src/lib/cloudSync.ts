@@ -59,6 +59,7 @@ export interface CloudBookmarkRaw {
   favicon: string | null;
   tags: string[] | null;
   on_desktop: boolean | null;
+  in_dock: boolean | null;
   created_at: string;
 }
 

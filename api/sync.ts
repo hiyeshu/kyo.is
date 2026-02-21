@@ -20,6 +20,7 @@ interface LocalBookmark {
   favicon?: string;
   createdAt?: string;
   onDesktop?: boolean;
+  inDock?: boolean;
 }
 
 interface LocalNote {
@@ -103,6 +104,7 @@ export default async function handler(req: Request) {
         favicon: b.favicon || null,
         tags: b.tags || [],
         on_desktop: b.onDesktop || false,
+        in_dock: b.inDock || false,
         created_at: b.createdAt || new Date().toISOString(),
       })),
       ...notes.map(n => ({

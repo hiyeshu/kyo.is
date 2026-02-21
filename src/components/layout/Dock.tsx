@@ -13,8 +13,8 @@ import { ThemedIcon } from "@/components/shared/ThemedIcon";
 import { AppId, getAppIconPath, appRegistry, getNonFinderApps } from "@/config/appRegistry";
 import { getTranslatedAppName } from "@/utils/i18n";
 import { useLaunchApp } from "@/hooks/useLaunchApp";
-import { useDockStore, PROTECTED_DOCK_ITEMS, type DockItem } from "@/stores/useDockStore";
-import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl } from "@/stores/useBookmarkStore";
+import { useDockStore, PROTECTED_DOCK_ITEMS } from "@/stores/useDockStore";
+import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl, isBookmark, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useLongPress } from "@/hooks/useLongPress";
@@ -676,8 +676,15 @@ function MacDock() {
     setMagnification: setDockMagnification,
   } = useDockStore();
   
-  // Bookmark store for bookmark references in dock
+  // Bookmark store — inDock 书签直接从 bookmarkStore 读取
   const bookmarkStore = useBookmarkStore();
+  const dockBookmarks: Bookmark[] = useMemo(() => {
+    const result: Bookmark[] = [];
+    for (const item of bookmarkStore.items) {
+      if (isBookmark(item) && item.inDock) result.push(item);
+    }
+    return result;
+  }, [bookmarkStore.items]);
   
   const [applicationsContextMenuPos, setApplicationsContextMenuPos] = useState<{
     x: number;
@@ -1105,30 +1112,22 @@ function MacDock() {
       const data = JSON.parse(jsonData);
       console.log("[Dock] Drop data:", data);
       
-      const { appId, aliasType, aliasTarget, type, bookmarkId } = data;
+      const { appId, aliasType, aliasTarget, type, bookmarkId, id: rawId } = data;
+      // 兼容 Desktop.tsx 发送 id、BookmarkBoardApp 发送 bookmarkId
+      const resolvedBookmarkId = bookmarkId || (type === "bookmark" ? rawId : undefined);
       
-      // Determine what to add to dock
-      let newItem: DockItem | null = null;
-      
-      // Case 1: Bookmark from bookmark board
-      if (type === "bookmark" && bookmarkId) {
-        newItem = { type: "bookmark", id: bookmarkId };
+      // Case 1: Bookmark → 设 inDock，联动清 onDesktop
+      if (type === "bookmark" && resolvedBookmarkId) {
+        bookmarkStore.updateBookmark(resolvedBookmarkId, { inDock: true, onDesktop: false });
+        console.log("[Dock] Bookmark pinned to dock:", resolvedBookmarkId);
       }
       // Case 2: App alias from desktop shortcuts (aliasType === "app")
       else if (aliasType === "app" && aliasTarget) {
-        newItem = { type: "app", id: aliasTarget };
+        addDockItem({ type: "app", id: aliasTarget }, dropIndex);
       }
       // Case 3: Direct app ID (from Applications folder files)
       else if (appId) {
-        newItem = { type: "app", id: appId };
-      }
-      // Note: File system paths removed - Kyo.is has no file system
-      
-      console.log("[Dock] Adding item:", newItem, "at index:", dropIndex);
-      
-      if (newItem) {
-        const added = addDockItem(newItem, dropIndex);
-        console.log("[Dock] Item added:", added);
+        addDockItem({ type: "app", id: appId }, dropIndex);
       }
     } catch (err) {
       console.warn("[Dock] Failed to handle drop:", err);
@@ -1146,7 +1145,7 @@ function MacDock() {
   }, []);
   
   // Handle internal dock item drag end
-  const handleItemDragEnd = useCallback((e: React.DragEvent, itemId: string) => {
+  const handleItemDragEnd = useCallback((e: React.DragEvent, itemId: string, isBookmarkItem: boolean) => {
     // Check if dropped outside the dock
     const dockRect = dockBarRef.current?.getBoundingClientRect();
     if (dockRect) {
@@ -1157,14 +1156,18 @@ function MacDock() {
         e.clientY > dockRect.bottom + 50; // Allow some margin below
       
       if (isOutside && !PROTECTED_DOCK_ITEMS.has(itemId)) {
-        // Remove item from dock
-        removeDockItem(itemId);
+        if (isBookmarkItem) {
+          // 书签拖出 Dock → 清除 inDock
+          bookmarkStore.updateBookmark(itemId, { inDock: false });
+        } else {
+          removeDockItem(itemId);
+        }
       }
     }
     
     setDraggingItemId(null);
     setIsDraggedOutside(false);
-  }, [removeDockItem]);
+  }, [removeDockItem, bookmarkStore]);
   
   // Track when drag leaves dock area
   const handleItemDrag = useCallback((e: React.DragEvent) => {
@@ -1726,11 +1729,12 @@ function MacDock() {
   const allVisibleIds = useMemo(() => {
     const ids = [
       ...pinnedItems.map(item => item.id),
+      ...dockBookmarks.map(b => b.id),
       ...openItems.map((item) => item.appId),
       "__applications__",
     ];
     return ids;
-  }, [pinnedItems, openItems]);
+  }, [pinnedItems, dockBookmarks, openItems]);
   // After first paint, mark everything present as seen and mark mounted
   // Also update seen set whenever visible ids change
   useEffect(() => {
@@ -1846,9 +1850,8 @@ function MacDock() {
         >
           <LayoutGroup>
             <AnimatePresence mode="popLayout" initial={false}>
-              {/* Left pinned items from dock store */}
+              {/* Pinned apps from dock store */}
               {(() => {
-                // Build array of elements with spacer inserted at correct position
                 const elements: React.ReactNode[] = [];
                 
                 pinnedItems.forEach((item, index) => {
@@ -1857,155 +1860,137 @@ function MacDock() {
                     elements.push(<DockSpacer key="dock-drop-spacer" idKey="dock-drop-spacer" mouseX={mouseX} magnifyEnabled={effectiveMagnifyEnabled} baseSize={scaledButtonSize} />);
                   }
                   
-                  if (item.type === "app") {
-                    const appId = item.id as AppId;
-                    const icon = getAppIconPath(appId, currentTheme);
-                    const isOpen = openAppsAllSet.has(appId);
-                    const isLoading = Object.values(instances).some(
-                      (i) => i.appId === appId && i.isOpen && i.isLoading
-                    );
-                    const label = getTranslatedAppName(appId);
-                    const isProtected = PROTECTED_DOCK_ITEMS.has(item.id);
-                    
-                    elements.push(
-                      <IconButton
-                        key={appId}
-                        ref={(el) => {
-                          if (el) iconRefsMap.current.set(item.id, el);
-                          else iconRefsMap.current.delete(item.id);
-                        }}
-                        label={label}
-                        icon={icon}
-                        idKey={appId}
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const launchOrigin: LaunchOriginRect = {
-                            x: rect.left,
-                            y: rect.top,
-                            width: rect.width,
-                            height: rect.height,
-                          };
-                          focusOrLaunchApp(appId, undefined, launchOrigin);
-                        }}
-                        onContextMenu={(e) => handleAppContextMenu(e, appId)}
-                        showIndicator={isOpen}
-                        isLoading={isLoading}
-                        mouseX={mouseX}
-                        magnifyEnabled={effectiveMagnifyEnabled}
-                        isNew={hasMounted && !seenIdsRef.current.has(appId)}
-                        isHovered={hoveredId === appId}
-                        isSwapping={isSwapping}
-                        onHover={() => handleIconHover(appId)}
-                        onLeave={handleIconLeave}
-                        draggable={!isProtected}
-                        onDragStart={(e) => handleItemDragStart(e, item.id, index)}
-                        onDragEnd={(e) => handleItemDragEnd(e, item.id)}
-                        onDragOver={(e) => handleItemDragOver(e, index)}
-                        isDragging={draggingItemId === item.id}
-                        isDraggedOutside={draggingItemId === item.id && isDraggedOutside}
-                        baseSize={scaledButtonSize}
-                      />
-                    );
-                  } else if (item.type === "bookmark") {
-                    // Bookmark reference from bookmarkStore
-                    const bookmark = bookmarkStore.getBookmarkById(item.id);
-                    if (!bookmark) {
-                      // Bookmark was deleted, skip rendering
-                      return;
-                    }
-                    
-                    // 使用单一真相源获取图标信息
-                    const iconInfo = getBookmarkIconInfo(bookmark);
-                    // favicon URL 需要放大尺寸参数，custom/emoji 直接用
-                    const icon = iconInfo.isFavicon && iconInfo.value.startsWith("http")
-                      ? faviconUrlForDock(iconInfo.value)
-                      : iconInfo.value;
-                    const label = bookmark.title;
-                    // 是否需要 iOS 风格容器（favicon URL 或 custom base64 图片）
-                    const isImageIcon = iconInfo.isFavicon || iconInfo.isCustom;
-
-                    elements.push(
-                      <IconButton
-                        key={item.id}
-                        ref={(el) => {
-                          if (el) iconRefsMap.current.set(item.id, el);
-                          else iconRefsMap.current.delete(item.id);
-                        }}
-                        label={label}
-                        icon={icon}
-                        idKey={item.id}
-                        isBookmark={isImageIcon}
-                        isEmoji={iconInfo.isEmoji}
-                        isMacTheme={isMacTheme}
-                        bookmarkId={bookmark.id}
-                        bookmarkUrl={bookmark.url}
-                        bookmarkTitle={bookmark.title}
-                        faviconResolved={bookmark.faviconResolved}
-                        onClick={() => {
-                          openBookmarkUrl(bookmark.url);
-                        }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          
-                          const containerRect = dockContainerRef.current?.getBoundingClientRect();
-                          const x = containerRect ? e.clientX - containerRect.left : e.clientX;
-                          const y = containerRect ? e.clientY - containerRect.top : e.clientY;
-                          
-                          setUrlContextMenu({
-                            x,
-                            y,
-                            items: [
-                              {
-                                type: "item",
-                                label: t("common.dock.openInNewTab"),
-                                onSelect: () => {
-                                  openBookmarkUrl(bookmark.url);
-                                },
-                              },
-                              {
-                                type: "item",
-                                label: t("common.dock.copyUrl"),
-                                onSelect: () => {
-                                  navigator.clipboard.writeText(bookmark.url);
-                                },
-                              },
-                              { type: "separator" },
-                              {
-                                type: "item",
-                                label: t("common.dock.removeFromDock"),
-                                onSelect: () => removeDockItem(item.id),
-                              },
-                            ],
-                          });
-                        }}
-                        mouseX={mouseX}
-                        magnifyEnabled={effectiveMagnifyEnabled}
-                        isNew={hasMounted && !seenIdsRef.current.has(item.id)}
-                        isHovered={hoveredId === item.id}
-                        isSwapping={isSwapping}
-                        onHover={() => handleIconHover(item.id)}
-                        onLeave={handleIconLeave}
-                        draggable
-                        onDragStart={(e) => handleItemDragStart(e, item.id, index)}
-                        onDragEnd={(e) => handleItemDragEnd(e, item.id)}
-                        onDragOver={(e) => handleItemDragOver(e, index)}
-                        isDragging={draggingItemId === item.id}
-                        isDraggedOutside={draggingItemId === item.id && isDraggedOutside}
-                        baseSize={scaledButtonSize}
-                      />
-                    );
-                  }
-                  // Note: link type removed - all website links are now bookmarks
+                  const appId = item.id as AppId;
+                  const icon = getAppIconPath(appId, currentTheme);
+                  const isOpen = openAppsAllSet.has(appId);
+                  const isLoading = Object.values(instances).some(
+                    (i) => i.appId === appId && i.isOpen && i.isLoading
+                  );
+                  const label = getTranslatedAppName(appId);
+                  const isProtected = PROTECTED_DOCK_ITEMS.has(item.id);
+                  
+                  elements.push(
+                    <IconButton
+                      key={appId}
+                      ref={(el) => {
+                        if (el) iconRefsMap.current.set(item.id, el);
+                        else iconRefsMap.current.delete(item.id);
+                      }}
+                      label={label}
+                      icon={icon}
+                      idKey={appId}
+                      onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const launchOrigin: LaunchOriginRect = {
+                          x: rect.left,
+                          y: rect.top,
+                          width: rect.width,
+                          height: rect.height,
+                        };
+                        focusOrLaunchApp(appId, undefined, launchOrigin);
+                      }}
+                      onContextMenu={(e) => handleAppContextMenu(e, appId)}
+                      showIndicator={isOpen}
+                      isLoading={isLoading}
+                      mouseX={mouseX}
+                      magnifyEnabled={effectiveMagnifyEnabled}
+                      isNew={hasMounted && !seenIdsRef.current.has(appId)}
+                      isHovered={hoveredId === appId}
+                      isSwapping={isSwapping}
+                      onHover={() => handleIconHover(appId)}
+                      onLeave={handleIconLeave}
+                      draggable={!isProtected}
+                      onDragStart={(e) => handleItemDragStart(e, item.id, index)}
+                      onDragEnd={(e) => handleItemDragEnd(e, item.id, false)}
+                      onDragOver={(e) => handleItemDragOver(e, index)}
+                      isDragging={draggingItemId === item.id}
+                      isDraggedOutside={draggingItemId === item.id && isDraggedOutside}
+                      baseSize={scaledButtonSize}
+                    />
+                  );
                 });
                 
-                // Add spacer at end if dropping after all items
+                // Add spacer at end if dropping after all pinned apps
                 if (externalDragIndex === pinnedItems.length) {
                   elements.push(<DockSpacer key="dock-drop-spacer" idKey="dock-drop-spacer" mouseX={mouseX} magnifyEnabled={effectiveMagnifyEnabled} baseSize={scaledButtonSize} />);
                 }
                 
                 return elements;
               })()}
+
+              {/* Dock bookmarks (from useBookmarkStore, inDock === true) */}
+              {dockBookmarks.map((bookmark) => {
+                const iconInfo = getBookmarkIconInfo(bookmark);
+                const icon = iconInfo.isFavicon && iconInfo.value.startsWith("http")
+                  ? faviconUrlForDock(iconInfo.value)
+                  : iconInfo.value;
+                const isImageIcon = iconInfo.isFavicon || iconInfo.isCustom;
+
+                return (
+                  <IconButton
+                    key={`bm-${bookmark.id}`}
+                    ref={(el) => {
+                      if (el) iconRefsMap.current.set(bookmark.id, el);
+                      else iconRefsMap.current.delete(bookmark.id);
+                    }}
+                    label={bookmark.title}
+                    icon={icon}
+                    idKey={bookmark.id}
+                    isBookmark={isImageIcon}
+                    isEmoji={iconInfo.isEmoji}
+                    isMacTheme={isMacTheme}
+                    bookmarkId={bookmark.id}
+                    bookmarkUrl={bookmark.url}
+                    bookmarkTitle={bookmark.title}
+                    faviconResolved={bookmark.faviconResolved}
+                    onClick={() => openBookmarkUrl(bookmark.url)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      
+                      const containerRect = dockContainerRef.current?.getBoundingClientRect();
+                      const x = containerRect ? e.clientX - containerRect.left : e.clientX;
+                      const y = containerRect ? e.clientY - containerRect.top : e.clientY;
+                      
+                      setUrlContextMenu({
+                        x,
+                        y,
+                        items: [
+                          {
+                            type: "item",
+                            label: t("common.dock.openInNewTab"),
+                            onSelect: () => openBookmarkUrl(bookmark.url),
+                          },
+                          {
+                            type: "item",
+                            label: t("common.dock.copyUrl"),
+                            onSelect: () => navigator.clipboard.writeText(bookmark.url),
+                          },
+                          { type: "separator" },
+                          {
+                            type: "item",
+                            label: t("common.dock.removeFromDock"),
+                            onSelect: () => bookmarkStore.updateBookmark(bookmark.id, { inDock: false }),
+                          },
+                        ],
+                      });
+                    }}
+                    mouseX={mouseX}
+                    magnifyEnabled={effectiveMagnifyEnabled}
+                    isNew={hasMounted && !seenIdsRef.current.has(bookmark.id)}
+                    isHovered={hoveredId === bookmark.id}
+                    isSwapping={isSwapping}
+                    onHover={() => handleIconHover(bookmark.id)}
+                    onLeave={handleIconLeave}
+                    draggable
+                    onDragStart={(e) => handleItemDragStart(e, bookmark.id, -1)}
+                    onDragEnd={(e) => handleItemDragEnd(e, bookmark.id, true)}
+                    isDragging={draggingItemId === bookmark.id}
+                    isDraggedOutside={draggingItemId === bookmark.id && isDraggedOutside}
+                    baseSize={scaledButtonSize}
+                  />
+                );
+              })}
 
               {/* Divider between pinned and non-pinned apps */}
               {openItems.length > 0 && (
