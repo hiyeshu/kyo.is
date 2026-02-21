@@ -2502,7 +2502,10 @@
       "addWebsiteDescDesktop": "输入网站网址以新增至桌面",
       "addToDock": "加入 Dock",
       "addToDesktop": "加入桌面",
-      "changeWallpaper": "更换壁纸"
+      "changeWallpaper": "更换壁纸",
+      "batchRemoveTitle": "移除书签",
+      "batchRemoveDesc": "确定要将选中的 {{count}} 个书签从桌面移除吗？",
+      "removeSelectedFromDesktop": "从桌面移除 ({{count}})"
     },
     "dialog": {
       "about": "关于",

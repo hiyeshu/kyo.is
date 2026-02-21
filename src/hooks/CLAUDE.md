@@ -14,6 +14,7 @@ useIsPhone.ts: 手机检测 hook，监听窗口宽度变化，返回是否为手
 useLatestRef.ts: 最新值引用 hook，保持 ref 始终指向最新值，避免闭包陷阱
 useLaunchApp.ts: 应用启动 hook，处理应用启动逻辑、动画、音效、实例管理
 useLongPress.ts: 长按检测 hook，支持触摸和鼠标，可配置延迟时间
+useMarqueeSelection.ts: 桌面框选 hook，封装拖拽选框、AABB 碰撞检测、多选 ID 管理，被 Desktop.tsx 消费
 useMediaQuery.ts: 媒体查询 hook，监听 CSS 媒体查询变化，返回匹配状态
 useOffline.ts: 离线检测 hook，监听网络状态，显示离线提示 Toast
 usePasteHandler.ts: 全局粘贴处理器，URL→桌面书签（onDesktop），文本→便签

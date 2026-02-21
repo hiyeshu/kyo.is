@@ -15,8 +15,8 @@ import { fileURLToPath } from 'url';
 // VERSION CONSTANTS - Auto-bumped by pre-commit hook
 // ============================================================================
 const MAJOR = 1;
-const MINOR = 0;
-const PATCH = 99;
+const MINOR = 1;
+const PATCH = 0;
 // ============================================================================
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

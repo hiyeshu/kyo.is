@@ -2496,7 +2496,10 @@
       "addWebsiteDescDesktop": "輸入網站網址以新增至桌面",
       "addToDock": "加入 Dock",
       "addToDesktop": "加入桌面",
-      "changeWallpaper": "更換桌布"
+      "changeWallpaper": "更換桌布",
+      "batchRemoveTitle": "移除書籤",
+      "batchRemoveDesc": "確定要將選取的 {{count}} 個書籤從桌面移除嗎？",
+      "removeSelectedFromDesktop": "從桌面移除 ({{count}})"
     },
     "dialog": {
       "about": "關於",

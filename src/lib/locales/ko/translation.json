@@ -2490,7 +2490,10 @@
       "addWebsiteDescDesktop": "바탕 화면에 추가할 웹사이트 URL을 입력하세요",
       "addToDock": "Dock에 추가",
       "addToDesktop": "바탕 화면에 추가",
-      "changeWallpaper": "배경화면 변경"
+      "changeWallpaper": "배경화면 변경",
+      "batchRemoveTitle": "북마크 제거",
+      "batchRemoveDesc": "선택한 {{count}}개의 북마크를 바탕화면에서 제거하시겠습니까?",
+      "removeSelectedFromDesktop": "바탕화면에서 제거 ({{count}})"
     },
     "dialog": {
       "about": "정보",

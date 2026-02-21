@@ -166,7 +166,10 @@
       "addWebsiteDescDesktop": "Enter a website URL to add to your Desktop",
       "addToDock": "Add to Dock",
       "addToDesktop": "Add to Desktop",
-      "changeWallpaper": "Change Wallpaper"
+      "changeWallpaper": "Change Wallpaper",
+      "batchRemoveTitle": "Remove Bookmarks",
+      "batchRemoveDesc": "Remove {{count}} bookmark(s) from desktop?",
+      "removeSelectedFromDesktop": "Remove from Desktop ({{count}})"
     },
     "dock": {
       "open": "Open",

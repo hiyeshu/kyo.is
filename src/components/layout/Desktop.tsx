@@ -1,6 +1,6 @@
 /**
- * [INPUT]: 依赖 apps/base/types 的应用类型，依赖 config/appRegistry 的应用配置，依赖 hooks/useWallpaper 的壁纸管理，依赖 hooks/useLongPress 的长按检测，依赖 stores/useThemeStore 的主题状态
- * [OUTPUT]: 对外提供 Desktop 组件，桌面环境核心（壁纸显示、桌面图标、右键菜单、应用启动）
+ * [INPUT]: 依赖 apps/base/types 的应用类型，依赖 config/appRegistry 的应用配置，依赖 hooks/useWallpaper 的壁纸管理，依赖 hooks/useLongPress 的长按检测，依赖 stores/useThemeStore 的主题状态，依赖 hooks/useMarqueeSelection 的框选逻辑
+ * [OUTPUT]: 对外提供 Desktop 组件，桌面环境核心（壁纸显示、桌面图标、右键菜单、应用启动、框选交互）
  * [POS]: components/layout/ 的桌面组件，被 App.tsx 使用，是桌面环境的主容器
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -11,12 +11,14 @@ import { useState, useRef, useCallback } from "react";
 import { useWallpaper } from "@/hooks/useWallpaper";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
+import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useBookmarkStore, isFolder, openBookmarkUrl, getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
+import { useMarqueeSelection } from "@/hooks/useMarqueeSelection";
 import { getTranslatedAppName } from "@/utils/i18n";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -57,12 +59,15 @@ export function Desktop({
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const { wallpaperSource, isVideoWallpaper } = useWallpaper();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const desktopRef = useRef<HTMLDivElement>(null);
   const [contextMenuPos, setContextMenuPos] = useState<{
     x: number;
     y: number;
   } | null>(null);
   const [contextMenuAppId, setContextMenuAppId] = useState<string | null>(null);
   const [isAddWebsiteDialogOpen, setIsAddWebsiteDialogOpen] = useState(false);
+  const [isBatchRemoveDialogOpen, setIsBatchRemoveDialogOpen] = useState(false);
+  const [batchRemoveIds, setBatchRemoveIds] = useState<Set<string>>(new Set());
 
   const currentTheme = useThemeStore((state) => state.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
@@ -72,8 +77,21 @@ export function Desktop({
 
   // ─── Bookmarks for desktop (all themes) ────────────────────────────
   const bookmarkStore = useBookmarkStore();
-  const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(null);
   const [contextMenuBookmark, setContextMenuBookmark] = useState<Bookmark | null>(null);
+
+  // ─── Marquee selection ─────────────────────────────────────────────
+  const {
+    marqueeRect,
+    selectedIds: selectedBookmarkIds,
+    clearSelection,
+    selectAll,
+    setSelectedIds: setSelectedBookmarkIds,
+    handleMouseDown: handleMarqueeMouseDown,
+    justFinishedRef,
+  } = useMarqueeSelection({
+    containerRef: desktopRef,
+    enabled: !isMobile,
+  });
 
   const handleDesktopClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -83,17 +101,48 @@ export function Desktop({
         return;
       }
       if (target.closest("[data-desktop-icon]")) return;
+      // 框选刚结束时跳过 click
+      if (justFinishedRef.current) return;
       setSelectedAppId(null);
-      setSelectedBookmarkId(null);
+      clearSelection();
       onClick?.();
     },
-    [onClick]
+    [onClick, clearSelection, justFinishedRef]
   );
 
   // Get top-level bookmarks (not in folders) marked for desktop
   const desktopBookmarks = bookmarkStore.items.filter((item) =>
     !isFolder(item) && (item as Bookmark).onDesktop
   ) as Bookmark[];
+
+  // ─── Keyboard shortcuts ─────────────────────────────────────────────
+  useEventListener("keydown", useCallback((e: KeyboardEvent) => {
+    // ⌘A / Ctrl+A → 全选桌面书签
+    if ((e.metaKey || e.ctrlKey) && e.key === "a") {
+      e.preventDefault();
+      selectAll(desktopBookmarks.map((bm) => bm.id));
+      return;
+    }
+    // Delete / Backspace → 批量移除（非 input/textarea 焦点时）
+    if (e.key === "Delete" || e.key === "Backspace") {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (selectedBookmarkIds.size > 0) {
+        e.preventDefault();
+        setBatchRemoveIds(new Set(selectedBookmarkIds));
+        setIsBatchRemoveDialogOpen(true);
+      }
+    }
+  }, [desktopBookmarks, selectedBookmarkIds, selectAll]));
+
+  // ─── Batch remove handler ───────────────────────────────────────────
+  const handleBatchRemove = useCallback(() => {
+    batchRemoveIds.forEach((id) => {
+      bookmarkStore.updateBookmark(id, { onDesktop: false });
+    });
+    clearSelection();
+    setIsBatchRemoveDialogOpen(false);
+  }, [batchRemoveIds, bookmarkStore, clearSelection]);
 
   // ─── Video wallpaper playback ─────────────────────────────────────
   const resumeVideoPlayback = useCallback(async () => {
@@ -173,8 +222,9 @@ export function Desktop({
 
   // ─── Context menu ─────────────────────────────────────────────────
   const getContextMenuItems = (): MenuItem[] => {
-    // Bookmark context menu
+    // Bookmark context menu (multi-select aware)
     if (contextMenuBookmark) {
+      const isMulti = selectedBookmarkIds.size > 1 && selectedBookmarkIds.has(contextMenuBookmark.id);
       return [
         {
           type: "item",
@@ -197,9 +247,16 @@ export function Desktop({
         { type: "separator" },
         {
           type: "item",
-          label: t("common.desktop.removeFromDesktop", "从桌面移除"),
+          label: isMulti
+            ? t("common.desktop.removeSelectedFromDesktop", "从桌面移除 ({{count}})", { count: selectedBookmarkIds.size })
+            : t("common.desktop.removeFromDesktop", "从桌面移除"),
           onSelect: () => {
-            bookmarkStore.updateBookmark(contextMenuBookmark.id, { onDesktop: false });
+            if (isMulti) {
+              setBatchRemoveIds(new Set(selectedBookmarkIds));
+              setIsBatchRemoveDialogOpen(true);
+            } else {
+              bookmarkStore.updateBookmark(contextMenuBookmark.id, { onDesktop: false });
+            }
             setContextMenuPos(null);
             setContextMenuBookmark(null);
           },
@@ -269,8 +326,10 @@ export function Desktop({
 
   return (
     <div
+      ref={desktopRef}
       className="absolute inset-0 min-h-screen h-full z-0 desktop-background"
       onClick={handleDesktopClick}
+      onMouseDown={handleMarqueeMouseDown}
       onDoubleClick={(e) => {
         const target = e.target as HTMLElement;
         if (!target.closest("[data-desktop-icon]") && onDoubleClick) {
@@ -399,7 +458,7 @@ export function Desktop({
                     setSelectedAppId(null);
                   } else {
                     setSelectedAppId(app.id);
-                    setSelectedBookmarkId(null);
+                    clearSelection();
                   }
                 }}
                 onDoubleClick={(e) => {
@@ -432,6 +491,7 @@ export function Desktop({
           {desktopBookmarks.map((bm) => (
             <div
               key={bm.id}
+              data-bookmark-id={bm.id}
               draggable
               onDragStart={(e) => {
                 e.dataTransfer.effectAllowed = "move";
@@ -455,16 +515,16 @@ export function Desktop({
             >
               <BookmarkDesktopIcon
                 bookmark={bm}
-                isSelected={selectedBookmarkId === bm.id}
+                isSelected={selectedBookmarkIds.has(bm.id)}
                 theme={currentTheme}
                 onClick={(e) => {
                   e.stopPropagation();
                   // Mobile: single tap opens bookmark; Desktop: single click selects
                   if (isMobile) {
                     openBookmarkUrl(bm.url);
-                    setSelectedBookmarkId(null);
+                    clearSelection();
                   } else {
-                    setSelectedBookmarkId(bm.id);
+                    setSelectedBookmarkIds(new Set([bm.id]));
                     setSelectedAppId(null);
                   }
                 }}
@@ -473,7 +533,7 @@ export function Desktop({
                   // Desktop: double click opens bookmark
                   if (!isMobile) {
                     openBookmarkUrl(bm.url);
-                    setSelectedBookmarkId(null);
+                    clearSelection();
                   }
                 }}
                 onContextMenu={(e) => {
@@ -482,7 +542,10 @@ export function Desktop({
                   setContextMenuPos({ x: e.clientX, y: e.clientY });
                   setContextMenuBookmark(bm);
                   setContextMenuAppId(null);
-                  setSelectedBookmarkId(bm.id);
+                  // 右键已选中的书签保持多选
+                  if (!selectedBookmarkIds.has(bm.id)) {
+                    setSelectedBookmarkIds(new Set([bm.id]));
+                  }
                 }}
               />
             </div>
@@ -505,6 +568,26 @@ export function Desktop({
         isOpen={isAddWebsiteDialogOpen}
         onOpenChange={setIsAddWebsiteDialogOpen}
       />
+      <ConfirmDialog
+        isOpen={isBatchRemoveDialogOpen}
+        onOpenChange={setIsBatchRemoveDialogOpen}
+        onConfirm={handleBatchRemove}
+        title={t("common.desktop.batchRemoveTitle", "移除书签")}
+        description={t("common.desktop.batchRemoveDesc", "确定要将选中的 {{count}} 个书签从桌面移除吗？", { count: batchRemoveIds.size })}
+      />
+
+      {/* Marquee selection overlay */}
+      {marqueeRect && (
+        <div
+          className="fixed pointer-events-none z-50 border border-white/60 bg-white/15"
+          style={{
+            left: marqueeRect.left,
+            top: marqueeRect.top,
+            width: marqueeRect.width,
+            height: marqueeRect.height,
+          }}
+        />
+      )}
     </div>
   );
 }

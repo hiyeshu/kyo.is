@@ -2490,7 +2490,10 @@
       "addWebsiteDescDesktop": "デスクトップにウェブサイトのURLを入力してください",
       "addToDock": "Dockに追加",
       "addToDesktop": "デスクトップに追加",
-      "changeWallpaper": "壁紙を変更"
+      "changeWallpaper": "壁紙を変更",
+      "batchRemoveTitle": "ブックマークを削除",
+      "batchRemoveDesc": "選択した {{count}} 件のブックマークをデスクトップから削除しますか？",
+      "removeSelectedFromDesktop": "デスクトップから削除 ({{count}})"
     },
     "dialog": {
       "about": "について",
