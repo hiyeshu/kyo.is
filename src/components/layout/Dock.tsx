@@ -14,7 +14,7 @@ import { AppId, getAppIconPath, appRegistry, getNonFinderApps } from "@/config/a
 import { getTranslatedAppName } from "@/utils/i18n";
 import { useLaunchApp } from "@/hooks/useLaunchApp";
 import { useDockStore, PROTECTED_DOCK_ITEMS } from "@/stores/useDockStore";
-import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl, isBookmark, type Bookmark } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useLongPress } from "@/hooks/useLongPress";
@@ -681,7 +681,7 @@ function MacDock() {
   const dockBookmarks: Bookmark[] = useMemo(() => {
     const result: Bookmark[] = [];
     for (const item of bookmarkStore.items) {
-      if (isBookmark(item) && item.inDock) result.push(item);
+      if (item.inDock) result.push(item);
     }
     return result;
   }, [bookmarkStore.items]);

@@ -451,7 +451,6 @@ export interface Bookmark {
 
 export type SortMode = "recent" | "name";
 
-export const isBookmark = (item: Bookmark): item is Bookmark => true;
 
 // 向后兼容：旧数据可能包含文件夹对象
 interface LegacyFolder { id: string; title: string; bookmarks: Bookmark[] }
