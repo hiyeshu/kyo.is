@@ -13,10 +13,7 @@ import {
 } from "@/lib/cloudSync";
 import {
   useBookmarkStore,
-  isBookmark,
-  isFolder,
   type Bookmark,
-  type BoardItem,
 } from "./useBookmarkStore";
 import { useStickiesStore, type StickyNote } from "./useStickiesStore";
 
@@ -32,13 +29,7 @@ interface SyncState {
 // ─── 辅助函数 ─────────────────────────────────────────────────────────────────
 
 function getLocalBookmarks(): Bookmark[] {
-  const items = useBookmarkStore.getState().items;
-  const bookmarks: Bookmark[] = [];
-  for (const item of items) {
-    if (isBookmark(item)) bookmarks.push(item);
-    else if (isFolder(item)) bookmarks.push(...item.bookmarks);
-  }
-  return bookmarks;
+  return useBookmarkStore.getState().items;
 }
 
 function getLocalNotes(): StickyNote[] {
@@ -73,7 +64,7 @@ export const useSyncStore = create<SyncState>((set) => ({
 
       if (hasCloud) {
         // 云端有数据 → 覆盖本地
-        const bookmarkItems: BoardItem[] = cloudBookmarks.map((b) => ({
+        const bookmarkItems: Bookmark[] = cloudBookmarks.map((b) => ({
           id: b.id,
           title: b.title || "",
           url: b.url || "",

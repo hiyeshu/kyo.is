@@ -74,7 +74,7 @@ function handleUrlPaste(url: string, t: (key: string, fallback?: string) => stri
   // 先创建占位书签，异步抓取
   let hostname = "example.com";
   try { hostname = new URL(url).hostname; } catch { /* noop */ }
-  const tempId = addBookmark(hostname, url, undefined, undefined, { onDesktop: true });
+  const tempId = addBookmark(hostname, url, undefined, { onDesktop: true });
   toast(t("paste.fetchingMeta", "正在获取网页信息..."));
 
   fetchLinkMeta(url)

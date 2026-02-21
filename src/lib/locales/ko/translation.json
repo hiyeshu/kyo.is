@@ -1850,7 +1850,7 @@
       "cancel": "취소"
     },
     "bookmarks": {
-      "name": "북마크 보드",
+      "name": "내 즐겨찾기",
       "search": "북마크 검색...",
       "countBookmarks": "{{count}}개의 북마크",
       "addBookmark": "북마크 추가",
@@ -1863,6 +1863,10 @@
       "editBookmark": "북마크 편집",
       "openInNewTab": "새 탭에서 열기",
       "addToDock": "Dock에 추가",
+      "sortByName": "이름순 정렬",
+      "sortByRecent": "최근 사용순 정렬",
+      "groupByDomain": "도메인별 그룹",
+      "removeFromFavorites": "즐겨찾기에서 제거",
       "url": "URL",
       "bookmarkName": "이름",
       "pageTitle": "페이지 제목",
@@ -1888,8 +1892,8 @@
         "imageSizeLimit": "PNG, JPG 최대 100KB"
       },
       "menu": {
-        "help": "북마크 보드 도움말",
-        "about": "북마크 보드 정보"
+        "help": "내 즐겨찾기 도움말",
+        "about": "내 즐겨찾기 정보"
       }
     },
     "stickies": {
@@ -2361,10 +2365,10 @@
       "transcribing": "텍스트 변환 중..."
     },
     "favorites": {
-      "name": "컬렉션 박스",
-      "title": "컬렉션 박스",
+      "name": "히스토리",
+      "title": "히스토리",
       "description": "북마크와 메모를 한곳에서 관리",
-      "search": "컬렉션 검색...",
+      "search": "히스토리 검색...",
       "empty": "아이템이 없습니다",
       "items": "개"
     },

@@ -2300,7 +2300,7 @@
       "cancel": "Cancel"
     },
     "bookmarks": {
-      "name": "Bookmark Board",
+      "name": "My Favorites",
       "search": "Search bookmarks...",
       "countBookmarks": "{{count}} bookmarks",
       "addBookmark": "Add Bookmark",
@@ -2313,6 +2313,10 @@
       "editBookmark": "Edit Bookmark",
       "openInNewTab": "Open in New Tab",
       "addToDock": "Add to Dock",
+      "sortByName": "Sort by Name",
+      "sortByRecent": "Sort by Recent Use",
+      "groupByDomain": "Group by Domain",
+      "removeFromFavorites": "Remove from Favorites",
       "url": "URL",
       "bookmarkName": "Name",
       "pageTitle": "Page title",
@@ -2338,8 +2342,8 @@
         "imageSizeLimit": "PNG, JPG up to 100KB"
       },
       "menu": {
-        "help": "Bookmark Board Help",
-        "about": "About Bookmark Board"
+        "help": "My Favorites Help",
+        "about": "About My Favorites"
       }
     },
     "stickies": {
@@ -2693,10 +2697,10 @@
       "transcribing": "Transcribing..."
     },
     "favorites": {
-      "name": "Collection Box",
-      "title": "Collection Box",
+      "name": "History",
+      "title": "History",
       "description": "All your bookmarks and notes in one place",
-      "search": "Search collection...",
+      "search": "Search history...",
       "empty": "No items yet",
       "items": "items"
     },

@@ -8,11 +8,9 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import {
   useBookmarkStore,
-  isFolder,
   getFaviconUrl,
   openBookmarkUrl,
-  type BookmarkFolder,
-  type BoardItem,
+  type Bookmark,
 } from "@/stores/useBookmarkStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { toast } from "@/hooks/useToast";
@@ -21,11 +19,14 @@ import { useTranslation } from "react-i18next";
 
 // ─── 右键菜单类型 ─────────────────────────────────────────────────────────────
 
+export type ContextMenuTarget =
+  | { kind: "bookmark"; item: Bookmark }
+  | { kind: "empty" };
+
 export interface ContextMenuState {
   x: number;
   y: number;
-  item: BoardItem;
-  folderId?: string; // 如果书签在文件夹内
+  target: ContextMenuTarget;
 }
 
 export function useBookmarkBoard() {
@@ -40,55 +41,70 @@ export function useBookmarkBoard() {
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return store.items;
-    return store.items
-      .map((item) => {
-        if (isFolder(item)) {
-          const matched = item.bookmarks.filter((b) => {
-            const tags = (b.tags || []).join(" ").toLowerCase();
-            const summary = (b.summary || "").toLowerCase();
-            return (
-              b.title.toLowerCase().includes(q) ||
-              b.url.toLowerCase().includes(q) ||
-              summary.includes(q) ||
-              tags.includes(q)
-            );
-          });
-          return matched.length ? { ...item, bookmarks: matched } : null;
-        }
-        const tags = (item.tags || []).join(" ").toLowerCase();
-        const summary = (item.summary || "").toLowerCase();
-        return item.title.toLowerCase().includes(q) ||
-          item.url.toLowerCase().includes(q) ||
-          summary.includes(q) ||
-          tags.includes(q)
-          ? item
-          : null;
-      })
-      .filter(Boolean) as typeof store.items;
+    return store.items.filter((bm) => {
+      const tags = (bm.tags || []).join(" ").toLowerCase();
+      const summary = (bm.summary || "").toLowerCase();
+      return (
+        bm.title.toLowerCase().includes(q) ||
+        bm.url.toLowerCase().includes(q) ||
+        summary.includes(q) ||
+        tags.includes(q)
+      );
+    });
   }, [store.items, searchQuery]);
+
+  // ─── 排序后的列表 ──────────────────────────────────────────────────────────
+  const sortedItems = useMemo(() => {
+    const list = [...filteredItems];
+    if (store.sortMode === "name") {
+      list.sort((a, b) => a.title.localeCompare(b.title));
+    } else {
+      // "recent": lastUsed 优先，没有 lastUsed 的按 createdAt 降序
+      list.sort((a, b) => {
+        const aTime = a.lastUsed || a.createdAt || "";
+        const bTime = b.lastUsed || b.createdAt || "";
+        return bTime.localeCompare(aTime);
+      });
+    }
+    return list;
+  }, [filteredItems, store.sortMode]);
+
+  // ─── 域名分组 ──────────────────────────────────────────────────────────────
+  const groupedByDomain = useMemo(() => {
+    if (!store.groupByDomain) return null;
+    const raw = new Map<string, Bookmark[]>();
+    for (const bm of sortedItems) {
+      let domain = "other";
+      try { domain = new URL(bm.url).hostname.replace(/^www\./, ""); } catch { /* noop */ }
+      const list = raw.get(domain) || [];
+      list.push(bm);
+      raw.set(domain, list);
+    }
+    // 单个书签的域名归入"其他"，避免一个域名独占一行
+    const result: [string, Bookmark[]][] = [];
+    const others: Bookmark[] = [];
+    for (const [domain, bookmarks] of raw) {
+      if (bookmarks.length >= 2) {
+        result.push([domain, bookmarks]);
+      } else {
+        others.push(...bookmarks);
+      }
+    }
+    result.sort(([a], [b]) => a.localeCompare(b));
+    if (others.length > 0) result.push(["other", others]);
+    return result;
+  }, [sortedItems, store.groupByDomain]);
 
   // ─── 添加书签 ──────────────────────────────────────────────────────────────
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [addUrl, setAddUrl] = useState("");
   const [isAiCreating, setIsAiCreating] = useState(false);
 
-  // 所有文件夹列表（保留用于编辑/展示）
-  const folders = useMemo(
-    () => store.items.filter(isFolder) as BookmarkFolder[],
-    [store.items]
-  );
-
-  // 预览 favicon URL - 根据用户地区自动选择服务
   const previewFavicon = useMemo(() => {
     const url = addUrl.trim();
     if (!url) return null;
     const fullUrl = url.startsWith("http") ? url : `https://${url}`;
-    try {
-      const hostname = new URL(fullUrl).hostname;
-      return getFaviconUrl(hostname);
-    } catch {
-      return null;
-    }
+    try { return getFaviconUrl(new URL(fullUrl).hostname); } catch { return null; }
   }, [addUrl]);
 
   const openAddDialog = useCallback(() => {
@@ -96,7 +112,7 @@ export function useBookmarkBoard() {
     setAddDialogOpen(true);
   }, []);
 
-  // ─── AI 添加书签（只创建） ──────────────────────────────────────────────
+  // ─── AI 添加书签 ──────────────────────────────────────────────────────────
   const submitAiBookmark = useCallback(async () => {
     const input = addUrl.trim();
     if (!input || isAiCreating) return;
@@ -105,11 +121,7 @@ export function useBookmarkBoard() {
     const fullUrl = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
 
     let parsedUrl: URL | null = null;
-    try {
-      parsedUrl = new URL(fullUrl);
-    } catch {
-      return;
-    }
+    try { parsedUrl = new URL(fullUrl); } catch { return; }
 
     const existing = store.getBookmarkByUrl(parsedUrl.toString());
     if (existing) {
@@ -124,105 +136,74 @@ export function useBookmarkBoard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
-            {
-              role: "system",
-              content: `You are a link ingestion assistant. Return JSON only: {"title":"...","summary":"...","tags":["..."]}. Summary should be two or three sentences. No extra text.`,
-            },
-            {
-              role: "user",
-              content: parsedUrl.toString(),
-            },
+            { role: "system", content: `You are a link ingestion assistant. Return JSON only: {"title":"...","summary":"...","tags":["..."]}. Summary should be two or three sentences. No extra text.` },
+            { role: "user", content: parsedUrl.toString() },
           ],
           task: "link-ingest",
         }),
       });
 
-      if (!response.ok) {
-        return;
-      }
+      if (!response.ok) return;
 
       const text = await response.text();
       const fullContent = text
         .split("\n")
         .filter((line) => line.startsWith("0:"))
-        .map((line) => {
-          try {
-            return JSON.parse(line.slice(2)) as string;
-          } catch {
-            return "";
-          }
-        })
+        .map((line) => { try { return JSON.parse(line.slice(2)) as string; } catch { return ""; } })
         .join("");
       const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        return;
-      }
+      if (!jsonMatch) return;
       const data = JSON.parse(jsonMatch[0]) as { title: string; summary: string; tags: string[] };
 
-      if (!data.title || !data.summary || !Array.isArray(data.tags)) {
-        return;
-      }
+      if (!data.title || !data.summary || !Array.isArray(data.tags)) return;
 
       const trimmedTags = data.tags.filter((tag) => tag && tag.trim());
       store.addAiBookmark(data.title, parsedUrl.toString(), data.summary, trimmedTags);
       setAddDialogOpen(false);
       setAddUrl("");
-    } catch {
-      // noop
-    } finally {
+    } catch { /* noop */ } finally {
       setIsAiCreating(false);
     }
   }, [addUrl, isAiCreating, store, t]);
 
-  // ─── 编辑书签 ──────────────────────────────────────────────────────────────
-
   // ─── 打开书签 ──────────────────────────────────────────────────────────────
-
-  const openBookmark = useCallback((url: string) => {
+  const openBookmark = useCallback((id: string, url: string) => {
+    store.touchBookmark(id);
     openBookmarkUrl(url);
-  }, []);
+  }, [store]);
 
   // ─── 删除 ──────────────────────────────────────────────────────────────────
   const removeBookmark = useCallback((id: string) => {
     store.removeBookmark(id);
   }, [store]);
 
-  const removeFolder = useCallback((id: string) => {
-    store.removeFolder(id);
-  }, [store]);
-
   // ─── 右键菜单 ──────────────────────────────────────────────────────────────
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
-  const openContextMenu = useCallback((e: React.MouseEvent, item: BoardItem, folderId?: string) => {
+  const openContextMenu = useCallback((e: React.MouseEvent, item: Bookmark) => {
     e.preventDefault();
     e.stopPropagation();
-    setContextMenu({ x: e.clientX, y: e.clientY, item, folderId });
+    setContextMenu({ x: e.clientX, y: e.clientY, target: { kind: "bookmark", item } });
   }, []);
 
-  const closeContextMenu = useCallback(() => {
-    setContextMenu(null);
+  const openEmptyContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY, target: { kind: "empty" } });
   }, []);
+
+  const closeContextMenu = useCallback(() => setContextMenu(null), []);
 
   // ─── 拖拽排序 ──────────────────────────────────────────────────────────────
-  const [draggedItem, setDraggedItem] = useState<{ item: BoardItem; index: number; folderId?: string } | null>(null);
+  const [draggedItem, setDraggedItem] = useState<{ item: Bookmark; index: number } | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const dragCounterRef = useRef(0);
 
-  const handleDragStart = useCallback((e: React.DragEvent, item: BoardItem, index: number, folderId?: string) => {
-    setDraggedItem({ item, index, folderId });
+  const handleDragStart = useCallback((e: React.DragEvent, item: Bookmark, index: number) => {
+    setDraggedItem({ item, index });
     e.dataTransfer.effectAllowed = "copyMove";
     e.dataTransfer.setData("text/plain", item.id);
-    
-    // 设置 JSON 数据，让 Dock 能识别这是书签拖拽
-    if (!isFolder(item)) {
-      e.dataTransfer.setData("application/json", JSON.stringify({
-        type: "bookmark",
-        bookmarkId: item.id,
-      }));
-    }
-    
-    // 设置拖拽图像
+    e.dataTransfer.setData("application/json", JSON.stringify({ type: "bookmark", bookmarkId: item.id }));
     if (e.currentTarget instanceof HTMLElement) {
       e.dataTransfer.setDragImage(e.currentTarget, 24, 24);
     }
@@ -242,36 +223,17 @@ export function useBookmarkBoard() {
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     dragCounterRef.current--;
-    if (dragCounterRef.current === 0) {
-      setDragOverIndex(null);
-    }
+    if (dragCounterRef.current === 0) setDragOverIndex(null);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent, toIndex: number, targetFolderId?: string) => {
+  const handleDrop = useCallback((e: React.DragEvent, toIndex: number) => {
     e.preventDefault();
     dragCounterRef.current = 0;
     setDragOverIndex(null);
-
     if (!draggedItem) return;
-
-    const { item, index: fromIndex, folderId: sourceFolderId } = draggedItem;
-
-    // 同一层级内排序
-    if (sourceFolderId === targetFolderId) {
-      if (fromIndex !== toIndex) {
-        if (sourceFolderId) {
-          store.reorderInFolder(sourceFolderId, fromIndex, toIndex);
-        } else {
-          store.reorderItems(fromIndex, toIndex);
-        }
-      }
-    } else {
-      // 跨文件夹移动（只对书签有效）
-      if (!isFolder(item)) {
-        store.moveBookmarkToFolder(item.id, targetFolderId || null);
-      }
+    if (draggedItem.index !== toIndex) {
+      store.reorderItems(draggedItem.index, toIndex);
     }
-
     setDraggedItem(null);
   }, [draggedItem, store]);
 
@@ -281,14 +243,6 @@ export function useBookmarkBoard() {
     dragCounterRef.current = 0;
   }, []);
 
-  // 直接拖放到文件夹
-  const handleDropToFolder = useCallback((bookmarkId: string, targetFolderId: string | null) => {
-    store.moveBookmarkToFolder(bookmarkId, targetFolderId);
-    setDraggedItem(null);
-    setDragOverIndex(null);
-    dragCounterRef.current = 0;
-  }, [store]);
-
   // ─── 重置 ──────────────────────────────────────────────────────────────────
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
@@ -297,81 +251,41 @@ export function useBookmarkBoard() {
     setResetDialogOpen(false);
   }, [store]);
 
-  // ─── 添加文件夹 ────────────────────────────────────────────────────────────
-  const [folderDialogOpen, setFolderDialogOpen] = useState(false);
-  const [folderName, setFolderName] = useState("");
-
-  const openFolderDialog = useCallback(() => {
-    setFolderName("");
-    setFolderDialogOpen(true);
-  }, []);
-
-  const submitFolder = useCallback(() => {
-    const name = folderName.trim();
-    if (!name) return;
-    store.addFolder(name);
-    setFolderDialogOpen(false);
-  }, [folderName, store]);
-
-  // ─── 重命名文件夹 ──────────────────────────────────────────────────────────
-  const [renameFolderDialogOpen, setRenameFolderDialogOpen] = useState(false);
-  const [renamingFolder, setRenamingFolder] = useState<BookmarkFolder | null>(null);
-  const [renameFolderName, setRenameFolderName] = useState("");
-
-  const openRenameFolderDialog = useCallback((folder: BookmarkFolder) => {
-    setRenamingFolder(folder);
-    setRenameFolderName(folder.title);
-    setRenameFolderDialogOpen(true);
-  }, []);
-
-  const submitRenameFolder = useCallback(() => {
-    if (!renamingFolder) return;
-    const name = renameFolderName.trim();
-    if (!name) return;
-    store.renameFolder(renamingFolder.id, name);
-    setRenameFolderDialogOpen(false);
-    setRenamingFolder(null);
-  }, [renamingFolder, renameFolderName, store]);
-
   // ─── Help / About ──────────────────────────────────────────────────────────
   const [helpOpen, setHelpOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
 
   return {
-    // 数据
     items: store.items,
     filteredItems,
+    sortedItems,
+    groupedByDomain,
     searchQuery,
     setSearchQuery,
 
-    // 主题
+    sortMode: store.sortMode,
+    setSortMode: store.setSortMode,
+    groupByDomain: store.groupByDomain,
+    setGroupByDomain: store.setGroupByDomain,
+
     currentTheme,
     isXpTheme,
 
-    // 添加书签
-    addDialogOpen,
-    setAddDialogOpen,
-    addUrl,
-    setAddUrl,
+    addDialogOpen, setAddDialogOpen,
+    addUrl, setAddUrl,
     openAddDialog,
     submitAiBookmark,
     isAiCreating,
-    folders,
     previewFavicon,
 
-    // 打开
     openBookmark,
-
-    // 删除
     removeBookmark,
-    removeFolder,
 
-    // 右键菜单
     contextMenu,
     openContextMenu,
+    openEmptyContextMenu,
     closeContextMenu,
 
-    // 拖拽排序
     draggedItem,
     dragOverIndex,
     handleDragStart,
@@ -380,34 +294,11 @@ export function useBookmarkBoard() {
     handleDragLeave,
     handleDrop,
     handleDragEnd,
-    handleDropToFolder,
 
-    // 重置
-    resetDialogOpen,
-    setResetDialogOpen,
+    resetDialogOpen, setResetDialogOpen,
     confirmReset,
 
-    // 添加文件夹
-    folderDialogOpen,
-    setFolderDialogOpen,
-    folderName,
-    setFolderName,
-    openFolderDialog,
-    submitFolder,
-
-    // 重命名文件夹
-    renameFolderDialogOpen,
-    setRenameFolderDialogOpen,
-    renamingFolder,
-    renameFolderName,
-    setRenameFolderName,
-    openRenameFolderDialog,
-    submitRenameFolder,
-
-    // Help / About
-    helpOpen,
-    setHelpOpen,
-    aboutOpen,
-    setAboutOpen,
+    helpOpen, setHelpOpen,
+    aboutOpen, setAboutOpen,
   };
 }

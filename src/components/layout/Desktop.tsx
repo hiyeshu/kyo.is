@@ -14,7 +14,7 @@ import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
-import { useBookmarkStore, isFolder, openBookmarkUrl, getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, openBookmarkUrl, getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
@@ -111,10 +111,7 @@ export function Desktop({
     [onClick, clearSelection, justFinishedRef]
   );
 
-  // Get top-level bookmarks (not in folders) marked for desktop
-  const desktopBookmarks = bookmarkStore.items.filter((item) =>
-    !isFolder(item) && (item as Bookmark).onDesktop
-  ) as Bookmark[];
+  const desktopBookmarks = bookmarkStore.items.filter((b) => b.onDesktop) as Bookmark[];
 
   // ─── Keyboard shortcuts ─────────────────────────────────────────────
   useEventListener("keydown", useCallback((e: KeyboardEvent) => {
@@ -343,6 +340,24 @@ export function Desktop({
         setContextMenuPos({ x: e.clientX, y: e.clientY });
         setContextMenuAppId(null);
         setContextMenuBookmark(null);
+      }}
+      onDragOver={(e) => {
+        // 允许从我的收藏拖书签到桌面
+        if (e.dataTransfer.types.includes("application/json")) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+        }
+      }}
+      onDrop={(e) => {
+        try {
+          const raw = e.dataTransfer.getData("application/json");
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          if (data.type === "bookmark" && data.bookmarkId) {
+            e.preventDefault();
+            bookmarkStore.updateBookmark(data.bookmarkId, { onDesktop: true });
+          }
+        } catch { /* noop */ }
       }}
       style={finalStyles}
       {...longPressHandlers}

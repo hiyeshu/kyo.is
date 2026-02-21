@@ -1850,7 +1850,7 @@
       "cancel": "キャンセル"
     },
     "bookmarks": {
-      "name": "ブックマークボード",
+      "name": "マイコレクション",
       "search": "ブックマークを検索...",
       "countBookmarks": "{{count}} 件のブックマーク",
       "addBookmark": "ブックマークを追加",
@@ -1863,6 +1863,10 @@
       "editBookmark": "ブックマークを編集",
       "openInNewTab": "新しいタブで開く",
       "addToDock": "Dockに追加",
+      "sortByName": "名前順",
+      "sortByRecent": "最近使用した順",
+      "groupByDomain": "ドメインで分類",
+      "removeFromFavorites": "お気に入りから外す",
       "url": "URL",
       "bookmarkName": "名前",
       "pageTitle": "ページタイトル",
@@ -1888,8 +1892,8 @@
         "imageSizeLimit": "PNG, JPG 最大100KB"
       },
       "menu": {
-        "help": "ブックマークボードヘルプ",
-        "about": "ブックマークボードについて"
+        "help": "マイコレクションヘルプ",
+        "about": "マイコレクションについて"
       }
     },
     "stickies": {
@@ -2361,10 +2365,10 @@
       "transcribing": "文字起こし中..."
     },
     "favorites": {
-      "name": "コレクションボックス",
-      "title": "コレクションボックス",
+      "name": "履歴",
+      "title": "履歴",
       "description": "ブックマークと付箋をまとめて管理",
-      "search": "コレクションを検索...",
+      "search": "履歴を検索...",
       "empty": "アイテムがありません",
       "items": "件"
     },

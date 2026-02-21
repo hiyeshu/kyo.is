@@ -18,7 +18,6 @@ import { useTranslation } from "react-i18next";
 
 interface Props {
   onAddBookmark: () => void;
-  onAddFolder: () => void;
   onResetBookmarks: () => void;
   onShowHelp: () => void;
   onShowAbout: () => void;
@@ -27,7 +26,6 @@ interface Props {
 
 export function BookmarkBoardMenuBar({
   onAddBookmark,
-  onAddFolder,
   onResetBookmarks,
   onShowHelp,
   onShowAbout,
@@ -58,9 +56,6 @@ export function BookmarkBoardMenuBar({
           <MenubarItem onClick={onAddBookmark} className="text-md h-6 px-3">
             {t("common.menu.addBookmark", "Add Bookmark")}
           </MenubarItem>
-          <MenubarItem onClick={onAddFolder} className="text-md h-6 px-3">
-            {t("common.menu.newFolder", "New Folder")}
-          </MenubarItem>
           <MenubarSeparator className="h-[2px] bg-black my-1" />
           <MenubarItem onClick={onResetBookmarks} className="text-md h-6 px-3">
             {t("common.menu.resetToDefaults", "Reset to Defaults")}
@@ -79,11 +74,11 @@ export function BookmarkBoardMenuBar({
         </MenubarTrigger>
         <MenubarContent align="start" sideOffset={1} className="px-0">
           <MenubarItem onClick={onShowHelp} className="text-md h-6 px-3">
-            {t("apps.bookmarks.help.title", "Bookmark Board Help")}
+            {t("apps.bookmarks.help.title", "我的收藏帮助")}
           </MenubarItem>
           <MenubarSeparator className="h-[2px] bg-black my-1" />
           <MenubarItem onClick={onShowAbout} className="text-md h-6 px-3">
-            {t("common.appMenu.aboutApp", { appName: t("apps.bookmarks.name", "Bookmark Board") })}
+            {t("common.appMenu.aboutApp", { appName: t("apps.bookmarks.name", "我的收藏") })}
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>

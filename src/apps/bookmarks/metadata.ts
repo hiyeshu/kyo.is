@@ -30,7 +30,7 @@ export const helpItems = [
 
 export const appMetadata = {
   version: "1.0",
-  name: "Bookmark Board",
+  name: "My Favorites",
   creator: { name: "You", url: "" },
   github: "",
   icon: "/icons/macosx/sites.png",

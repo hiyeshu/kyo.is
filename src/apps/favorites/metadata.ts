@@ -6,14 +6,14 @@
  */
 
 export const appMetadata = {
-  name: "Collection Box",
+  name: "History",
   version: "1.0.0",
   creator: {
     name: "yeshu",
     url: "https://github.com/hiyeshu",
   },
   github: "https://github.com/hiyeshu/kyo.is",
-  icon: "/icons/macosx/bento.png",
+  icon: "/icons/macosx/minesweeper.png",
 };
 
 export const helpItems = [

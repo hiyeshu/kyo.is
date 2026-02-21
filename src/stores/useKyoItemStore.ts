@@ -5,7 +5,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useBookmarkStore, isFolder, isBookmark } from "./useBookmarkStore";
+import { useBookmarkStore } from "./useBookmarkStore";
 import { useStickiesStore } from "./useStickiesStore";
 import type { KyoItem, KyoBookmarkItem, KyoNoteItem } from "@/types/kyoItem";
 
@@ -42,21 +42,10 @@ export function getAllItems(): KyoItem[] {
   const bookmarkItems = useBookmarkStore.getState().items;
   const notes = useStickiesStore.getState().notes;
 
-  const kyoItems: KyoItem[] = [];
-
-  for (const item of bookmarkItems) {
-    if (isBookmark(item)) {
-      kyoItems.push(bookmarkToKyoItem(item));
-    } else if (isFolder(item)) {
-      for (const bm of item.bookmarks) {
-        kyoItems.push(bookmarkToKyoItem(bm));
-      }
-    }
-  }
-
-  for (const note of notes) {
-    kyoItems.push(noteToKyoItem(note));
-  }
+  const kyoItems: KyoItem[] = [
+    ...bookmarkItems.map(bookmarkToKyoItem),
+    ...notes.map(noteToKyoItem),
+  ];
 
   return kyoItems.sort((a, b) => b.createdAt - a.createdAt);
 }
@@ -91,21 +80,10 @@ export function useKyoItems() {
   const bookmarkItems = useBookmarkStore((s) => s.items);
   const notes = useStickiesStore((s) => s.notes);
 
-  const kyoItems: KyoItem[] = [];
-
-  for (const item of bookmarkItems) {
-    if (isBookmark(item)) {
-      kyoItems.push(bookmarkToKyoItem(item));
-    } else if (isFolder(item)) {
-      for (const bm of item.bookmarks) {
-        kyoItems.push(bookmarkToKyoItem(bm));
-      }
-    }
-  }
-
-  for (const note of notes) {
-    kyoItems.push(noteToKyoItem(note));
-  }
+  const kyoItems: KyoItem[] = [
+    ...bookmarkItems.map(bookmarkToKyoItem),
+    ...notes.map(noteToKyoItem),
+  ];
 
   return kyoItems.sort((a, b) => b.createdAt - a.createdAt);
 }

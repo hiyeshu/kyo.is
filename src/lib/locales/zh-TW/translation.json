@@ -1856,7 +1856,7 @@
       "cancel": "取消"
     },
     "bookmarks": {
-      "name": "書籤板",
+      "name": "我的收藏",
       "search": "搜尋書籤...",
       "countBookmarks": "{{count}} 個書籤",
       "addBookmark": "新增書籤",
@@ -1869,6 +1869,10 @@
       "editBookmark": "編輯書籤",
       "openInNewTab": "在新分頁開啟",
       "addToDock": "加入 Dock",
+      "sortByName": "依名稱排序",
+      "sortByRecent": "依最近使用排序",
+      "groupByDomain": "依網域聚合",
+      "removeFromFavorites": "移出我的收藏",
       "url": "網址",
       "bookmarkName": "名稱",
       "pageTitle": "頁面標題",
@@ -1894,8 +1898,8 @@
         "imageSizeLimit": "PNG, JPG 最大 100KB"
       },
       "menu": {
-        "help": "書籤板說明",
-        "about": "關於書籤板"
+        "help": "我的收藏說明",
+        "about": "關於我的收藏"
       }
     },
     "stickies": {
@@ -2367,10 +2371,10 @@
       "transcribing": "轉錄中..."
     },
     "favorites": {
-      "name": "收藏盒",
-      "title": "收藏盒",
+      "name": "歷史紀錄",
+      "title": "歷史紀錄",
       "description": "集中管理你的書籤與便利貼",
-      "search": "搜尋收藏...",
+      "search": "搜尋歷史...",
       "empty": "暫無收藏",
       "items": "項"
     },

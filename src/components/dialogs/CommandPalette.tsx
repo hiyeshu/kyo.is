@@ -8,7 +8,7 @@
 
 import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
-import { useBookmarkStore, isFolder, getBookmarkIconInfo, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { supabase } from "@/lib/supabase";
@@ -32,9 +32,7 @@ interface CommandPaletteProps {
   initialSearch?: string;
 }
 
-interface FlatBookmark extends Bookmark {
-  folderTitle?: string;
-}
+type FlatBookmark = Bookmark;
 
 // Supabase RPC 返回的 kyo_items 行
 interface ServerItem {
@@ -177,12 +175,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
     };
   });
 
-  // 展平所有书签（包括文件夹内的）
-  const allBookmarks: FlatBookmark[] = items.flatMap((item) =>
-    isFolder(item)
-      ? item.bookmarks.map((bm) => ({ ...bm, folderTitle: item.title }))
-      : [item]
-  );
+  const allBookmarks: FlatBookmark[] = items as FlatBookmark[];
 
   // ─── 客户端过滤 ──────────────────────────────────────────────────────────────
   // 应用：始终客户端即时过滤
@@ -313,7 +306,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
     // 先创建占位书签
     let hostname = "example.com";
     try { hostname = new URL(url).hostname; } catch { /* noop */ }
-    const tempId = addBookmark(hostname, url, undefined, undefined, { onDesktop: true });
+    const tempId = addBookmark(hostname, url, undefined, { onDesktop: true });
     toast(t("paste.fetchingMeta", "正在获取网页信息..."));
 
     // 异步抓取元数据
@@ -606,20 +599,6 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                             </div>
                           )}
                         </div>
-                        {bm.folderTitle && (
-                          <span
-                            className="shrink-0"
-                            style={{
-                              padding: "2px 6px",
-                              borderRadius: isMacTheme ? "4px" : "2px",
-                              fontSize: "10px",
-                              backgroundColor: "rgba(0, 0, 0, 0.06)",
-                              color: "rgba(0, 0, 0, 0.5)",
-                            }}
-                          >
-                            {bm.folderTitle}
-                          </span>
-                        )}
                       </Command.Item>
                     );
                   })}

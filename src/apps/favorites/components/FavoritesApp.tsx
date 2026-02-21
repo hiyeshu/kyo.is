@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 useKyoItems, AppProps, WindowFrame, i18n
- * [OUTPUT]: FavoritesApp 组件 — 收藏夹窗口，混排书签+便签
+ * [OUTPUT]: FavoritesApp 组件 — 历史记录窗口，混排书签+便签
  * [POS]: apps/favorites/components 的主组件
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -47,7 +47,7 @@ export function FavoritesApp({
 
   return (
     <WindowFrame
-      title={t("apps.favorites.title", "收藏夹")}
+      title={t("apps.favorites.title", "历史记录")}
       onClose={onClose}
       isForeground={isForeground}
       appId="favorites"

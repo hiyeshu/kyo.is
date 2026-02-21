@@ -1,7 +1,7 @@
 /**
  * [INPUT]: zustand + zustand/middleware(persist)，依赖 @/lib/cloudSync 云端写入
- * [OUTPUT]: useBookmarkStore, Bookmark, BookmarkFolder, BoardItem, isFolder, isBookmark, openBookmarkUrl, getBookmarkIconInfo, getFaviconUrl
- * [POS]: 书签数据的单一真相源，管理 onDesktop/inDock 展示位置，被 bookmark-board、Dock、Desktop 消费，每次变更同步写云端
+ * [OUTPUT]: useBookmarkStore, Bookmark, isBookmark, openBookmarkUrl, getBookmarkIconInfo, getFaviconUrl, SortMode
+ * [POS]: 书签数据的单一真相源，管理 onDesktop/inDock 展示位置、排序偏好，被 bookmark-board、Dock、Desktop 消费，每次变更同步写云端
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -134,6 +134,7 @@ function bookmarkToCloud(b: Bookmark) {
     on_desktop: b.onDesktop || false,
     in_dock: b.inDock || false,
     created_at: b.createdAt || new Date().toISOString(),
+    last_used: b.lastUsed || null,
   };
 }
 
@@ -145,6 +146,7 @@ const BOOKMARK_FIELD_MAP: Record<string, string> = {
   tags: "tags",
   onDesktop: "on_desktop",
   inDock: "in_dock",
+  lastUsed: "last_used",
 };
 
 // ─── iOS PWA Deep Link ──────────────────────────────────────────────────────
@@ -439,26 +441,22 @@ export interface Bookmark {
   summary: string;
   tags: string[];
   createdAt: string;
-  onDesktop?: boolean; // 是否显示在桌面
-  inDock?: boolean; // 是否固定在 Dock 栏（macOS 主题），云端同步
-  favicon?: string; // 保留兼容性
-  icon?: BookmarkIcon; // 新的图标配置
-  faviconResolved?: boolean; // 三层回退已完成，纯本地标记，不同步云端
+  lastUsed?: string;
+  onDesktop?: boolean;
+  inDock?: boolean;
+  favicon?: string;
+  icon?: BookmarkIcon;
+  faviconResolved?: boolean;
 }
 
-export interface BookmarkFolder {
-  id: string;
-  title: string;
-  bookmarks: Bookmark[];
-}
+export type SortMode = "recent" | "name";
 
-export type BoardItem = Bookmark | BookmarkFolder;
+export const isBookmark = (item: Bookmark): item is Bookmark => true;
 
-export const isFolder = (item: BoardItem): item is BookmarkFolder =>
-  "bookmarks" in item;
-
-export const isBookmark = (item: BoardItem): item is Bookmark =>
-  !("bookmarks" in item);
+// 向后兼容：旧数据可能包含文件夹对象
+interface LegacyFolder { id: string; title: string; bookmarks: Bookmark[] }
+const isLegacyFolder = (item: unknown): item is LegacyFolder =>
+  typeof item === "object" && item !== null && "bookmarks" in item;
 
 // ─── 图标信息（单一真相源） ─────────────────────────────────────────────────────
 
@@ -527,15 +525,9 @@ const createBookmark = (
   favicon: favicon || fav(new URL(url).hostname),
 });
 
-const createFolder = (title: string, bookmarks: Bookmark[] = []): BookmarkFolder => ({
-  id: generateId(),
-  title,
-  bookmarks,
-});
-
 // ─── 默认数据 ───────────────────────────────────────────────────────────────
 
-const createDefaultItems = (): BoardItem[] => [
+const createDefaultItems = (): Bookmark[] => [
   createBookmark("AI探索站", "https://web.okjike.com/topic/63579abb6724cc583b9bba9a/square"),
   createBookmark("小红书", "https://xiaohongshu.com"),
   createBookmark("Notion", "https://notion.so"),
@@ -551,28 +543,26 @@ const createDefaultItems = (): BoardItem[] => [
 // ─── Store ───────────────────────────────────────────────────────────────────
 
 interface BookmarkStore {
-  items: BoardItem[];
+  items: Bookmark[];
+  sortMode: SortMode;
+  groupByDomain: boolean;
 
-  // 基础 CRUD
-  addBookmark: (title: string, url: string, favicon?: string, folderId?: string, options?: { onDesktop?: boolean; inDock?: boolean }) => string; // 返回新书签 ID
-  addAiBookmark: (title: string, url: string, summary: string, tags: string[], options?: { onDesktop?: boolean; inDock?: boolean }) => string; // AI 写入
+  // CRUD
+  addBookmark: (title: string, url: string, favicon?: string, options?: { onDesktop?: boolean; inDock?: boolean }) => string;
+  addAiBookmark: (title: string, url: string, summary: string, tags: string[], options?: { onDesktop?: boolean; inDock?: boolean }) => string;
   getBookmarkByUrl: (url: string) => Bookmark | undefined;
-  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags" | "onDesktop" | "inDock" | "faviconResolved">>) => void;
+  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags" | "onDesktop" | "inDock" | "faviconResolved" | "lastUsed">>) => void;
   removeBookmark: (id: string) => void;
-  
-  // 文件夹
-  addFolder: (title: string) => string; // 返回新文件夹 ID
-  renameFolder: (id: string, newTitle: string) => void;
-  removeFolder: (id: string) => void;
-  
+  touchBookmark: (id: string) => void; // 更新 lastUsed
+
   // 排序
   reorderItems: (fromIndex: number, toIndex: number) => void;
-  reorderInFolder: (folderId: string, fromIndex: number, toIndex: number) => void;
-  moveBookmarkToFolder: (bookmarkId: string, targetFolderId: string | null) => void;
-  
+  setSortMode: (mode: SortMode) => void;
+  setGroupByDomain: (enabled: boolean) => void;
+
   // 查询
   getBookmarkById: (id: string) => Bookmark | undefined;
-  
+
   // 重置
   resetToDefaults: () => void;
 }
@@ -581,37 +571,25 @@ export const useBookmarkStore = create<BookmarkStore>()(
   persist(
     (set, get) => ({
       items: createDefaultItems(),
+      sortMode: "recent" as SortMode,
+      groupByDomain: false,
 
-      addBookmark: (title, url, favicon, folderId, options) => {
+      addBookmark: (title, url, favicon, options) => {
         const newBookmark = createBookmark(title, url, favicon, {
           onDesktop: options?.onDesktop,
           inDock: options?.inDock,
         });
-        set((s) => {
-          if (!folderId) {
-            return { items: [...s.items, newBookmark] };
-          }
-          return {
-            items: s.items.map((item) =>
-              isFolder(item) && item.id === folderId
-                ? { ...item, bookmarks: [...item.bookmarks, newBookmark] }
-                : item
-            ),
-          };
-        });
+        set((s) => ({ items: [...s.items, newBookmark] }));
         cloudUpsertItem(bookmarkToCloud(newBookmark)).catch(() => {});
         return newBookmark.id;
       },
 
       addAiBookmark: (title, url, summary, tags, options) => {
         let hostname = "example.com";
-        try {
-          hostname = new URL(url).hostname;
-        } catch { /* noop */ }
+        try { hostname = new URL(url).hostname; } catch { /* noop */ }
         const favicon = getFaviconUrl(hostname);
         const newBookmark = createBookmark(title, url, favicon, {
-          summary,
-          tags,
+          summary, tags,
           createdAt: new Date().toISOString(),
           onDesktop: options?.onDesktop,
           inDock: options?.inDock,
@@ -621,40 +599,16 @@ export const useBookmarkStore = create<BookmarkStore>()(
         return newBookmark.id;
       },
 
-      getBookmarkByUrl: (url) => {
-        for (const item of get().items) {
-          if (isBookmark(item) && item.url === url) return item;
-          if (isFolder(item)) {
-            const found = item.bookmarks.find((b) => b.url === url);
-            if (found) return found;
-          }
-        }
-        return undefined;
-      },
+      getBookmarkByUrl: (url) => get().items.find((b) => b.url === url),
 
       updateBookmark: (id, updates) => {
-        // url 或 favicon 变更时，自动重置 faviconResolved（需要重新走回退链）
         const merged = { ...updates };
         if (("url" in merged || "favicon" in merged) && !("faviconResolved" in merged)) {
           merged.faviconResolved = false;
         }
         set((s) => ({
-          items: s.items.map((item) => {
-            if (isBookmark(item) && item.id === id) {
-              return { ...item, ...merged };
-            }
-            if (isFolder(item)) {
-              return {
-                ...item,
-                bookmarks: item.bookmarks.map((b) =>
-                  b.id === id ? { ...b, ...merged } : b
-                ),
-              };
-            }
-            return item;
-          }),
+          items: s.items.map((b) => b.id === id ? { ...b, ...merged } : b),
         }));
-        // 映射字段名到云端格式
         const mapped: Record<string, unknown> = {};
         for (const [k, v] of Object.entries(updates)) {
           const cloudKey = BOOKMARK_FIELD_MAP[k];
@@ -666,40 +620,16 @@ export const useBookmarkStore = create<BookmarkStore>()(
       },
 
       removeBookmark: (id) => {
-        set((s) => ({
-          items: s.items
-            .filter((item) => !(isBookmark(item) && item.id === id))
-            .map((item) =>
-              isFolder(item)
-                ? { ...item, bookmarks: item.bookmarks.filter((b) => b.id !== id) }
-                : item
-            ),
-        }));
+        set((s) => ({ items: s.items.filter((b) => b.id !== id) }));
         cloudDeleteItem(id).catch(() => {});
       },
 
-      addFolder: (title) => {
-        const newFolder = createFolder(title);
-        set((s) => ({ items: [...s.items, newFolder] }));
-        return newFolder.id;
-      },
-
-      renameFolder: (id, newTitle) =>
+      touchBookmark: (id) => {
+        const now = new Date().toISOString();
         set((s) => ({
-          items: s.items.map((item) =>
-            isFolder(item) && item.id === id ? { ...item, title: newTitle } : item
-          ),
-        })),
-
-      removeFolder: (id) => {
-        // 删除文件夹内所有书签的云端记录
-        const folder = get().items.find((i) => isFolder(i) && i.id === id) as BookmarkFolder | undefined;
-        if (folder) {
-          for (const b of folder.bookmarks) {
-            cloudDeleteItem(b.id).catch(() => {});
-          }
-        }
-        set((s) => ({ items: s.items.filter((i) => !(isFolder(i) && i.id === id)) }));
+          items: s.items.map((b) => b.id === id ? { ...b, lastUsed: now } : b),
+        }));
+        cloudUpdateItem(id, { last_used: now }).catch(() => {});
       },
 
       reorderItems: (fromIndex, toIndex) =>
@@ -710,248 +640,76 @@ export const useBookmarkStore = create<BookmarkStore>()(
           return { items: newItems };
         }),
 
-      reorderInFolder: (folderId, fromIndex, toIndex) =>
-        set((s) => ({
-          items: s.items.map((item) => {
-            if (isFolder(item) && item.id === folderId) {
-              const newBookmarks = [...item.bookmarks];
-              const [moved] = newBookmarks.splice(fromIndex, 1);
-              newBookmarks.splice(toIndex, 0, moved);
-              return { ...item, bookmarks: newBookmarks };
-            }
-            return item;
-          }),
-        })),
+      setSortMode: (mode) => set({ sortMode: mode }),
+      setGroupByDomain: (enabled) => set({ groupByDomain: enabled }),
 
-      moveBookmarkToFolder: (bookmarkId, targetFolderId) =>
-        set((s) => {
-          // 先找到书签
-          let bookmarkToMove: Bookmark | undefined;
-          
-          // 在顶层找
-          const topLevelBookmark = s.items.find(
-            (i) => isBookmark(i) && i.id === bookmarkId
-          ) as Bookmark | undefined;
-          
-          if (topLevelBookmark) {
-            bookmarkToMove = topLevelBookmark;
-          } else {
-            // 在文件夹中找
-            for (const item of s.items) {
-              if (isFolder(item)) {
-                const found = item.bookmarks.find((b) => b.id === bookmarkId);
-                if (found) {
-                  bookmarkToMove = found;
-                  break;
-                }
-              }
-            }
-          }
-          
-          if (!bookmarkToMove) return s;
-          
-          // 从原位置移除
-          let newItems = s.items
-            .filter((i) => !(isBookmark(i) && i.id === bookmarkId))
-            .map((item) =>
-              isFolder(item)
-                ? { ...item, bookmarks: item.bookmarks.filter((b) => b.id !== bookmarkId) }
-                : item
-            );
-          
-          // 添加到目标位置
-          if (targetFolderId) {
-            newItems = newItems.map((item) =>
-              isFolder(item) && item.id === targetFolderId
-                ? { ...item, bookmarks: [...item.bookmarks, bookmarkToMove!] }
-                : item
-            );
-          } else {
-            newItems = [...newItems, bookmarkToMove];
-          }
-          
-          return { items: newItems };
-        }),
-
-      getBookmarkById: (id) => {
-        const state = get();
-        // 在顶层找
-        const topLevel = state.items.find(
-          (i) => isBookmark(i) && i.id === id
-        ) as Bookmark | undefined;
-        if (topLevel) return topLevel;
-        
-        // 在文件夹中找
-        for (const item of state.items) {
-          if (isFolder(item)) {
-            const found = item.bookmarks.find((b) => b.id === id);
-            if (found) return found;
-          }
-        }
-        return undefined;
-      },
+      getBookmarkById: (id) => get().items.find((b) => b.id === id),
 
       resetToDefaults: () => set({ items: createDefaultItems() }),
     }),
     {
       name: "kyo:bookmark-store",
-      version: 7, // v7: add inDock flag, migrate from useDockStore bookmark references
+      version: 8, // v8: flatten folders, add lastUsed + sortMode + groupByDomain
       migrate: (persisted, version) => {
-        const old = persisted as { items?: BoardItem[] };
-        
-        // 从 v1 迁移：给旧数据加 id
-        if (version < 2) {
-          if (old.items) {
-            old.items = old.items.map((item) => {
-              if (isFolder(item)) {
-                return {
-                  ...item,
-                  id: (item as BookmarkFolder).id || generateId(),
-                  bookmarks: item.bookmarks.map((b) => ({
-                    ...b,
-                    id: (b as Bookmark).id || generateId(),
-                  })),
-                };
-              }
-              return {
-                ...item,
-                id: (item as Bookmark).id || generateId(),
-              };
-            });
-          }
-        }
-        
-        // 从 v2 迁移：把旧 favicon URL 换成根据地区选择的服务
-        if (version < 3) {
-          const migrateFavicon = (favicon?: string): string | undefined => {
-            if (!favicon) return favicon;
-            // 匹配 Google favicon API URL
-            const googleMatch = favicon.match(/google\.com\/s2\/favicons\?domain=([^&]+)/);
-            if (googleMatch) {
-              const domain = googleMatch[1];
-              return getFaviconUrl(domain);
-            }
-            // 匹配 DuckDuckGo favicon API URL (以防中间版本用过)
-            const ddgMatch = favicon.match(/icons\.duckduckgo\.com\/ip3\/([^.]+\.?[^/]*?)\.ico/);
-            if (ddgMatch) {
-              const domain = ddgMatch[1];
-              return getFaviconUrl(domain);
-            }
-            // 匹配 cccyun favicon URL (国外用户需要换成 Google)
-            const cccyunMatch = favicon.match(/favicon\.cccyun\.cc\/(.+)/);
-            if (cccyunMatch) {
-              const domain = cccyunMatch[1];
-              return getFaviconUrl(domain);
-            }
-            return favicon;
-          };
-          
-          if (old.items) {
-            old.items = old.items.map((item) => {
-              if (isFolder(item)) {
-                return {
-                  ...item,
-                  bookmarks: item.bookmarks.map((b) => ({
-                    ...b,
-                    favicon: migrateFavicon(b.favicon),
-                  })),
-                };
-              }
-              return {
-                ...item,
-                favicon: migrateFavicon((item as Bookmark).favicon),
-              } as Bookmark;
-            });
-          }
-        }
-        
-        // v4: 重置为新默认书签
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const old = persisted as any;
+
+        // v4 以下：数据结构差异太大，直接重置
         if (version < 4) {
-          return { items: createDefaultItems() };
+          return { items: createDefaultItems(), sortMode: "recent", groupByDomain: false };
         }
 
-        // v5: add ai metadata fields
-        if (version < 5) {
-          if (old.items) {
-            old.items = old.items.map((item) => {
-              if (isFolder(item)) {
-                return {
-                  ...item,
-                  bookmarks: item.bookmarks.map((b) => ({
-                    ...b,
-                    summary: (b as Bookmark).summary ?? "",
-                    tags: (b as Bookmark).tags ?? [],
-                    createdAt: (b as Bookmark).createdAt ?? new Date().toISOString(),
-                  })),
-                };
-              }
-              return {
-                ...item,
-                summary: (item as Bookmark).summary ?? "",
-                tags: (item as Bookmark).tags ?? [],
-                createdAt: (item as Bookmark).createdAt ?? new Date().toISOString(),
-              } as Bookmark;
-            });
-          }
+        // v5: add metadata fields
+        if (version < 5 && old.items) {
+          old.items = old.items.map((item: Bookmark) => ({
+            ...item,
+            summary: item.summary ?? "",
+            tags: item.tags ?? [],
+            createdAt: item.createdAt ?? new Date().toISOString(),
+          }));
         }
 
-        // v6: add onDesktop flag (default false for existing data)
-        if (version < 6) {
-          if (old.items) {
-            old.items = old.items.map((item) => {
-              if (isFolder(item)) {
-                return {
-                  ...item,
-                  bookmarks: item.bookmarks.map((b) => ({
-                    ...b,
-                    onDesktop: (b as Bookmark).onDesktop ?? false,
-                  })),
-                };
-              }
-              return {
-                ...item,
-                onDesktop: (item as Bookmark).onDesktop ?? false,
-              } as Bookmark;
-            });
-          }
+        // v6: add onDesktop
+        if (version < 6 && old.items) {
+          old.items = old.items.map((item: Bookmark) => ({
+            ...item,
+            onDesktop: item.onDesktop ?? false,
+          }));
         }
 
-        // v7: add inDock flag, migrate bookmark references from useDockStore
-        if (version < 7) {
-          // 从 localStorage 读取 useDockStore 的持久化数据，提取 bookmark pinnedItems
+        // v7: add inDock
+        if (version < 7 && old.items) {
           const dockBookmarkIds = new Set<string>();
           try {
             const raw = localStorage.getItem("kyo:dock-storage");
             if (raw) {
               const parsed = JSON.parse(raw);
-              const pinnedItems = parsed?.state?.pinnedItems ?? [];
-              for (const item of pinnedItems) {
-                if (item.type === "bookmark" && item.id) {
-                  dockBookmarkIds.add(item.id);
-                }
+              for (const item of parsed?.state?.pinnedItems ?? []) {
+                if (item.type === "bookmark" && item.id) dockBookmarkIds.add(item.id);
               }
             }
-          } catch { /* localStorage 读取失败，跳过 */ }
-
-          if (old.items) {
-            old.items = old.items.map((item) => {
-              if (isFolder(item)) {
-                return {
-                  ...item,
-                  bookmarks: item.bookmarks.map((b) => ({
-                    ...b,
-                    inDock: dockBookmarkIds.has(b.id),
-                  })),
-                };
-              }
-              return {
-                ...item,
-                inDock: dockBookmarkIds.has((item as Bookmark).id),
-              } as Bookmark;
-            });
-          }
+          } catch { /* noop */ }
+          old.items = old.items.map((item: Bookmark) => ({
+            ...item,
+            inDock: dockBookmarkIds.has(item.id),
+          }));
         }
-        
+
+        // v8: 展平文件夹 + 添加 lastUsed
+        if (version < 8 && old.items) {
+          const flat: Bookmark[] = [];
+          for (const item of old.items) {
+            if (isLegacyFolder(item)) {
+              flat.push(...item.bookmarks.map((b: Bookmark) => ({ ...b, lastUsed: b.lastUsed })));
+            } else {
+              flat.push({ ...(item as Bookmark), lastUsed: (item as Bookmark).lastUsed });
+            }
+          }
+          old.items = flat;
+          old.sortMode = old.sortMode ?? "recent";
+          old.groupByDomain = old.groupByDomain ?? false;
+        }
+
         return persisted as BookmarkStore;
       },
     }

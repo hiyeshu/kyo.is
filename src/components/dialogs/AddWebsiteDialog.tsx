@@ -86,7 +86,7 @@ export function AddWebsiteDialog({
       const title = getWebsiteTitle(normalizedUrl);
 
       // 创建书签（macOS 主题直接固定到 Dock）
-      const bookmarkId = addBookmark(title, normalizedUrl, faviconUrl, undefined, {
+      const bookmarkId = addBookmark(title, normalizedUrl, faviconUrl, {
         inDock: isMacTheme,
       });
 

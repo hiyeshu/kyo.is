@@ -207,7 +207,7 @@ export const appRegistry = {
   },
   "favorites": {
     id: "favorites" as const,
-    icon: { type: "image" as const, src: "/icons/macosx/bento.png" },
+    icon: { type: "image" as const, src: favoritesMetadata.icon },
     component: LazyFavoritesApp,
     helpItems: favoritesHelpItems,
     metadata: favoritesMetadata,

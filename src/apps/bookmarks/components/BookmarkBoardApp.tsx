@@ -1,11 +1,11 @@
 /**
  * [INPUT]: 依赖 components/layout/WindowFrame, components/ui, hooks/useBookmarkBoard, stores/useBookmarkStore
  * [OUTPUT]: 对外提供 BookmarkBoardApp 组件
- * [POS]: apps/bookmarks/components/ 的根组件，书签应用主容器
+ * [POS]: apps/bookmarks/components/ 的根组件，书签应用主容器，平铺布局 + 排序 + 域名聚合
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { AppProps } from "../../base/types";
 import { WindowFrame } from "@/components/layout/WindowFrame";
 import { Input } from "@/components/ui/input";
@@ -19,14 +19,7 @@ import {
   DialogBody,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { MagnifyingGlass, Plus, FolderPlus, Link, DotsThree, PencilSimple, Trash } from "@phosphor-icons/react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { HelpDialog } from "@/components/dialogs/HelpDialog";
 import { AboutDialog } from "@/components/dialogs/AboutDialog";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
@@ -34,7 +27,7 @@ import { RightClickMenu, type MenuItem } from "@/components/ui/right-click-menu"
 import { appMetadata, helpItems } from "../metadata";
 import { BookmarkBoardMenuBar } from "./BookmarkBoardMenuBar";
 import { useBookmarkBoard } from "../hooks/useBookmarkBoard";
-import { useBookmarkStore, isFolder, type Bookmark, type BookmarkFolder } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkIconDisplay } from "./BookmarkIconDisplay";
 import { useTranslation } from "react-i18next";
 import { useThemeStore } from "@/stores/useThemeStore";
@@ -55,7 +48,7 @@ function BookmarkCard({
   onDragEnd,
   isDragging,
   isDragOver,
-  isMacTheme = false,
+  isMacTheme,
 }: {
   bm: Bookmark;
   onClick: () => void;
@@ -66,36 +59,34 @@ function BookmarkCard({
   onDragEnter: (e: React.DragEvent) => void;
   onDragLeave: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
-  onDragEnd: () => void;
+  onDragEnd: (e: React.DragEvent) => void;
   isDragging: boolean;
   isDragOver: boolean;
-  isMacTheme?: boolean;
+  isMacTheme: boolean;
 }) {
-  // 长按检测
-  const longPressTimerRef = useRef<number | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
-  
+
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
-    longPressTimerRef.current = window.setTimeout(() => {
-      onLongPress(e);
+    longPressTimerRef.current = setTimeout(() => {
       longPressTimerRef.current = null;
+      onLongPress(e);
     }, 500);
   };
-  
+
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartPosRef.current || !longPressTimerRef.current) return;
+    if (!longPressTimerRef.current || !touchStartPosRef.current) return;
     const touch = e.touches[0];
     const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
     const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
-    // 移动超过 10px 则取消长按
     if (dx > 10 || dy > 10) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
   };
-  
+
   const handleTouchEnd = () => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
@@ -126,7 +117,6 @@ function BookmarkCard({
       onDragEnd={onDragEnd}
       title={bm.url}
     >
-      {/* 图标容器 - 使用 CSS 变量 */}
       <div 
         className={cn(
           "rounded-xl flex items-center justify-center relative overflow-hidden",
@@ -142,7 +132,6 @@ function BookmarkCard({
         }}
       >
         <BookmarkIconDisplay bookmark={bm} size="sm" />
-        {/* macOS Aqua 水晶高光 */}
         {isMacTheme && (
           <div 
             className="absolute inset-0 pointer-events-none rounded-xl"
@@ -152,7 +141,6 @@ function BookmarkCard({
           />
         )}
       </div>
-      {/* 标题 - 双行截断，字体使用 CSS 变量 */}
       <span 
         className="text-center line-clamp-2 w-full font-geneva-12 leading-tight text-black/70 group-hover:text-black/90"
         style={{ fontSize: "var(--os-text-xs)" }}
@@ -163,110 +151,43 @@ function BookmarkCard({
   );
 }
 
-// ─── 文件夹区域 ──────────────────────────────────────────────────────────────
+// ─── 书签网格（可复用） ───────────────────────────────────────────────────────
 
-function FolderSection({
-  folder,
+function BookmarkGrid({
+  bookmarks,
   h,
-  isDragOverFolder,
-  onFolderDragOver,
-  onFolderDragLeave,
-  onFolderDrop,
-  t,
+  isMacTheme,
 }: {
-  folder: BookmarkFolder;
+  bookmarks: Bookmark[];
   h: ReturnType<typeof useBookmarkBoard>;
-  isDragOverFolder: boolean;
-  onFolderDragOver: (e: React.DragEvent) => void;
-  onFolderDragLeave: (e: React.DragEvent) => void;
-  onFolderDrop: (e: React.DragEvent) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: any;
+  isMacTheme: boolean;
 }) {
   return (
-    <div 
-      className={cn(
-        "mb-3 rounded-lg transition-all",
-        isDragOverFolder && "bg-blue-500/10 ring-2 ring-blue-500/30"
-      )}
-      onDragOver={onFolderDragOver}
-      onDragLeave={onFolderDragLeave}
-      onDrop={onFolderDrop}
-    >
-      <div 
-        className="flex items-center gap-1.5 mb-1.5 px-1 group/folder"
-        onContextMenu={(e) => h.openContextMenu(e, folder)}
-      >
-        <span className="text-[11px] font-geneva-12 font-medium text-black/50 uppercase tracking-wider cursor-default">
-          {folder.title}
-        </span>
-        <div className="flex-1 h-px bg-black/10" />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={cn(
-                "w-5 h-5 rounded flex items-center justify-center",
-                "text-black/40 hover:text-black/70 hover:bg-black/5",
-                "opacity-0 group-hover/folder:opacity-100 transition-all"
-              )}
-            >
-              <DotsThree size={18} weight="bold" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[160px]">
-            <DropdownMenuItem onClick={() => h.openAddDialog()}>
-              <Plus size={14} className="mr-2" />
-              {t("apps.bookmarks.addBookmark", "添加書籤")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => h.openRenameFolderDialog(folder)}>
-              <PencilSimple size={14} className="mr-2" />
-              {t("apps.bookmarks.renameFolder", "重命名")}
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => h.removeFolder(folder.id)}
-              className="text-red-600 focus:text-red-600"
-            >
-              <Trash size={14} className="mr-2" />
-              {t("apps.bookmarks.deleteFolder", "刪除分類")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1">
-        {folder.bookmarks.map((bm, index) => (
-          <BookmarkCard
-            key={bm.id}
-            bm={bm}
-            onClick={() => h.openBookmark(bm.url)}
-            onContextMenu={(e) => h.openContextMenu(e, bm, folder.id)}
-            onLongPress={(e) => {
-              // 模拟右键菜单位置
-              const touch = e.touches[0];
-              h.openContextMenu(
-                { preventDefault: () => {}, stopPropagation: () => {}, clientX: touch.clientX, clientY: touch.clientY } as unknown as React.MouseEvent,
-                bm,
-                folder.id
-              );
-            }}
-            onDragStart={(e) => h.handleDragStart(e, bm, index, folder.id)}
-            onDragOver={(e) => h.handleDragOver(e, index)}
-            onDragEnter={h.handleDragEnter}
-            onDragLeave={h.handleDragLeave}
-            onDrop={(e) => h.handleDrop(e, index, folder.id)}
-            onDragEnd={h.handleDragEnd}
-            isDragging={h.draggedItem?.item.id === bm.id}
-            isDragOver={h.dragOverIndex === index && h.draggedItem?.folderId === folder.id}
-            isMacTheme={h.currentTheme === "macosx"}
-          />
-        ))}
-        {/* 空文件夹的拖放区域 */}
-        {folder.bookmarks.length === 0 && (
-          <div className="col-span-full py-4 text-center text-[10px] text-black/30">
-            {isDragOverFolder ? t("apps.bookmarks.dropHere") : t("apps.bookmarks.dragHere")}
-          </div>
-        )}
-      </div>
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1">
+      {bookmarks.map((bm, index) => (
+        <BookmarkCard
+          key={bm.id}
+          bm={bm}
+          onClick={() => h.openBookmark(bm.id, bm.url)}
+          onContextMenu={(e) => h.openContextMenu(e, bm)}
+          onLongPress={(e) => {
+            const touch = e.touches[0];
+            h.openContextMenu(
+              { preventDefault: () => {}, stopPropagation: () => {}, clientX: touch.clientX, clientY: touch.clientY } as unknown as React.MouseEvent,
+              bm
+            );
+          }}
+          onDragStart={(e) => h.handleDragStart(e, bm, index)}
+          onDragOver={(e) => h.handleDragOver(e, index)}
+          onDragEnter={h.handleDragEnter}
+          onDragLeave={h.handleDragLeave}
+          onDrop={(e) => h.handleDrop(e, index)}
+          onDragEnd={h.handleDragEnd}
+          isDragging={h.draggedItem?.item.id === bm.id}
+          isDragOver={h.dragOverIndex === index}
+          isMacTheme={isMacTheme}
+        />
+      ))}
     </div>
   );
 }
@@ -289,106 +210,67 @@ export function BookmarkBoardApp({
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   const isMacTheme = currentTheme === "macosx";
 
-  // ─── 文件夹拖拽状态 ──────────────────────────────────────────────────────────
-  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
-
-  const handleFolderDragOver = (e: React.DragEvent, folderId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // 只有在拖拽书签时才允许放入文件夹
-    if (h.draggedItem && !isFolder(h.draggedItem.item)) {
-      setDragOverFolderId(folderId);
-    }
-  };
-
-  const handleFolderDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    // 检查是否真的离开了文件夹区域
-    const relatedTarget = e.relatedTarget as HTMLElement;
-    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
-      setDragOverFolderId(null);
-    }
-  };
-
-  const handleFolderDrop = (e: React.DragEvent, folderId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverFolderId(null);
-    
-    if (h.draggedItem && !isFolder(h.draggedItem.item)) {
-      // 移动书签到目标文件夹
-      h.handleDropToFolder(h.draggedItem.item.id, folderId);
-    }
-  };
-
   // ─── 右键菜单项 ─────────────────────────────────────────────────────────────
   const getContextMenuItems = (): MenuItem[] => {
     if (!h.contextMenu) return [];
-    const { item } = h.contextMenu;
+    const { target } = h.contextMenu;
 
-    if (isFolder(item)) {
-      // 文件夹右键菜单
+    if (target.kind === "empty") {
       return [
         {
           type: "item",
-          label: t("apps.bookmarks.addBookmark", "Add Bookmark"),
+          label: t("apps.bookmarks.addBookmark", "添加书签"),
           icon: "➕",
-          onSelect: () => {
-            h.openAddDialog();
-            h.closeContextMenu();
-          },
+          onSelect: () => { h.openAddDialog(); h.closeContextMenu(); },
         },
         { type: "separator" },
         {
-          type: "item",
-          label: t("common.menu.delete", "Delete"),
-          icon: "🗑️",
-          onSelect: () => {
-            h.removeFolder(item.id);
-            h.closeContextMenu();
-          },
+          type: "radioGroup",
+          value: h.sortMode,
+          onChange: (val) => { h.setSortMode(val as "recent" | "name"); h.closeContextMenu(); },
+          items: [
+            { label: t("apps.bookmarks.sortByName", "按名称排序"), value: "name" },
+            { label: t("apps.bookmarks.sortByRecent", "按最近使用排序"), value: "recent" },
+          ],
+        },
+        { type: "separator" },
+        {
+          type: "checkbox",
+          label: t("apps.bookmarks.groupByDomain", "按域名聚合"),
+          checked: h.groupByDomain,
+          onSelect: () => { h.setGroupByDomain(!h.groupByDomain); h.closeContextMenu(); },
         },
       ];
     }
 
-    // 书签右键菜单
+    const item = target.item;
     return [
       {
         type: "item",
-        label: t("apps.bookmarks.openInNewTab", "在新分頁中開啟"),
-        onSelect: () => {
-          h.openBookmark(item.url);
-          h.closeContextMenu();
-        },
+        label: t("apps.bookmarks.openInNewTab", "打开链接"),
+        onSelect: () => { h.openBookmark(item.id, item.url); h.closeContextMenu(); },
+      },
+      {
+        type: "item",
+        label: t("common.dock.copyUrl", "复制链接"),
+        onSelect: () => { navigator.clipboard.writeText(item.url); h.closeContextMenu(); },
       },
       { type: "separator" },
       {
         type: "item",
-        label: t("common.contextMenu.open", "開啟"),
-        icon: "↗️",
-        onSelect: () => {
-          h.openBookmark(item.url);
-          h.closeContextMenu();
-        },
+        label: t("common.contextMenu.addToDesktop", "放到桌面"),
+        onSelect: () => { updateBookmark(item.id, { onDesktop: true }); h.closeContextMenu(); },
       },
       {
         type: "item",
-        label: t("apps.bookmarks.addToDock", "加入 Dock"),
-        icon: "📌",
-        onSelect: () => {
-          updateBookmark(item.id, { inDock: true, onDesktop: false });
-          h.closeContextMenu();
-        },
+        label: t("apps.bookmarks.addToDock", "放到 Dock"),
+        onSelect: () => { updateBookmark(item.id, { inDock: true }); h.closeContextMenu(); },
       },
       { type: "separator" },
       {
         type: "item",
-        label: t("common.menu.delete", "刪除"),
-        icon: "🗑️",
-        onSelect: () => {
-          h.removeBookmark(item.id);
-          h.closeContextMenu();
-        },
+        label: t("common.menu.delete", "删除"),
+        onSelect: () => { h.removeBookmark(item.id); h.closeContextMenu(); },
       },
     ];
   };
@@ -396,7 +278,6 @@ export function BookmarkBoardApp({
   const menuBar = (
     <BookmarkBoardMenuBar
       onAddBookmark={() => h.openAddDialog()}
-      onAddFolder={h.openFolderDialog}
       onResetBookmarks={() => h.setResetDialogOpen(true)}
       onShowHelp={() => h.setHelpOpen(true)}
       onShowAbout={() => h.setAboutOpen(true)}
@@ -406,16 +287,10 @@ export function BookmarkBoardApp({
 
   if (!isWindowOpen) return null;
 
-  // 拆分: 顶层书签 vs 文件夹
-  const topLevel = h.filteredItems.filter((i) => !isFolder(i)) as Bookmark[];
-  const folders = h.filteredItems.filter(isFolder) as BookmarkFolder[];
-
   return (
     <>
-      {/* macOS 主题：菜单栏在窗口外 */}
       {!h.isXpTheme && isForeground && menuBar}
       
-      {/* 右键菜单：使用 fixed 定位容器，全局坐标 */}
       {h.contextMenu && (
         <div className="fixed inset-0 z-[9999]" style={{ pointerEvents: "none" }}>
           <div style={{ pointerEvents: "auto", position: "relative", width: "100%", height: "100%" }}>
@@ -429,7 +304,7 @@ export function BookmarkBoardApp({
       )}
       
       <WindowFrame
-        title={t("apps.bookmarks.name", "Bookmark Board")}
+        title={t("apps.bookmarks.name", "我的收藏")}
         onClose={onClose}
         isForeground={isForeground}
         appId="bookmarks"
@@ -437,12 +312,11 @@ export function BookmarkBoardApp({
         instanceId={instanceId}
         onNavigateNext={onNavigateNext}
         onNavigatePrevious={onNavigatePrevious}
-        menuBar={undefined}  /* 书签板不需要窗口内菜单栏，功能都在 + 按钮里 */
+        menuBar={undefined}
       >
         <div className="flex flex-col h-full w-full bg-white/85">
           {/* ── 搜索栏 ─────────────────────────────────────────── */}
           {h.isXpTheme ? (
-            /* Windows 98/XP: 搜索栏即输入框，不套层 */
             <div className="flex items-center gap-2 px-2 py-2 bg-white border-b border-[#919b9c]">
               <MagnifyingGlass size={16} className="text-black/40 shrink-0" />
               <input
@@ -452,26 +326,14 @@ export function BookmarkBoardApp({
                 placeholder={t("apps.bookmarks.search", "Search bookmarks...")}
                 className="flex-1 text-[13px] bg-transparent outline-none placeholder:text-black/40"
               />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="w-7 h-7 flex items-center justify-center shrink-0 hover:bg-black/5 active:bg-black/10">
-                    <Plus size={16} weight="bold" className="text-black/60" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[160px]">
-                  <DropdownMenuItem onClick={() => h.openAddDialog()}>
-                    <Link size={14} className="mr-2" />
-                    {t("apps.bookmarks.addBookmark", "新增書籤")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => h.openFolderDialog()}>
-                    <FolderPlus size={14} className="mr-2" />
-                    {t("apps.bookmarks.newFolder", "新增分類")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button
+                onClick={() => h.openAddDialog()}
+                className="w-7 h-7 flex items-center justify-center shrink-0 hover:bg-black/5 active:bg-black/10"
+              >
+                <Plus size={16} weight="bold" className="text-black/60" />
+              </button>
             </div>
           ) : (
-            /* macOS: 工具栏 + 搜索框 */
             <div
               className="flex items-center gap-2 px-3 py-2 border-b border-black/20"
               style={{
@@ -479,9 +341,7 @@ export function BookmarkBoardApp({
                 backgroundImage: "var(--os-pinstripe-window)",
               }}
             >
-              <div 
-                className="flex items-center flex-1 gap-1.5 px-2.5 py-1 rounded-full bg-white/80 border border-black/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50"
-              >
+              <div className="flex items-center flex-1 gap-1.5 px-2.5 py-1 rounded-full bg-white/80 border border-black/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50">
                 <MagnifyingGlass size={14} className="text-black/40 shrink-0" />
                 <input
                   type="text"
@@ -491,91 +351,44 @@ export function BookmarkBoardApp({
                   className="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/30"
                 />
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="w-7 h-7 flex items-center justify-center shrink-0 transition-all rounded-full bg-white/80 border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-white hover:border-black/20 active:bg-black/5"
-                  >
-                    <Plus size={16} weight="bold" className="text-black/60" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[160px]">
-                  <DropdownMenuItem onClick={() => h.openAddDialog()}>
-                    <Link size={14} className="mr-2" />
-                    {t("apps.bookmarks.addBookmark", "新增書籤")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => h.openFolderDialog()}>
-                    <FolderPlus size={14} className="mr-2" />
-                    {t("apps.bookmarks.newFolder", "新增分類")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button
+                onClick={() => h.openAddDialog()}
+                className="w-7 h-7 flex items-center justify-center shrink-0 transition-all rounded-full bg-white/80 border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-white hover:border-black/20 active:bg-black/5"
+              >
+                <Plus size={16} weight="bold" className="text-black/60" />
+              </button>
             </div>
           )}
 
           {/* ── 书签网格 ──────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto p-3">
-            {/* 顶层书签 */}
-            {topLevel.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1 mb-3">
-                {topLevel.map((bm, index) => (
-                  <BookmarkCard
-                    key={bm.id}
-                    bm={bm}
-                    onClick={() => h.openBookmark(bm.url)}
-                    onContextMenu={(e) => h.openContextMenu(e, bm)}
-                    onLongPress={(e) => {
-                      // 模拟右键菜单位置
-                      const touch = e.touches[0];
-                      h.openContextMenu(
-                        { preventDefault: () => {}, stopPropagation: () => {}, clientX: touch.clientX, clientY: touch.clientY } as unknown as React.MouseEvent,
-                        bm
-                      );
-                    }}
-                    onDragStart={(e) => h.handleDragStart(e, bm, index)}
-                    onDragOver={(e) => h.handleDragOver(e, index)}
-                    onDragEnter={h.handleDragEnter}
-                    onDragLeave={h.handleDragLeave}
-                    onDrop={(e) => h.handleDrop(e, index)}
-                    onDragEnd={h.handleDragEnd}
-                    isDragging={h.draggedItem?.item.id === bm.id}
-                    isDragOver={h.dragOverIndex === index && !h.draggedItem?.folderId}
-                    isMacTheme={h.currentTheme === "macosx"}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* 文件夹 */}
-            {folders.map((folder) => (
-              <FolderSection
-                key={folder.id}
-                folder={folder}
-                h={h}
-                isDragOverFolder={dragOverFolderId === folder.id}
-                onFolderDragOver={(e) => handleFolderDragOver(e, folder.id)}
-                onFolderDragLeave={handleFolderDragLeave}
-                onFolderDrop={(e) => handleFolderDrop(e, folder.id)}
-                t={t}
-              />
-            ))}
-
-            {/* 空状态 */}
-            {topLevel.length === 0 && folders.length === 0 && (
+          <div
+            className="flex-1 overflow-y-auto p-3"
+            onContextMenu={h.openEmptyContextMenu}
+          >
+            {h.groupedByDomain && h.groupedByDomain.length > 0 ? (
+              h.groupedByDomain.map(([domain, bookmarks]) => (
+                <div key={domain} className="mb-3">
+                  <div className="flex items-center gap-1.5 mb-1.5 px-1">
+                    <span className="text-[11px] font-geneva-12 font-medium text-black/50 uppercase tracking-wider cursor-default">
+                      {domain}
+                    </span>
+                    <div className="flex-1 h-px bg-black/10" />
+                  </div>
+                  <BookmarkGrid bookmarks={bookmarks} h={h} isMacTheme={isMacTheme} />
+                </div>
+              ))
+            ) : h.sortedItems.length > 0 ? (
+              <BookmarkGrid bookmarks={h.sortedItems} h={h} isMacTheme={isMacTheme} />
+            ) : (
               <div className="flex flex-col items-center justify-center h-full text-black/30 gap-2">
                 <span className="text-sm font-geneva-12">
-                  {h.searchQuery 
-                    ? t("apps.bookmarks.noResults", "沒有結果") 
-                    : t("apps.bookmarks.noBookmarksYet", "尚無書籤")}
+                  {h.searchQuery
+                    ? t("apps.bookmarks.noResults", "没有结果")
+                    : t("apps.bookmarks.noBookmarksYet", "尚无书签")}
                 </span>
                 {!h.searchQuery && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => h.openAddDialog()}
-                  >
-                    {t("apps.bookmarks.addFirstBookmark", "新增第一個書籤")}
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => h.openAddDialog()}>
+                    {t("apps.bookmarks.addFirstBookmark", "新增第一个书签")}
                   </Button>
                 )}
               </div>
@@ -591,17 +404,12 @@ export function BookmarkBoardApp({
           >
             <DialogHeader>
               <DialogTitle 
-                className={cn(
-                  "text-sm font-medium",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
+                className={cn("text-sm font-medium", isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]")}
               >
-                {t("apps.bookmarks.addBookmark", "新增書籤")}
+                {t("apps.bookmarks.addBookmark", "添加书签")}
               </DialogTitle>
             </DialogHeader>
-
             <div className="flex">
-              {/* 左侧预览区 */}
               <div
                 className="w-[100px] shrink-0 flex items-center justify-center border-r border-black/10"
                 style={{
@@ -611,76 +419,50 @@ export function BookmarkBoardApp({
               >
                 <BookmarkIconDisplay
                   bookmark={{
-                    id: "preview",
-                    title: h.addUrl,
-                    url: h.addUrl,
-                    summary: "",
-                    tags: [],
-                    createdAt: "",
-                    icon: undefined,
-                    favicon: h.previewFavicon || undefined,
+                    id: "preview", title: h.addUrl, url: h.addUrl,
+                    summary: "", tags: [], createdAt: "",
+                    icon: undefined, favicon: h.previewFavicon || undefined,
                   }}
                   size="lg"
                 />
               </div>
-
-              {/* 右侧表单区 */}
               <DialogBody className={isXpTheme ? "flex-1 p-2 px-4" : "flex-1 p-4"}>
                 <div className="space-y-3">
-                  {/* URL */}
                   <div className="space-y-1">
                     <Label 
                       htmlFor="bm-url" 
-                      className={cn(
-                        "text-[11px] text-black/50",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                      )}
+                      className={cn("text-[11px] text-black/50", isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]")}
                     >
-                      {t("apps.bookmarks.url", "網址")}
+                      {t("apps.bookmarks.url", "网址")}
                     </Label>
                     <Input
                       id="bm-url"
                       value={h.addUrl}
                       onChange={(e) => h.setAddUrl(e.target.value)}
-                      placeholder={t("apps.bookmarks.url", "網址")}
-                      className={cn(
-                        "text-xs h-8",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                      )}
+                      placeholder={t("apps.bookmarks.url", "网址")}
+                      className={cn("text-xs h-8", isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]")}
                       onKeyDown={(e) => e.key === "Enter" && h.submitAiBookmark()}
                       autoFocus
                     />
                   </div>
-
-                  {/* AI 模式：仅粘贴 URL */}
-
-                  {/* 文件夹选择已移除（仅收藏夹） */}
                 </div>
-
-                {/* 按钮 */}
                 <DialogFooter className="pt-4 gap-1">
-                    <Button
-                      variant={isMacTheme ? "secondary" : "retro"}
-                      size="sm"
-                      onClick={() => h.setAddDialogOpen(false)}
-                      className={cn(
-                        !isMacTheme && "h-7",
-                        isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                      )}
-                    >
-                      {t("common.dialog.cancel", "取消")}
-                    </Button>
+                  <Button
+                    variant={isMacTheme ? "secondary" : "retro"}
+                    size="sm"
+                    onClick={() => h.setAddDialogOpen(false)}
+                    className={cn(!isMacTheme && "h-7", isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]")}
+                  >
+                    {t("common.dialog.cancel", "取消")}
+                  </Button>
                   <Button
                     variant={isMacTheme ? "default" : "retro"}
                     size="sm"
                     onClick={h.submitAiBookmark}
                     disabled={!h.addUrl.trim() || h.isAiCreating}
-                    className={cn(
-                      !isMacTheme && "h-7",
-                      isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                    )}
+                    className={cn(!isMacTheme && "h-7", isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]")}
                   >
-                    {h.isAiCreating ? t("common.loading", "載入中...") : t("apps.bookmarks.add", "新增")}
+                    {h.isAiCreating ? t("common.loading", "载入中...") : t("apps.bookmarks.add", "新增")}
                   </Button>
                 </DialogFooter>
               </DialogBody>
@@ -688,160 +470,16 @@ export function BookmarkBoardApp({
           </DialogContent>
         </Dialog>
 
-        {/* ── 编辑书签对话框 ──────────────────────────────── */}
-        {/* ── 新建文件夹对话框 ────────────────────────────── */}
-        <Dialog open={h.folderDialogOpen} onOpenChange={h.setFolderDialogOpen}>
-          <DialogContent 
-            className={cn("sm:max-w-[320px] p-0 gap-0 overflow-hidden", isXpTheme && "p-0")}
-            style={isXpTheme ? { fontSize: "11px" } : undefined}
-          >
-            <DialogHeader>
-              <DialogTitle 
-                className={cn(
-                  "text-sm",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
-              >
-                {t("apps.bookmarks.newFolder", "新增檔案夾")}
-              </DialogTitle>
-            </DialogHeader>
-            <DialogBody className={isXpTheme ? "p-2 px-4" : "p-4"}>
-              <div className="space-y-1 mb-4">
-                <Label 
-                  className={cn(
-                    "text-[11px] text-black/50",
-                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                  )}
-                >
-                  {t("apps.bookmarks.folderName", "文件夹名称")}
-                </Label>
-                <Input
-                  value={h.folderName}
-                  onChange={(e) => h.setFolderName(e.target.value)}
-                  placeholder={t("apps.bookmarks.folderNamePlaceholder", "输入文件夹名称")}
-                  className={cn(
-                    "text-xs h-8",
-                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                  )}
-                  onKeyDown={(e) => e.key === "Enter" && h.submitFolder()}
-                  autoFocus
-                />
-              </div>
-              <DialogFooter className="gap-1">
-                <Button
-                  variant={isMacTheme ? "secondary" : "retro"}
-                  size="sm"
-                  onClick={() => h.setFolderDialogOpen(false)}
-                  className={cn(
-                    !isMacTheme && "h-7",
-                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                  )}
-                >
-                  {t("common.dialog.cancel", "取消")}
-                </Button>
-                <Button 
-                  variant={isMacTheme ? "default" : "retro"}
-                  size="sm" 
-                  onClick={h.submitFolder}
-                  className={cn(
-                    !isMacTheme && "h-7",
-                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                  )}
-                >
-                  {t("apps.bookmarks.create", "建立")}
-                </Button>
-              </DialogFooter>
-            </DialogBody>
-          </DialogContent>
-        </Dialog>
-
-        {/* ── 重命名文件夹对话框 ──────────────────────────── */}
-        <Dialog open={h.renameFolderDialogOpen} onOpenChange={h.setRenameFolderDialogOpen}>
-          <DialogContent 
-            className={cn("sm:max-w-[320px] p-0 gap-0 overflow-hidden", isXpTheme && "p-0")}
-            style={isXpTheme ? { fontSize: "11px" } : undefined}
-          >
-            <DialogHeader>
-              <DialogTitle 
-                className={cn(
-                  "text-sm",
-                  isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                )}
-              >
-                {t("apps.bookmarks.renameFolder", "重命名")}
-              </DialogTitle>
-            </DialogHeader>
-            <DialogBody className={isXpTheme ? "p-2 px-4" : "p-4"}>
-              <div className="space-y-1 mb-4">
-                <Label 
-                  className={cn(
-                    "text-[11px] text-black/50",
-                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial]"
-                  )}
-                >
-                  {t("apps.bookmarks.folderName", "文件夹名称")}
-                </Label>
-                <Input
-                  value={h.renameFolderName}
-                  onChange={(e) => h.setRenameFolderName(e.target.value)}
-                  placeholder={t("apps.bookmarks.folderNamePlaceholder", "输入文件夹名称")}
-                  className={cn(
-                    "text-xs h-8",
-                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                  )}
-                  onKeyDown={(e) => e.key === "Enter" && h.submitRenameFolder()}
-                  autoFocus
-                />
-              </div>
-              <DialogFooter className="gap-1">
-                <Button
-                  variant={isMacTheme ? "secondary" : "retro"}
-                  size="sm"
-                  onClick={() => h.setRenameFolderDialogOpen(false)}
-                  className={cn(
-                    !isMacTheme && "h-7",
-                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                  )}
-                >
-                  {t("common.dialog.cancel", "取消")}
-                </Button>
-                <Button 
-                  variant={isMacTheme ? "default" : "retro"}
-                  size="sm" 
-                  onClick={h.submitRenameFolder}
-                  disabled={!h.renameFolderName.trim()}
-                  className={cn(
-                    !isMacTheme && "h-7",
-                    isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]"
-                  )}
-                >
-                  {t("common.dialog.save", "儲存")}
-                </Button>
-              </DialogFooter>
-            </DialogBody>
-          </DialogContent>
-        </Dialog>
-
         {/* ── 系统对话框 ──────────────────────────────────── */}
-        <HelpDialog
-          isOpen={h.helpOpen}
-          onOpenChange={h.setHelpOpen}
-          helpItems={helpItems}
-          appId="bookmarks"
+        <HelpDialog isOpen={h.helpOpen} onOpenChange={h.setHelpOpen} helpItems={helpItems} appId="bookmarks" />
+        <AboutDialog isOpen={h.aboutOpen} onOpenChange={h.setAboutOpen} metadata={appMetadata} appId="bookmarks" />
+        <ConfirmDialog
+          isOpen={h.resetDialogOpen}
+          onOpenChange={h.setResetDialogOpen}
+          onConfirm={h.confirmReset}
+          title={t("apps.bookmarks.resetTitle", "重置书签")}
+          description={t("apps.bookmarks.resetDescription", "重置所有书签为预设值？此操作无法还原。")}
         />
-        <AboutDialog
-          isOpen={h.aboutOpen}
-          onOpenChange={h.setAboutOpen}
-          metadata={appMetadata}
-          appId="bookmarks"
-        />
-            <ConfirmDialog
-              isOpen={h.resetDialogOpen}
-              onOpenChange={h.setResetDialogOpen}
-              onConfirm={h.confirmReset}
-              title={t("apps.bookmarks.resetTitle", "重置書籤")}
-              description={t("apps.bookmarks.resetDescription", "重置所有書籤為預設值？此操作無法還原。")}
-            />
       </WindowFrame>
     </>
   );
