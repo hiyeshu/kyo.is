@@ -3,14 +3,18 @@
 
 ## 成员清单
 
+BookmarkFaviconImg.tsx: 书签 favicon 渲染器，三层回退状态机（Google S2 → LinkMeta 缓存 → 首字母 Emoji），解析后写回 faviconResolved 避免重复执行
 PrefetchToast.tsx: 预加载提示组件，显示资源预加载进度、桌面应用更新提示
 ThemedIcon.tsx: 主题图标组件，根据当前主题显示不同风格的图标
 TrafficLightButton.tsx: 交通灯按钮组件，macOS 风格窗口控制按钮（关闭、最小化、最大化）
 
 ## 依赖关系
 - 依赖 @/stores/useThemeStore 主题状态
+- 依赖 @/stores/useBookmarkStore 书签状态（BookmarkFaviconImg 写回 faviconResolved）
+- 依赖 @/stores/useLinkMetaStore 链接元数据缓存（BookmarkFaviconImg 查询缓存 favicon）
 - 依赖 @/components/ui Toast 组件
 - 被窗口框架和应用消费
+- BookmarkFaviconImg 被 BookmarkIconDisplay / Desktop / Dock / CommandPalette 消费
 
 ## 共享组件约束
 1. 组件必须支持所有主题（Aqua/XP/Win98）

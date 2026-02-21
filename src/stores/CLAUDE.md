@@ -7,7 +7,7 @@ helpers.ts: Zustand 浅比较辅助函数，优化 store 订阅性能，避免�
 useAppStore.ts: 应用管理核心状态，窗口实例、最近应用、AI 模型选择，存储键 kyo:app-store
 useAudioSettingsStore.ts: 音频设置状态，系统音效开关、音量控制，持久化
 useAuthStore.ts: 认证状态管理，Google OAuth 登录/登出，Supabase Auth 监听，登录时触发 initialSync
-useBookmarkStore.ts: 书签管理状态，书签列表、分类、拖拽排序、桌面显示标记，持久化，每次增删改同步写云端
+useBookmarkStore.ts: 书签管理状态，书签列表、分类、拖拽排序、桌面显示标记、faviconResolved 本地标记（三层回退完成标志），持久化，每次增删改同步写云端
 useDisplaySettingsStore.ts: 显示设置状态，显示模式、壁纸、屏保，存储键 kyo:display-settings
 useDockStore.ts: Dock 栏状态，固定应用列表、拖拽排序、显示/隐藏，持久化
 useThemeStore.ts: 主题状态，当前主题，存储键 kyo:theme 和 kyo:theme-sync-wallpaper

@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useBookmarkStore, isFolder, openBookmarkUrl, getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
+import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
@@ -662,21 +663,15 @@ function BookmarkDesktopIcon({
               boxShadow: "0 1px 0 rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.12)",
             }}
           >
-            <img
+            <BookmarkFaviconImg
+              bookmarkId={bookmark.id}
               src={iconInfo.value}
-              alt=""
+              bookmarkUrl={bookmark.url}
+              bookmarkTitle={bookmark.title}
+              faviconResolved={bookmark.faviconResolved}
               className="w-full h-full object-cover"
               style={{ imageRendering: "-webkit-optimize-contrast" }}
-              draggable={false}
               loading="lazy"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = "none";
-                const span = document.createElement("span");
-                span.className = "flex items-center justify-center w-full h-full text-2xl";
-                span.textContent = "🌐";
-                target.parentElement?.appendChild(span);
-              }}
             />
             {/* Aqua 水晶高光 */}
             <div
@@ -689,17 +684,15 @@ function BookmarkDesktopIcon({
           </div>
         ) : (
           // XP/Win98: 直接显示图标
-          <img
+          <BookmarkFaviconImg
+            bookmarkId={bookmark.id}
             src={iconInfo.value}
-            alt=""
+            bookmarkUrl={bookmark.url}
+            bookmarkTitle={bookmark.title}
+            faviconResolved={bookmark.faviconResolved}
             className="w-12 h-12 object-contain"
             style={{ imageRendering: "auto" }}
-            draggable={false}
             loading="lazy"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = isXpTheme ? "/icons/xp/ie-site.png" : "/icons/win98/ie-site.png";
-            }}
           />
         )}
       </div>

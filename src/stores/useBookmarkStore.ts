@@ -440,6 +440,7 @@ export interface Bookmark {
   onDesktop?: boolean; // 是否显示在桌面
   favicon?: string; // 保留兼容性
   icon?: BookmarkIcon; // 新的图标配置
+  faviconResolved?: boolean; // 三层回退已完成，纯本地标记，不同步云端
 }
 
 export interface BookmarkFolder {
@@ -552,7 +553,7 @@ interface BookmarkStore {
   addBookmark: (title: string, url: string, favicon?: string, folderId?: string, options?: { onDesktop?: boolean }) => string; // 返回新书签 ID
   addAiBookmark: (title: string, url: string, summary: string, tags: string[], options?: { onDesktop?: boolean }) => string; // AI 写入
   getBookmarkByUrl: (url: string) => Bookmark | undefined;
-  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags" | "onDesktop">>) => void;
+  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags" | "onDesktop" | "faviconResolved">>) => void;
   removeBookmark: (id: string) => void;
   
   // 文件夹
@@ -626,16 +627,21 @@ export const useBookmarkStore = create<BookmarkStore>()(
       },
 
       updateBookmark: (id, updates) => {
+        // url 或 favicon 变更时，自动重置 faviconResolved（需要重新走回退链）
+        const merged = { ...updates };
+        if (("url" in merged || "favicon" in merged) && !("faviconResolved" in merged)) {
+          merged.faviconResolved = false;
+        }
         set((s) => ({
           items: s.items.map((item) => {
             if (isBookmark(item) && item.id === id) {
-              return { ...item, ...updates };
+              return { ...item, ...merged };
             }
             if (isFolder(item)) {
               return {
                 ...item,
                 bookmarks: item.bookmarks.map((b) =>
-                  b.id === id ? { ...b, ...updates } : b
+                  b.id === id ? { ...b, ...merged } : b
                 ),
               };
             }

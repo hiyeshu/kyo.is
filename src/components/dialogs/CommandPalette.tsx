@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { MagnifyingGlass, Plus, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -583,14 +584,14 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                             {iconInfo.value}
                           </span>
                         ) : (
-                          <img
+                          <BookmarkFaviconImg
+                            bookmarkId={bm.id}
                             src={iconInfo.value}
-                            alt=""
+                            bookmarkUrl={bm.url}
+                            bookmarkTitle={bm.title}
+                            faviconResolved={bm.faviconResolved}
                             className="w-4 h-4 shrink-0 object-contain self-start mt-0.5"
                             style={{ borderRadius: "3px" }}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/icons/default/internet.png";
-                            }}
                           />
                         )}
                         <div className="flex-1 min-w-0">

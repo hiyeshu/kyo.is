@@ -15,6 +15,7 @@ import { getTranslatedAppName } from "@/utils/i18n";
 import { useLaunchApp } from "@/hooks/useLaunchApp";
 import { useDockStore, PROTECTED_DOCK_ITEMS, type DockItem } from "@/stores/useDockStore";
 import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl } from "@/stores/useBookmarkStore";
+import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useSound, Sounds } from "@/hooks/useSound";
@@ -55,6 +56,11 @@ interface IconButtonProps {
   isEmoji?: boolean;
   isBookmark?: boolean; // iOS-style rounded container for bookmark favicons
   isMacTheme?: boolean; // Enable Aqua crystal effect
+  // 书签回退链所需元数据
+  bookmarkId?: string;
+  bookmarkUrl?: string;
+  bookmarkTitle?: string;
+  faviconResolved?: boolean;
   onDragOver?: React.DragEventHandler;
   onDrop?: React.DragEventHandler;
   onDragLeave?: React.DragEventHandler;
@@ -186,6 +192,10 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
       isEmoji = false,
       isBookmark = false,
       isMacTheme = false,
+      bookmarkId,
+      bookmarkUrl,
+      bookmarkTitle,
+      faviconResolved,
       onDragOver,
       onDrop,
       onDragLeave,
@@ -426,28 +436,44 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
                   boxShadow: "0 1px 0 rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.12)",
                 }}
               >
-                <img
-                  src={icon}
-                  alt={label}
-                  draggable={false}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    imageRendering: "-webkit-optimize-contrast",
-                    pointerEvents: "none",
-                  }}
-                  onError={(e) => {
-                    // Fallback to globe emoji on error
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                    target.parentElement!.innerHTML = "🌐";
-                    target.parentElement!.style.fontSize = `${baseButtonSize * 0.5}px`;
-                    target.parentElement!.style.display = "flex";
-                    target.parentElement!.style.alignItems = "center";
-                    target.parentElement!.style.justifyContent = "center";
-                  }}
-                />
+                {bookmarkId && bookmarkUrl && bookmarkTitle ? (
+                  <BookmarkFaviconImg
+                    bookmarkId={bookmarkId}
+                    src={icon}
+                    bookmarkUrl={bookmarkUrl}
+                    bookmarkTitle={bookmarkTitle}
+                    faviconResolved={faviconResolved}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      imageRendering: "-webkit-optimize-contrast",
+                      pointerEvents: "none",
+                    }}
+                  />
+                ) : (
+                  <img
+                    src={icon}
+                    alt={label}
+                    draggable={false}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      imageRendering: "-webkit-optimize-contrast",
+                      pointerEvents: "none",
+                    }}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                      target.parentElement!.innerHTML = "🌐";
+                      target.parentElement!.style.fontSize = `${baseButtonSize * 0.5}px`;
+                      target.parentElement!.style.display = "flex";
+                      target.parentElement!.style.alignItems = "center";
+                      target.parentElement!.style.justifyContent = "center";
+                    }}
+                  />
+                )}
                 {/* macOS Aqua 水晶高光 */}
                 {isMacTheme && (
                   <div
@@ -1911,6 +1937,10 @@ function MacDock() {
                         isBookmark={isImageIcon}
                         isEmoji={iconInfo.isEmoji}
                         isMacTheme={isMacTheme}
+                        bookmarkId={bookmark.id}
+                        bookmarkUrl={bookmark.url}
+                        bookmarkTitle={bookmark.title}
+                        faviconResolved={bookmark.faviconResolved}
                         onClick={() => {
                           openBookmarkUrl(bookmark.url);
                         }}
