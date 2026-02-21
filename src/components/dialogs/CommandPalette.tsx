@@ -1,7 +1,7 @@
 /**
- * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useThemeStore, appRegistry, useAppStore, i18n, usePasteHandler logic
+ * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useAuthStore, supabase, useThemeStore, appRegistry, useAppStore, i18n
  * [OUTPUT]: CommandPalette 组件
- * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签，支持 URL 添加书签 + Ask AI 兜底，被 AppManager 挂载
+ * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签，已登录时 debounced Supabase RPC ILIKE 搜索，未登录时客户端过滤，被 AppManager 挂载
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -9,6 +9,8 @@ import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
 import { useBookmarkStore, isFolder, getBookmarkIconInfo, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
 import { useStickiesStore } from "@/stores/useStickiesStore";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { supabase } from "@/lib/supabase";
 import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useAppStore } from "@/stores/useAppStore";
@@ -17,7 +19,7 @@ import type { AppId } from "@/config/appRegistry";
 import { getTranslatedAppName } from "@/utils/i18n";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -30,6 +32,21 @@ interface CommandPaletteProps {
 
 interface FlatBookmark extends Bookmark {
   folderTitle?: string;
+}
+
+// Supabase RPC 返回的 kyo_items 行
+interface ServerItem {
+  id: string;
+  type: "bookmark" | "note";
+  title: string | null;
+  url: string | null;
+  summary: string | null;
+  text: string | null;
+  favicon: string | null;
+  tags: string[] | null;
+  color: string | null;
+  on_desktop: boolean | null;
+  created_at: string;
 }
 
 // URL 检测：有协议头，或者 xxx.xxx 格式（无空格）
@@ -72,10 +89,18 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
   const { t } = useTranslation();
   const { items, getBookmarkByUrl, addBookmark, updateBookmark } = useBookmarkStore();
   const { notes } = useStickiesStore();
+  const user = useAuthStore((s) => s.user);
   const currentTheme = useThemeStore((s) => s.current);
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const searchRef = useRef("");
+
+  // ─── 服务端搜索状态 ──────────────────────────────────────────────────────────
+  const [serverResults, setServerResults] = useState<ServerItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const q = search.trim().toLowerCase();
 
   // 应用列表 - 使用主题感知图标
   const appList = Object.entries(appRegistry).map(([id]) => {
@@ -94,6 +119,62 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
       ? item.bookmarks.map((bm) => ({ ...bm, folderTitle: item.title }))
       : [item]
   );
+
+  // ─── 客户端过滤 ──────────────────────────────────────────────────────────────
+  // 应用：始终客户端即时过滤
+  const filteredApps = q
+    ? appList.filter((a) => a.searchLabel.toLowerCase().includes(q))
+    : appList;
+
+  // 书签：扩展搜索范围到 title + url + summary + tags
+  const filteredBookmarks = q
+    ? allBookmarks.filter((bm) => {
+        const haystack = [bm.title, bm.url, bm.summary || "", (bm.tags || []).join(" ")].join(" ").toLowerCase();
+        return haystack.includes(q);
+      })
+    : allBookmarks;
+
+  // 便签：搜索 content
+  const filteredNotes = q
+    ? notes.filter((n) => n.content.toLowerCase().includes(q))
+    : notes.filter((n) => n.content.trim().length > 0);
+
+  // ─── 服务端 vs 客户端决策 ────────────────────────────────────────────────────
+  const useServer = !!user && q.length > 0;
+  const serverBookmarks = serverResults.filter((r) => r.type === "bookmark");
+  const serverNotes = serverResults.filter((r) => r.type === "note");
+
+  const displayBookmarks = useServer ? serverBookmarks : null;
+  const displayNotes = useServer ? serverNotes : null;
+
+  // URL 检测
+  const trimmedSearch = search.trim();
+  const isUrlInput = trimmedSearch.length > 0 && looksLikeUrl(trimmedSearch);
+
+  // 空状态判断（手动，因为 shouldFilter=false）
+  const bookmarkCount = useServer ? serverBookmarks.length : filteredBookmarks.length;
+  const noteCount = useServer ? serverNotes.length : filteredNotes.length;
+  const isEmpty = q.length > 0 && filteredApps.length === 0 && bookmarkCount === 0 && noteCount === 0 && !isUrlInput;
+
+  // ─── 服务端搜索 debounce ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user || !search.trim()) {
+      setServerResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("search_items", { q: search.trim() });
+      if (!error && data) setServerResults(data as ServerItem[]);
+      else setServerResults([]);
+      setIsSearching(false);
+    }, 300);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [search, user]);
 
   // 打开时聚焦输入框 + 填入初始字符 + ESC/Tab 处理
   useEffect(() => {
@@ -193,10 +274,6 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
     onOpenChange(false);
   };
 
-  // 是否显示 URL 添加选项
-  const trimmedSearch = search.trim();
-  const isUrlInput = trimmedSearch.length > 0 && looksLikeUrl(trimmedSearch);
-
   // 主题判断
   const isMacTheme = currentTheme === "macosx";
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
@@ -235,7 +312,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
         className="absolute left-1/2 top-[20%] -translate-x-1/2 w-full max-w-[520px] px-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <Command className="overflow-hidden" style={getPanelStyle()} loop>
+        <Command className="overflow-hidden" style={getPanelStyle()} loop shouldFilter={false}>
           {/* Input Area */}
           <div
             className="flex items-center gap-2 px-3"
@@ -248,18 +325,33 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               backgroundColor: isXpTheme ? "#ffffff" : undefined,
             }}
           >
-            <MagnifyingGlass
-              className="shrink-0"
-              size={16}
-              weight="regular"
-              style={{
-                color: isMacTheme
-                  ? "rgba(0, 0, 0, 0.4)"
-                  : isXpTheme
-                  ? "#0054E3"
-                  : "#666666",
-              }}
-            />
+            {isSearching ? (
+              <CircleNotch
+                className="shrink-0 animate-spin"
+                size={16}
+                weight="regular"
+                style={{
+                  color: isMacTheme
+                    ? "rgba(0, 0, 0, 0.4)"
+                    : isXpTheme
+                    ? "#0054E3"
+                    : "#666666",
+                }}
+              />
+            ) : (
+              <MagnifyingGlass
+                className="shrink-0"
+                size={16}
+                weight="regular"
+                style={{
+                  color: isMacTheme
+                    ? "rgba(0, 0, 0, 0.4)"
+                    : isXpTheme
+                    ? "#0054E3"
+                    : "#666666",
+                }}
+              />
+            )}
             <Command.Input
               ref={inputRef}
               value={search}
@@ -300,16 +392,19 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               padding: isMacTheme ? "6px" : "4px",
             }}
           >
-            <Command.Empty
-              className="py-6 text-center"
-              style={{
-                fontSize: isMacTheme ? "13px" : isXpTheme ? "11px" : "12px",
-                color: "rgba(0, 0, 0, 0.4)",
-                fontFamily: isMacTheme ? "var(--os-font-ui)" : undefined,
-              }}
-            >
-              {t("common.search.noResults", "找不到结果")}
-            </Command.Empty>
+            {/* 手动空状态（shouldFilter=false 时 Command.Empty 不可靠） */}
+            {isEmpty && !isSearching && (
+              <div
+                className="py-6 text-center"
+                style={{
+                  fontSize: isMacTheme ? "13px" : isXpTheme ? "11px" : "12px",
+                  color: "rgba(0, 0, 0, 0.4)",
+                  fontFamily: isMacTheme ? "var(--os-font-ui)" : undefined,
+                }}
+              >
+                {t("common.search.noResults", "找不到结果")}
+              </div>
+            )}
 
             {/* URL 检测 → 添加书签 */}
             {isUrlInput && (
@@ -331,55 +426,52 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               </Command.Group>
             )}
 
-            {/* 应用组 */}
-            <Command.Group heading={t("common.search.appsGroup", "应用")}>
-              {appList.map((app) => (
-                <Command.Item
-                  key={app.id}
-                    value={app.searchLabel}
-                  onSelect={() => handleSelectApp(app.id)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 cursor-pointer",
-                    "data-[selected=true]:text-white"
-                  )}
-                  style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
-                >
-                  <img
-                    src={app.icon}
-                    alt=""
-                    className="w-4 h-4 shrink-0 object-contain"
-                    style={{ borderRadius: "3px" }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/icons/default/application.png";
-                    }}
-                  />
-                    <span className="truncate">{app.name}</span>
-                </Command.Item>
-              ))}
-            </Command.Group>
-
-            {/* 书签组 */}
-            <Command.Group heading={t("common.search.bookmarksGroup", "书签")}>
-              {allBookmarks.map((bm) => {
-                const iconInfo = getBookmarkIconInfo(bm);
-                return (
+            {/* 应用组 — 始终客户端过滤 */}
+            {filteredApps.length > 0 && (
+              <Command.Group heading={t("common.search.appsGroup", "应用")}>
+                {filteredApps.map((app) => (
                   <Command.Item
-                    key={bm.url}
-                    value={`${bm.title} ${bm.url}`}
-                    onSelect={() => handleSelectBookmark(bm.url)}
+                    key={app.id}
+                    value={app.searchLabel}
+                    onSelect={() => handleSelectApp(app.id)}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 cursor-pointer",
                       "data-[selected=true]:text-white"
                     )}
                     style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
                   >
-                    {iconInfo.isEmoji ? (
-                      <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
-                        {iconInfo.value}
-                      </span>
-                    ) : (
+                    <img
+                      src={app.icon}
+                      alt=""
+                      className="w-4 h-4 shrink-0 object-contain"
+                      style={{ borderRadius: "3px" }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/icons/default/application.png";
+                      }}
+                    />
+                    <span className="truncate">{app.name}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* 书签组 — 服务端结果 or 客户端过滤 */}
+            {displayBookmarks ? (
+              displayBookmarks.length > 0 && (
+                <Command.Group heading={t("common.search.bookmarksGroup", "书签")}>
+                  {displayBookmarks.map((item) => (
+                    <Command.Item
+                      key={item.id}
+                      value={`${item.title || ""} ${item.url || ""}`}
+                      onSelect={() => item.url && handleSelectBookmark(item.url)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                        "data-[selected=true]:text-white"
+                      )}
+                      style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                    >
                       <img
-                        src={iconInfo.value}
+                        src={item.favicon || "/icons/default/internet.png"}
                         alt=""
                         className="w-4 h-4 shrink-0 object-contain"
                         style={{ borderRadius: "3px" }}
@@ -387,66 +479,141 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                           (e.target as HTMLImageElement).src = "/icons/default/internet.png";
                         }}
                       />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate">{bm.title}</div>
-                      <div
-                        className="truncate"
-                        style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}
-                      >
-                        {bm.url}
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate">{item.title || item.url}</div>
+                        <div
+                          className="truncate"
+                          style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}
+                        >
+                          {item.url}
+                        </div>
                       </div>
-                    </div>
-                    {bm.folderTitle && (
-                      <span
-                        className="shrink-0"
-                        style={{
-                          padding: "2px 6px",
-                          borderRadius: isMacTheme ? "4px" : "2px",
-                          fontSize: "10px",
-                          backgroundColor: "rgba(0, 0, 0, 0.06)",
-                          color: "rgba(0, 0, 0, 0.5)",
-                        }}
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )
+            ) : (
+              filteredBookmarks.length > 0 && (
+                <Command.Group heading={t("common.search.bookmarksGroup", "书签")}>
+                  {filteredBookmarks.map((bm) => {
+                    const iconInfo = getBookmarkIconInfo(bm);
+                    return (
+                      <Command.Item
+                        key={bm.url}
+                        value={`${bm.title} ${bm.url}`}
+                        onSelect={() => handleSelectBookmark(bm.url)}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                          "data-[selected=true]:text-white"
+                        )}
+                        style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
                       >
-                        {bm.folderTitle}
-                      </span>
-                    )}
-                  </Command.Item>
-                );
-              })}
-            </Command.Group>
+                        {iconInfo.isEmoji ? (
+                          <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
+                            {iconInfo.value}
+                          </span>
+                        ) : (
+                          <img
+                            src={iconInfo.value}
+                            alt=""
+                            className="w-4 h-4 shrink-0 object-contain"
+                            style={{ borderRadius: "3px" }}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/icons/default/internet.png";
+                            }}
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate">{bm.title}</div>
+                          <div
+                            className="truncate"
+                            style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}
+                          >
+                            {bm.url}
+                          </div>
+                        </div>
+                        {bm.folderTitle && (
+                          <span
+                            className="shrink-0"
+                            style={{
+                              padding: "2px 6px",
+                              borderRadius: isMacTheme ? "4px" : "2px",
+                              fontSize: "10px",
+                              backgroundColor: "rgba(0, 0, 0, 0.06)",
+                              color: "rgba(0, 0, 0, 0.5)",
+                            }}
+                          >
+                            {bm.folderTitle}
+                          </span>
+                        )}
+                      </Command.Item>
+                    );
+                  })}
+                </Command.Group>
+              )
+            )}
 
-            {/* 便签组 */}
-            {notes.length > 0 && (
-              <Command.Group heading={t("common.search.notesGroup", "便签")}>
-                {notes
-                  .filter((note) => note.content.trim().length > 0)
-                  .map((note) => (
-                  <Command.Item
-                    key={note.id}
-                    value={note.content}
-                    onSelect={() => handleSelectNote(note.id)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 cursor-pointer",
-                      "data-[selected=true]:text-white"
-                    )}
-                    style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
-                  >
-                    <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
-                      📝
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate">
-                        {note.content.slice(0, 60)}
+            {/* 便签组 — 服务端结果 or 客户端过滤 */}
+            {displayNotes ? (
+              displayNotes.length > 0 && (
+                <Command.Group heading={t("common.search.notesGroup", "便签")}>
+                  {displayNotes.map((item) => (
+                    <Command.Item
+                      key={item.id}
+                      value={item.text || ""}
+                      onSelect={() => handleSelectNote(item.id)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                        "data-[selected=true]:text-white"
+                      )}
+                      style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                    >
+                      <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
+                        📝
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate">
+                          {(item.text || "").slice(0, 60)}
+                        </div>
                       </div>
-                    </div>
-                    <span
-                      className="shrink-0 w-3 h-3 rounded-full"
-                      style={{ backgroundColor: `var(--os-sticky-${note.color}, #fef08a)` }}
-                    />
-                  </Command.Item>
-                ))}
-              </Command.Group>
+                      <span
+                        className="shrink-0 w-3 h-3 rounded-full"
+                        style={{ backgroundColor: `var(--os-sticky-${item.color || "yellow"}, #fef08a)` }}
+                      />
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )
+            ) : (
+              filteredNotes.length > 0 && (
+                <Command.Group heading={t("common.search.notesGroup", "便签")}>
+                  {filteredNotes.map((note) => (
+                    <Command.Item
+                      key={note.id}
+                      value={note.content}
+                      onSelect={() => handleSelectNote(note.id)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                        "data-[selected=true]:text-white"
+                      )}
+                      style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                    >
+                      <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
+                        📝
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate">
+                          {note.content.slice(0, 60)}
+                        </div>
+                      </div>
+                      <span
+                        className="shrink-0 w-3 h-3 rounded-full"
+                        style={{ backgroundColor: `var(--os-sticky-${note.color}, #fef08a)` }}
+                      />
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )
             )}
 
             {/* 问问 Kyo 兜底 — 有输入且非 URL 时始终显示 */}
