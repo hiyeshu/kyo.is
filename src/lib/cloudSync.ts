@@ -11,7 +11,9 @@ import { supabase } from "./supabase";
 
 async function getUserId(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
-  return data.session?.user?.id ?? null;
+  const uid = data.session?.user?.id ?? null;
+  if (!uid) console.warn("[cloudSync] no auth session — cloud write skipped");
+  return uid;
 }
 
 // ─── 通用 CRUD ──────────────────────────────────────────────────────────────

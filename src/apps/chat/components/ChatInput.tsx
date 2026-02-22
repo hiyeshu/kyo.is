@@ -150,7 +150,7 @@ export function ChatInput({
           accept="image/*"
           multiple
           className="hidden"
-          disabled={isActionDisabled}
+          disabled={isLoading}
           onChange={(e) => {
             if (e.target.files?.length) {
               onAddImages(e.target.files);
@@ -181,9 +181,9 @@ export function ChatInput({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isActionDisabled}
+              disabled={isLoading}
               className={`flex items-center justify-center transition-colors w-6 h-6 ${
-                isActionDisabled
+                isLoading
                   ? "text-gray-300 cursor-not-allowed"
                   : "text-gray-500 hover:text-gray-700"
               }`}

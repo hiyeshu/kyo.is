@@ -2309,6 +2309,8 @@
       "linkAlreadyExists": "Already exists: {{title}}",
       "resetTitle": "Reset bookmarks",
       "resetDescription": "Reset all bookmarks to defaults? This cannot be undone.",
+      "deleteTitle": "Delete Bookmark",
+      "deleteDescription": "Are you sure you want to permanently delete this bookmark? This cannot be undone.",
       "newFolder": "New Folder",
       "dropHere": "Drop here",
       "dragHere": "Drag bookmarks here",

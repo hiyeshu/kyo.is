@@ -579,7 +579,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           inDock: options?.inDock,
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
-        cloudUpsertItem(bookmarkToCloud(newBookmark)).catch(() => {});
+        cloudUpsertItem(bookmarkToCloud(newBookmark));
         return newBookmark.id;
       },
 
@@ -594,7 +594,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           inDock: options?.inDock,
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
-        cloudUpsertItem(bookmarkToCloud(newBookmark)).catch(() => {});
+        cloudUpsertItem(bookmarkToCloud(newBookmark));
         return newBookmark.id;
       },
 
@@ -614,13 +614,13 @@ export const useBookmarkStore = create<BookmarkStore>()(
           if (cloudKey) mapped[cloudKey] = v;
         }
         if (Object.keys(mapped).length > 0) {
-          cloudUpdateItem(id, mapped).catch(() => {});
+          cloudUpdateItem(id, mapped);
         }
       },
 
       removeBookmark: (id) => {
         set((s) => ({ items: s.items.filter((b) => b.id !== id) }));
-        cloudDeleteItem(id).catch(() => {});
+        cloudDeleteItem(id);
       },
 
       touchBookmark: (id) => {

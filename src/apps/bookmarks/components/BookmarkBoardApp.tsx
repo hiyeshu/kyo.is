@@ -5,7 +5,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { AppProps } from "../../base/types";
 import { WindowFrame } from "@/components/layout/WindowFrame";
 import { Input } from "@/components/ui/input";
@@ -211,6 +211,7 @@ export function BookmarkBoardApp({
   const { t } = useTranslation();
   const h = useBookmarkBoard();
   const updateBookmark = useBookmarkStore((s) => s.updateBookmark);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const currentTheme = useThemeStore((s) => s.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   const isMacTheme = currentTheme === "macosx";
@@ -275,7 +276,7 @@ export function BookmarkBoardApp({
       {
         type: "item",
         label: t("common.menu.delete", "删除"),
-        onSelect: () => { h.removeBookmark(item.id); h.closeContextMenu(); },
+        onSelect: () => { setPendingDeleteId(item.id); h.closeContextMenu(); },
       },
     ];
   };
@@ -484,6 +485,13 @@ export function BookmarkBoardApp({
           onConfirm={h.confirmReset}
           title={t("apps.bookmarks.resetTitle", "重置书签")}
           description={t("apps.bookmarks.resetDescription", "重置所有书签为预设值？此操作无法还原。")}
+        />
+        <ConfirmDialog
+          isOpen={pendingDeleteId !== null}
+          onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
+          onConfirm={() => { if (pendingDeleteId) h.removeBookmark(pendingDeleteId); setPendingDeleteId(null); }}
+          title={t("apps.bookmarks.deleteTitle", "删除书签")}
+          description={t("apps.bookmarks.deleteDescription", "确定要永久删除此书签吗？此操作无法还原。")}
         />
       </WindowFrame>
     </>

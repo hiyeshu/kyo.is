@@ -1865,6 +1865,8 @@
       "linkAlreadyExists": "已存在：{{title}}",
       "resetTitle": "重設書籤",
       "resetDescription": "重設所有書籤為預設值？此操作無法還原。",
+      "deleteTitle": "刪除書籤",
+      "deleteDescription": "確定要永久刪除此書籤嗎？此操作無法還原。",
       "newFolder": "新增檔案夾",
       "dropHere": "放開以放入",
       "dragHere": "拖曳書籤到此處",
