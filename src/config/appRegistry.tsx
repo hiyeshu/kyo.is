@@ -118,12 +118,12 @@ const LazyStickiesApp = createLazyComponent<unknown>(
   "stickies"
 );
 
-const LazyFavoritesApp = createLazyComponent<unknown>(
+const LazyHistoryApp = createLazyComponent<unknown>(
   () =>
     import(
-      "@/apps/favorites/components/FavoritesApp"
-    ).then((m) => ({ default: m.FavoritesApp })),
-  "favorites"
+      "@/apps/history/components/HistoryApp"
+    ).then((m) => ({ default: m.HistoryApp })),
+  "history"
 );
 
 const LazyWhiteNoiseApp = createLazyComponent<unknown>(
@@ -153,9 +153,9 @@ import {
 } from "@/apps/stickies/metadata";
 
 import {
-  appMetadata as favoritesMetadata,
-  helpItems as favoritesHelpItems,
-} from "@/apps/favorites/metadata";
+  appMetadata as historyMetadata,
+  helpItems as historyHelpItems,
+} from "@/apps/history/metadata";
 
 import {
   appMetadata as whiteNoiseMetadata,
@@ -205,12 +205,12 @@ export const appRegistry = {
       minSize: { width: 480, height: 400 },
     } as WindowConstraints,
   },
-  "favorites": {
-    id: "favorites" as const,
-    icon: { type: "image" as const, src: favoritesMetadata.icon },
-    component: LazyFavoritesApp,
-    helpItems: favoritesHelpItems,
-    metadata: favoritesMetadata,
+  "history": {
+    id: "history" as const,
+    icon: { type: "image" as const, src: historyMetadata.icon },
+    component: LazyHistoryApp,
+    helpItems: historyHelpItems,
+    metadata: historyMetadata,
     windowConfig: {
       defaultSize: { width: 500, height: 450 },
       minSize: { width: 360, height: 300 },

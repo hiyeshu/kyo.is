@@ -9,6 +9,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { cloudUpsertItem, cloudDeleteItem, cloudDeleteByType } from "@/lib/cloudSync";
 import { markLocalChange } from "./useSyncStore";
+import { useHistoryStore } from "./useHistoryStore";
 
 export type StickyColor = "yellow" | "blue" | "green" | "pink" | "purple" | "orange";
 
@@ -104,6 +105,10 @@ function debouncedContentSync(id: string) {
     if (!note || !note.content.trim()) return;
     markLocalChange(id);
     cloudUpsertItem(noteToCloud(note));
+    useHistoryStore.getState().addEntry({
+      id: note.id, type: "note", title: note.content.slice(0, 60),
+      content: note.content, tags: note.tags, createdAt: note.createdAt,
+    });
   }, 500));
 }
 
@@ -197,6 +202,7 @@ export const useStickiesStore = create<StickiesState>()(
         cloudDeleteItem(id).catch((e) =>
           console.error("[stickies] delete failed:", e)
         );
+        useHistoryStore.getState().markDeleted(id);
       },
 
       bringToFront: (id) => {

@@ -2696,13 +2696,17 @@
       "recording": "Recording",
       "transcribing": "Transcribing..."
     },
-    "favorites": {
+    "history": {
       "name": "History",
       "title": "History",
       "description": "All your bookmarks and notes in one place",
       "search": "Search history...",
-      "empty": "No items yet",
-      "items": "items"
+      "empty": "No records yet",
+      "items": "items",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This Week",
+      "earlier": "Earlier"
     },
     "whiteNoise": {
       "name": "White Noise",

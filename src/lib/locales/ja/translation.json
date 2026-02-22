@@ -2359,13 +2359,17 @@
       "recording": "録音中",
       "transcribing": "文字起こし中..."
     },
-    "favorites": {
+    "history": {
       "name": "履歴",
       "title": "履歴",
       "description": "ブックマークと付箋をまとめて管理",
       "search": "履歴を検索...",
-      "empty": "アイテムがありません",
-      "items": "件"
+      "empty": "記録がありません",
+      "items": "件",
+      "today": "今日",
+      "yesterday": "昨日",
+      "thisWeek": "今週",
+      "earlier": "それ以前"
     },
     "whiteNoise": {
       "name": "ホワイトノイズ",

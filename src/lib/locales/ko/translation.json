@@ -2359,13 +2359,17 @@
       "recording": "녹음 중",
       "transcribing": "텍스트 변환 중..."
     },
-    "favorites": {
+    "history": {
       "name": "히스토리",
       "title": "히스토리",
       "description": "북마크와 메모를 한곳에서 관리",
       "search": "히스토리 검색...",
-      "empty": "아이템이 없습니다",
-      "items": "개"
+      "empty": "기록이 없습니다",
+      "items": "개",
+      "today": "오늘",
+      "yesterday": "어제",
+      "thisWeek": "이번 주",
+      "earlier": "이전"
     },
     "whiteNoise": {
       "name": "화이트 노이즈",

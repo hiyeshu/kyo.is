@@ -9,6 +9,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { cloudUpsertItem, cloudDeleteItem } from "@/lib/cloudSync";
 import { markLocalChange } from "./useSyncStore";
+import { useHistoryStore } from "./useHistoryStore";
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
@@ -568,6 +569,11 @@ export const useBookmarkStore = create<BookmarkStore>()(
         set((s) => ({ items: [...s.items, newBookmark] }));
         markLocalChange(newBookmark.id);
         cloudUpsertItem(bookmarkToCloud(newBookmark));
+        useHistoryStore.getState().addEntry({
+          id: newBookmark.id, type: "bookmark", title, url,
+          favicon: newBookmark.favicon,
+          tags: newBookmark.tags, createdAt: new Date(newBookmark.createdAt).getTime(),
+        });
         return newBookmark.id;
       },
 
@@ -584,6 +590,11 @@ export const useBookmarkStore = create<BookmarkStore>()(
         set((s) => ({ items: [...s.items, newBookmark] }));
         markLocalChange(newBookmark.id);
         cloudUpsertItem(bookmarkToCloud(newBookmark));
+        useHistoryStore.getState().addEntry({
+          id: newBookmark.id, type: "bookmark", title, url,
+          favicon: newBookmark.favicon,
+          tags, createdAt: new Date(newBookmark.createdAt).getTime(),
+        });
         return newBookmark.id;
       },
 
@@ -608,6 +619,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
         set((s) => ({ items: s.items.filter((b) => b.id !== id) }));
         markLocalChange(id);
         cloudDeleteItem(id);
+        useHistoryStore.getState().markDeleted(id);
       },
 
       touchBookmark: (id) => {

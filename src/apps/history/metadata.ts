@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 无外部依赖
  * [OUTPUT]: appMetadata, helpItems
- * [POS]: favorites 应用元数据，被 appRegistry 消费
+ * [POS]: history 应用元数据，被 appRegistry 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -18,13 +18,13 @@ export const appMetadata = {
 
 export const helpItems = [
   {
-    icon: "⭐",
-    title: "All Items",
-    description: "View all your bookmarks and notes in one place",
+    icon: "🕐",
+    title: "Timeline",
+    description: "All your bookmarks and notes, organized by time",
   },
   {
     icon: "🔍",
     title: "Search",
-    description: "Search across all your saved items",
+    description: "Search across all history, including deleted items",
   },
 ];

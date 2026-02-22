@@ -2370,13 +2370,17 @@
       "recording": "錄音中",
       "transcribing": "轉錄中..."
     },
-    "favorites": {
+    "history": {
       "name": "歷史紀錄",
       "title": "歷史紀錄",
       "description": "集中管理你的書籤與便利貼",
       "search": "搜尋歷史...",
-      "empty": "暫無收藏",
-      "items": "項"
+      "empty": "暫無紀錄",
+      "items": "項",
+      "today": "今天",
+      "yesterday": "昨天",
+      "thisWeek": "本週",
+      "earlier": "更早"
     },
     "whiteNoise": {
       "name": "白噪音",
