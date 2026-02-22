@@ -188,13 +188,26 @@ export function HistoryApp({
 
 // ─── 单条目 ──────────────────────────────────────────────────────────────────
 
+function formatEntryTime(ts: number): string {
+  const now = new Date();
+  const date = new Date(ts);
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / 86400000);
+  const sameDay = now.getDate() === date.getDate() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear();
+  const time = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+
+  if (sameDay) return time;
+  if (diffDays <= 1 && now.getDate() - date.getDate() === 1) return time;
+  if (diffDays < 7) {
+    const weekday = date.toLocaleDateString(undefined, { weekday: "short" });
+    return `${weekday} ${time}`;
+  }
+  return date.toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
+}
+
 function HistoryItem({ entry }: { entry: HistoryEntry }) {
   const isDeleted = !!entry.deletedAt;
   const [faviconBroken, setFaviconBroken] = useState(false);
-  const time = new Date(entry.createdAt).toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const time = formatEntryTime(entry.createdAt);
 
   const copyText = entry.type === "bookmark" ? entry.url || "" : entry.content || entry.title;
 
