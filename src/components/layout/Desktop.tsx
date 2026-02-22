@@ -499,64 +499,29 @@ export function Desktop({
           
           {/* Bookmark icons (all themes, those marked onDesktop=true) */}
           {desktopBookmarks.map((bm) => (
-            <div
+            <BookmarkIconWrapper
               key={bm.id}
-              data-bookmark-id={bm.id}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.effectAllowed = "move";
-                e.dataTransfer.setData(
-                  "application/json",
-                  JSON.stringify({
-                    type: "bookmark",
-                    bookmarkId: bm.id,
-                  })
-                );
-                // Set drag image
-                const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
-                dragImage.style.position = "absolute";
-                dragImage.style.top = "-1000px";
-                document.body.appendChild(dragImage);
-                e.dataTransfer.setDragImage(dragImage, e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-                setTimeout(() => document.body.removeChild(dragImage), 0);
+              bookmark={bm}
+              isMobile={isMobile}
+              isSelected={selectedBookmarkIds.has(bm.id)}
+              theme={currentTheme}
+              onOpen={() => {
+                openBookmarkUrl(bm.url);
+                clearSelection();
               }}
-            >
-              <BookmarkDesktopIcon
-                bookmark={bm}
-                isSelected={selectedBookmarkIds.has(bm.id)}
-                theme={currentTheme}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Mobile: single tap opens bookmark; Desktop: single click selects
-                  if (isMobile) {
-                    openBookmarkUrl(bm.url);
-                    clearSelection();
-                  } else {
-                    setSelectedBookmarkIds(new Set([bm.id]));
-                    setSelectedAppId(null);
-                  }
-                }}
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  // Desktop: double click opens bookmark
-                  if (!isMobile) {
-                    openBookmarkUrl(bm.url);
-                    clearSelection();
-                  }
-                }}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setContextMenuPos({ x: e.clientX, y: e.clientY });
-                  setContextMenuBookmark(bm);
-                  setContextMenuAppId(null);
-                  // 右键已选中的书签保持多选
-                  if (!selectedBookmarkIds.has(bm.id)) {
-                    setSelectedBookmarkIds(new Set([bm.id]));
-                  }
-                }}
-              />
-            </div>
+              onSelect={() => {
+                setSelectedBookmarkIds(new Set([bm.id]));
+                setSelectedAppId(null);
+              }}
+              onContextMenu={(x, y) => {
+                setContextMenuPos({ x, y });
+                setContextMenuBookmark(bm);
+                setContextMenuAppId(null);
+                if (!selectedBookmarkIds.has(bm.id)) {
+                  setSelectedBookmarkIds(new Set([bm.id]));
+                }
+              }}
+            />
           ))}
         </div>
       </div>
@@ -610,6 +575,101 @@ const AQUA_HIGHLIGHT =
 // XP: 1px 1px 2px rgba(0,0,0,0.8)
 const MACOS_TEXT_SHADOW = "rgba(0, 0, 0, 0.9) 0px 1px 0px, rgba(0, 0, 0, 0.85) 0px 1px 3px, rgba(0, 0, 0, 0.45) 0px 2px 3px";
 const XP_TEXT_SHADOW = "1px 1px 2px rgba(0, 0, 0, 0.8)";
+
+// ─── Bookmark icon wrapper (long-press → context menu on iOS) ────────
+
+function BookmarkIconWrapper({
+  bookmark,
+  isMobile,
+  isSelected,
+  theme,
+  onOpen,
+  onSelect,
+  onContextMenu,
+}: {
+  bookmark: Bookmark;
+  isMobile: boolean;
+  isSelected: boolean;
+  theme: string;
+  onOpen: () => void;
+  onSelect: () => void;
+  onContextMenu: (x: number, y: number) => void;
+}) {
+  const longPressTimer = useRef<number | null>(null);
+  const didLongPress = useRef(false);
+
+  const clearTimer = useCallback(() => {
+    if (longPressTimer.current !== null) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  return (
+    <div
+      data-bookmark-id={bookmark.id}
+      draggable={!isMobile}
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData(
+          "application/json",
+          JSON.stringify({ type: "bookmark", bookmarkId: bookmark.id })
+        );
+        const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
+        dragImage.style.position = "absolute";
+        dragImage.style.top = "-1000px";
+        document.body.appendChild(dragImage);
+        e.dataTransfer.setDragImage(dragImage, e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+        setTimeout(() => document.body.removeChild(dragImage), 0);
+      }}
+      // 长按触发右键菜单（iOS 触屏）
+      onTouchStart={(e) => {
+        if (e.touches.length !== 1) return;
+        didLongPress.current = false;
+        const touch = e.touches[0];
+        const x = touch.clientX;
+        const y = touch.clientY;
+        longPressTimer.current = window.setTimeout(() => {
+          didLongPress.current = true;
+          onContextMenu(x, y);
+        }, 500);
+      }}
+      onTouchEnd={(e) => {
+        clearTimer();
+        // 长按后松手不触发 click（防止打开链接）
+        if (didLongPress.current) {
+          e.preventDefault();
+          didLongPress.current = false;
+        }
+      }}
+      onTouchMove={clearTimer}
+      onTouchCancel={clearTimer}
+    >
+      <BookmarkDesktopIcon
+        bookmark={bookmark}
+        isSelected={isSelected}
+        theme={theme}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (isMobile) {
+            onOpen();
+          } else {
+            onSelect();
+          }
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          if (!isMobile) onOpen();
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onContextMenu(e.clientX, e.clientY);
+        }}
+      />
+    </div>
+  );
+}
 
 // ─── Bookmark desktop icon ───────────────────────────────────────────
 
