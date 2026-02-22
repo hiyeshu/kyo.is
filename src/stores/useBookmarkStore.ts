@@ -8,6 +8,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { cloudUpsertItem, cloudDeleteItem } from "@/lib/cloudSync";
+import { markLocalChange } from "./useSyncStore";
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
@@ -568,6 +569,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
         console.log("[bookmark] addBookmark →", newBookmark.id, title, url);
+        markLocalChange(newBookmark.id);
         cloudUpsertItem(bookmarkToCloud(newBookmark));
         return newBookmark.id;
       },
@@ -583,6 +585,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           inDock: options?.inDock,
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
+        markLocalChange(newBookmark.id);
         cloudUpsertItem(bookmarkToCloud(newBookmark));
         return newBookmark.id;
       },
@@ -600,12 +603,14 @@ export const useBookmarkStore = create<BookmarkStore>()(
         const updated = get().items.find((b) => b.id === id);
         if (updated) {
           console.log("[bookmark] updateBookmark →", id, Object.keys(updates));
+          markLocalChange(id);
           cloudUpsertItem(bookmarkToCloud(updated));
         }
       },
 
       removeBookmark: (id) => {
         set((s) => ({ items: s.items.filter((b) => b.id !== id) }));
+        markLocalChange(id);
         cloudDeleteItem(id);
       },
 
@@ -615,7 +620,10 @@ export const useBookmarkStore = create<BookmarkStore>()(
           items: s.items.map((b) => b.id === id ? { ...b, lastUsed: now } : b),
         }));
         const touched = get().items.find((b) => b.id === id);
-        if (touched) cloudUpsertItem(bookmarkToCloud(touched));
+        if (touched) {
+          markLocalChange(id);
+          cloudUpsertItem(bookmarkToCloud(touched));
+        }
       },
 
       reorderItems: (fromIndex, toIndex) =>

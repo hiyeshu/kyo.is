@@ -133,12 +133,14 @@ export function ChatInput({
                 <button
                   type="button"
                   onClick={() => onRemoveImage(img.id)}
-                  className={`chat-image-close absolute flex items-center justify-center w-[18px] h-[18px] rounded-full ${
-                    isMobile ? "" : "opacity-0 group-hover:opacity-100 transition-opacity"
+                  className={`chat-image-close absolute flex items-center justify-center rounded-full ${
+                    isMobile
+                      ? "w-[22px] h-[22px]"
+                      : "w-[18px] h-[18px] opacity-0 group-hover:opacity-100 transition-opacity"
                   }`}
                   aria-label={t("apps.chat.removeImage", "移除图片")}
                 >
-                  <X className="h-2 w-2" weight="bold" />
+                  <X className={isMobile ? "h-2.5 w-2.5" : "h-2 w-2"} weight="bold" />
                 </button>
               </div>
             ))}
