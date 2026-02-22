@@ -2179,6 +2179,7 @@
       "settingsResetReloading": "All settings reset. Reloading...",
       "fileSystemFormattedReloading": "File system formatted. Reloading...",
       "formatFileSystemConfirmDesc": "Are you sure you want to format the file system? This will permanently delete all files (except sample documents), images, and custom wallpapers. kyo will restart after formatting.",
+      "videos": "Videos",
       "terminalIeAmbientSynth": "Synth",
       "chatSynth": "Chat Synth",
       "selectAPreset": "Select a preset",

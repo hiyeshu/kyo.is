@@ -10,7 +10,6 @@ import { AppId, getAppIconPath } from "@/config/appRegistry";
 import { useState, useRef, useCallback } from "react";
 import { useWallpaper } from "@/hooks/useWallpaper";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
-import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
@@ -67,7 +66,6 @@ export function Desktop({
     y: number;
   } | null>(null);
   const [contextMenuAppId, setContextMenuAppId] = useState<string | null>(null);
-  const [isAddWebsiteDialogOpen, setIsAddWebsiteDialogOpen] = useState(false);
   const [isBatchRemoveDialogOpen, setIsBatchRemoveDialogOpen] = useState(false);
   const [batchRemoveIds, setBatchRemoveIds] = useState<Set<string>>(new Set());
 
@@ -301,13 +299,6 @@ export function Desktop({
       { type: "separator" },
       {
         type: "item",
-        label: t("common.desktop.addWebsite", "新增网站"),
-        onSelect: () => {
-          setIsAddWebsiteDialogOpen(true);
-        },
-      },
-      {
-        type: "item",
         label: t("common.desktop.changeWallpaper", "更换壁纸"),
         onSelect: () => {
           toggleApp("control-panels" as AppId);
@@ -536,10 +527,6 @@ export function Desktop({
           setContextMenuBookmark(null);
         }}
         items={getContextMenuItems()}
-      />
-      <AddWebsiteDialog
-        isOpen={isAddWebsiteDialogOpen}
-        onOpenChange={setIsAddWebsiteDialogOpen}
       />
       <ConfirmDialog
         isOpen={isBatchRemoveDialogOpen}

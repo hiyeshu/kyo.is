@@ -826,7 +826,8 @@
       "failedToParseBackup": "无法解析备份文件",
       "settingsResetReloading": "所有设定已重置，正在重新加载...",
       "fileSystemFormattedReloading": "档案系统已格式化，正在重新启动...",
-      "formatFileSystemConfirmDesc": "确定要格式化档案系统吗？这将清除所有文件（范例文档除外）、图片和自定义桌布。格式化后 kyo 将重新启动。"
+      "formatFileSystemConfirmDesc": "确定要格式化档案系统吗？这将清除所有文件（范例文档除外）、图片和自定义桌布。格式化后 kyo 将重新启动。",
+      "videos": "视频"
     },
     "finder": {
       "contextMenu": {
