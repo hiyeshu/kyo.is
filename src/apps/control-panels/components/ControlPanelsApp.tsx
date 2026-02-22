@@ -101,7 +101,7 @@ function restoreBackup(json: string, t: (key: string) => string): boolean {
 }
 
 function resetAllSettings() {
-  localStorage.clear();
+  for (const key of BACKUP_KEYS) localStorage.removeItem(key);
   location.reload();
 }
 

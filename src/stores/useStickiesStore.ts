@@ -7,7 +7,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { cloudUpsertItem, cloudUpdateItem, cloudDeleteItem, cloudDeleteByType } from "@/lib/cloudSync";
+import { cloudUpsertItem, cloudDeleteItem, cloudDeleteByType } from "@/lib/cloudSync";
 
 export type StickyColor = "yellow" | "blue" | "green" | "pink" | "purple" | "orange";
 
@@ -65,12 +65,9 @@ function debouncedContentSync(id: string) {
   if (existing) clearTimeout(existing);
   contentSyncTimers.set(id, setTimeout(() => {
     contentSyncTimers.delete(id);
-    // 取最新的 note 做 upsert（而非 update），确保行不存在时也能写入
     const note = useStickiesStore.getState().notes.find((n) => n.id === id);
-    if (!note) return;
-    cloudUpsertItem(noteToCloud(note)).catch((e) =>
-      console.error("[stickies] content sync failed:", e)
-    );
+    if (!note || !note.content.trim()) return;
+    cloudUpsertItem(noteToCloud(note));
   }, 500));
 }
 
@@ -132,9 +129,6 @@ export const useStickiesStore = create<StickiesState>()(
         set((state) => ({
           notes: [...state.notes, newNote],
         }));
-        cloudUpsertItem(noteToCloud(newNote)).catch((e) =>
-          console.error("[stickies] upsert failed:", e)
-        );
         return id;
       },
 
@@ -146,22 +140,13 @@ export const useStickiesStore = create<StickiesState>()(
               : note
           ),
         }));
-        // 映射字段名到云端格式（跳过 position/size，云端不存）
-        const mapped: Record<string, unknown> = {};
-        for (const [k, v] of Object.entries(updates)) {
-          const cloudKey = NOTE_FIELD_MAP[k];
-          if (cloudKey) mapped[cloudKey] = v;
-        }
-        if (Object.keys(mapped).length > 0) {
-          mapped.updated_at = new Date().toISOString();
-          // 内容更新用 debounce（避免每次按键都写），其他立即同步
-          if ("text" in mapped) {
-            debouncedContentSync(id);
-          } else {
-            cloudUpdateItem(id, mapped).catch((e) =>
-              console.error("[stickies] sync failed:", e)
-            );
-          }
+        const hasCloudField = Object.keys(updates).some((k) => NOTE_FIELD_MAP[k]);
+        if (!hasCloudField) return;
+        if ("content" in updates) {
+          debouncedContentSync(id);
+        } else {
+          const note = get().notes.find((n) => n.id === id);
+          if (note) cloudUpsertItem(noteToCloud(note));
         }
       },
 
