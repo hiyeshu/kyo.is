@@ -73,7 +73,7 @@ interface MatchInfo {
  * 按优先级推断搜索命中的字段，返回应展示的文本
  * - title 命中 → 不显示副文本（标题已足够说明）
  * - summary/text/url 命中 → 显示该字段内容
- * - tags 命中 → 显示 summary（tag 不直接暴露给用户）
+ * - tags 命中 → 展示命中 tag 值（可高亮），拼接 summary 补充语境
  */
 function getMatchInfo(
   query: string,
@@ -83,7 +83,12 @@ function getMatchInfo(
   if (fields.title && fields.title.toLowerCase().includes(q)) return { field: "title", text: null };
   if (fields.summary && fields.summary.toLowerCase().includes(q)) return { field: "summary", text: fields.summary };
   if (fields.text && fields.text.toLowerCase().includes(q)) return { field: "text", text: fields.text };
-  if (fields.tags?.some((t) => t.toLowerCase().includes(q))) return { field: "tags", text: fields.summary || null };
+  if (fields.tags?.some((t) => t.toLowerCase().includes(q))) {
+    // 找到命中的 tag，将其置于文本开头以便 HighlightText 高亮
+    const hit = fields.tags.find((t) => t.toLowerCase().includes(q)) || "";
+    const suffix = fields.summary ? ` · ${fields.summary}` : "";
+    return { field: "tags", text: hit + suffix };
+  }
   if (fields.url && fields.url.toLowerCase().includes(q)) return { field: "url", text: fields.url };
   return { field: "none", text: null };
 }
