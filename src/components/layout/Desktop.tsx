@@ -116,6 +116,8 @@ export function Desktop({
   useEventListener("keydown", useCallback((e: KeyboardEvent) => {
     // ⌘A / Ctrl+A → 全选桌面书签
     if ((e.metaKey || e.ctrlKey) && e.key === "a") {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement).isContentEditable) return;
       e.preventDefault();
       selectAll(desktopBookmarks.map((bm) => bm.id));
       return;
