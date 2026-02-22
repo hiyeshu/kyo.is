@@ -568,6 +568,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           inDock: options?.inDock,
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
+        console.log("[bookmark] addBookmark →", newBookmark.id, title, url);
         cloudUpsertItem(bookmarkToCloud(newBookmark));
         return newBookmark.id;
       },
@@ -598,7 +599,10 @@ export const useBookmarkStore = create<BookmarkStore>()(
           items: s.items.map((b) => b.id === id ? { ...b, ...merged } : b),
         }));
         const updated = get().items.find((b) => b.id === id);
-        if (updated) cloudUpsertItem(bookmarkToCloud(updated));
+        if (updated) {
+          console.log("[bookmark] updateBookmark →", id, Object.keys(updates));
+          cloudUpsertItem(bookmarkToCloud(updated));
+        }
       },
 
       removeBookmark: (id) => {
