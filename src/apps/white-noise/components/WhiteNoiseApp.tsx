@@ -10,6 +10,7 @@ import { AppProps } from "../../base/types";
 import { WindowFrame } from "@/components/layout/WindowFrame";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useTranslation } from "react-i18next";
+import { getAudioContext, resumeAudioContext } from "@/lib/audioContext";
 
 /* ═══════════════════════════════════════════════════════════════════════════════
  * 点阵波形 Canvas — 播放时格栅的点通过颜色深浅形成流动波形
@@ -363,8 +364,7 @@ export function WhiteNoiseApp({
   const isDraggingRef = useRef(false);
   const lastSoundRef = useRef<SoundOption>(SOUNDS[0]);
   
-  // 音频分析
-  const audioContextRef = useRef<AudioContext | null>(null);
+  // 音频分析 — 使用共享 AudioContext（Safari/WebKit 兼容）
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -384,60 +384,58 @@ export function WhiteNoiseApp({
     setFrequencies(Array(6).fill(0));
   }, []);
 
-  // 开始频谱分析
-  const startAnalysis = useCallback((audio: HTMLAudioElement) => {
-    // 创建或复用 AudioContext
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext();
-    }
-    const ctx = audioContextRef.current;
-    
-    // 创建 Analyser
-    if (!analyserRef.current) {
-      analyserRef.current = ctx.createAnalyser();
-      analyserRef.current.fftSize = 64;
-      analyserRef.current.smoothingTimeConstant = 0.7;
-    }
-    
-    // 连接音频源（只能连接一次）
-    if (!sourceRef.current) {
-      sourceRef.current = ctx.createMediaElementSource(audio);
-      sourceRef.current.connect(analyserRef.current);
-      analyserRef.current.connect(ctx.destination);
-    }
-    
-    // 频谱数据读取循环
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-    const numBands = 6;
-    
-    const analyze = () => {
-      if (!analyserRef.current) return;
+  // 尝试启动频谱分析（降级：失败不影响播放）
+  const tryStartAnalysis = useCallback((audio: HTMLAudioElement) => {
+    try {
+      const ctx = getAudioContext();
       
-      analyserRef.current.getByteFrequencyData(dataArray);
-      
-      // 将频谱数据映射到 12 个条
-      const bands: number[] = [];
-      const binCount = dataArray.length;
-      const binsPerBand = Math.max(1, Math.floor(binCount / numBands));
-      
-      for (let i = 0; i < numBands; i++) {
-        let sum = 0;
-        const start = i * binsPerBand;
-        const end = Math.min(start + binsPerBand, binCount);
-        let count = 0;
-        for (let j = start; j < end; j++) {
-          sum += dataArray[j];
-          count++;
-        }
-        // 归一化到 0-1
-        bands.push(count > 0 ? (sum / count) / 255 : 0);
+      // 创建 Analyser
+      if (!analyserRef.current || analyserRef.current.context !== ctx) {
+        analyserRef.current = ctx.createAnalyser();
+        analyserRef.current.fftSize = 64;
+        analyserRef.current.smoothingTimeConstant = 0.7;
       }
-      
-      setFrequencies(bands);
-      animationFrameRef.current = requestAnimationFrame(analyze);
-    };
-    
-    analyze();
+
+      // 连接音频源（HTMLAudioElement 只能绑定一个 MediaElementSource）
+      if (!sourceRef.current) {
+        sourceRef.current = ctx.createMediaElementSource(audio);
+        sourceRef.current.connect(analyserRef.current);
+        analyserRef.current.connect(ctx.destination);
+      }
+
+      // 频谱数据读取循环
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+      const numBands = 6;
+
+      const analyze = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(dataArray);
+
+        const bands: number[] = [];
+        const binCount = dataArray.length;
+        const binsPerBand = Math.max(1, Math.floor(binCount / numBands));
+
+        for (let i = 0; i < numBands; i++) {
+          let sum = 0;
+          const start = i * binsPerBand;
+          const end = Math.min(start + binsPerBand, binCount);
+          let count = 0;
+          for (let j = start; j < end; j++) {
+            sum += dataArray[j];
+            count++;
+          }
+          bands.push(count > 0 ? (sum / count) / 255 : 0);
+        }
+
+        setFrequencies(bands);
+        animationFrameRef.current = requestAnimationFrame(analyze);
+      };
+
+      analyze();
+    } catch {
+      // 频谱分析失败不阻塞播放 — 纯装饰性功能
+      console.debug("[WhiteNoise] Spectrum analysis unavailable, playback continues");
+    }
   }, []);
 
   const stopPlayback = useCallback(() => {
@@ -446,29 +444,35 @@ export function WhiteNoiseApp({
       audioRef.current.pause();
       audioRef.current = null;
     }
-    // 重置音频源（下次播放需要重新创建）
     sourceRef.current = null;
     setActiveSound(null);
   }, [stopAnalysis]);
 
-  const playSound = useCallback((sound: SoundOption) => {
+  const playSound = useCallback(async (sound: SoundOption) => {
     stopPlayback();
+    if (activeSound === sound.id) return;
 
-    if (activeSound === sound.id) {
-      return;
-    }
+    // 先确保 AudioContext 处于 running（Safari/WebKit 需要用户手势解锁）
+    await resumeAudioContext();
 
     const audio = new Audio(sound.src);
     audio.loop = true;
     audio.volume = volume;
-    audio.crossOrigin = "anonymous"; // 需要 CORS 才能分析音频
-    audio.play().then(() => {
-      startAnalysis(audio);
-    }).catch(() => {});
+    audio.crossOrigin = "anonymous";
     audioRef.current = audio;
     setActiveSound(sound.id);
     lastSoundRef.current = sound;
-  }, [activeSound, startAnalysis, stopPlayback, volume]);
+
+    try {
+      await audio.play();
+      tryStartAnalysis(audio);
+    } catch (err) {
+      console.error("[WhiteNoise] Playback failed:", err);
+      // 播放失败时重置状态
+      audioRef.current = null;
+      setActiveSound(null);
+    }
+  }, [activeSound, tryStartAnalysis, stopPlayback, volume]);
 
   const handleTogglePlayback = useCallback(() => {
     if (activeSound) {
@@ -476,7 +480,7 @@ export function WhiteNoiseApp({
       return;
     }
 
-    playSound(lastSoundRef.current ?? SOUNDS[0]);
+    void playSound(lastSoundRef.current ?? SOUNDS[0]);
   }, [activeSound, playSound, stopPlayback]);
 
   const handleDialInteraction = useCallback((clientX: number, clientY: number) => {

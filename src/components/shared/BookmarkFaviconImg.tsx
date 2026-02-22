@@ -45,6 +45,7 @@ export function BookmarkFaviconImg({
   loading,
 }: BookmarkFaviconImgProps) {
   const [stage, setStage] = useState<FaviconStage>("primary");
+  const [resolvedBroken, setResolvedBroken] = useState(false);
   const writtenRef = useRef(false);
 
   // ─── 写回 store（防重复） ──────────────────────────────────────────────────────
@@ -84,7 +85,7 @@ export function BookmarkFaviconImg({
   }, [getLinkMetaFavicon, markResolved]);
 
   // ─── faviconResolved === true → 直接渲染，不走状态机 ──────────────────────────
-  if (faviconResolved) {
+  if (faviconResolved && !resolvedBroken) {
     return (
       <img
         src={src}
@@ -93,19 +94,19 @@ export function BookmarkFaviconImg({
         style={style}
         draggable={draggable}
         loading={loading}
-        onError={(e) => {
-          // 极端情况：已解析但图片失效，显示 emoji
-          const target = e.target as HTMLImageElement;
-          target.style.display = "none";
-          if (target.parentElement) {
-            const span = document.createElement("span");
-            span.className = target.className;
-            Object.assign(span.style, { display: "flex", alignItems: "center", justifyContent: "center" });
-            span.textContent = getEmojiChar();
-            target.parentElement.appendChild(span);
-          }
-        }}
+        onError={() => setResolvedBroken(true)}
       />
+    );
+  }
+
+  if (resolvedBroken) {
+    return (
+      <span
+        className={className}
+        style={{ ...style, display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
+        {getEmojiChar()}
+      </span>
     );
   }
 

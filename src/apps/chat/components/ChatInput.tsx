@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { isTauri } from "@/utils/platform";
 import {
   ArrowUp,
   Square,
@@ -87,6 +88,7 @@ export function ChatInput({
   const isWinTheme = currentTheme === "xp" || currentTheme === "win98";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasContent = input.trim() !== "" || pendingImages.length > 0;
+  const isApp = isTauri();
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     const items = e.clipboardData?.items;
@@ -131,7 +133,9 @@ export function ChatInput({
                 <button
                   type="button"
                   onClick={() => onRemoveImage(img.id)}
-                  className="chat-image-close absolute flex items-center justify-center w-[18px] h-[18px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  className={`chat-image-close absolute flex items-center justify-center w-[18px] h-[18px] rounded-full ${
+                    isApp ? "" : "opacity-0 group-hover:opacity-100 transition-opacity"
+                  }`}
                   aria-label={t("apps.chat.removeImage", "移除图片")}
                 >
                   <X className="h-2 w-2" weight="bold" />

@@ -51,9 +51,9 @@ export function usePasteHandler() {
   }, [t]);
 }
 
-// ─── URL 粘贴 → 书签 ─────────────────────────────────────────────────────────
+// ─── URL 粘贴 → 书签（导出供右键菜单等场景直接调用）────────────────────────
 
-function handleUrlPaste(url: string, t: (key: string, fallback?: string) => string) {
+export function handleUrlPaste(url: string, t: (key: string, fallback?: string) => string) {
   const { getBookmarkByUrl, addAiBookmark, addBookmark } = useBookmarkStore.getState();
   const linkMetaStore = useLinkMetaStore.getState();
 
