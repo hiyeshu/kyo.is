@@ -7,7 +7,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { cloudUpsertItem, cloudUpdateItem, cloudDeleteItem } from "@/lib/cloudSync";
+import { cloudUpsertItem, cloudDeleteItem } from "@/lib/cloudSync";
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
@@ -137,17 +137,6 @@ function bookmarkToCloud(b: Bookmark) {
     last_used: b.lastUsed || null,
   };
 }
-
-const BOOKMARK_FIELD_MAP: Record<string, string> = {
-  title: "title",
-  url: "url",
-  summary: "summary",
-  favicon: "favicon",
-  tags: "tags",
-  onDesktop: "on_desktop",
-  inDock: "in_dock",
-  lastUsed: "last_used",
-};
 
 // ─── iOS PWA Deep Link ──────────────────────────────────────────────────────
 // 热门 App 的 URL scheme 映射，用于 iOS PWA 下直接唤起原生 App
@@ -608,14 +597,8 @@ export const useBookmarkStore = create<BookmarkStore>()(
         set((s) => ({
           items: s.items.map((b) => b.id === id ? { ...b, ...merged } : b),
         }));
-        const mapped: Record<string, unknown> = {};
-        for (const [k, v] of Object.entries(updates)) {
-          const cloudKey = BOOKMARK_FIELD_MAP[k];
-          if (cloudKey) mapped[cloudKey] = v;
-        }
-        if (Object.keys(mapped).length > 0) {
-          cloudUpdateItem(id, mapped);
-        }
+        const updated = get().items.find((b) => b.id === id);
+        if (updated) cloudUpsertItem(bookmarkToCloud(updated));
       },
 
       removeBookmark: (id) => {
@@ -628,7 +611,8 @@ export const useBookmarkStore = create<BookmarkStore>()(
         set((s) => ({
           items: s.items.map((b) => b.id === id ? { ...b, lastUsed: now } : b),
         }));
-        cloudUpdateItem(id, { last_used: now }).catch(() => {});
+        const touched = get().items.find((b) => b.id === id);
+        if (touched) cloudUpsertItem(bookmarkToCloud(touched));
       },
 
       reorderItems: (fromIndex, toIndex) =>
