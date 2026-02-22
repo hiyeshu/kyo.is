@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 AppProps, WindowFrame, useThemeStore, @/lib/audioContext 的 getAudioContext/resumeAudioContext
  * [OUTPUT]: WhiteNoiseApp 组件 — 主题适配的复古收音机，实时音频频谱可视化
- * [POS]: apps/white-noise/components 的主组件，使用共享 AudioContext（Safari/WebKit 兼容）
+ * [POS]: apps/white-noise/components 的主组件，共享 AudioContext + iOS 模拟频谱降级
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -384,11 +384,26 @@ export function WhiteNoiseApp({
     setFrequencies(Array(6).fill(0));
   }, []);
 
+  // iOS Safari / PWA 检测 — MediaElementSource 会劫持音频输出，在这些环境下不安全
+  const isIOSSafari = useMemo(() => {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent;
+    return /iP(hone|od|ad)/.test(ua) || (/Mac/.test(ua) && "ontouchend" in document);
+  }, []);
+
   // 尝试启动频谱分析（降级：失败不影响播放）
   const tryStartAnalysis = useCallback((audio: HTMLAudioElement) => {
+    // iOS Safari/PWA: MediaElementSource 劫持输出到 AudioContext，
+    // 一旦 AudioContext 被 suspended/interrupted 音频直接静音且无法恢复
+    // 降级为模拟频谱，保证播放 100% 可靠
+    if (isIOSSafari) {
+      startSimulatedAnalysis();
+      return;
+    }
+
     try {
       const ctx = getAudioContext();
-      
+
       // 创建 Analyser
       if (!analyserRef.current || analyserRef.current.context !== ctx) {
         analyserRef.current = ctx.createAnalyser();
@@ -398,6 +413,7 @@ export function WhiteNoiseApp({
 
       // 连接音频源（HTMLAudioElement 只能绑定一个 MediaElementSource）
       if (!sourceRef.current) {
+        audio.crossOrigin = "anonymous";
         sourceRef.current = ctx.createMediaElementSource(audio);
         sourceRef.current.connect(analyserRef.current);
         analyserRef.current.connect(ctx.destination);
@@ -433,9 +449,31 @@ export function WhiteNoiseApp({
 
       analyze();
     } catch {
-      // 频谱分析失败不阻塞播放 — 纯装饰性功能
-      console.debug("[WhiteNoise] Spectrum analysis unavailable, playback continues");
+      // MediaElementSource 失败 → 降级到模拟频谱
+      console.debug("[WhiteNoise] Real analysis failed, falling back to simulated");
+      startSimulatedAnalysis();
     }
+  }, [isIOSSafari]);
+
+  // 模拟频谱：柔和随机波形，视觉上与真实频谱无差异
+  const startSimulatedAnalysis = useCallback(() => {
+    const numBands = 6;
+    const targets = Array(numBands).fill(0).map(() => 0.2 + Math.random() * 0.4);
+    const current = Array(numBands).fill(0);
+
+    const animate = () => {
+      for (let i = 0; i < numBands; i++) {
+        // 平滑插值 + 微小随机抖动
+        current[i] += (targets[i] - current[i]) * 0.08;
+        if (Math.abs(current[i] - targets[i]) < 0.02) {
+          targets[i] = 0.15 + Math.random() * 0.45;
+        }
+      }
+      setFrequencies([...current]);
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
   }, []);
 
   const stopPlayback = useCallback(() => {
@@ -452,23 +490,23 @@ export function WhiteNoiseApp({
     stopPlayback();
     if (activeSound === sound.id) return;
 
-    // 先确保 AudioContext 处于 running（Safari/WebKit 需要用户手势解锁）
+    // 确保 AudioContext running（Safari/WebKit/iOS PWA 用户手势解锁）
     await resumeAudioContext();
 
     const audio = new Audio(sound.src);
     audio.loop = true;
     audio.volume = volume;
-    audio.crossOrigin = "anonymous";
     audioRef.current = audio;
     setActiveSound(sound.id);
     lastSoundRef.current = sound;
 
     try {
       await audio.play();
+      // MediaElementSource 会劫持音频输出到 AudioContext，iOS PWA 下可能导致静音
+      // 尝试连接，失败则降级到模拟频谱（播放不受影响）
       tryStartAnalysis(audio);
     } catch (err) {
       console.error("[WhiteNoise] Playback failed:", err);
-      // 播放失败时重置状态
       audioRef.current = null;
       setActiveSound(null);
     }

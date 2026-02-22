@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 react, @/components/ui/input, @/components/ui/button, useThemeStore, @/utils/platform, ImageAttachment
+ * [INPUT]: 依赖 react, @/components/ui/input, @/components/ui/button, useThemeStore, useIsMobile, ImageAttachment
  * [OUTPUT]: 对外提供 ChatInput 组件
- * [POS]: apps/chat/components 的输入框组件，支持图片附件预览，Tauri 端始终显示删除按钮
+ * [POS]: apps/chat/components 的输入框组件，支持图片附件预览，触屏设备始终显示删除按钮
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
-import { isTauri } from "@/utils/platform";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   ArrowUp,
   Square,
@@ -88,7 +88,7 @@ export function ChatInput({
   const isWinTheme = currentTheme === "xp" || currentTheme === "win98";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasContent = input.trim() !== "" || pendingImages.length > 0;
-  const isApp = isTauri();
+  const isMobile = useIsMobile();
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     const items = e.clipboardData?.items;
@@ -134,7 +134,7 @@ export function ChatInput({
                   type="button"
                   onClick={() => onRemoveImage(img.id)}
                   className={`chat-image-close absolute flex items-center justify-center w-[18px] h-[18px] rounded-full ${
-                    isApp ? "" : "opacity-0 group-hover:opacity-100 transition-opacity"
+                    isMobile ? "" : "opacity-0 group-hover:opacity-100 transition-opacity"
                   }`}
                   aria-label={t("apps.chat.removeImage", "移除图片")}
                 >
