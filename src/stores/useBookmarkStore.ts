@@ -134,7 +134,6 @@ function bookmarkToCloud(b: Bookmark) {
     on_desktop: b.onDesktop || false,
     in_dock: b.inDock || false,
     created_at: b.createdAt || new Date().toISOString(),
-    last_used: b.lastUsed || null,
   };
 }
 
