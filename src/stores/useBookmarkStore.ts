@@ -568,7 +568,6 @@ export const useBookmarkStore = create<BookmarkStore>()(
           inDock: options?.inDock,
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
-        console.log("[bookmark] addBookmark →", newBookmark.id, title, url);
         markLocalChange(newBookmark.id);
         cloudUpsertItem(bookmarkToCloud(newBookmark));
         return newBookmark.id;
@@ -602,7 +601,6 @@ export const useBookmarkStore = create<BookmarkStore>()(
         }));
         const updated = get().items.find((b) => b.id === id);
         if (updated) {
-          console.log("[bookmark] updateBookmark →", id, Object.keys(updates));
           markLocalChange(id);
           cloudUpsertItem(bookmarkToCloud(updated));
         }

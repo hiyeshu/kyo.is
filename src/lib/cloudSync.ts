@@ -22,12 +22,9 @@ export async function cloudUpsertItem(item: Record<string, unknown>) {
   const userId = await getUserId();
   if (!userId) return;
   const payload = { ...item, user_id: userId };
-  console.log("[cloudSync] upserting:", item.type, item.id, item.title);
-  const { error, data } = await supabase.from("kyo_items").upsert(payload).select();
+  const { error } = await supabase.from("kyo_items").upsert(payload);
   if (error) {
-    console.error("[cloudSync] upsert FAILED:", error.code, error.message, error.details, payload);
-  } else {
-    console.log("[cloudSync] upsert OK:", data?.length, "rows", item.title);
+    console.error("[cloudSync] upsert failed:", error.code, error.message);
   }
 }
 
@@ -97,7 +94,6 @@ export async function cloudFetchAll(): Promise<CloudFetchResult | null> {
     bookmarks: data.filter((i: { type: string }) => i.type === "bookmark"),
     notes: data.filter((i: { type: string }) => i.type === "note"),
   };
-  console.log("[cloudSync] fetchAll:", { bookmarks: result.bookmarks.length, notes: result.notes.length });
   return result;
 }
 

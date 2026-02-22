@@ -486,12 +486,9 @@ export function WhiteNoiseApp({
     setActiveSound(null);
   }, [stopAnalysis]);
 
-  const playSound = useCallback(async (sound: SoundOption) => {
+  const playSound = useCallback((sound: SoundOption) => {
     stopPlayback();
     if (activeSound === sound.id) return;
-
-    // 确保 AudioContext running（Safari/WebKit/iOS PWA 用户手势解锁）
-    await resumeAudioContext();
 
     const audio = new Audio(sound.src);
     audio.loop = true;
@@ -500,16 +497,20 @@ export function WhiteNoiseApp({
     setActiveSound(sound.id);
     lastSoundRef.current = sound;
 
-    try {
-      await audio.play();
-      // MediaElementSource 会劫持音频输出到 AudioContext，iOS PWA 下可能导致静音
-      // 尝试连接，失败则降级到模拟频谱（播放不受影响）
-      tryStartAnalysis(audio);
-    } catch (err) {
-      console.error("[WhiteNoise] Playback failed:", err);
-      audioRef.current = null;
-      setActiveSound(null);
-    }
+    // iOS 铁律：audio.play() 必须在用户手势的同步调用栈内
+    // 任何 await 都会打断手势上下文，导致 iOS 拒绝播放
+    const playPromise = audio.play();
+
+    playPromise
+      .then(() => {
+        // 播放成功后异步 resume AudioContext + 启动频谱
+        resumeAudioContext().then(() => tryStartAnalysis(audio));
+      })
+      .catch((err) => {
+        console.error("[WhiteNoise] Playback failed:", err);
+        audioRef.current = null;
+        setActiveSound(null);
+      });
   }, [activeSound, tryStartAnalysis, stopPlayback, volume]);
 
   const handleTogglePlayback = useCallback(() => {
@@ -518,7 +519,7 @@ export function WhiteNoiseApp({
       return;
     }
 
-    void playSound(lastSoundRef.current ?? SOUNDS[0]);
+    playSound(lastSoundRef.current ?? SOUNDS[0]);
   }, [activeSound, playSound, stopPlayback]);
 
   const handleDialInteraction = useCallback((clientX: number, clientY: number) => {

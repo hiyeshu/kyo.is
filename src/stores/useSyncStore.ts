@@ -92,7 +92,6 @@ export const useSyncStore = create<SyncState>((set) => ({
 
       const { bookmarks: cloudBookmarks, notes: cloudNotes } = result;
       const hasCloud = cloudBookmarks.length > 0 || cloudNotes.length > 0;
-      console.log("[sync] cloud data:", { bookmarks: cloudBookmarks.length, notes: cloudNotes.length });
 
       if (hasCloud) {
         const bookmarkItems = cloudBookmarks.map((b) => cloudRowToBookmark(b as unknown as Record<string, unknown>));
@@ -162,8 +161,6 @@ export const useSyncStore = create<SyncState>((set) => ({
 
           const type = (newRow as Record<string, unknown>)?.type as string;
 
-          console.log("[realtime]", eventType, type, id);
-
           if (type === "bookmark" || (eventType === "DELETE" && !type)) {
             handleBookmarkChange(eventType, newRow as Record<string, unknown>, oldRow as Record<string, unknown>);
           } else if (type === "note") {
@@ -180,7 +177,6 @@ export const useSyncStore = create<SyncState>((set) => ({
     if (channel) {
       supabase.removeChannel(channel);
       channel = null;
-      console.log("[realtime] unsubscribed");
     }
   },
 }));
