@@ -11,9 +11,7 @@ import { MenuBar } from "@/components/layout/MenuBar";
 import { Desktop } from "@/components/layout/Desktop";
 import { Dock } from "@/components/layout/Dock";
 import { ExposeView } from "@/components/layout/ExposeView";
-import { AddWebsiteDialog } from "@/components/dialogs/AddWebsiteDialog";
 import { CommandPalette } from "@/components/dialogs/CommandPalette";
-import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { getAppComponent, appRegistry } from "@/config/appRegistry";
 import type { AppId } from "@/config/appRegistry";
 import { useAppStoreShallow } from "@/stores/helpers";
@@ -56,10 +54,8 @@ export function AppManager({ apps }: AppManagerProps) {
 
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [isExposeViewOpen, setIsExposeViewOpen] = useState(false);
-  const [isAddWebsiteDialogOpen, setIsAddWebsiteDialogOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [initialSearch, setInitialSearch] = useState("");
-  const [desktopContextMenuPos, setDesktopContextMenuPos] = useState<{ x: number; y: number } | null>(null);
 
 
   // Create legacy-compatible appStates from instances for Desktop component
@@ -248,43 +244,6 @@ export function AppManager({ apps }: AppManagerProps) {
     };
   }, []);
 
-  // Global right-click handler for desktop
-  useEffect(() => {
-    const handleContextMenu = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-
-      // Check if click is on desktop background (not on windows, dock, menubar)
-      const isOnWindow = target.closest('[role="dialog"]') || target.closest('.window-frame');
-      const isOnDock = target.closest('.dock-container') || target.closest('[data-dock]');
-      const isOnMenuBar = target.closest('.menubar') || target.closest('[data-menubar]');
-      const isOnDesktopIcon = target.closest('[data-desktop-icon]');
-
-      // Only handle if clicking on desktop background
-      if (!isOnWindow && !isOnDock && !isOnMenuBar && !isOnDesktopIcon) {
-        e.preventDefault();
-        e.stopPropagation();
-        setDesktopContextMenuPos({ x: e.clientX, y: e.clientY });
-      }
-    };
-
-    document.addEventListener('contextmenu', handleContextMenu);
-    return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-    };
-  }, []);
-
-  // Desktop context menu items
-  const getDesktopContextMenuItems = useCallback((): MenuItem[] => {
-    return [
-      {
-        type: "item",
-        label: t("common.desktop.addWebsite", "Add Website"),
-        onSelect: () => {
-          setIsAddWebsiteDialogOpen(true);
-        },
-      },
-    ];
-  }, [t]);
 
   return (
     <>
@@ -358,17 +317,6 @@ export function AppManager({ apps }: AppManagerProps) {
       <ExposeView
         isOpen={isExposeViewOpen}
         onClose={() => setIsExposeViewOpen(false)}
-      />
-
-      <AddWebsiteDialog
-        isOpen={isAddWebsiteDialogOpen}
-        onOpenChange={setIsAddWebsiteDialogOpen}
-      />
-
-      <RightClickMenu
-        position={desktopContextMenuPos}
-        onClose={() => setDesktopContextMenuPos(null)}
-        items={getDesktopContextMenuItems()}
       />
 
       {/* Command Palette - ⌘K / any key to search apps & bookmarks */}
