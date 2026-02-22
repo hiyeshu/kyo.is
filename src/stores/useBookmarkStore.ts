@@ -57,6 +57,8 @@ const FAVICON_OVERRIDES: Record<string, string> = {
   "open.spotify.com": "https://open.spotifycdn.com/cdn/images/favicon32.b64ecc03.png",
   "youtube.com": "https://www.youtube.com/s/desktop/12d6b690/img/favicon_144x144.png",
   "www.youtube.com": "https://www.youtube.com/s/desktop/12d6b690/img/favicon_144x144.png",
+  "cursor.com": "https://cursor.com/marketing-static/icon-512x512.png",
+  "www.cursor.com": "https://cursor.com/marketing-static/icon-512x512.png",
   "github.com": "https://github.githubassets.com/favicons/favicon.svg",
   "discord.com": "https://discord.com/assets/847541504914fd33810e70a0ea73177e.ico",
   "reddit.com": "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png",
@@ -516,16 +518,12 @@ const createBookmark = (
 // ─── 默认数据 ───────────────────────────────────────────────────────────────
 
 const createDefaultItems = (): Bookmark[] => [
-  createBookmark("AI探索站", "https://web.okjike.com/topic/63579abb6724cc583b9bba9a/square"),
-  createBookmark("小红书", "https://xiaohongshu.com"),
   createBookmark("Notion", "https://notion.so"),
   createBookmark("X", "https://x.com"),
-  createBookmark("网易云音乐", "https://music.163.com"),
-  createBookmark("哔哩哔哩", "https://bilibili.com"),
-  createBookmark("Flomo", "https://flomoapp.com"),
   createBookmark("YouMind", "https://youmind.com", "/icons/favicons/youmind.png"),
-  createBookmark("豆瓣", "https://douban.com"),
+  createBookmark("Cursor", "https://cursor.com"),
   createBookmark("GitHub", "https://github.com"),
+  createBookmark("Flomo", "https://flomoapp.com"),
 ];
 
 // ─── Store ───────────────────────────────────────────────────────────────────

@@ -35,6 +35,40 @@ interface StickiesState {
 
 const DEFAULT_NOTE_SIZE = { width: 220, height: 240 };
 
+// ─── 欢迎便签（首次使用时显示） ─────────────────────────────────────────────
+
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+const mod = isMac ? "⌘" : "Ctrl+";
+
+const WELCOME_CONTENT: Record<string, string> = {
+  zh: `${mod}V 粘贴链接，自动收藏\n${mod}K 搜索一切\n直接打字也能搜\n桌面右键，更多可能`,
+  en: `${mod}V paste a link, auto-saved\n${mod}K search everything\njust start typing to search\nright-click desktop for more`,
+  ja: `${mod}V リンク貼り付け、自動保存\n${mod}K すべてを検索\nそのまま入力で検索\nデスクトップ右クリックで更に`,
+  ko: `${mod}V 링크 붙여넣기, 자동 저장\n${mod}K 모든 것 검색\n바로 입력해서 검색\n바탕화면 우클릭으로 더 많은 기능`,
+};
+
+function getWelcomeContent(): string {
+  const lang = typeof navigator !== "undefined" ? navigator.language : "en";
+  if (lang.startsWith("zh")) return WELCOME_CONTENT.zh;
+  if (lang.startsWith("ja")) return WELCOME_CONTENT.ja;
+  if (lang.startsWith("ko")) return WELCOME_CONTENT.ko;
+  return WELCOME_CONTENT.en;
+}
+
+function createWelcomeNote(): StickyNote {
+  return {
+    id: "welcome",
+    content: getWelcomeContent(),
+    color: "yellow",
+    tags: [],
+    onDesktop: true,
+    position: { x: 340, y: 80 },
+    size: DEFAULT_NOTE_SIZE,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+}
+
 // ─── 云端字段映射 ─────────────────────────────────────────────────────────────
 
 function noteToCloud(n: StickyNote) {
@@ -107,7 +141,7 @@ const getNextPosition = (existingNotes: StickyNote[], anchorId?: string | null) 
 export const useStickiesStore = create<StickiesState>()(
   persist(
     (set, get) => ({
-      notes: [],
+      notes: [createWelcomeNote()],
 
       addNote: (
         color: StickyColor = "yellow",
