@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 react, @/components/ui/input, @/components/ui/button, useThemeStore, ImageAttachment
+ * [INPUT]: 依赖 react, @/components/ui/input, @/components/ui/button, useThemeStore, @/utils/platform, ImageAttachment
  * [OUTPUT]: 对外提供 ChatInput 组件
- * [POS]: apps/chat/components 的输入框组件，支持图片附件预览
+ * [POS]: apps/chat/components 的输入框组件，支持图片附件预览，Tauri 端始终显示删除按钮
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 

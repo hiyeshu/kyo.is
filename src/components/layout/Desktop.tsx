@@ -23,6 +23,7 @@ import { useMarqueeSelection } from "@/hooks/useMarqueeSelection";
 import { getTranslatedAppName } from "@/utils/i18n";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { handleUrlPaste } from "@/hooks/usePasteHandler";
 
 interface DesktopStyles {
   backgroundColor?: string;
@@ -283,12 +284,9 @@ export function Desktop({
         onSelect: async () => {
           try {
             const text = await navigator.clipboard.readText();
-            if (/^https?:\/\/\S+$/i.test(text.trim())) {
-              const dt = new DataTransfer();
-              dt.setData("text/plain", text.trim());
-              document.dispatchEvent(
-                new ClipboardEvent("paste", { clipboardData: dt })
-              );
+            const url = text?.trim();
+            if (url && /^https?:\/\/\S+$/i.test(url)) {
+              handleUrlPaste(url, (key, fallback) => t(key, fallback || ""));
             }
           } catch { /* clipboard permission denied */ }
         },

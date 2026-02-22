@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 useBookmarkStore, useStickiesStore, useLinkMetaStore, @/lib/linkMeta, sonner toast
- * [OUTPUT]: usePasteHandler hook — 全局 ⌘V 粘贴监听
+ * [OUTPUT]: usePasteHandler hook — 全局 ⌘V 粘贴监听；handleUrlPaste — URL→书签（供右键菜单直接调用）
  * [POS]: hooks/ 的全局粘贴处理器，URL→书签，文本→便签
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */

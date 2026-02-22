@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 AppProps, WindowFrame, useThemeStore, Web Audio API (AnalyserNode)
+ * [INPUT]: 依赖 AppProps, WindowFrame, useThemeStore, @/lib/audioContext 的 getAudioContext/resumeAudioContext
  * [OUTPUT]: WhiteNoiseApp 组件 — 主题适配的复古收音机，实时音频频谱可视化
- * [POS]: apps/white-noise/components 的主组件
+ * [POS]: apps/white-noise/components 的主组件，使用共享 AudioContext（Safari/WebKit 兼容）
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
