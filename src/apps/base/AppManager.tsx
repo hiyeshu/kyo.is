@@ -5,7 +5,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import type { AnyApp, AppState } from "./types";
 import { MenuBar } from "@/components/layout/MenuBar";
 import { Desktop } from "@/components/layout/Desktop";

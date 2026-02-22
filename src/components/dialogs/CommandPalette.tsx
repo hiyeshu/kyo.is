@@ -20,9 +20,28 @@ import type { AppId } from "@/config/appRegistry";
 import { getTranslatedAppName } from "@/utils/i18n";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { MagnifyingGlass, Plus, CircleNotch } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus, CircleNotch, CopySimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
+
+// ─── 复制按钮（hover 显示，点击复制后自动关闭搜索）─────────────────────────
+
+function CopyButton({ text, onCopied }: { text: string; onCopied?: () => void }) {
+  return (
+    <button
+      type="button"
+      className="shrink-0 opacity-0 group-data-[selected=true]:opacity-60 hover:!opacity-100 transition-opacity p-0.5 cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        toast.success("已复制");
+        onCopied?.();
+      }}
+    >
+      <CopySimple className="w-3.5 h-3.5" />
+    </button>
+  );
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -529,7 +548,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                         value={`${item.title || ""} ${item.url || ""}`}
                         onSelect={() => item.url && handleSelectBookmark(item.url)}
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                          "group flex items-center gap-3 px-3 py-2 cursor-pointer",
                           "data-[selected=true]:text-white"
                         )}
                         style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
@@ -555,6 +574,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                             </div>
                           )}
                         </div>
+                        {item.url && <CopyButton text={item.url} onCopied={() => onOpenChange(false)} />}
                       </Command.Item>
                     );
                   })}
@@ -572,7 +592,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                         value={`${bm.title} ${bm.url}`}
                         onSelect={() => handleSelectBookmark(bm.url)}
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                          "group flex items-center gap-3 px-3 py-2 cursor-pointer",
                           "data-[selected=true]:text-white"
                         )}
                         style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
@@ -604,6 +624,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                             </div>
                           )}
                         </div>
+                        <CopyButton text={bm.url} onCopied={() => onOpenChange(false)} />
                       </Command.Item>
                     );
                   })}
@@ -621,7 +642,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       value={item.text || ""}
                       onSelect={() => handleSelectNote(item.id)}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                        "group flex items-center gap-3 px-3 py-2 cursor-pointer",
                         "data-[selected=true]:text-white"
                       )}
                       style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
@@ -634,6 +655,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                           {q ? <HighlightText text={(item.text || "").slice(0, 120)} query={q} /> : (item.text || "").slice(0, 60)}
                         </div>
                       </div>
+                      {item.text && <CopyButton text={item.text} onCopied={() => onOpenChange(false)} />}
                       <span
                         className="shrink-0 w-3 h-3 rounded-full"
                         style={{ backgroundColor: `var(--os-sticky-${item.color || "yellow"}, #fef08a)` }}
@@ -651,7 +673,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       value={note.content}
                       onSelect={() => handleSelectNote(note.id)}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                        "group flex items-center gap-3 px-3 py-2 cursor-pointer",
                         "data-[selected=true]:text-white"
                       )}
                       style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
@@ -664,6 +686,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                           {q ? <HighlightText text={note.content.slice(0, 120)} query={q} /> : note.content.slice(0, 60)}
                         </div>
                       </div>
+                      <CopyButton text={note.content} onCopied={() => onOpenChange(false)} />
                       <span
                         className="shrink-0 w-3 h-3 rounded-full"
                         style={{ backgroundColor: `var(--os-sticky-${note.color}, #fef08a)` }}
