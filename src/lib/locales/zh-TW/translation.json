@@ -2417,6 +2417,9 @@
       "noResults": "找不到結果",
       "askKyo": "問問 Kyo"
     },
+    "about": {
+      "tagline": "你的桌面上想放什麼？"
+    },
     "aboutThisMac": {
       "builtInMemory": "內建記憶體",
       "clickToToggle": "按一下以切換",

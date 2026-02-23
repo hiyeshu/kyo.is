@@ -224,6 +224,9 @@
       "fullScreen": "Full Screen",
       "quitApp": "Quit {{appName}}"
     },
+    "about": {
+      "tagline": "What do you want on your desk?"
+    },
     "aboutThisMac": {
       "title": "About This Computer",
       "description": "Information about kyo on this computer",

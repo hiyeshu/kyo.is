@@ -2406,6 +2406,9 @@
       "noResults": "結果が見つかりません",
       "askKyo": "Kyoに聞く"
     },
+    "about": {
+      "tagline": "あなたのデスクトップに何を置きたい？"
+    },
     "aboutThisMac": {
       "builtInMemory": "内蔵メモリ",
       "clickToToggle": "クリックで切り替え",

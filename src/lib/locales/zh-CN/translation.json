@@ -2419,6 +2419,9 @@
       "noResults": "找不到书签",
       "askKyo": "问问 Kyo"
     },
+    "about": {
+      "tagline": "你的桌面上想放什么？"
+    },
     "aboutThisMac": {
       "builtInMemory": "内建记忆体",
       "clickToToggle": "按一下以切换",
