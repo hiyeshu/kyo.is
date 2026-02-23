@@ -92,39 +92,19 @@ export function AboutDialog({
           <p className="text-gray-600 pt-1 max-w-[240px] leading-relaxed">{displayDescription}</p>
         )}
       </div>
-      <div
-        className={cn(
-          "flex items-center gap-3 pt-1 text-center",
-          isXpTheme ? "text-[10px]" : "text-[9px] font-geneva-12"
-        )}
-      >
-        {showCredits &&
-          (metadata.creator.url ? (
-            <a
-              href={metadata.creator.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline"
-            >
-              {metadata.creator.name}
-            </a>
-          ) : metadata.creator.name ? (
-            <span className="text-gray-400">{metadata.creator.name}</span>
-          ) : null)}
-        {showCredits && metadata.github && (
-          <>
-            <span className="text-gray-300">·</span>
-            <a
-              href={metadata.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline"
-            >
-              GitHub
-            </a>
-          </>
-        )}
-      </div>
+      {showCredits && (
+        <a
+          href="/docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "pt-3 text-center text-blue-500 hover:underline cursor-pointer",
+            isXpTheme ? "text-[11px]" : "text-[11px] font-geneva-12"
+          )}
+        >
+          查看帮助文档 →
+        </a>
+      )}
     </div>
   );
 
