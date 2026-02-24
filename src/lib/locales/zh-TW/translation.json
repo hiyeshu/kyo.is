@@ -2564,7 +2564,7 @@
         "shareLinkOrScanToOpen": "分享連結或掃描以開啟此{{itemType}}"
       },
       "version": "版本",
-      "viewDocs": "查看文檔",
+      "viewDocs": "👉 查看說明文件",
       "welcomeTo": "歡迎使用{{appName}}"
     },
     "dock": {

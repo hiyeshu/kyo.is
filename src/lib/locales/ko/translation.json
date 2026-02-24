@@ -2553,7 +2553,7 @@
         "shareLinkOrScanToOpen": "링크를 공유하거나 스캔하여 이 {{itemType}}을(를) 여세요."
       },
       "version": "버전",
-      "viewDocs": "문서 보기",
+      "viewDocs": "👉 도움말 보기",
       "welcomeTo": "{{appName}}에 오신 것을 환영합니다"
     },
     "dock": {

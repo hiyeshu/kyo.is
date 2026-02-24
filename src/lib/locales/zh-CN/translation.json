@@ -2570,7 +2570,7 @@
         "shareLinkOrScanToOpen": "分享连结或扫描以开启此{{itemType}}"
       },
       "version": "版本",
-      "viewDocs": "查看文档",
+      "viewDocs": "👉 查看帮助文档",
       "welcomeTo": "欢迎使用{{appName}}"
     },
     "dock": {

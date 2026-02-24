@@ -98,11 +98,11 @@ export function AboutDialog({
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            "pt-3 text-center text-blue-500 hover:underline cursor-pointer",
+            "pt-3 text-center text-blue-500/80 hover:text-blue-600 hover:underline cursor-pointer transition-colors duration-150",
             isXpTheme ? "text-[11px]" : "text-[11px] font-geneva-12"
           )}
         >
-          查看帮助文档 →
+          {t("common.dialog.viewDocs")}
         </a>
       )}
     </div>

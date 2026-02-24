@@ -2553,7 +2553,7 @@
         "shareLinkOrScanToOpen": "リンクを共有するか、スキャンしてこの {{itemType}} を開く"
       },
       "version": "バージョン",
-      "viewDocs": "ドキュメント",
+      "viewDocs": "👉 ヘルプを見る",
       "welcomeTo": "{{appName}}へようこそ"
     },
     "dock": {
