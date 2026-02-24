@@ -99,7 +99,7 @@ export function AboutDialog({
           rel="noopener noreferrer"
           className={cn(
             "pt-3 text-center text-blue-500/80 hover:text-blue-600 hover:underline cursor-pointer transition-colors duration-150",
-            isXpTheme ? "text-[11px]" : "text-[11px] font-geneva-12"
+            isXpTheme ? "text-[13px]" : "text-[13px] font-geneva-12"
           )}
         >
           {t("common.dialog.viewDocs")}
