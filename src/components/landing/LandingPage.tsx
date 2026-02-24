@@ -8,7 +8,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent } from "@/components/ui/card";
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS, changeLanguage } from "@/lib/i18n";
 import type { SupportedLanguage } from "@/lib/i18n";
 
@@ -23,42 +22,42 @@ interface LandingPageProps {
 const MOCK_BOOKMARKS = [
   { title: "Notion", favicon: "https://www.notion.so/images/favicon.ico" },
   { title: "X", favicon: "https://abs.twimg.com/favicons/twitter.3.ico" },
+  { title: "YouMind", favicon: "https://youmind.com/favicon.ico" },
+  { title: "Cursor", favicon: "https://cursor.com/favicon.ico" },
   { title: "GitHub", favicon: "https://github.com/favicon.ico" },
-  { title: "Vercel", favicon: "https://vercel.com/favicon.ico" },
-  { title: "Linear", favicon: "https://linear.app/favicon.ico" },
-  { title: "Figma", favicon: "https://static.figma.com/app/icon/1/favicon.ico" },
+  { title: "Flomo", favicon: "https://flomoapp.com/favicon.ico" },
 ];
 
 const MOCK_PASTE_URLS = [
-  { title: "GitHub - Where the world builds software", domain: "github.com", favicon: "https://github.com/favicon.ico" },
-  { title: "Hacker News", domain: "news.ycombinator.com", favicon: "https://news.ycombinator.com/favicon.ico" },
-  { title: "Vercel - Build and deploy the best web", domain: "vercel.com", favicon: "https://vercel.com/favicon.ico" },
+  { title: "Linear - Plan and build products", domain: "linear.app", favicon: "https://linear.app/favicon.ico" },
+  { title: "Figma - Design tool for teams", domain: "figma.com", favicon: "https://static.figma.com/app/icon/1/favicon.ico" },
+  { title: "Vercel - Build the best web", domain: "vercel.com", favicon: "https://vercel.com/favicon.ico" },
 ];
 
 const MOCK_SEARCH_SCENARIOS = [
   {
-    query: "设计",
+    query: "design",
     results: [
       { title: "Designing with Clarity", domain: "youtube.com", favicon: "https://youtube.com/favicon.ico" },
       { title: "Design Systems Handbook", domain: "designbetter.co", favicon: "https://designbetter.co/favicon.ico" },
-      { title: "设计模式精解", domain: "patterns.dev", favicon: "https://patterns.dev/favicon.ico" },
+      { title: "Design Patterns", domain: "patterns.dev", favicon: "https://patterns.dev/favicon.ico" },
     ],
   },
   {
-    query: "tools",
+    query: "Notion",
     results: [
-      { title: "Developer Tools Weekly", domain: "devtools.fm", favicon: "https://devtools.fm/favicon.ico" },
-      { title: "Build Tools Comparison", domain: "blog.logrocket.com", favicon: "https://blog.logrocket.com/favicon.ico" },
-      { title: "AI Tools Directory", domain: "aitoolsdirectory.com", favicon: "https://aitoolsdirectory.com/favicon.ico" },
+      { title: "Notion - Your connected workspace", domain: "notion.so", favicon: "https://www.notion.so/images/favicon.ico" },
+      { title: "Notion API Reference", domain: "developers.notion.com", favicon: "https://www.notion.so/images/favicon.ico" },
+      { title: "Notion Templates Gallery", domain: "notion.so/templates", favicon: "https://www.notion.so/images/favicon.ico" },
     ],
   },
 ];
 
 const FEATURES = [
-  { key: "windowManager", icon: "🪟", color: "yellow" },
-  { key: "ai", icon: "🤖", color: "blue" },
-  { key: "bookmarks", icon: "🔖", color: "pink" },
-  { key: "themes", icon: "🎨", color: "green" },
+  { key: "windowManager", color: "yellow" },
+  { key: "ai", color: "blue" },
+  { key: "bookmarks", color: "pink" },
+  { key: "themes", color: "green" },
 ] as const;
 
 // Aqua theme sticky note colors
@@ -75,7 +74,7 @@ const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { delay: i * 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const },
   }),
 };
 
@@ -245,17 +244,23 @@ function PasteDemo() {
 
         {/* floating paste indicator */}
         <AnimatePresence>
-          {phase === "url" && (
+          {(phase === "url" || phase === "card") && (
             <motion.div
               key={`url-${idx}`}
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, y: -16, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="absolute top-2 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full text-[9px] font-mono"
-              style={{ background: "rgba(56,117,215,0.1)", color: "#3875D7", border: "0.5px solid rgba(56,117,215,0.25)" }}
+              className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg text-[10px] font-medium z-10"
+              style={{
+                background: "rgba(56,117,215,0.15)",
+                color: "#3875D7",
+                border: "1px solid rgba(56,117,215,0.3)",
+                backdropFilter: "blur(4px)",
+                fontFamily: AQUA_FONT,
+              }}
             >
-              ⌘V {bm.domain}
+              ⌘V&nbsp;&nbsp;{bm.title}
             </motion.div>
           )}
         </AnimatePresence>
@@ -307,30 +312,43 @@ function SearchDemo() {
       {/* results */}
       <div className="px-2 pb-3 pt-1.5 min-h-[128px]">
         <AnimatePresence>
-          {show && scenario.results.map((item, i) => (
-            <motion.div
-              key={`${si}-${i}`}
-              initial={{ opacity: 0, x: -6 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 6 }}
-              transition={{ delay: i * 0.08, duration: 0.25 }}
-              className="flex items-center gap-2 py-[5px] px-2 rounded"
-              style={{ background: i === 0 ? "#3875D7" : "transparent" }}
-            >
-              <div className="w-[18px] h-[18px] rounded-sm flex-shrink-0 flex items-center justify-center overflow-hidden"
-                style={{ background: i === 0 ? "rgba(255,255,255,0.2)" : "#f3f3f3" }}>
-                <img src={item.favicon} alt="" className="w-3 h-3" style={i === 0 ? { filter: "brightness(10)" } : {}}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[10px] font-medium truncate" style={{
-                  color: i === 0 ? "#fff" : "#333",
-                  fontFamily: AQUA_FONT,
-                }}>{item.title}</span>
-                <span className="text-[8px]" style={{ color: i === 0 ? "rgba(255,255,255,0.7)" : "#999" }}>{item.domain}</span>
-              </div>
-            </motion.div>
-          ))}
+          {show && scenario.results.map((item, i) => {
+            // highlight matching text
+            const q = MOCK_SEARCH_SCENARIOS[si].query.toLowerCase();
+            const titleLower = item.title.toLowerCase();
+            const matchIdx = titleLower.indexOf(q);
+            let titleEl: React.ReactNode = item.title;
+            if (matchIdx >= 0) {
+              const before = item.title.slice(0, matchIdx);
+              const match = item.title.slice(matchIdx, matchIdx + q.length);
+              const after = item.title.slice(matchIdx + q.length);
+              titleEl = <>{before}<span style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "2px" }}>{match}</span>{after}</>;
+            }
+            return (
+              <motion.div
+                key={`${si}-${i}`}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 6 }}
+                transition={{ delay: i * 0.08, duration: 0.25 }}
+                className="flex items-center gap-2 py-[5px] px-2 rounded"
+                style={{ background: i === 0 ? "#3875D7" : "transparent" }}
+              >
+                <div className="w-[18px] h-[18px] rounded-sm flex-shrink-0 flex items-center justify-center overflow-hidden"
+                  style={{ background: i === 0 ? "rgba(255,255,255,0.2)" : "#f3f3f3" }}>
+                  <img src={item.favicon} alt="" className="w-3 h-3" style={i === 0 ? { filter: "brightness(10)" } : {}}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[10px] font-medium truncate" style={{
+                    color: i === 0 ? "#fff" : "#333",
+                    fontFamily: AQUA_FONT,
+                  }}>{titleEl}</span>
+                  <span className="text-[8px]" style={{ color: i === 0 ? "rgba(255,255,255,0.7)" : "#999" }}>{item.domain}</span>
+                </div>
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
     </AquaWindow>
@@ -343,8 +361,12 @@ export function LandingPage({ onEnter }: LandingPageProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 overflow-y-auto"
-      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
+    <div className="fixed inset-0 bg-white text-gray-900 overflow-y-auto overscroll-none"
+      style={{
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
+        WebkitOverflowScrolling: "touch",
+        touchAction: "pan-y",
+      }}>
 
       {/* ── nav ── */}
       <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-gray-100/80">
@@ -370,7 +392,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
           <h1 className="text-[40px] md:text-[48px] font-bold tracking-tight text-gray-900 leading-none">Kyo</h1>
           <p className="text-[17px] text-gray-400 max-w-xs leading-relaxed">{t("landing.tagline")}</p>
           <button onClick={onEnter} className="aqua-button primary mt-3 cursor-pointer"
-            style={{ fontSize: "14px", padding: "6px 32px" }}>
+            style={{ fontSize: "14px", padding: "6px 32px", cursor: "pointer" }}>
             {t("landing.cta")} →
           </button>
         </motion.div>
@@ -416,6 +438,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
                     border: `1px solid ${c.border}`,
                     borderRadius: "1px",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+                    minHeight: "110px",
                   }}
                 >
                   {/* sticky title bar */}
@@ -423,10 +446,9 @@ export function LandingPage({ onEnter }: LandingPageProps) {
                     <div className="w-[9px] h-[9px]" style={{ border: `1px solid ${c.border}`, backgroundColor: c.bg }} />
                   </div>
                   {/* content */}
-                  <div className="px-3 py-3">
-                    <div className="text-xl mb-2">{f.icon}</div>
-                    <h3 className="text-[13px] font-semibold text-black mb-0.5" style={{ fontFamily: AQUA_FONT }}>{t(`landing.features.${f.key}.title`)}</h3>
-                    <p className="text-[11px] text-black/60 leading-relaxed" style={{ fontFamily: AQUA_FONT }}>{t(`landing.features.${f.key}.desc`)}</p>
+                  <div className="flex-1 flex flex-col justify-center px-3 py-4">
+                    <h3 className="text-[13px] font-semibold text-black mb-1" style={{ fontFamily: AQUA_FONT }}>{t(`landing.features.${f.key}.title`)}</h3>
+                    <p className="text-[11px] text-black/50 leading-relaxed" style={{ fontFamily: AQUA_FONT }}>{t(`landing.features.${f.key}.desc`)}</p>
                   </div>
                 </div>
               </motion.div>
