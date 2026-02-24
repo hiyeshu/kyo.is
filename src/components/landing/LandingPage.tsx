@@ -361,11 +361,13 @@ export function LandingPage({ onEnter }: LandingPageProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 bg-white text-gray-900 overflow-y-auto overscroll-none"
+    <div className="fixed inset-0 bg-white text-gray-900 overflow-y-auto overscroll-none landing-scrollbar select-text"
       style={{
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
         WebkitOverflowScrolling: "touch",
         touchAction: "pan-y",
+        scrollbarWidth: "thin",
+        scrollbarColor: "rgba(0,0,0,0.15) transparent",
       }}>
 
       {/* ── nav ── */}
@@ -460,7 +462,15 @@ export function LandingPage({ onEnter }: LandingPageProps) {
       {/* ── footer ── */}
       <footer className="border-t border-gray-100/80 py-6">
         <div className="max-w-3xl mx-auto px-6 text-center text-[11px] text-gray-300">
-          {t("landing.footer")}
+          <a
+            href="https://github.com/hiyeshu/kyo.is"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-500 transition-colors"
+            style={{ fontFamily: AQUA_FONT }}
+          >
+            GitHub
+          </a>
         </div>
       </footer>
     </div>

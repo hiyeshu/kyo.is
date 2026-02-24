@@ -77,16 +77,20 @@ export function AboutDialog({
           fontSize: isXpTheme ? "11px" : undefined,
         }}
       >
-        <div
+        <button
+          onClick={() => {
+            useAppStore.getState().resetLanding();
+            onOpenChange(false);
+          }}
           className={cn(
-            "!text-2xl font-medium",
+            "!text-2xl font-medium hover:text-blue-500 cursor-pointer transition-colors duration-150",
             isXpTheme
               ? "font-['Trebuchet MS'] !text-[15px]"
               : "font-apple-garamond"
           )}
         >
           {displayName}
-        </div>
+        </button>
         <p className="text-gray-500">{t("common.dialog.version")} {displayVersion}</p>
         {displayDescription && (
           <p className="text-gray-600 pt-1 max-w-[240px] leading-relaxed">{displayDescription}</p>
@@ -105,18 +109,7 @@ export function AboutDialog({
           >
             {t("common.dialog.viewDocs")}
           </a>
-          <button
-            onClick={() => {
-              useAppStore.getState().resetLanding();
-              onOpenChange(false);
-            }}
-            className={cn(
-              "text-center text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150",
-              isXpTheme ? "text-[11px]" : "text-[11px] font-geneva-12"
-            )}
-          >
-            {t("landing.viewIntro")}
-          </button>
+
         </div>
       )}
     </div>

@@ -815,6 +815,34 @@ button.piano-key.piano-key[class*="bg-[#ff33ff]"] {
   height: calc(100% + 1px) !important;
 }
 
+/* Landing page overrides - escape OS desktop constraints */
+.landing-scrollbar,
+.landing-scrollbar * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -webkit-touch-callout: default !important;
+}
+
+/* Landing page thin scrollbar - override OS theme scrollbar */
+.landing-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+.landing-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.landing-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+.landing-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+.landing-scrollbar::-webkit-scrollbar-button {
+  display: none;
+}
+
 /* Hide default scrollbars for custom implementation */
 .ipod-menu-container {
   scrollbar-width: none; /* Firefox */
