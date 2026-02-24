@@ -2727,5 +2727,28 @@
       "spanish": "Español",
       "title": "언어"
     }
+  },
+  "landing": {
+    "tagline": "브라우저를 열면, 거기가 데스크톱",
+    "cta": "시작하기",
+    "demo": {
+      "desktop": "데스크톱",
+      "search": "검색",
+      "pasteTitle": "붙여넣기만 하면 저장",
+      "pasteDesc": "링크를 복사하고 데스크톱에 붙여넣기. 그게 전부.",
+      "searchTitle": "찾고 싶은 걸 입력하면 돼요",
+      "searchDesc": "당신의 북마크, 언제든 찾을 수 있어요.",
+      "searchPlaceholder": "검색..."
+    },
+    "features": {
+      "windowManager": { "title": "윈도우", "desc": "드래그, 리사이즈, 겹치기. 진짜 데스크톱처럼." },
+      "ai": { "title": "AI", "desc": "궁금한 게 있으면 그냥 물어보세요." },
+      "bookmarks": { "title": "북마크", "desc": "좋은 것들을 남겨두세요." },
+      "themes": { "title": "테마", "desc": "Aqua, XP, 98. 마음에 드는 모습을 골라요." },
+      "fileSystem": { "title": "파일", "desc": "만들고, 편집하고, 정리하고. 당신의 가상 데스크." },
+      "i18n": { "title": "언어", "desc": "中文, English, 日本語, 한국어." }
+    },
+    "footer": "Kyo",
+    "viewIntro": "제품 소개 보기"
   }
 }

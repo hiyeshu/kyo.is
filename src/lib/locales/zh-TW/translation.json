@@ -2738,5 +2738,28 @@
       "spanish": "Español",
       "title": "語言"
     }
+  },
+  "landing": {
+    "tagline": "打開瀏覽器，回到桌面",
+    "cta": "進入",
+    "demo": {
+      "desktop": "桌面",
+      "search": "搜尋",
+      "pasteTitle": "貼上，就收藏了",
+      "pasteDesc": "複製一個連結，貼上到桌面。就這樣。",
+      "searchTitle": "想找什麼，打字就好",
+      "searchDesc": "你的收藏，隨時能找到。",
+      "searchPlaceholder": "搜尋..."
+    },
+    "features": {
+      "windowManager": { "title": "視窗", "desc": "拖曳、縮放、層疊。像真的桌面一樣。" },
+      "ai": { "title": "AI", "desc": "有什麼想問的，直接問。" },
+      "bookmarks": { "title": "收藏", "desc": "把好東西留下來。" },
+      "themes": { "title": "主題", "desc": "Aqua、XP、98。選你喜歡的樣子。" },
+      "fileSystem": { "title": "檔案", "desc": "建立、編輯、整理。你的虛擬桌面。" },
+      "i18n": { "title": "語言", "desc": "中文、English、日本語、한국어。" }
+    },
+    "footer": "Kyo",
+    "viewIntro": "查看產品介紹"
   }
 }

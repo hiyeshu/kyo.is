@@ -121,6 +121,9 @@ interface AppStoreState extends AppManagerState {
   ) => void;
   isFirstBoot: boolean;
   setHasBooted: () => void;
+  hasEnteredDesktop: boolean;
+  setHasEnteredDesktop: () => void;
+  resetLanding: () => void;
   macAppToastShown: boolean;
   setMacAppToastShown: () => void;
   lastSeenDesktopVersion: string | null;
@@ -162,6 +165,9 @@ const createUseAppStore = () =>
       // Boot state
       isFirstBoot: true,
       setHasBooted: () => set({ isFirstBoot: false }),
+      hasEnteredDesktop: false,
+      setHasEnteredDesktop: () => set({ hasEnteredDesktop: true }),
+      resetLanding: () => set({ hasEnteredDesktop: false }),
       macAppToastShown: false,
       setMacAppToastShown: () => set({ macAppToastShown: true }),
       lastSeenDesktopVersion: null,
@@ -833,6 +839,7 @@ const createUseAppStore = () =>
         
         // Boot/version state
         isFirstBoot: state.isFirstBoot,
+        hasEnteredDesktop: state.hasEnteredDesktop,
         macAppToastShown: state.macAppToastShown,
         lastSeenDesktopVersion: state.lastSeenDesktopVersion,
         ryOSVersion: state.ryOSVersion,

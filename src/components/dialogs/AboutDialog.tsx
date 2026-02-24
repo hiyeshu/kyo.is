@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 @/components/ui/dialog、@/components/shared/ThemedIcon、@/stores/useThemeStore、@/stores/useAppStore、@/utils/i18n、react-i18next
  * [OUTPUT]: 对外提供 AboutDialog 组件
- * [POS]: components/dialogs 的应用关于弹窗，展示名称/版本/描述，可按 appId 控制显示作者信息
+ * [POS]: components/dialogs 的应用关于弹窗，展示名称/版本/描述，可按 appId 控制显示作者信息，提供帮助文档和产品介绍入口
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -93,17 +93,31 @@ export function AboutDialog({
         )}
       </div>
       {showCredits && (
-        <a
-          href="/docs"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(
-            "pt-3 text-center text-blue-500/80 hover:text-blue-600 hover:underline cursor-pointer transition-colors duration-150",
-            isXpTheme ? "text-[13px]" : "text-[13px] font-geneva-12"
-          )}
-        >
-          {t("common.dialog.viewDocs")}
-        </a>
+        <div className="flex flex-col items-center gap-1.5 pt-3">
+          <a
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "text-center text-blue-500/80 hover:text-blue-600 hover:underline cursor-pointer transition-colors duration-150",
+              isXpTheme ? "text-[13px]" : "text-[13px] font-geneva-12"
+            )}
+          >
+            {t("common.dialog.viewDocs")}
+          </a>
+          <button
+            onClick={() => {
+              useAppStore.getState().resetLanding();
+              onOpenChange(false);
+            }}
+            className={cn(
+              "text-center text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150",
+              isXpTheme ? "text-[11px]" : "text-[11px] font-geneva-12"
+            )}
+          >
+            {t("landing.viewIntro")}
+          </button>
+        </div>
       )}
     </div>
   );

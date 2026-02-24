@@ -12,6 +12,7 @@ layout/ - 布局组件，桌面环境核心，包含 Desktop、Dock、MenuBar、
 dialogs/ - 对话框组件，系统级弹窗，包含 BootScreen、ControlPanels、AboutDialog、FileDialog、ConfirmDialog
 screensavers/ - 屏保组件，包含 ScreenSaverOverlay、多种屏保效果（飞行 Logo、矩阵雨、星空）
 shared/ - 共享业务组件，跨应用复用，包含 FileIcon、AppIcon、ContextMenu、Toolbar
+landing/ - 产品开屏页，首次访问展示，包含 Hero、操作动画演示、Feature 卡片、Footer
 
 ## 依赖关系
 - 依赖 React 19 + TypeScript

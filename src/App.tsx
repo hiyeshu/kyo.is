@@ -1,6 +1,6 @@
 /**
- * [INPUT]: 依赖 apps/base/AppManager 的应用管理器，依赖 config/appRegistry 的应用注册表，依赖 stores 的全局状态，依赖 hooks 的自定义 hooks，依赖 i18next 的国际化，依赖 useAuthStore 的认证状态
- * [OUTPUT]: 对外提供 App 根组件，管理应用启动流程、主题切换、离线检测、Toast 配置、屏保覆盖层、登录门控
+ * [INPUT]: 依赖 apps/base/AppManager 的应用管理器，依赖 config/appRegistry 的应用注册表，依赖 stores 的全局状态，依赖 hooks 的自定义 hooks，依赖 i18next 的国际化，依赖 useAuthStore 的认证状态，依赖 components/landing/LandingPage 的开屏页
+ * [OUTPUT]: 对外提供 App 根组件，管理应用启动流程、主题切换、离线检测、Toast 配置、屏保覆盖层、登录门控、开屏页门控
  * [POS]: src/ 的根组件，被 main.tsx 渲染，是整个前端应用的容器和生命周期管理者
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -13,6 +13,7 @@ import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
 import { useAppStoreShallow, useDisplaySettingsStoreShallow } from "@/stores/helpers";
 import { BootScreen } from "./components/dialogs/BootScreen";
+import { LandingPage } from "./components/landing/LandingPage";
 import { getNextBootMessage, clearNextBootMessage, isBootDebugMode } from "./utils/bootMessage";
 import { AnyApp } from "./apps/base/types";
 import { useThemeStore } from "./stores/useThemeStore";
@@ -37,11 +38,13 @@ export function App() {
 
   // 初始化认证监听（同步检测在 useAuthStore.init 里触发）
   useEffect(() => { initAuth(); }, [initAuth]);
-  const { isFirstBoot, setHasBooted, setLastSeenDesktopVersion } = useAppStoreShallow(
+  const { isFirstBoot, setHasBooted, setLastSeenDesktopVersion, hasEnteredDesktop, setHasEnteredDesktop } = useAppStoreShallow(
     (state) => ({
       isFirstBoot: state.isFirstBoot,
       setHasBooted: state.setHasBooted,
       setLastSeenDesktopVersion: state.setLastSeenDesktopVersion,
+      hasEnteredDesktop: state.hasEnteredDesktop,
+      setHasEnteredDesktop: state.setHasEnteredDesktop,
     })
   );
   const displayMode = useDisplaySettingsStoreShallow((state) => state.displayMode);
@@ -196,6 +199,10 @@ export function App() {
         }}
       />
     );
+  }
+
+  if (!hasEnteredDesktop) {
+    return <LandingPage onEnter={setHasEnteredDesktop} />;
   }
 
   return (
