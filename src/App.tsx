@@ -201,16 +201,8 @@ export function App() {
     );
   }
 
-  // /hi 路径 或 首次访问：展示产品介绍页
-  const isHiRoute = window.location.pathname === "/hi";
-  if (!hasEnteredDesktop || isHiRoute) {
-    const handleEnter = () => {
-      setHasEnteredDesktop();
-      if (isHiRoute) {
-        window.history.replaceState({}, "", "/");
-      }
-    };
-    return <LandingPage onEnter={handleEnter} />;
+  if (!hasEnteredDesktop) {
+    return <LandingPage onEnter={setHasEnteredDesktop} />;
   }
 
   return (
