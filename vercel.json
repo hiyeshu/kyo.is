@@ -220,7 +220,8 @@
     { "source": "/pc", "destination": "/" },
     { "source": "/terminal", "destination": "/" },
     { "source": "/control-panels", "destination": "/" },
-    { "source": "/infinite-mac", "destination": "/" }
+    { "source": "/infinite-mac", "destination": "/" },
+    { "source": "/hi", "destination": "/" }
   ],
   "redirects": [
     { "source": "/docs", "destination": "/docs/overview", "permanent": false },
