@@ -5,11 +5,12 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS, changeLanguage } from "@/lib/i18n";
 import type { SupportedLanguage } from "@/lib/i18n";
+import { PINSTRIPE_BACKGROUND, AQUA_FONT } from "@/lib/utils";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -43,15 +44,11 @@ const PASTE_BOOKMARKS = [
 const SEARCH_SCENARIOS = [
   {
     query: "S",
-    apps: [
-      { name: "stickies", icon: "/icons/default/stickies.png" },
-      { name: "whiteNoise", icon: "/icons/macosx/cdrom.png" },
-    ],
     bookmarks: [
       { title: "Notion", url: "notion.so", favicon: "https://www.notion.so/images/favicon.ico" },
-      { title: "Cursor", url: "cursor.com", favicon: "https://cursor.com/favicon.ico" },
+      { title: "Cursor", url: "cursor.com", favicon: "https://cursor.com/marketing-static/apple-touch-icon.png" },
     ],
-    selectedIdx: 3, // Cursor (0: stickies, 1: whiteNoise, 2: Notion, 3: Cursor)
+    selectedIdx: 1, // Cursor (0: Notion, 1: Cursor)
   },
 ];
 
@@ -88,6 +85,16 @@ const fadeUp = {
 const AQUA_FONT = "'Lucida Grande', 'Geneva', sans-serif";
 const PINSTRIPE = "repeating-linear-gradient(0deg, transparent 0px, transparent 1.5px, rgba(255,255,255,0.85) 1.5px, rgba(255,255,255,0.85) 4px), #ececec";
 const SELECTION_BLUE = "rgba(39,101,202,0.88)";
+
+// Shared panel style for SSOT
+const PANEL_STYLE: React.CSSProperties = {
+  background: PINSTRIPE,
+  backdropFilter: "blur(12px)",
+  border: "0.5px solid rgba(0,0,0,0.3)",
+  boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
+  fontFamily: AQUA_FONT,
+  color: "#333",
+};
 
 // ─── MiniDesktop ────────────────────────────────────────────────────────────
 // 迷你桌面容器：MenuBar + Toast 插槽 + 壁纸 + 桌面图标 + Dock + 内容浮层
@@ -153,24 +160,31 @@ function MiniDesktop({ children, icons, toast }: {
       </div>
 
       {/* ── Content overlay ── */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ top: "18px", bottom: "32px", right: "56px" }}>
+      <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ top: "18px", bottom: "32px" }}>
         {children}
       </div>
 
       {/* ── Dock ── */}
       <div
-        className="absolute bottom-[4px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-[6px] px-[10px]"
+        className="absolute bottom-[10px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-[10px] px-[12px]"
         style={{
-          height: "28px",
+          height: "44px",
           background: "rgba(255,255,255,0.25)",
-          backdropFilter: "blur(8px)",
-          borderRadius: "6px",
+          backdropFilter: "blur(12px)",
+          borderRadius: "14px",
           border: "0.5px solid rgba(255,255,255,0.4)",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
         }}
       >
         {DOCK_ICONS.map((icon, i) => (
-          <img key={i} src={icon} alt="" className="w-[20px] h-[20px]"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          <motion.div
+            key={i}
+            whileHover={{ scale: 1.2, y: -4 }}
+            transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          >
+            <img src={icon} alt="" className="w-[32px] h-[32px] drop-shadow-sm"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          </motion.div>
         ))}
       </div>
     </div>
@@ -185,24 +199,31 @@ function LanguageSwitcher() {
   const current = i18n.language as SupportedLanguage;
 
   return (
-    <div className="relative">
+    <div 
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       <button
-        onClick={() => setOpen(!open)}
-        className="text-[13px] text-gray-500 hover:text-gray-800 transition-colors px-2 py-1 rounded-md hover:bg-gray-50 cursor-pointer"
+        className="text-[13px] text-gray-500 hover:text-gray-800 transition-colors px-2 py-1 rounded-md hover:bg-gray-50 cursor-default"
         style={{ fontFamily: AQUA_FONT }}
       >
         {LANGUAGE_LABELS[current] ?? LANGUAGE_LABELS["zh-CN"]}
       </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div
-            className="absolute right-0 top-full mt-1 z-50 py-1 min-w-[120px]"
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-full mt-1 z-50 py-1.5 min-w-[120px]"
             style={{
-              background: "#fff",
-              border: "0.5px solid rgba(0,0,0,0.2)",
-              borderRadius: "0.45rem",
-              boxShadow: "0 3px 10px rgba(0,0,0,0.15)",
+              background: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(12px)",
+              border: "0.5px solid rgba(0,0,0,0.1)",
+              borderRadius: "10px",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
               fontFamily: AQUA_FONT,
             }}
           >
@@ -210,15 +231,18 @@ function LanguageSwitcher() {
               <button
                 key={lang}
                 onClick={() => { changeLanguage(lang); setOpen(false); }}
-                className={`w-full text-left px-3 py-1.5 text-[13px] transition-colors hover:bg-[#3875D7] hover:text-white cursor-pointer`}
-                style={{ color: lang === current ? "#3875D7" : "#333", fontWeight: lang === current ? 600 : 400 }}
+                className="w-full text-left px-3 py-1.5 text-[13px] transition-colors hover:bg-gray-100/80 block"
+                style={{ 
+                  color: lang === current ? "#3875D7" : "#333", 
+                  fontWeight: lang === current ? 600 : 400 
+                }}
               >
                 {LANGUAGE_LABELS[lang]}
               </button>
             ))}
-          </div>
-        </>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -363,24 +387,29 @@ function PasteIcons({ showNewIcon, bookmark }: {
 // 单个桌面图标
 function DesktopIcon({ label, icon, isApp }: { label: string; icon: string; isApp?: boolean }) {
   return (
-    <div className="flex flex-col items-center" style={{ width: "48px" }}>
+    <div className="flex flex-col items-center gap-1" style={{ width: "64px" }}>
       <div
-        className="w-[28px] h-[28px] flex items-center justify-center"
+        className="w-[48px] h-[48px] flex items-center justify-center transition-transform hover:scale-105"
         style={isApp ? {} : {
-          background: "#fff",
-          borderRadius: "22%",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
+          // macOS Aqua style: iOS rounded square + white bg + crystal highlight
+          background: "linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%)",
+          borderRadius: "10px", // 22.5% of 48px ≈ 10.8px, matching desktop
+          boxShadow: "0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)", // Matches desktop icon style
+          position: "relative",
         }}
       >
         <img
           src={icon} alt=""
-          className={isApp ? "w-[28px] h-[28px]" : "w-[18px] h-[18px]"}
+          className={isApp ? "w-[48px] h-[48px] drop-shadow-md" : "w-[32px] h-[32px]"} // Icon size adjusted to match desktop (32px inside 48px box)
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
       </div>
       <span
-        className="text-[7px] text-white text-center leading-tight mt-0.5 truncate w-full font-bold"
-        style={{ textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
+        className="text-[11px] text-white text-center leading-tight mt-0.5 truncate w-full font-medium tracking-tight"
+        style={{ 
+          textShadow: "0 1px 2px rgba(0,0,0,0.9)", // Stronger shadow for readability like desktop
+          fontFamily: AQUA_FONT,
+        }}
       >
         {label}
       </span>
@@ -394,31 +423,32 @@ function ToastBanner({ phase }: { phase: "toast" | "done" }) {
   const { t } = useTranslation();
   return (
     <motion.div
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -4 }}
-      transition={{ duration: 0.2 }}
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md"
+      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className="flex items-center gap-2 px-3 py-2"
       style={{
-        background: "rgba(255,255,255,0.92)",
-        backdropFilter: "blur(8px)",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.08)",
-        fontSize: "8px",
-        color: "#333",
-        fontFamily: AQUA_FONT,
+        ...PANEL_STYLE,
+        background: PINSTRIPE,
+        borderRadius: "12px", // 与搜索框一致
+        boxShadow: "0 8px 24px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.08)", // 统一阴影
+        fontSize: "12px",
         whiteSpace: "nowrap",
       }}
     >
       {phase === "toast" && (
-        <span className="inline-block w-[8px] h-[8px] rounded-full border border-gray-300 border-t-gray-500 animate-spin" />
+        <span className="inline-block w-[12px] h-[12px] rounded-full border-[1.5px] border-black/10 border-t-black/60 animate-spin" />
       )}
       {phase === "done" && (
-        <span className="text-[8px]" style={{ color: "#28C840" }}>&#10003;</span>
+        <span className="flex items-center justify-center w-[14px] h-[14px] bg-[#34C759] rounded-full text-white text-[9px]">
+          &#10003;
+        </span>
       )}
-      <span>
+      <span className="font-medium tracking-tight opacity-90">
         {phase === "toast"
-          ? t("landing.demo.fetchingInfo", "Fetching page info..")
-          : t("landing.demo.bookmarkAdded", "Bookmark added")}
+          ? t("landing.demo.fetchingInfo", "正在获取网页信息...")
+          : t("landing.demo.bookmarkAdded", "已添加到收藏")}
       </span>
     </motion.div>
   );
@@ -437,19 +467,22 @@ function PasteCenter({ phase }: { phase: PastePhase }) {
       <AnimatePresence>
         {(phase === "cmdv" || phase === "toast") && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="px-6 py-2.5 rounded-lg text-center"
+            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 5 }}
+            transition={{ type: "spring", stiffness: 350, damping: 30 }}
+            className="px-10 py-5 text-center flex flex-col items-center justify-center gap-1"
             style={{
-              background: "rgba(255,255,255,0.85)",
-              backdropFilter: "blur(12px)",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.08)",
+              ...PANEL_STYLE,
+              background: PINSTRIPE,
+              borderRadius: "16px", // 略大一点的圆角，因为是居中大提示
+              boxShadow: "0 12px 40px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.08)",
+              minWidth: "140px",
+              minHeight: "100px",
             }}
           >
-            <span className="text-[18px] font-medium text-gray-600" style={{ fontFamily: AQUA_FONT }}>
-              &#8984;V
+             <span className="text-[32px] font-medium text-[#1d1d1f] tracking-tight" style={{ fontFamily: "-apple-system, sans-serif" }}>
+              ⌘V
             </span>
           </motion.div>
         )}
@@ -484,22 +517,21 @@ function SearchOverlay() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.25 }}
-      className="w-[45%] max-w-[180px]"
+      className="w-[60%] max-w-[280px]"
       style={{
+        ...PANEL_STYLE,
         background: PINSTRIPE,
-        borderRadius: "7px",
-        border: "0.5px solid rgba(0,0,0,0.3)",
-        boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
+        borderRadius: "12px",
         overflow: "hidden",
+        boxShadow: "0 12px 40px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.1)",
       }}
     >
       {/* 搜索输入框 */}
-      <div className="flex items-center gap-1 px-1.5 py-1" style={{ borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
-        <span className="text-[7px] text-gray-400">&#128269;</span>
-        <div className="flex-1 text-[8px] text-gray-800 min-h-[12px]" style={{ fontFamily: AQUA_FONT }}>
+      <div className="flex items-center gap-2 px-3 py-2.5" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+        <span className="text-[14px] text-gray-400">&#128269;</span>
+        <div className="flex-1 text-[13px] text-gray-800 min-h-[18px] flex items-center tracking-tight" style={{ fontFamily: AQUA_FONT }}>
           {typed || <span className="text-gray-400">{t("landing.demo.searchPlaceholder", "搜索...")}</span>}
         </div>
-        <span className="text-[6px] text-gray-400 px-0.5 py-0.5 rounded" style={{ background: "rgba(0,0,0,0.06)" }}>ESC</span>
       </div>
 
       {/* 结果列表 */}
@@ -508,60 +540,33 @@ function SearchOverlay() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="px-1 py-0.5 max-h-[120px] overflow-hidden"
+            className="px-1.5 py-1.5 max-h-[180px] overflow-hidden"
           >
-            {/* 应用分组 */}
-            <div className="text-[6px] text-gray-400 px-1 py-0.5" style={{ fontFamily: AQUA_FONT }}>
-              {t("landing.demo.apps", "应用")}
-            </div>
-            {scenario.apps.map((app, i) => {
-              const isSelected = selectedIdx === i;
-              return (
-                <motion.div
-                  key={`app-${i}`}
-                  initial={{ opacity: 0, x: -4 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.06, duration: 0.2 }}
-                  className="flex items-center gap-1 px-1 py-[2px] rounded"
-                  style={{ background: isSelected ? SELECTION_BLUE : "transparent" }}
-                >
-                  <img src={app.icon} alt="" className="w-[10px] h-[10px]" />
-                  <span className="text-[7px]" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
-                    {t(`landing.demo.${app.name}`, app.name)}
-                  </span>
-                </motion.div>
-              );
-            })}
-
             {/* 书签分组 */}
-            <div className="text-[6px] text-gray-400 px-1 py-0.5 mt-0.5" style={{ fontFamily: AQUA_FONT }}>
-              {t("landing.demo.bookmarks", "书签")}
-            </div>
             {scenario.bookmarks.map((bm, i) => {
-              const globalIdx = scenario.apps.length + i;
-              const isSelected = selectedIdx === globalIdx;
+              const isSelected = selectedIdx === i;
               return (
                 <motion.div
                   key={`bm-${i}`}
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (scenario.apps.length + i) * 0.06, duration: 0.2 }}
-                  className="flex items-center gap-1 px-1 py-[2px] rounded"
+                  transition={{ delay: i * 0.06, duration: 0.2 }}
+                  className="flex items-center gap-2.5 px-2 py-1.5 rounded-[6px]"
                   style={{ background: isSelected ? SELECTION_BLUE : "transparent" }}
                 >
                   <div
-                    className="w-[10px] h-[10px] rounded-sm flex items-center justify-center flex-shrink-0"
-                    style={{ background: isSelected ? "rgba(255,255,255,0.2)" : "#f0f0f0" }}
+                    className="w-[16px] h-[16px] rounded-[4px] flex items-center justify-center flex-shrink-0"
+                    style={{ background: isSelected ? "rgba(255,255,255,0.95)" : "#f0f0f0" }}
                   >
-                    <img src={bm.favicon} alt="" className="w-[7px] h-[7px]"
-                      style={isSelected ? { filter: "brightness(10)" } : {}}
+                    <img src={bm.favicon} alt="" className="w-[10px] h-[10px]"
+                      style={isSelected ? {} : {}}
                       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[7px] truncate" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
+                  <div className="flex flex-col min-w-0 gap-0.5">
+                    <span className="text-[11px] truncate leading-none" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
                       {bm.title}
                     </span>
-                    <span className="text-[5px] truncate" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "#999" }}>
+                    <span className="text-[9px] truncate leading-none" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "#999" }}>
                       {bm.url}
                     </span>
                   </div>
@@ -571,26 +576,6 @@ function SearchOverlay() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Footer: nowrap + 缩小字号防溢出 */}
-      <div
-        className="flex items-center justify-between px-2 py-1"
-        style={{
-          borderTop: "1px solid rgba(0,0,0,0.08)",
-          fontSize: "6px",
-          color: "rgba(0,0,0,0.3)",
-          fontFamily: AQUA_FONT,
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-        }}
-      >
-        <span>
-          {t("landing.demo.statsApps", { count: 6, defaultValue: "6 Apps" })} · {t("landing.demo.statsBookmarks", { count: 7, defaultValue: "7 Bookmarks" })}
-        </span>
-        <span>
-          &#8629; {t("landing.demo.open", "Open")}&nbsp;&nbsp;ESC {t("landing.demo.close", "Close")}
-        </span>
-      </div>
     </motion.div>
   );
 }
@@ -601,13 +586,18 @@ export function LandingPage({ onEnter }: LandingPageProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 bg-white text-gray-900 overflow-y-auto overscroll-none landing-scrollbar select-text"
+    <div className="fixed inset-0 bg-white text-gray-900 overflow-y-auto overscroll-none landing-scrollbar select-text selection:bg-[#B3D7FF] origin-top"
       style={{
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
         WebkitOverflowScrolling: "touch",
         touchAction: "pan-y",
         scrollbarWidth: "thin",
         scrollbarColor: "rgba(0,0,0,0.15) transparent",
+        transform: "scale(1.1)",
+        transformOrigin: "top center",
+        height: "90.9vh",
+        width: "90.9vw",
+        marginLeft: "4.55vw",
       }}>
 
       {/* ── nav ── */}
@@ -633,8 +623,8 @@ export function LandingPage({ onEnter }: LandingPageProps) {
             style={{ filter: "drop-shadow(0 2px 8px rgba(63,156,255,0.25))" }} />
           <h1 className="text-[40px] md:text-[48px] font-bold tracking-tight text-gray-900 leading-none">Kyo</h1>
           <p className="text-[17px] text-gray-400 max-w-xs leading-relaxed">{t("landing.tagline")}</p>
-          <button onClick={onEnter} className="aqua-button primary mt-3 cursor-pointer"
-            style={{ fontSize: "14px", padding: "6px 32px", cursor: "pointer" }}>
+          <button onClick={onEnter} className="aqua-button primary mt-4 cursor-pointer"
+            style={{ fontSize: "16px", padding: "12px 48px", cursor: "pointer", borderRadius: "24px" }}>
             {t("landing.cta")} →
           </button>
         </motion.div>

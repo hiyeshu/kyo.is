@@ -216,6 +216,8 @@ export default defineConfig({
           // App routes handled by middleware for OG preview links
           /^\/bookmarks$/,
           /^\/theme-editor$/,
+          // Landing page route - bypass SW to let Vercel rewrite handle it
+          /^\/hi$/,
         ],
         // Enable navigation fallback to precached index.html for offline support
         // This ensures the app can start when offline by serving the cached shell
