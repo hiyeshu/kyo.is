@@ -5,12 +5,11 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS, changeLanguage } from "@/lib/i18n";
 import type { SupportedLanguage } from "@/lib/i18n";
-import { PINSTRIPE_BACKGROUND, AQUA_FONT } from "@/lib/utils";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
