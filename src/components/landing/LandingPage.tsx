@@ -139,7 +139,7 @@ function MiniDesktop({ children, icons, toast }: {
       </div>
 
       {/* ── Toast 插槽：MenuBar 下方居中 ── */}
-      <div className="absolute top-[22px] left-1/2 -translate-x-1/2 z-30">
+      <div className="absolute top-[20px] md:top-[22px] left-1/2 -translate-x-1/2 z-30">
         <AnimatePresence>{toast}</AnimatePresence>
       </div>
 
@@ -154,36 +154,29 @@ function MiniDesktop({ children, icons, toast }: {
       />
 
       {/* ── Desktop Icons (right column) ── */}
-      <div className="absolute top-[26px] right-[8px] z-10 flex flex-col items-center gap-2">
+      <div className="absolute top-[22px] md:top-[26px] right-[4px] md:right-[8px] z-10 flex flex-col items-center gap-1 md:gap-2">
         {icons}
       </div>
 
       {/* ── Content overlay ── */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ top: "18px", bottom: "32px" }}>
+      <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ top: "18px", bottom: "28px" }}>
         {children}
       </div>
 
       {/* ── Dock ── */}
       <div
-        className="absolute bottom-[10px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-[10px] px-[12px]"
+        className="absolute bottom-[4px] md:bottom-[10px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-[4px] md:gap-[10px] px-[6px] md:px-[12px] h-[24px] md:h-[44px]"
         style={{
-          height: "44px",
           background: "rgba(255,255,255,0.25)",
           backdropFilter: "blur(12px)",
-          borderRadius: "14px",
+          borderRadius: "8px",
           border: "0.5px solid rgba(255,255,255,0.4)",
           boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
         }}
       >
         {DOCK_ICONS.map((icon, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ scale: 1.2, y: -4 }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-          >
-            <img src={icon} alt="" className="w-[32px] h-[32px] drop-shadow-sm"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-          </motion.div>
+          <img key={i} src={icon} alt="" className="w-[16px] h-[16px] md:w-[32px] md:h-[32px] drop-shadow-sm"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
         ))}
       </div>
     </div>
@@ -383,32 +376,27 @@ function PasteIcons({ showNewIcon, bookmark }: {
   );
 }
 
-// 单个桌面图标
+// 单个桌面图标：移动端 32px，桌面端 48px
 function DesktopIcon({ label, icon, isApp }: { label: string; icon: string; isApp?: boolean }) {
   return (
-    <div className="flex flex-col items-center gap-1" style={{ width: "64px" }}>
+    <div className="flex flex-col items-center w-[40px] md:w-[64px]">
       <div
-        className="w-[48px] h-[48px] flex items-center justify-center transition-transform hover:scale-105"
+        className="w-[28px] h-[28px] md:w-[48px] md:h-[48px] flex items-center justify-center"
         style={isApp ? {} : {
-          // macOS Aqua style: iOS rounded square + white bg + crystal highlight
           background: "linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%)",
-          borderRadius: "10px", // 22.5% of 48px ≈ 10.8px, matching desktop
-          boxShadow: "0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)", // Matches desktop icon style
-          position: "relative",
+          borderRadius: "22%",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)",
         }}
       >
         <img
           src={icon} alt=""
-          className={isApp ? "w-[48px] h-[48px] drop-shadow-md" : "w-[32px] h-[32px]"} // Icon size adjusted to match desktop (32px inside 48px box)
+          className={isApp ? "w-[28px] h-[28px] md:w-[48px] md:h-[48px] drop-shadow-md" : "w-[18px] h-[18px] md:w-[32px] md:h-[32px]"}
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
       </div>
       <span
-        className="text-[11px] text-white text-center leading-tight mt-0.5 truncate w-full font-medium tracking-tight"
-        style={{ 
-          textShadow: "0 1px 2px rgba(0,0,0,0.9)", // Stronger shadow for readability like desktop
-          fontFamily: AQUA_FONT,
-        }}
+        className="text-[7px] md:text-[11px] text-white text-center leading-tight mt-0.5 truncate w-full font-medium"
+        style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9)", fontFamily: AQUA_FONT }}
       >
         {label}
       </span>
@@ -426,25 +414,24 @@ function ToastBanner({ phase }: { phase: "toast" | "done" }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -8, scale: 0.95 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="flex items-center gap-2 px-3 py-2"
+      className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-2"
       style={{
         ...PANEL_STYLE,
         background: PINSTRIPE,
-        borderRadius: "12px", // 与搜索框一致
-        boxShadow: "0 8px 24px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.08)", // 统一阴影
-        fontSize: "12px",
+        borderRadius: "8px",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.08)",
         whiteSpace: "nowrap",
       }}
     >
       {phase === "toast" && (
-        <span className="inline-block w-[12px] h-[12px] rounded-full border-[1.5px] border-black/10 border-t-black/60 animate-spin" />
+        <span className="inline-block w-[8px] h-[8px] md:w-[12px] md:h-[12px] rounded-full border-[1.5px] border-black/10 border-t-black/60 animate-spin" />
       )}
       {phase === "done" && (
-        <span className="flex items-center justify-center w-[14px] h-[14px] bg-[#34C759] rounded-full text-white text-[9px]">
+        <span className="flex items-center justify-center w-[10px] h-[10px] md:w-[14px] md:h-[14px] bg-black/70 rounded-full text-white text-[7px] md:text-[9px]">
           &#10003;
         </span>
       )}
-      <span className="font-medium tracking-tight opacity-90">
+      <span className="text-[8px] md:text-[12px] font-medium tracking-tight opacity-90">
         {phase === "toast"
           ? t("landing.demo.fetchingInfo", "正在获取网页信息...")
           : t("landing.demo.bookmarkAdded", "已添加到收藏")}
@@ -470,17 +457,15 @@ function PasteCenter({ phase }: { phase: PastePhase }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 5 }}
             transition={{ type: "spring", stiffness: 350, damping: 30 }}
-            className="px-10 py-5 text-center flex flex-col items-center justify-center gap-1"
+            className="px-5 py-3 md:px-10 md:py-5 text-center flex flex-col items-center justify-center"
             style={{
               ...PANEL_STYLE,
               background: PINSTRIPE,
-              borderRadius: "16px", // 略大一点的圆角，因为是居中大提示
+              borderRadius: "12px",
               boxShadow: "0 12px 40px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.08)",
-              minWidth: "140px",
-              minHeight: "100px",
             }}
           >
-             <span className="text-[32px] font-medium text-[#1d1d1f] tracking-tight" style={{ fontFamily: "-apple-system, sans-serif" }}>
+            <span className="text-[18px] md:text-[32px] font-medium text-[#1d1d1f] tracking-tight" style={{ fontFamily: "-apple-system, sans-serif" }}>
               ⌘V
             </span>
           </motion.div>
@@ -516,19 +501,19 @@ function SearchOverlay() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.25 }}
-      className="w-[60%] max-w-[280px]"
+      className="w-[55%] md:w-[60%] max-w-[280px]"
       style={{
         ...PANEL_STYLE,
         background: PINSTRIPE,
-        borderRadius: "12px",
+        borderRadius: "8px",
         overflow: "hidden",
         boxShadow: "0 12px 40px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.1)",
       }}
     >
       {/* 搜索输入框 */}
-      <div className="flex items-center gap-2 px-3 py-2.5" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-        <span className="text-[14px] text-gray-400">&#128269;</span>
-        <div className="flex-1 text-[13px] text-gray-800 min-h-[18px] flex items-center tracking-tight" style={{ fontFamily: AQUA_FONT }}>
+      <div className="flex items-center gap-1 md:gap-2 px-1.5 md:px-3 py-1 md:py-2.5" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+        <span className="text-[9px] md:text-[14px] text-gray-400">&#128269;</span>
+        <div className="flex-1 text-[9px] md:text-[13px] text-gray-800 min-h-[14px] md:min-h-[18px] flex items-center tracking-tight" style={{ fontFamily: AQUA_FONT }}>
           {typed || <span className="text-gray-400">{t("landing.demo.searchPlaceholder", "搜索...")}</span>}
         </div>
       </div>
@@ -539,7 +524,7 @@ function SearchOverlay() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="px-1.5 py-1.5 max-h-[180px] overflow-hidden"
+            className="px-1 md:px-1.5 py-0.5 md:py-1.5 max-h-[180px] overflow-hidden"
           >
             {/* 书签分组 */}
             {scenario.bookmarks.map((bm, i) => {
@@ -550,22 +535,22 @@ function SearchOverlay() {
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.06, duration: 0.2 }}
-                  className="flex items-center gap-2.5 px-2 py-1.5 rounded-[6px]"
+                  className="flex items-center gap-1.5 md:gap-2.5 px-1 md:px-2 py-[2px] md:py-1.5 rounded-[4px] md:rounded-[6px]"
                   style={{ background: isSelected ? SELECTION_BLUE : "transparent" }}
                 >
                   <div
-                    className="w-[16px] h-[16px] rounded-[4px] flex items-center justify-center flex-shrink-0"
+                    className="w-[10px] h-[10px] md:w-[16px] md:h-[16px] rounded-[3px] md:rounded-[4px] flex items-center justify-center flex-shrink-0"
                     style={{ background: isSelected ? "rgba(255,255,255,0.95)" : "#f0f0f0" }}
                   >
-                    <img src={bm.favicon} alt="" className="w-[10px] h-[10px]"
+                    <img src={bm.favicon} alt="" className="w-[7px] h-[7px] md:w-[10px] md:h-[10px]"
                       style={isSelected ? {} : {}}
                       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   </div>
-                  <div className="flex flex-col min-w-0 gap-0.5">
-                    <span className="text-[11px] truncate leading-none" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[8px] md:text-[11px] truncate leading-none" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
                       {bm.title}
                     </span>
-                    <span className="text-[9px] truncate leading-none" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "#999" }}>
+                    <span className="text-[6px] md:text-[9px] truncate leading-none" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "#999" }}>
                       {bm.url}
                     </span>
                   </div>
