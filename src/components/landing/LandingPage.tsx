@@ -1,11 +1,11 @@
 /**
- * [INPUT]: 依赖 @/components/ui/card、@/lib/i18n、framer-motion、react-i18next
+ * [INPUT]: 依赖 @/lib/i18n、framer-motion、react-i18next
  * [OUTPUT]: 对外提供 LandingPage 组件
- * [POS]: components/landing 的产品开屏页，首次访问展示，点击 CTA 进入桌面
+ * [POS]: components/landing 的产品开屏页，单一大桌面 DemoShowcase 场景轮播（粘贴→搜索），文案 AnimatePresence 跟随切换
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS, changeLanguage } from "@/lib/i18n";
@@ -19,37 +19,39 @@ interface LandingPageProps {
 
 // ─── Mock Data ──────────────────────────────────────────────────────────────
 
-const MOCK_BOOKMARKS = [
-  { title: "Notion", favicon: "https://www.notion.so/images/favicon.ico" },
-  { title: "X", favicon: "https://abs.twimg.com/favicons/twitter.3.ico" },
-  { title: "YouMind", favicon: "https://youmind.com/favicon.ico" },
-  { title: "Cursor", favicon: "https://cursor.com/favicon.ico" },
-  { title: "GitHub", favicon: "https://github.com/favicon.ico" },
-  { title: "Flomo", favicon: "https://flomoapp.com/favicon.ico" },
+// 桌面图标：右侧纵向排列
+const DESKTOP_ICONS = [
+  { label: "myBookmarks", icon: "/icons/macosx/sites.png", isApp: true },
+  { label: "Notion", icon: "https://www.notion.so/images/favicon.ico", isApp: false },
 ];
 
-const MOCK_PASTE_URLS = [
-  { title: "Linear - Plan and build products", domain: "linear.app", favicon: "https://linear.app/favicon.ico" },
-  { title: "Figma - Design tool for teams", domain: "figma.com", favicon: "https://static.figma.com/app/icon/1/favicon.ico" },
-  { title: "Vercel - Build the best web", domain: "vercel.com", favicon: "https://vercel.com/favicon.ico" },
+// Dock 图标
+const DOCK_ICONS = [
+  "/icons/macosx/sites.png",
+  "/icons/macosx/question.png",
+  "/icons/macosx/control-panels.png",
 ];
 
-const MOCK_SEARCH_SCENARIOS = [
+// 粘贴动画：新增的书签
+const PASTE_BOOKMARKS = [
+  { label: "Linear", icon: "https://linear.app/favicon.ico" },
+  { label: "Figma", icon: "https://static.figma.com/app/icon/1/favicon.ico" },
+  { label: "Vercel", icon: "https://vercel.com/favicon.ico" },
+];
+
+// 搜索动画：搜索场景
+const SEARCH_SCENARIOS = [
   {
-    query: "design",
-    results: [
-      { title: "Designing with Clarity", domain: "youtube.com", favicon: "https://youtube.com/favicon.ico" },
-      { title: "Design Systems Handbook", domain: "designbetter.co", favicon: "https://designbetter.co/favicon.ico" },
-      { title: "Design Patterns", domain: "patterns.dev", favicon: "https://patterns.dev/favicon.ico" },
+    query: "S",
+    apps: [
+      { name: "stickies", icon: "/icons/default/stickies.png" },
+      { name: "whiteNoise", icon: "/icons/macosx/cdrom.png" },
     ],
-  },
-  {
-    query: "Notion",
-    results: [
-      { title: "Notion - Your connected workspace", domain: "notion.so", favicon: "https://www.notion.so/images/favicon.ico" },
-      { title: "Notion API Reference", domain: "developers.notion.com", favicon: "https://www.notion.so/images/favicon.ico" },
-      { title: "Notion Templates Gallery", domain: "notion.so/templates", favicon: "https://www.notion.so/images/favicon.ico" },
+    bookmarks: [
+      { title: "Notion", url: "notion.so", favicon: "https://www.notion.so/images/favicon.ico" },
+      { title: "Cursor", url: "cursor.com", favicon: "https://cursor.com/favicon.ico" },
     ],
+    selectedIdx: 3, // Cursor (0: stickies, 1: whiteNoise, 2: Notion, 3: Cursor)
   },
 ];
 
@@ -84,49 +86,92 @@ const fadeUp = {
 // traffic lights: #FF5F57 #FEBC2E #28C840, selection #3875D7
 
 const AQUA_FONT = "'Lucida Grande', 'Geneva', sans-serif";
+const PINSTRIPE = "repeating-linear-gradient(0deg, transparent 0px, transparent 1.5px, rgba(255,255,255,0.85) 1.5px, rgba(255,255,255,0.85) 4px), #ececec";
+const SELECTION_BLUE = "rgba(39,101,202,0.88)";
 
-function AquaWindow({ title, children }: { title: string; children: React.ReactNode }) {
+// ─── MiniDesktop ────────────────────────────────────────────────────────────
+// 迷你桌面容器：MenuBar + Toast 插槽 + 壁纸 + 桌面图标 + Dock + 内容浮层
+
+function MiniDesktop({ children, icons, toast }: {
+  children: React.ReactNode;
+  icons: React.ReactNode;
+  toast?: React.ReactNode;
+}) {
+  const { i18n } = useTranslation();
+  // 语言 → locale 映射，让日期跟随 app 语言
+  const localeMap: Record<string, string> = {
+    "zh-CN": "zh-CN", "zh-TW": "zh-TW", en: "en-US", ja: "ja-JP", ko: "ko-KR",
+  };
+  const dateLocale = localeMap[i18n.language] ?? "en-US";
   return (
     <div
-      className="bg-[#E8E8E8]"
+      className="relative w-full overflow-hidden"
       style={{
-        border: "0.5px solid rgba(0,0,0,0.3)",
-        borderRadius: "0.45rem",
-        boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
-        overflow: "hidden",
+        borderRadius: "8px",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+        aspectRatio: "16 / 10",
         fontFamily: AQUA_FONT,
       }}
     >
-      {/* ── Aqua title bar ── */}
+      {/* ── MenuBar ── */}
       <div
-        className="flex items-center px-[10px]"
+        className="relative z-20 flex items-center px-2"
         style={{
-          height: "22px",
-          background: "linear-gradient(to bottom, #efefef 0%, #d8d8d8 50%, #cfcfcf 100%)",
-          borderBottom: "0.5px solid rgba(0,0,0,0.15)",
+          height: "18px",
+          background: "rgba(248,248,248,0.85)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "0.5px solid rgba(0,0,0,0.12)",
+          fontSize: "9px",
         }}
       >
-        {/* traffic lights */}
-        <div className="flex items-center gap-[5px]">
-          {(["#FF5F57", "#FEBC2E", "#28C840"] as const).map((c, i) => (
-            <div key={i} className="w-[10px] h-[10px] rounded-full" style={{
-              background: c,
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 0.5px 1px rgba(0,0,0,0.12)",
-            }} />
-          ))}
-        </div>
-        {/* centered title */}
-        <span className="flex-1 text-center text-[11px] text-gray-500 select-none" style={{ fontFamily: AQUA_FONT }}>
-          {title}
+        <img src="/icons/macosx/apple.png" alt="" className="w-[10px] h-[10px] mr-1.5" style={{ opacity: 0.7 }} />
+        <span className="font-bold text-[9px] text-gray-700 mr-3">Kyo</span>
+        <div className="flex-1" />
+        <span className="text-[8px] text-gray-400">
+          {new Date().toLocaleDateString(dateLocale, { month: "short", day: "numeric", weekday: "short" })}
         </span>
-        <div className="w-[36px]" /> {/* balance traffic lights width */}
       </div>
 
-      {/* ── pinstripe body ── */}
-      <div style={{
-        background: `repeating-linear-gradient(0deg, transparent 0px, transparent 1.5px, rgba(255,255,255,0.85) 1.5px, rgba(255,255,255,0.85) 4px), #ececec`,
-      }}>
+      {/* ── Toast 插槽：MenuBar 下方居中 ── */}
+      <div className="absolute top-[22px] left-1/2 -translate-x-1/2 z-30">
+        <AnimatePresence>{toast}</AnimatePresence>
+      </div>
+
+      {/* ── Wallpaper ── */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: "url(/wallpapers/photos/aqua/aqua_kyo.jpg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
+      {/* ── Desktop Icons (right column) ── */}
+      <div className="absolute top-[26px] right-[8px] z-10 flex flex-col items-center gap-2">
+        {icons}
+      </div>
+
+      {/* ── Content overlay ── */}
+      <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ top: "18px", bottom: "32px", right: "56px" }}>
         {children}
+      </div>
+
+      {/* ── Dock ── */}
+      <div
+        className="absolute bottom-[4px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-[6px] px-[10px]"
+        style={{
+          height: "28px",
+          background: "rgba(255,255,255,0.25)",
+          backdropFilter: "blur(8px)",
+          borderRadius: "6px",
+          border: "0.5px solid rgba(255,255,255,0.4)",
+        }}
+      >
+        {DOCK_ICONS.map((icon, i) => (
+          <img key={i} src={icon} alt="" className="w-[20px] h-[20px]"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+        ))}
       </div>
     </div>
   );
@@ -178,180 +223,375 @@ function LanguageSwitcher() {
   );
 }
 
-// ─── Demo: Paste ────────────────────────────────────────────────────────────
+// ─── DemoShowcase ────────────────────────────────────────────────────────────
+// 单一大桌面 · 场景轮播 · 唯一时钟源
+// paste(6s): idle->cmdv(0.8s)->toast(2s)->done(3.2s)->icon appears
+// search(6s): type->results->highlight
 
-function PasteDemo() {
+type Scene = "paste" | "search";
+type PastePhase = "idle" | "cmdv" | "toast" | "done";
+const SCENE_DURATION = 6000;
+
+function DemoShowcase() {
   const { t } = useTranslation();
-  const [idx, setIdx] = useState(0);
-  const [phase, setPhase] = useState<"idle" | "url" | "card" | "hold">("idle");
-  const [bookmarks, setBookmarks] = useState(MOCK_BOOKMARKS.slice(0, 4));
-  const bm = MOCK_PASTE_URLS[idx];
+  const [scene, setScene] = useState<Scene>("paste");
+  const [pastePhase, setPastePhase] = useState<PastePhase>("idle");
+  const [pasteIdx, setPasteIdx] = useState(0);
+
+  // ── 唯一时钟：场景轮播 + 粘贴阶段 ──
+  useEffect(() => {
+    const ts: ReturnType<typeof setTimeout>[] = [];
+
+    if (scene === "paste") {
+      setPastePhase("idle");
+      ts.push(setTimeout(() => setPastePhase("cmdv"), 800));
+      ts.push(setTimeout(() => setPastePhase("toast"), 2000));
+      ts.push(setTimeout(() => setPastePhase("done"), 3200));
+    }
+
+    ts.push(setTimeout(() => {
+      if (scene === "paste") setPasteIdx(i => i + 1);
+      setScene(s => s === "paste" ? "search" : "paste");
+    }, SCENE_DURATION));
+
+    return () => ts.forEach(clearTimeout);
+  }, [scene]);
+
+  const currentBookmark = PASTE_BOOKMARKS[pasteIdx % PASTE_BOOKMARKS.length];
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      {/* ── 文案区：跟随场景切换 ── */}
+      <div className="text-center min-h-[52px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={scene}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h3 className="text-[20px] font-semibold text-gray-800 mb-1.5 tracking-tight">
+              {scene === "paste"
+                ? t("landing.demo.pasteTitle", "粘贴，就收藏了")
+                : t("landing.demo.searchTitle", "想找什么，打字就好")}
+            </h3>
+            <p className="text-[14px] text-gray-400 leading-relaxed">
+              {scene === "paste"
+                ? t("landing.demo.pasteDesc", "复制一个链接，粘贴到桌面。就这样。")
+                : t("landing.demo.searchDesc", "你的收藏，随时能找到。")}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* ── 大桌面容器 ── */}
+      <div className="w-full">
+        <MiniDesktop
+          icons={
+            scene === "paste"
+              ? <PasteIcons showNewIcon={pastePhase === "done"} bookmark={currentBookmark} />
+              : <StaticIcons />
+          }
+          toast={
+            scene === "paste" && (pastePhase === "toast" || pastePhase === "done")
+              ? <ToastBanner phase={pastePhase as "toast" | "done"} />
+              : null
+          }
+        >
+          <AnimatePresence mode="wait">
+            {scene === "paste"
+              ? <PasteCenter key="paste" phase={pastePhase} />
+              : <SearchOverlay key="search" />}
+          </AnimatePresence>
+        </MiniDesktop>
+      </div>
+    </div>
+  );
+}
+
+// ─── 桌面图标渲染器 ─────────────────────────────────────────────────────────
+
+function StaticIcons() {
+  const { t } = useTranslation();
+  return (
+    <>
+      {DESKTOP_ICONS.map((item, i) => (
+        <DesktopIcon
+          key={i}
+          label={item.label === "myBookmarks" ? t("landing.demo.myBookmarks", "我的收藏") : item.label}
+          icon={item.icon}
+          isApp={item.isApp}
+        />
+      ))}
+    </>
+  );
+}
+
+// PasteIcons: 纯展示组件，showNewIcon 由父级 DemoShowcase 控制
+function PasteIcons({ showNewIcon, bookmark }: {
+  showNewIcon: boolean;
+  bookmark: { label: string; icon: string };
+}) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {DESKTOP_ICONS.map((item, i) => (
+        <DesktopIcon
+          key={i}
+          label={item.label === "myBookmarks" ? t("landing.demo.myBookmarks", "我的收藏") : item.label}
+          icon={item.icon}
+          isApp={item.isApp}
+        />
+      ))}
+      <AnimatePresence>
+        {showNewIcon && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <DesktopIcon label={bookmark.label} icon={bookmark.icon} isApp={false} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// 单个桌面图标
+function DesktopIcon({ label, icon, isApp }: { label: string; icon: string; isApp?: boolean }) {
+  return (
+    <div className="flex flex-col items-center" style={{ width: "48px" }}>
+      <div
+        className="w-[28px] h-[28px] flex items-center justify-center"
+        style={isApp ? {} : {
+          background: "#fff",
+          borderRadius: "22%",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
+        }}
+      >
+        <img
+          src={icon} alt=""
+          className={isApp ? "w-[28px] h-[28px]" : "w-[18px] h-[18px]"}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
+      </div>
+      <span
+        className="text-[7px] text-white text-center leading-tight mt-0.5 truncate w-full font-bold"
+        style={{ textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ─── Toast 横幅（MenuBar 下方居中，macOS 通知风格）────────────────────────
+
+function ToastBanner({ phase }: { phase: "toast" | "done" }) {
+  const { t } = useTranslation();
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
+      transition={{ duration: 0.2 }}
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md"
+      style={{
+        background: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(8px)",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.08)",
+        fontSize: "8px",
+        color: "#333",
+        fontFamily: AQUA_FONT,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {phase === "toast" && (
+        <span className="inline-block w-[8px] h-[8px] rounded-full border border-gray-300 border-t-gray-500 animate-spin" />
+      )}
+      {phase === "done" && (
+        <span className="text-[8px]" style={{ color: "#28C840" }}>&#10003;</span>
+      )}
+      <span>
+        {phase === "toast"
+          ? t("landing.demo.fetchingInfo", "Fetching page info..")
+          : t("landing.demo.bookmarkAdded", "Bookmark added")}
+      </span>
+    </motion.div>
+  );
+}
+
+// ─── 场景A 中心：⌘V 指示器（frosted glass 风格）─────────────────────────
+
+function PasteCenter({ phase }: { phase: PastePhase }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex items-center justify-center"
+    >
+      <AnimatePresence>
+        {(phase === "cmdv" || phase === "toast") && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="px-6 py-2.5 rounded-lg text-center"
+            style={{
+              background: "rgba(255,255,255,0.85)",
+              backdropFilter: "blur(12px)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.08)",
+            }}
+          >
+            <span className="text-[18px] font-medium text-gray-600" style={{ fontFamily: AQUA_FONT }}>
+              &#8984;V
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ─── 场景B 浮层：搜索 ──────────────────────────────────────────────────────
+
+function SearchOverlay() {
+  const { t } = useTranslation();
+  const scenario = SEARCH_SCENARIOS[0];
+  const [typed, setTyped] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [selectedIdx, setSelectedIdx] = useState(-1);
 
   useEffect(() => {
     const ts: ReturnType<typeof setTimeout>[] = [];
-    const run = () => {
-      setPhase("idle");
-      ts.push(setTimeout(() => setPhase("url"), 600));
-      ts.push(setTimeout(() => setPhase("card"), 1400));
-      ts.push(setTimeout(() => {
-        setPhase("hold");
-        setBookmarks(prev => {
-          const next = [...prev, { title: bm.domain.split(".")[0], favicon: bm.favicon }];
-          return next.slice(-6);
-        });
-      }, 2000));
-      ts.push(setTimeout(() => {
-        setIdx((i) => (i + 1) % MOCK_PASTE_URLS.length);
-        run();
-      }, 4000));
-    };
-    run();
+    const q = scenario.query;
+    for (let i = 0; i <= q.length; i++) {
+      ts.push(setTimeout(() => setTyped(q.slice(0, i)), 600 + i * 200));
+    }
+    ts.push(setTimeout(() => setShowResults(true), 600 + q.length * 200 + 300));
+    ts.push(setTimeout(() => setSelectedIdx(scenario.selectedIdx), 600 + q.length * 200 + 1200));
     return () => ts.forEach(clearTimeout);
   }, []);
 
   return (
-    <AquaWindow title={t("landing.demo.desktop")}>
-      {/* toolbar */}
-      <div className="flex items-center gap-2 px-3 py-[6px] border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-        <div className="flex-1 flex items-center bg-white rounded h-[22px] px-2" style={{ border: "0.5px solid rgba(0,0,0,0.15)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)" }}>
-          <span className="text-[10px] text-gray-400" style={{ fontFamily: AQUA_FONT }}>{t("landing.demo.searchPlaceholder")}</span>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.25 }}
+      className="w-[45%] max-w-[180px]"
+      style={{
+        background: PINSTRIPE,
+        borderRadius: "7px",
+        border: "0.5px solid rgba(0,0,0,0.3)",
+        boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
+        overflow: "hidden",
+      }}
+    >
+      {/* 搜索输入框 */}
+      <div className="flex items-center gap-1 px-1.5 py-1" style={{ borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
+        <span className="text-[7px] text-gray-400">&#128269;</span>
+        <div className="flex-1 text-[8px] text-gray-800 min-h-[12px]" style={{ fontFamily: AQUA_FONT }}>
+          {typed || <span className="text-gray-400">{t("landing.demo.searchPlaceholder", "搜索...")}</span>}
         </div>
-        <div className="w-[20px] h-[20px] rounded flex items-center justify-center text-[13px] text-gray-400" style={{ border: "0.5px solid rgba(0,0,0,0.15)", background: "linear-gradient(to bottom, #fafafa, #e8e8e8)" }}>+</div>
+        <span className="text-[6px] text-gray-400 px-0.5 py-0.5 rounded" style={{ background: "rgba(0,0,0,0.06)" }}>ESC</span>
       </div>
 
-      {/* bookmark grid */}
-      <div className="relative px-4 py-4 min-h-[140px]">
-        <div className="grid grid-cols-6 gap-3">
-          {bookmarks.map((b, i) => (
-            <motion.div
-              key={`${b.title}-${i}`}
-              initial={i >= 4 ? { opacity: 0, scale: 0.5 } : false}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="flex flex-col items-center gap-1"
-            >
-              <div className="w-[36px] h-[36px] rounded-lg flex items-center justify-center" style={{
-                background: "linear-gradient(to bottom, #fafafa, #eee)",
-                border: "0.5px solid rgba(0,0,0,0.12)",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-              }}>
-                <img src={b.favicon} alt="" className="w-4 h-4" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-              </div>
-              <span className="text-[8px] text-gray-500 text-center leading-tight truncate w-full" style={{ fontFamily: AQUA_FONT }}>{b.title}</span>
-            </motion.div>
-          ))}
-        </div>
+      {/* 结果列表 */}
+      <AnimatePresence>
+        {showResults && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="px-1 py-0.5 max-h-[120px] overflow-hidden"
+          >
+            {/* 应用分组 */}
+            <div className="text-[6px] text-gray-400 px-1 py-0.5" style={{ fontFamily: AQUA_FONT }}>
+              {t("landing.demo.apps", "应用")}
+            </div>
+            {scenario.apps.map((app, i) => {
+              const isSelected = selectedIdx === i;
+              return (
+                <motion.div
+                  key={`app-${i}`}
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.06, duration: 0.2 }}
+                  className="flex items-center gap-1 px-1 py-[2px] rounded"
+                  style={{ background: isSelected ? SELECTION_BLUE : "transparent" }}
+                >
+                  <img src={app.icon} alt="" className="w-[10px] h-[10px]" />
+                  <span className="text-[7px]" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
+                    {t(`landing.demo.${app.name}`, app.name)}
+                  </span>
+                </motion.div>
+              );
+            })}
 
-        {/* floating paste indicator */}
-        <AnimatePresence>
-          {(phase === "url" || phase === "card") && (
-            <motion.div
-              key={`url-${idx}`}
-              initial={{ opacity: 0, y: -16, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg text-[10px] font-medium z-10"
-              style={{
-                background: "rgba(56,117,215,0.15)",
-                color: "#3875D7",
-                border: "1px solid rgba(56,117,215,0.3)",
-                backdropFilter: "blur(4px)",
-                fontFamily: AQUA_FONT,
-              }}
-            >
-              ⌘V&nbsp;&nbsp;{bm.title}
-            </motion.div>
-          )}
-        </AnimatePresence>
+            {/* 书签分组 */}
+            <div className="text-[6px] text-gray-400 px-1 py-0.5 mt-0.5" style={{ fontFamily: AQUA_FONT }}>
+              {t("landing.demo.bookmarks", "书签")}
+            </div>
+            {scenario.bookmarks.map((bm, i) => {
+              const globalIdx = scenario.apps.length + i;
+              const isSelected = selectedIdx === globalIdx;
+              return (
+                <motion.div
+                  key={`bm-${i}`}
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (scenario.apps.length + i) * 0.06, duration: 0.2 }}
+                  className="flex items-center gap-1 px-1 py-[2px] rounded"
+                  style={{ background: isSelected ? SELECTION_BLUE : "transparent" }}
+                >
+                  <div
+                    className="w-[10px] h-[10px] rounded-sm flex items-center justify-center flex-shrink-0"
+                    style={{ background: isSelected ? "rgba(255,255,255,0.2)" : "#f0f0f0" }}
+                  >
+                    <img src={bm.favicon} alt="" className="w-[7px] h-[7px]"
+                      style={isSelected ? { filter: "brightness(10)" } : {}}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[7px] truncate" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
+                      {bm.title}
+                    </span>
+                    <span className="text-[5px] truncate" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "#999" }}>
+                      {bm.url}
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Footer: nowrap + 缩小字号防溢出 */}
+      <div
+        className="flex items-center justify-between px-2 py-1"
+        style={{
+          borderTop: "1px solid rgba(0,0,0,0.08)",
+          fontSize: "6px",
+          color: "rgba(0,0,0,0.3)",
+          fontFamily: AQUA_FONT,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+        }}
+      >
+        <span>
+          {t("landing.demo.statsApps", { count: 6, defaultValue: "6 Apps" })} · {t("landing.demo.statsBookmarks", { count: 7, defaultValue: "7 Bookmarks" })}
+        </span>
+        <span>
+          &#8629; {t("landing.demo.open", "Open")}&nbsp;&nbsp;ESC {t("landing.demo.close", "Close")}
+        </span>
       </div>
-    </AquaWindow>
-  );
-}
-
-// ─── Demo: Search ───────────────────────────────────────────────────────────
-
-function SearchDemo() {
-  const { t } = useTranslation();
-  const [si, setSi] = useState(0);
-  const [typed, setTyped] = useState("");
-  const [show, setShow] = useState(false);
-  const scenario = MOCK_SEARCH_SCENARIOS[si];
-
-  const run = useCallback(() => {
-    const ts: ReturnType<typeof setTimeout>[] = [];
-    const q = MOCK_SEARCH_SCENARIOS[si].query;
-    for (let i = 0; i <= q.length; i++) ts.push(setTimeout(() => setTyped(q.slice(0, i)), i * 150));
-    ts.push(setTimeout(() => setShow(true), q.length * 150 + 200));
-    ts.push(setTimeout(() => { setShow(false); setTyped(""); }, q.length * 150 + 3000));
-    ts.push(setTimeout(() => setSi((i) => (i + 1) % MOCK_SEARCH_SCENARIOS.length), q.length * 150 + 3500));
-    return ts;
-  }, [si]);
-
-  useEffect(() => { const ts = run(); return () => ts.forEach(clearTimeout); }, [run]);
-
-  return (
-    <AquaWindow title={t("landing.demo.search")}>
-      {/* search input */}
-      <div className="px-3 pt-3">
-        <div className="relative">
-          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">🔍</span>
-          <input
-            readOnly value={typed}
-            placeholder={t("landing.demo.searchPlaceholder")}
-            className="w-full pl-6 pr-3 h-[26px] text-[11px] bg-white rounded cursor-default outline-none"
-            style={{
-              border: "0.5px solid rgba(0,0,0,0.15)",
-              boxShadow: "inset 0 1px 2px rgba(0,0,0,0.06)",
-              fontFamily: AQUA_FONT,
-            }}
-          />
-        </div>
-      </div>
-
-      {/* results */}
-      <div className="px-2 pb-3 pt-1.5 min-h-[128px]">
-        <AnimatePresence>
-          {show && scenario.results.map((item, i) => {
-            // highlight matching text
-            const q = MOCK_SEARCH_SCENARIOS[si].query.toLowerCase();
-            const titleLower = item.title.toLowerCase();
-            const matchIdx = titleLower.indexOf(q);
-            let titleEl: React.ReactNode = item.title;
-            if (matchIdx >= 0) {
-              const before = item.title.slice(0, matchIdx);
-              const match = item.title.slice(matchIdx, matchIdx + q.length);
-              const after = item.title.slice(matchIdx + q.length);
-              titleEl = <>{before}<span style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "2px" }}>{match}</span>{after}</>;
-            }
-            return (
-              <motion.div
-                key={`${si}-${i}`}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 6 }}
-                transition={{ delay: i * 0.08, duration: 0.25 }}
-                className="flex items-center gap-2 py-[5px] px-2 rounded"
-                style={{ background: i === 0 ? "#3875D7" : "transparent" }}
-              >
-                <div className="w-[18px] h-[18px] rounded-sm flex-shrink-0 flex items-center justify-center overflow-hidden"
-                  style={{ background: i === 0 ? "rgba(255,255,255,0.2)" : "#f3f3f3" }}>
-                  <img src={item.favicon} alt="" className="w-3 h-3" style={i === 0 ? { filter: "brightness(10)" } : {}}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[10px] font-medium truncate" style={{
-                    color: i === 0 ? "#fff" : "#333",
-                    fontFamily: AQUA_FONT,
-                  }}>{titleEl}</span>
-                  <span className="text-[8px]" style={{ color: i === 0 ? "rgba(255,255,255,0.7)" : "#999" }}>{item.domain}</span>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
-    </AquaWindow>
+    </motion.div>
   );
 }
 
@@ -402,27 +642,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
 
       {/* ── demos ── */}
       <section className="max-w-3xl mx-auto px-6 pb-24">
-        <div className="grid md:grid-cols-2 gap-10 items-start">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.5 }}
-            className="flex flex-col">
-            <div className="mb-4 min-h-[52px]">
-              <h3 className="text-[15px] font-semibold text-gray-800 mb-1">{t("landing.demo.pasteTitle")}</h3>
-              <p className="text-[12px] text-gray-400 leading-relaxed">{t("landing.demo.pasteDesc")}</p>
-            </div>
-            <PasteDemo />
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.5, delay: 0.08 }}
-            className="flex flex-col">
-            <div className="mb-4 min-h-[52px]">
-              <h3 className="text-[15px] font-semibold text-gray-800 mb-1">{t("landing.demo.searchTitle")}</h3>
-              <p className="text-[12px] text-gray-400 leading-relaxed">{t("landing.demo.searchDesc")}</p>
-            </div>
-            <SearchDemo />
-          </motion.div>
-        </div>
+        <DemoShowcase />
       </section>
 
       {/* ── features 2×2 sticky notes ── */}

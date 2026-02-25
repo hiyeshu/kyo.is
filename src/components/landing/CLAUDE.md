@@ -3,21 +3,29 @@
 
 ## 成员清单
 
-LandingPage.tsx: 产品开屏页，首次访问展示，包含 Hero（Logo+标题+CTA）、两个操作动画演示（粘贴链接+搜索）、6 个 Feature 卡片、Footer
+LandingPage.tsx: 产品开屏页，单一大桌面 DemoShowcase 场景轮播（粘贴6s→搜索6s），Hero + Feature 便利贴 + Footer
+
+## 内部组件结构
+- MiniDesktop: 迷你桌面容器（MenuBar + 壁纸 + 桌面图标 + Dock），icons 接受 ReactNode
+- DemoShowcase: 场景轮播控制器，管理 paste/search 切换 + 文案 AnimatePresence
+- PasteOverlay: 场景A 浮层（⌘V 指示器 → toast → 书签已添加）
+- SearchOverlay: 场景B 浮层（CommandPalette 自动打字 → 结果列表 → 选中高亮）
+- PasteIcons / StaticIcons: 桌面图标渲染器，粘贴场景动态新增图标
+- DesktopIcon: 单个桌面图标组件
+- LanguageSwitcher: 语言切换下拉菜单
 
 ## 依赖关系
-- 依赖 @/components/ui/button Button 组件（CTA 按钮）
-- 依赖 @/components/ui/card Card/CardContent 组件（Feature 卡片 + 演示区容器）
-- 依赖 @/components/ui/input Input 组件（搜索演示区）
-- 依赖 framer-motion 动画库
+- 依赖 framer-motion AnimatePresence/motion 动画
 - 依赖 react-i18next 国际化
+- 依赖 @/lib/i18n 语言配置
 - 被 App.tsx 根据 hasEnteredDesktop 状态条件渲染
 
 ## 设计约束
-1. 独立设计风格，不跟随 OS 主题（Aqua/XP/Win98）
-2. 品牌色 #3F9CFF（Kyo 图标蓝）
-3. 动画演示使用硬编码 mock 数据，不依赖 store
-4. 响应式：移动端单列，桌面端双列
-5. 所有文本通过 t() 国际化
+1. Aqua 风格迷你桌面，使用 Lucida Grande 字体 + pinstripe 纹理
+2. 110% 缩放（transform: scale(1.1)），全宽展示
+3. 壁纸固定 /wallpapers/photos/aqua/aqua_kyo.jpg
+4. 动画演示使用硬编码 mock 数据，不依赖 store
+5. 所有文本通过 t() 国际化，必须带 fallback 默认值
+6. 场景轮播 12s 循环（粘贴 6s → 搜索 6s）
 
 [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md

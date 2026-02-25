@@ -2763,7 +2763,20 @@
       "pasteDesc": "Copy a link. Paste it on your desktop. That's it.",
       "searchTitle": "Just type what you need",
       "searchDesc": "Your bookmarks, always within reach.",
-      "searchPlaceholder": "Search..."
+      "searchPlaceholder": "Search...",
+      "myBookmarks": "My Bookmarks",
+      "fetchingInfo": "Fetching page info..",
+      "bookmarkAdded": "Bookmark added",
+      "apps": "Apps",
+      "bookmarks": "Bookmarks",
+      "notes": "Notes",
+      "open": "Open",
+      "close": "Close",
+      "stickies": "Stickies",
+      "whiteNoise": "White Noise",
+      "statsApps": "{{count}} Apps",
+      "statsBookmarks": "{{count}} Bookmarks",
+      "statsNotes": "{{count}} Notes"
     },
     "features": {
       "windowManager": { "title": "Windows", "desc": "Drag, resize, stack. Like a real desktop." },

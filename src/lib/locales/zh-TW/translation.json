@@ -2749,7 +2749,20 @@
       "pasteDesc": "複製一個連結，貼上到桌面。就這樣。",
       "searchTitle": "想找什麼，打字就好",
       "searchDesc": "你的收藏，隨時能找到。",
-      "searchPlaceholder": "搜尋..."
+      "searchPlaceholder": "搜尋...",
+      "myBookmarks": "我的收藏",
+      "fetchingInfo": "正在取得網頁資訊..",
+      "bookmarkAdded": "書籤已新增",
+      "apps": "應用",
+      "bookmarks": "書籤",
+      "notes": "便箋",
+      "open": "開啟",
+      "close": "關閉",
+      "stickies": "便利貼",
+      "whiteNoise": "白噪音",
+      "statsApps": "{{count}} 應用",
+      "statsBookmarks": "{{count}} 書籤",
+      "statsNotes": "{{count}} 便箋"
     },
     "features": {
       "windowManager": { "title": "視窗", "desc": "拖曳、縮放、層疊。像真的桌面一樣。" },

@@ -2738,7 +2738,20 @@
       "pasteDesc": "リンクをコピーして、デスクトップに貼り付ける。それだけ。",
       "searchTitle": "探したいものを、打つだけ",
       "searchDesc": "あなたのブックマーク、いつでも見つかる。",
-      "searchPlaceholder": "検索..."
+      "searchPlaceholder": "検索...",
+      "myBookmarks": "マイブックマーク",
+      "fetchingInfo": "ページ情報を取得中..",
+      "bookmarkAdded": "ブックマーク追加済み",
+      "apps": "アプリ",
+      "bookmarks": "ブックマーク",
+      "notes": "メモ",
+      "open": "開く",
+      "close": "閉じる",
+      "stickies": "付箋",
+      "whiteNoise": "ホワイトノイズ",
+      "statsApps": "{{count}} アプリ",
+      "statsBookmarks": "{{count}} ブックマーク",
+      "statsNotes": "{{count}} メモ"
     },
     "features": {
       "windowManager": { "title": "ウィンドウ", "desc": "ドラッグ、リサイズ、重ねる。本物のデスクトップのように。" },

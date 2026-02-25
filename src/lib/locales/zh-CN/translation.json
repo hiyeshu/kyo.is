@@ -2755,7 +2755,20 @@
       "pasteDesc": "复制一个链接，粘贴到桌面。就这样。",
       "searchTitle": "想找什么，打字就好",
       "searchDesc": "你的收藏，随时能找到。",
-      "searchPlaceholder": "搜索..."
+      "searchPlaceholder": "搜索...",
+      "myBookmarks": "我的收藏",
+      "fetchingInfo": "正在获取网页信息..",
+      "bookmarkAdded": "书签已添加",
+      "apps": "应用",
+      "bookmarks": "书签",
+      "notes": "便签",
+      "open": "开启",
+      "close": "关闭",
+      "stickies": "便利贴",
+      "whiteNoise": "白噪音",
+      "statsApps": "{{count}} 应用",
+      "statsBookmarks": "{{count}} 书签",
+      "statsNotes": "{{count}} 便签"
     },
     "features": {
       "windowManager": { "title": "窗口", "desc": "拖拽、缩放、层叠。像真的桌面一样。" },
