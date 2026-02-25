@@ -142,6 +142,64 @@ function DockIcon({ src, mouseX, isMobile }: {
   );
 }
 
+// ─── KyoFace：面部跟随鼠标 + 浮动呼吸 ──────────────────────────────────
+
+function KyoFace() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const faceX = useMotionValue(0);
+  const faceY = useMotionValue(0);
+  // 更软的 spring，像漂浮在液体里
+  const smoothX = useSpring(faceX, { stiffness: 60, damping: 12, mass: 0.8 });
+  const smoothY = useSpring(faceY, { stiffness: 60, damping: 12, mass: 0.8 });
+
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      // 偏移范围 ±5px，更灵动
+      const dx = Math.max(-5, Math.min(5, (e.clientX - cx) / 50));
+      const dy = Math.max(-5, Math.min(5, (e.clientY - cy) / 50));
+      faceX.set(dx);
+      faceY.set(dy);
+    };
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, [faceX, faceY]);
+
+  return (
+    <motion.div
+      ref={containerRef}
+      className="relative w-[72px] h-[72px]"
+      // 整体浮动呼吸
+      animate={{ y: [0, -4, 0] }}
+      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      style={{ filter: "drop-shadow(0 2px 8px rgba(63,156,255,0.25))" }}
+    >
+      {/* 背景 icon（不含面部） */}
+      <img src="/favicon-bg.svg" alt="Kyo" className="w-full h-full" />
+      {/* 面部几何线条：跟随鼠标偏移 */}
+      <motion.svg
+        className="absolute inset-0 w-full h-full"
+        viewBox="0 0 500 500"
+        fill="none"
+        style={{ x: smoothX, y: smoothY }}
+      >
+        {/* 嘴巴 */}
+        <path d="M182.502 309.499H152.752V339.249H182.502V368.999H301.502V339.249H331.252V309.499H301.502V339.249H182.502V309.499Z" fill="black"/>
+        {/* 鼻子 L 形 */}
+        <path d="M271.751 131H242.001V250H212.25V279.75H271.751V131Z" fill="black"/>
+        {/* 右眼 */}
+        <rect x="361.002" y="131" width="29.7501" height="59.5001" fill="black"/>
+        {/* 左眼 */}
+        <rect x="123" y="131" width="29.7501" height="59.5001" fill="black"/>
+      </motion.svg>
+    </motion.div>
+  );
+}
+
 // ─── Animation ──────────────────────────────────────────────────────────────
 
 const fadeUp = {
@@ -277,7 +335,7 @@ function LanguageSwitcher() {
       onMouseLeave={() => setOpen(false)}
     >
       <button
-        className="text-[13px] text-gray-500 hover:text-gray-800 transition-colors px-2 py-1 rounded-md hover:bg-gray-50 cursor-default"
+        className="text-[13px] text-gray-500 hover:text-gray-800 transition-colors px-2 py-1 cursor-pointer"
         style={{ fontFamily: AQUA_FONT }}
       >
         {LANGUAGE_LABELS[current] ?? LANGUAGE_LABELS["zh-CN"]}
@@ -303,7 +361,7 @@ function LanguageSwitcher() {
               <button
                 key={lang}
                 onClick={() => { changeLanguage(lang); setOpen(false); }}
-                className="w-full text-left px-3 py-1.5 text-[13px] transition-colors hover:bg-gray-100/80 block"
+                className="w-full text-left px-3 py-1.5 text-[13px] transition-colors hover:bg-gray-100/80 block cursor-pointer"
                 style={{ 
                   color: lang === current ? "#3875D7" : "#333", 
                   fontWeight: lang === current ? 600 : 400 
@@ -715,11 +773,13 @@ export function LandingPage({ onEnter }: LandingPageProps) {
         touchAction: "pan-y",
         scrollbarWidth: "thin",
         scrollbarColor: "rgba(0,0,0,0.15) transparent",
-        transform: "scale(1.1)",
-        transformOrigin: "top center",
-        height: "90.9vh",
-        width: "90.9vw",
-        marginLeft: "4.55vw",
+        ...(isMobile ? {} : {
+          transform: "scale(1.1)",
+          transformOrigin: "top center",
+          height: "90.9vh",
+          width: "90.9vw",
+          marginLeft: "4.55vw",
+        }),
         backgroundImage: "linear-gradient(rgba(229,231,235,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(229,231,235,0.3) 1px, transparent 1px)",
         backgroundSize: "20px 20px",
       }}>
@@ -743,8 +803,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
           transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="flex flex-col items-center gap-5"
         >
-          <img src="/favicon.svg" alt="Kyo" className="w-[72px] h-[72px]"
-            style={{ filter: "drop-shadow(0 2px 8px rgba(63,156,255,0.25))" }} />
+          <KyoFace />
           <h1 className="text-[40px] md:text-[48px] font-bold tracking-tight text-gray-900 leading-none">Kyo</h1>
           <p className="text-[17px] text-gray-400 max-w-xs leading-relaxed">{t("landing.tagline")}</p>
           <motion.button onClick={onEnter} className="aqua-button primary mt-4 cursor-pointer"
