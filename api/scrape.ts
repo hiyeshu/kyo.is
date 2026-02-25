@@ -114,18 +114,18 @@ async function fetchFromLinkMeta(targetUrl: string): Promise<LinkMetaApiResponse
 
 // ─── AI 摘要生成（可选，Dify 不可用时降级） ──────────────────────────────────
 
-async function generateAiMeta(title: string, description: string, url: string): Promise<{ summary: string; tags: string[] }> {
+async function generateAiMeta(title: string, description: string, url: string, lang = "zh-CN"): Promise<{ summary: string; tags: string[] }> {
   if (!DIFY_API_KEY) {
     return { summary: description.slice(0, 200), tags: [] };
   }
 
   try {
-    const prompt = `为以下网页生成一句话中文摘要和3-5个标签。
-标题: ${title}
-描述: ${description}
+    const prompt = `Generate a one-sentence summary and 3-5 tags for this webpage. Summary and tags must be in ${lang} language.
+Title: ${title}
+Description: ${description}
 URL: ${url}
 
-请严格按 JSON 格式返回: {"summary":"...","tags":["...",]}`;
+Return JSON only: {"summary":"...","tags":["..."]}`;
 
     const res = await fetch(`${DIFY_API_BASE}/chat-messages`, {
       method: "POST",
@@ -171,8 +171,8 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const body = (await req.json()) as { url: string; no_cache?: boolean };
-    const { url, no_cache } = body;
+    const body = (await req.json()) as { url: string; no_cache?: boolean; lang?: string };
+    const { url, no_cache, lang } = body;
 
     if (!url || typeof url !== "string") {
       return new Response("Missing url", { status: 400 });
@@ -184,11 +184,12 @@ export default async function handler(req: Request) {
       return new Response("Invalid url", { status: 400 });
     }
 
-    // 1. 查 Supabase 缓存
+    // 1. 查 Supabase 缓存（只复用原始元数据，summary/tags 按用户语言重新生成）
     if (!no_cache) {
       const cached = await readCache(url);
       if (cached) {
-        return new Response(JSON.stringify(cached), {
+        const aiMeta = await generateAiMeta(cached.title, cached.description, url, lang);
+        return new Response(JSON.stringify({ ...cached, summary: aiMeta.summary, tags: aiMeta.tags }), {
           headers: { "Content-Type": "application/json" },
         });
       }
@@ -200,7 +201,7 @@ export default async function handler(req: Request) {
     const description = meta.description || "";
 
     // 3. 调 Dify AI 生成摘要和标签（带超时保护，失败则降级）
-    const aiMeta = await generateAiMeta(title, description, url);
+    const aiMeta = await generateAiMeta(title, description, url, lang);
 
     const result: ScrapeResult = {
       url,
@@ -215,7 +216,7 @@ export default async function handler(req: Request) {
       fetchedAt: Date.now(),
     };
 
-    // 4. 写入 LinkMeta 缓存（含 AI 摘要和标签）
+    // 4. 写入 LinkMeta 缓存（只存原始元数据，不存语言相关的 summary/tags）
     const cacheRow: Record<string, unknown> = {
       url,
       title,
@@ -224,8 +225,6 @@ export default async function handler(req: Request) {
       favicon_url: meta.favicon || null,
       site_name: meta.siteName || null,
       theme_color: meta.themeColor || null,
-      summary: aiMeta.summary,
-      tags: aiMeta.tags,
       fetched_at: new Date().toISOString(),
     };
     waitUntil(writeCache(cacheRow));

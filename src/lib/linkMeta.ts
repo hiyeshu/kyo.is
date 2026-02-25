@@ -7,6 +7,7 @@
 
 import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
 import type { LinkMeta } from "@/types/kyoItem";
+import i18n from "@/lib/i18n";
 
 /**
  * 三层缓存获取 URL 元数据
@@ -26,7 +27,7 @@ export async function fetchLinkMeta(url: string): Promise<LinkMeta> {
   const res = await fetch("/api/scrape", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, lang: i18n.language }),
   });
 
   if (!res.ok) throw new Error("Scrape failed");

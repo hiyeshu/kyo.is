@@ -33,7 +33,7 @@ export function useBookmarkBoard() {
   const store = useBookmarkStore();
   const currentTheme = useThemeStore((s) => s.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // ─── 搜索 ──────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -136,7 +136,7 @@ export function useBookmarkBoard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
-            { role: "system", content: `You are a link ingestion assistant. Return JSON only: {"title":"...","summary":"...","tags":["..."]}. Summary should be two or three sentences. No extra text.` },
+            { role: "system", content: `You are a link ingestion assistant. Return JSON only: {"title":"...","summary":"...","tags":["..."]}. Summary should be two or three sentences. Tags and summary must be in ${i18n.language} language. No extra text.` },
             { role: "user", content: parsedUrl.toString() },
           ],
           task: "link-ingest",

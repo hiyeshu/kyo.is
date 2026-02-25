@@ -652,7 +652,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="truncate">
-                          {q ? <HighlightText text={(item.text || "").slice(0, 120)} query={q} /> : (item.text || "").slice(0, 60)}
+                          {q ? <HighlightText text={item.text || ""} query={q} maxLen={120} /> : (item.text || "").slice(0, 60)}
                         </div>
                       </div>
                       {item.text && <CopyButton text={item.text} onCopied={() => onOpenChange(false)} />}
@@ -683,7 +683,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="truncate">
-                          {q ? <HighlightText text={note.content.slice(0, 120)} query={q} /> : note.content.slice(0, 60)}
+                          {q ? <HighlightText text={note.content} query={q} maxLen={120} /> : note.content.slice(0, 60)}
                         </div>
                       </div>
                       <CopyButton text={note.content} onCopied={() => onOpenChange(false)} />
