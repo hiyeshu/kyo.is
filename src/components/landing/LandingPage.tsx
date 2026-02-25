@@ -431,7 +431,7 @@ function ToastBanner({ phase }: { phase: "toast" | "done" }) {
           &#10003;
         </span>
       )}
-      <span className="text-[8px] md:text-[12px] font-medium tracking-tight opacity-90">
+      <span className="text-[9px] md:text-[12px] font-medium tracking-tight opacity-90">
         {phase === "toast"
           ? t("landing.demo.fetchingInfo", "正在获取网页信息...")
           : t("landing.demo.bookmarkAdded", "已添加到收藏")}
@@ -547,10 +547,10 @@ function SearchOverlay() {
                       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[8px] md:text-[11px] truncate leading-none" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
+                    <span className="text-[9px] md:text-[11px] truncate leading-none" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
                       {bm.title}
                     </span>
-                    <span className="text-[6px] md:text-[9px] truncate leading-none" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "#999" }}>
+                    <span className="text-[7px] md:text-[9px] truncate leading-none" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "#999" }}>
                       {bm.url}
                     </span>
                   </div>
