@@ -184,10 +184,16 @@ export default async function handler(req: Request) {
       return new Response("Invalid url", { status: 400 });
     }
 
-    // 1. 查 Supabase 缓存（只复用原始元数据，summary/tags 按用户语言重新生成）
+    // 1. 查 Supabase 缓存（有 summary/tags 直接用，没有则重新生成）
     if (!no_cache) {
       const cached = await readCache(url);
       if (cached) {
+        if (cached.summary && cached.tags?.length) {
+          return new Response(JSON.stringify(cached), {
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        // 缓存无 summary/tags，用缓存的原始元数据 + AI 重新生成
         const aiMeta = await generateAiMeta(cached.title, cached.description, url, lang);
         return new Response(JSON.stringify({ ...cached, summary: aiMeta.summary, tags: aiMeta.tags }), {
           headers: { "Content-Type": "application/json" },
@@ -216,7 +222,7 @@ export default async function handler(req: Request) {
       fetchedAt: Date.now(),
     };
 
-    // 4. 写入 LinkMeta 缓存（只存原始元数据，不存语言相关的 summary/tags）
+    // 4. 写入 LinkMeta 缓存（含 AI 摘要和标签）
     const cacheRow: Record<string, unknown> = {
       url,
       title,
@@ -225,6 +231,8 @@ export default async function handler(req: Request) {
       favicon_url: meta.favicon || null,
       site_name: meta.siteName || null,
       theme_color: meta.themeColor || null,
+      summary: aiMeta.summary,
+      tags: aiMeta.tags,
       fetched_at: new Date().toISOString(),
     };
     waitUntil(writeCache(cacheRow));
