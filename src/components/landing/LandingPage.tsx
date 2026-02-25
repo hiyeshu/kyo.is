@@ -810,7 +810,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
             whileHover={{ y: 2 }}
             whileTap={{ y: 3 }}
             transition={{ type: "spring", stiffness: 500, damping: 25 }}
-            style={{ fontSize: "16px", padding: "12px 48px", cursor: "pointer", borderRadius: "24px" }}>
+            style={{ fontSize: isMobile ? "18px" : "16px", padding: isMobile ? "16px 64px" : "12px 48px", cursor: "pointer", borderRadius: "24px" }}>
             {t("landing.cta")} →
           </motion.button>
         </motion.div>
