@@ -2760,9 +2760,9 @@
       "desktop": "Desktop",
       "search": "Search",
       "pasteTitle": "Paste. Saved.",
-      "pasteDesc": "Copy a link. Paste it on your desktop. That's it.",
+      "pasteDesc": "Copy a link. Paste it on your desktop. That's it",
       "searchTitle": "Just type what you need",
-      "searchDesc": "Your bookmarks, always within reach.",
+      "searchDesc": "Your bookmarks, always within reach",
       "searchPlaceholder": "Search...",
       "myBookmarks": "My Bookmarks",
       "fetchingInfo": "Fetching page info..",
@@ -2779,12 +2779,12 @@
       "statsNotes": "{{count}} Notes"
     },
     "features": {
-      "windowManager": { "title": "Windows", "desc": "Drag, resize, stack. Like a real desktop." },
-      "ai": { "title": "AI", "desc": "Got a question? Just ask." },
-      "bookmarks": { "title": "Bookmarks", "desc": "Keep the good stuff." },
-      "themes": { "title": "Themes", "desc": "Aqua, XP, 98. Pick your vibe." },
-      "fileSystem": { "title": "Files", "desc": "Create, edit, organize. Your virtual desk." },
-      "i18n": { "title": "Languages", "desc": "中文, English, 日本語, 한국어." }
+      "windowManager": { "title": "Windows", "desc": "Drag, resize, stack. Like a real desktop" },
+      "ai": { "title": "AI", "desc": "Got a question? Just ask" },
+      "bookmarks": { "title": "Bookmarks", "desc": "Keep the good stuff" },
+      "themes": { "title": "Themes", "desc": "Aqua, XP, 98. Pick your vibe" },
+      "fileSystem": { "title": "Files", "desc": "Create, edit, organize. Your virtual desk" },
+      "i18n": { "title": "Languages", "desc": "中文, English, 日本語, 한국어" }
     },
     "footer": "Kyo",
     "viewIntro": "View Introduction"

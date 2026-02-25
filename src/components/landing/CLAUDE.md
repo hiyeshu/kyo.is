@@ -3,9 +3,10 @@
 
 ## 成员清单
 
-LandingPage.tsx: 产品开屏页，单一大桌面 DemoShowcase 场景轮播（粘贴6s→搜索6s），Hero + Feature 便利贴 + Footer
+LandingPage.tsx: 产品开屏页，Dock 悬停放大（macOS 风格）+ 便利贴可拖动旋转 + DemoShowcase 场景轮播（粘贴6s→搜索6s），Hero + Feature 便利贴 + Footer
 
 ## 内部组件结构
+- DockIcon: Dock 图标组件，距离感应放大（useMotionValue/useTransform/useSpring），移动端不放大
 - MiniDesktop: 迷你桌面容器（MenuBar + 壁纸 + 桌面图标 + Dock），icons 接受 ReactNode
 - DemoShowcase: 场景轮播控制器，管理 paste/search 切换 + 文案 AnimatePresence
 - PasteOverlay: 场景A 浮层（⌘V 指示器 → toast → 书签已添加）
@@ -15,9 +16,10 @@ LandingPage.tsx: 产品开屏页，单一大桌面 DemoShowcase 场景轮播（�
 - LanguageSwitcher: 语言切换下拉菜单
 
 ## 依赖关系
-- 依赖 framer-motion AnimatePresence/motion 动画
+- 依赖 framer-motion AnimatePresence/motion/useMotionValue/useTransform/useSpring 动画
 - 依赖 react-i18next 国际化
 - 依赖 @/lib/i18n 语言配置
+- 依赖 @/hooks/useIsMobile 移动端检测
 - 被 App.tsx 根据 hasEnteredDesktop 状态条件渲染
 
 ## 设计约束

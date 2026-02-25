@@ -2735,9 +2735,9 @@
       "desktop": "デスクトップ",
       "search": "検索",
       "pasteTitle": "貼り付けるだけで保存",
-      "pasteDesc": "リンクをコピーして、デスクトップに貼り付ける。それだけ。",
+      "pasteDesc": "リンクをコピーして、デスクトップに貼り付ける。それだけ",
       "searchTitle": "探したいものを、打つだけ",
-      "searchDesc": "あなたのブックマーク、いつでも見つかる。",
+      "searchDesc": "あなたのブックマーク、いつでも見つかる",
       "searchPlaceholder": "検索...",
       "myBookmarks": "マイブックマーク",
       "fetchingInfo": "ページ情報を取得中..",
@@ -2754,12 +2754,12 @@
       "statsNotes": "{{count}} メモ"
     },
     "features": {
-      "windowManager": { "title": "ウィンドウ", "desc": "ドラッグ、リサイズ、重ねる。本物のデスクトップのように。" },
-      "ai": { "title": "AI", "desc": "聞きたいことがあれば、そのまま聞いて。" },
-      "bookmarks": { "title": "ブックマーク", "desc": "いいものを、残しておく。" },
-      "themes": { "title": "テーマ", "desc": "Aqua、XP、98。好きな姿を選んで。" },
-      "fileSystem": { "title": "ファイル", "desc": "作成、編集、整理。あなたの仮想デスク。" },
-      "i18n": { "title": "言語", "desc": "中文、English、日本語、한국어。" }
+      "windowManager": { "title": "ウィンドウ", "desc": "ドラッグ、リサイズ、重ねる。本物のデスクトップのように" },
+      "ai": { "title": "AI", "desc": "聞きたいことがあれば、そのまま聞いて" },
+      "bookmarks": { "title": "ブックマーク", "desc": "いいものを、残しておく" },
+      "themes": { "title": "テーマ", "desc": "Aqua、XP、98。好きな姿を選んで" },
+      "fileSystem": { "title": "ファイル", "desc": "作成、編集、整理。あなたの仮想デスク" },
+      "i18n": { "title": "言語", "desc": "中文、English、日本語、한국어" }
     },
     "footer": "Kyo",
     "viewIntro": "製品紹介を見る"

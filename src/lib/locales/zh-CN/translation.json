@@ -2752,9 +2752,9 @@
       "desktop": "桌面",
       "search": "搜索",
       "pasteTitle": "粘贴，就收藏了",
-      "pasteDesc": "复制一个链接，粘贴到桌面。就这样。",
+      "pasteDesc": "复制一个链接，粘贴到桌面。就这样",
       "searchTitle": "想找什么，打字就好",
-      "searchDesc": "你的收藏，随时能找到。",
+      "searchDesc": "你的收藏，随时能找到",
       "searchPlaceholder": "搜索...",
       "myBookmarks": "我的收藏",
       "fetchingInfo": "正在获取网页信息..",
@@ -2771,12 +2771,12 @@
       "statsNotes": "{{count}} 便签"
     },
     "features": {
-      "windowManager": { "title": "窗口", "desc": "拖拽、缩放、层叠。像真的桌面一样。" },
-      "ai": { "title": "AI", "desc": "有什么想问的，直接问。" },
-      "bookmarks": { "title": "收藏", "desc": "把好东西留下来。" },
-      "themes": { "title": "主题", "desc": "Aqua、XP、98。选你喜欢的样子。" },
-      "fileSystem": { "title": "文件", "desc": "创建、编辑、整理。你的虚拟桌面。" },
-      "i18n": { "title": "语言", "desc": "中文、English、日本語、한국어。" }
+      "windowManager": { "title": "窗口", "desc": "拖拽、缩放、层叠。像真的桌面一样" },
+      "ai": { "title": "AI", "desc": "有什么想问的，直接问" },
+      "bookmarks": { "title": "收藏", "desc": "把好东西留下来" },
+      "themes": { "title": "主题", "desc": "Aqua、XP、98。选你喜欢的样子" },
+      "fileSystem": { "title": "文件", "desc": "创建、编辑、整理。你的虚拟桌面" },
+      "i18n": { "title": "语言", "desc": "中文、English、日本語、한국어" }
     },
     "footer": "Kyo",
     "viewIntro": "查看产品介绍"

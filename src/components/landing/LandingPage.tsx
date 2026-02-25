@@ -1,15 +1,16 @@
 /**
- * [INPUT]: 依赖 @/lib/i18n、framer-motion、react-i18next
+ * [INPUT]: 依赖 @/lib/i18n、framer-motion（motion/useMotionValue/useTransform/useSpring）、react-i18next、@/hooks/useIsMobile
  * [OUTPUT]: 对外提供 LandingPage 组件
- * [POS]: components/landing 的产品开屏页，单一大桌面 DemoShowcase 场景轮播（粘贴→搜索），文案 AnimatePresence 跟随切换
+ * [POS]: components/landing 的产品开屏页，Dock 悬停放大 + 便利贴可拖动旋转 + DemoShowcase 场景轮播
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS, changeLanguage } from "@/lib/i18n";
 import type { SupportedLanguage } from "@/lib/i18n";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -66,6 +67,81 @@ const STICKY_COLORS: Record<string, { bg: string; border: string }> = {
   pink:   { bg: "#ffd0e0", border: "#f99bbf" },
 };
 
+// ─── Dock 悬停放大常量 ──────────────────────────────────────────────────────
+const DOCK_MAGNIFY_DISTANCE = 80;   // 影响半径 px
+const DOCK_BASE_SIZE = 32;          // 基础尺寸 px
+const DOCK_MAX_SIZE = 48;           // 最大尺寸 px (1.5x)
+const DOCK_MOBILE_SIZE = 16;        // 移动端固定尺寸 px
+
+// ─── 便利贴旋转角度 ─────────────────────────────────────────────────────────
+const STICKY_ROTATIONS = [-2.5, 1.8, -1.2, 3.0];
+
+// ─── useDraggable：原生 pointer 拖拽，不受布局重排影响 ─────────────────────
+
+function useDraggable(enabled: boolean) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const [dragging, setDragging] = useState(false);
+  const origin = useRef({ x: 0, y: 0 });
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    if (!enabled) return;
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    origin.current = { x: e.clientX - x.get(), y: e.clientY - y.get() };
+    setDragging(true);
+  }, [enabled, x, y]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging) return;
+    x.set(e.clientX - origin.current.x);
+    y.set(e.clientY - origin.current.y);
+  }, [dragging, x, y]);
+
+  const onPointerUp = useCallback(() => {
+    setDragging(false);
+  }, []);
+
+  return { x, y, dragging, handlers: { onPointerDown, onPointerMove, onPointerUp } };
+}
+
+// ─── DockIcon 组件：距离感应放大 ────────────────────────────────────────────
+
+function DockIcon({ src, mouseX, isMobile }: {
+  src: string;
+  mouseX: import("framer-motion").MotionValue<number>;
+  isMobile: boolean;
+}) {
+  const ref = useRef<HTMLImageElement>(null);
+
+  const distance = useTransform(mouseX, (val) => {
+    const bounds = ref.current?.getBoundingClientRect();
+    if (!bounds) return Infinity;
+    return val - (bounds.left + bounds.width / 2);
+  });
+
+  const targetSize = useTransform(distance, (dist) => {
+    if (isMobile) return DOCK_MOBILE_SIZE;
+    const abs = Math.abs(dist);
+    if (abs > DOCK_MAGNIFY_DISTANCE) return DOCK_BASE_SIZE;
+    const t = 1 - abs / DOCK_MAGNIFY_DISTANCE;
+    return DOCK_BASE_SIZE + t * (DOCK_MAX_SIZE - DOCK_BASE_SIZE);
+  });
+
+  const size = useSpring(targetSize, { mass: 0.15, stiffness: 170, damping: 18 });
+
+  return (
+    <motion.img
+      ref={ref}
+      src={src}
+      alt=""
+      className="drop-shadow-sm"
+      style={{ width: size, height: size }}
+      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+    />
+  );
+}
+
 // ─── Animation ──────────────────────────────────────────────────────────────
 
 const fadeUp = {
@@ -104,6 +180,8 @@ function MiniDesktop({ children, icons, toast }: {
   toast?: React.ReactNode;
 }) {
   const { i18n } = useTranslation();
+  const isMobile = useIsMobile();
+  const mouseX = useMotionValue(Infinity);
   // 语言 → locale 映射，让日期跟随 app 语言
   const localeMap: Record<string, string> = {
     "zh-CN": "zh-CN", "zh-TW": "zh-TW", en: "en-US", ja: "ja-JP", ko: "ko-KR",
@@ -154,7 +232,7 @@ function MiniDesktop({ children, icons, toast }: {
       />
 
       {/* ── Desktop Icons (right column) ── */}
-      <div className="absolute top-[22px] md:top-[26px] right-[4px] md:right-[8px] z-10 flex flex-col items-center gap-1 md:gap-2">
+      <div className="absolute top-[22px] md:top-[26px] right-[4px] md:right-[8px] z-10 flex flex-col items-center gap-1 md:gap-4">
         {icons}
       </div>
 
@@ -165,18 +243,20 @@ function MiniDesktop({ children, icons, toast }: {
 
       {/* ── Dock ── */}
       <div
-        className="absolute bottom-[4px] md:bottom-[10px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-[4px] md:gap-[10px] px-[6px] md:px-[12px] h-[24px] md:h-[44px]"
+        className="absolute bottom-[4px] md:bottom-[10px] left-1/2 -translate-x-1/2 z-20 flex items-end gap-[4px] md:gap-[10px] px-[6px] md:px-[12px] h-[24px] md:h-[44px]"
+        onMouseMove={(e) => mouseX.set(e.clientX)}
+        onMouseLeave={() => mouseX.set(Infinity)}
         style={{
           background: "rgba(255,255,255,0.25)",
           backdropFilter: "blur(12px)",
           borderRadius: "8px",
           border: "0.5px solid rgba(255,255,255,0.4)",
           boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+          paddingBottom: isMobile ? "4px" : "6px",
         }}
       >
         {DOCK_ICONS.map((icon, i) => (
-          <img key={i} src={icon} alt="" className="w-[16px] h-[16px] md:w-[32px] md:h-[32px] drop-shadow-sm"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          <DockIcon key={i} src={icon} mouseX={mouseX} isMobile={isMobile} />
         ))}
       </div>
     </div>
@@ -250,6 +330,8 @@ const SCENE_DURATION = 6000;
 
 function DemoShowcase() {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const { x, y, dragging, handlers } = useDraggable(!isMobile);
   const [scene, setScene] = useState<Scene>("paste");
   const [pastePhase, setPastePhase] = useState<PastePhase>("idle");
   const [pasteIdx, setPasteIdx] = useState(0);
@@ -294,15 +376,25 @@ function DemoShowcase() {
             </h3>
             <p className="text-[14px] text-gray-400 leading-relaxed">
               {scene === "paste"
-                ? t("landing.demo.pasteDesc", "复制一个链接，粘贴到桌面。就这样。")
-                : t("landing.demo.searchDesc", "你的收藏，随时能找到。")}
+                ? t("landing.demo.pasteDesc", "复制一个链接，粘贴到桌面。就这样")
+                : t("landing.demo.searchDesc", "你的收藏，随时能找到")}
             </p>
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* ── 大桌面容器 ── */}
-      <div className="w-full">
+      <motion.div
+        className="w-full"
+        style={{
+          x, y,
+          cursor: isMobile ? undefined : dragging ? "grabbing" : "grab",
+        }}
+        animate={dragging ? { scale: 0.98, rotate: -1 } : { scale: 1, rotate: 0 }}
+        whileHover={isMobile ? undefined : { y: -3, scale: 1.01 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        {...handlers}
+      >
         <MiniDesktop
           icons={
             scene === "paste"
@@ -321,7 +413,7 @@ function DemoShowcase() {
               : <SearchOverlay key="search" />}
           </AnimatePresence>
         </MiniDesktop>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -379,9 +471,9 @@ function PasteIcons({ showNewIcon, bookmark }: {
 // 单个桌面图标：移动端 32px，桌面端 48px
 function DesktopIcon({ label, icon, isApp }: { label: string; icon: string; isApp?: boolean }) {
   return (
-    <div className="flex flex-col items-center w-[40px] md:w-[64px]">
+    <div className="flex flex-col items-center w-[36px] md:w-[68px]">
       <div
-        className="w-[28px] h-[28px] md:w-[48px] md:h-[48px] flex items-center justify-center"
+        className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] flex items-center justify-center"
         style={isApp ? {} : {
           background: "linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%)",
           borderRadius: "22%",
@@ -390,7 +482,7 @@ function DesktopIcon({ label, icon, isApp }: { label: string; icon: string; isAp
       >
         <img
           src={icon} alt=""
-          className={isApp ? "w-[28px] h-[28px] md:w-[48px] md:h-[48px] drop-shadow-md" : "w-[18px] h-[18px] md:w-[32px] md:h-[32px]"}
+          className={isApp ? "w-[32px] h-[32px] md:w-[44px] md:h-[44px] drop-shadow-md" : "w-[24px] h-[24px] md:w-[32px] md:h-[32px]"}
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
       </div>
@@ -535,22 +627,22 @@ function SearchOverlay() {
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.06, duration: 0.2 }}
-                  className="flex items-center gap-1.5 md:gap-2.5 px-1 md:px-2 py-[2px] md:py-1.5 rounded-[4px] md:rounded-[6px]"
+                  className="flex items-center gap-2 md:gap-2.5 px-1.5 md:px-2 py-[4px] md:py-1.5 rounded-[5px] md:rounded-[6px]"
                   style={{ background: isSelected ? SELECTION_BLUE : "transparent" }}
                 >
                   <div
-                    className="w-[10px] h-[10px] md:w-[16px] md:h-[16px] rounded-[3px] md:rounded-[4px] flex items-center justify-center flex-shrink-0"
+                    className="w-[14px] h-[14px] md:w-[16px] md:h-[16px] rounded-[3px] md:rounded-[4px] flex items-center justify-center flex-shrink-0"
                     style={{ background: isSelected ? "rgba(255,255,255,0.95)" : "#f0f0f0" }}
                   >
-                    <img src={bm.favicon} alt="" className="w-[7px] h-[7px] md:w-[10px] md:h-[10px]"
+                    <img src={bm.favicon} alt="" className="w-[9px] h-[9px] md:w-[10px] md:h-[10px]"
                       style={isSelected ? {} : {}}
                       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[9px] md:text-[11px] truncate leading-none" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
+                    <span className="text-[10px] md:text-[11px] truncate leading-none" style={{ color: isSelected ? "#fff" : "#333", fontFamily: AQUA_FONT }}>
                       {bm.title}
                     </span>
-                    <span className="text-[7px] md:text-[9px] truncate leading-none" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "#999" }}>
+                    <span className="text-[8px] md:text-[9px] truncate leading-none" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "#999" }}>
                       {bm.url}
                     </span>
                   </div>
@@ -564,10 +656,56 @@ function SearchOverlay() {
   );
 }
 
+// ─── StickyCard：独立便利贴，原生 pointer 拖拽 ─────────────────────────────
+
+function StickyCard({ feature, index, isMobile }: {
+  feature: typeof FEATURES[number];
+  index: number;
+  isMobile: boolean;
+}) {
+  const { t } = useTranslation();
+  const c = STICKY_COLORS[feature.color];
+  const { x, y, dragging, handlers } = useDraggable(!isMobile);
+
+  return (
+    <motion.div custom={index} variants={fadeUp}
+      className="z-50 relative"
+      style={{
+        x, y,
+        cursor: isMobile ? undefined : dragging ? "grabbing" : "grab",
+        rotate: STICKY_ROTATIONS[index],
+      }}
+      whileHover={isMobile ? undefined : { y: -4, rotate: 0, scale: 1.03 }}
+      animate={dragging ? { scale: 1.05, rotate: 0, boxShadow: "0 8px 24px rgba(0,0,0,0.2)" } : {}}
+      {...handlers}
+    >
+      <div
+        className="flex flex-col overflow-hidden md:aspect-[5/4]"
+        style={{
+          backgroundColor: c.bg,
+          border: `1px solid ${c.border}`,
+          borderRadius: "1px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+          minHeight: "110px",
+        }}
+      >
+        <div className="flex items-center h-[14px] px-[3px]" style={{ borderBottom: `1px solid ${c.border}` }}>
+          <div className="w-[9px] h-[9px]" style={{ border: `1px solid ${c.border}`, backgroundColor: c.bg }} />
+        </div>
+        <div className="flex-1 flex flex-col justify-center px-3 py-4">
+          <h3 className="text-[13px] font-semibold text-black mb-1" style={{ fontFamily: AQUA_FONT }}>{t(`landing.features.${feature.key}.title`)}</h3>
+          <p className="text-[11px] text-black/50 leading-relaxed" style={{ fontFamily: AQUA_FONT }}>{t(`landing.features.${feature.key}.desc`)}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 export function LandingPage({ onEnter }: LandingPageProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   return (
     <div className="fixed inset-0 bg-white text-gray-900 overflow-y-auto overscroll-none landing-scrollbar select-text selection:bg-[#B3D7FF] origin-top"
@@ -582,6 +720,8 @@ export function LandingPage({ onEnter }: LandingPageProps) {
         height: "90.9vh",
         width: "90.9vw",
         marginLeft: "4.55vw",
+        backgroundImage: "linear-gradient(rgba(229,231,235,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(229,231,235,0.3) 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
       }}>
 
       {/* ── nav ── */}
@@ -607,10 +747,13 @@ export function LandingPage({ onEnter }: LandingPageProps) {
             style={{ filter: "drop-shadow(0 2px 8px rgba(63,156,255,0.25))" }} />
           <h1 className="text-[40px] md:text-[48px] font-bold tracking-tight text-gray-900 leading-none">Kyo</h1>
           <p className="text-[17px] text-gray-400 max-w-xs leading-relaxed">{t("landing.tagline")}</p>
-          <button onClick={onEnter} className="aqua-button primary mt-4 cursor-pointer"
+          <motion.button onClick={onEnter} className="aqua-button primary mt-4 cursor-pointer"
+            whileHover={{ y: 2 }}
+            whileTap={{ y: 3 }}
+            transition={{ type: "spring", stiffness: 500, damping: 25 }}
             style={{ fontSize: "16px", padding: "12px 48px", cursor: "pointer", borderRadius: "24px" }}>
             {t("landing.cta")} →
-          </button>
+          </motion.button>
         </motion.div>
       </section>
 
@@ -620,49 +763,24 @@ export function LandingPage({ onEnter }: LandingPageProps) {
       </section>
 
       {/* ── features 2×2 sticky notes ── */}
-      <section className="max-w-3xl mx-auto px-6 pb-24">
+      <section className="max-w-md mx-auto px-6 pb-24">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }}
           transition={{ staggerChildren: 0.08 }} className="grid grid-cols-2 gap-4">
-          {FEATURES.map((f, i) => {
-            const c = STICKY_COLORS[f.color];
-            return (
-              <motion.div key={f.key} custom={i} variants={fadeUp}>
-                <div
-                  className="flex flex-col overflow-hidden"
-                  style={{
-                    backgroundColor: c.bg,
-                    border: `1px solid ${c.border}`,
-                    borderRadius: "1px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-                    minHeight: "110px",
-                  }}
-                >
-                  {/* sticky title bar */}
-                  <div className="flex items-center h-[14px] px-[3px]" style={{ borderBottom: `1px solid ${c.border}` }}>
-                    <div className="w-[9px] h-[9px]" style={{ border: `1px solid ${c.border}`, backgroundColor: c.bg }} />
-                  </div>
-                  {/* content */}
-                  <div className="flex-1 flex flex-col justify-center px-3 py-4">
-                    <h3 className="text-[13px] font-semibold text-black mb-1" style={{ fontFamily: AQUA_FONT }}>{t(`landing.features.${f.key}.title`)}</h3>
-                    <p className="text-[11px] text-black/50 leading-relaxed" style={{ fontFamily: AQUA_FONT }}>{t(`landing.features.${f.key}.desc`)}</p>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+          {FEATURES.map((f, i) => (
+            <StickyCard key={f.key} feature={f} index={i} isMobile={isMobile} />
+          ))}
         </motion.div>
       </section>
 
       {/* ── footer ── */}
-      <footer className="border-t border-gray-100/80 py-6">
-        <div className="max-w-3xl mx-auto px-6 text-center text-[11px] text-gray-300">
-          <a
-            href="https://github.com/hiyeshu/kyo.is"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-gray-500 transition-colors"
-            style={{ fontFamily: AQUA_FONT }}
-          >
+      <footer className="py-10">
+        <div className="max-w-3xl mx-auto px-6 flex items-center justify-center gap-4 text-[11px] text-gray-300" style={{ fontFamily: AQUA_FONT }}>
+          <a href="/docs/overview" className="hover:text-gray-500 transition-colors">
+            About
+          </a>
+          <span>·</span>
+          <a href="https://github.com/hiyeshu/kyo.is" target="_blank" rel="noopener noreferrer"
+            className="hover:text-gray-500 transition-colors">
             GitHub
           </a>
         </div>
