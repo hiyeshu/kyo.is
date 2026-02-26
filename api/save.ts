@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 _utils 的 Supabase 工具，接收 POST { type, url?, title?, summary?, favicon?, text?, tags? }
- * [OUTPUT]: 返回创建的 kyo_item 记录
+ * [OUTPUT]: 返回创建或更新的 kyo_item 记录
  * [POS]: api/ 的数据写入端点，被前端书签/便签保存逻辑消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -23,6 +23,32 @@ export default async function handler(req: Request) {
 
   if (!type || !["bookmark", "note"].includes(type)) {
     return error("type must be 'bookmark' or 'note'");
+  }
+
+  // 书签按 URL 去重：已存在则更新，不存在则插入
+  if (type === "bookmark" && url) {
+    const { data: existing } = await client
+      .from("kyo_items")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("url", url)
+      .maybeSingle();
+
+    if (existing) {
+      const { data, error: dbErr } = await client
+        .from("kyo_items")
+        .update({
+          title: title || undefined,
+          summary: summary || undefined,
+          favicon: favicon || undefined,
+          tags: tags?.length ? tags : undefined,
+        })
+        .eq("id", existing.id)
+        .select()
+        .single();
+      if (dbErr) return error(dbErr.message, 500);
+      return json(data, 200);
+    }
   }
 
   const { data, error: dbErr } = await client

@@ -2604,6 +2604,7 @@
       "enter": "확인"
     },
     "loading": {
+      "default": "로딩 중...",
       "openingAppletStore": "애플릿 스토어 여는 중...",
       "openingSharedApplet": "공유된 애플릿 여는 중...",
       "openingSharedIELink": "공유된 Internet Explorer 링크 여는 중...",

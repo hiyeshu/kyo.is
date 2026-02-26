@@ -468,7 +468,7 @@ export function BookmarkBoardApp({
                     disabled={!h.addUrl.trim() || h.isAiCreating}
                     className={cn(!isMacTheme && "h-7", isXpTheme && "font-['Pixelated_MS_Sans_Serif',Arial] text-[11px]")}
                   >
-                    {h.isAiCreating ? t("common.loading", "载入中...") : t("apps.bookmarks.add", "新增")}
+                    {h.isAiCreating ? t("common.loading.default", "载入中...") : t("apps.bookmarks.add", "新增")}
                   </Button>
                 </DialogFooter>
               </DialogBody>

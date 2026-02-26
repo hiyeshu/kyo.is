@@ -2615,6 +2615,7 @@
       "enter": "確定"
     },
     "loading": {
+      "default": "載入中...",
       "openingAppletStore": "正在開啟小程式商店...",
       "openingSharedApplet": "正在開啟共享小程式...",
       "openingSharedIELink": "正在開啟共享 Internet Explorer 連結...",

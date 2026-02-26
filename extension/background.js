@@ -1,7 +1,7 @@
 /**
  * [INPUT]: chrome.* APIs, lib/storage.js, lib/auth.js, lib/sync.js
  * [OUTPUT]: Service Worker 入口，注册事件监听器
- * [POS]: extension 的核心控制器，图标点击 toggle 收藏、右键菜单、快捷键、图标状态、定时同步
+ * [POS]: extension 的核心控制器，图标点击收藏（只收藏不取消）、右键菜单、快捷键、图标状态、定时同步
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -20,56 +20,39 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create("kyo-sync", { periodInMinutes: 5 });
 });
 
-// ─── 点击图标：toggle 收藏状态 ──────────────────────────────────────────────
+// ─── 核心动作：只收藏，不取消（取消在 kyo.is 桌面操作）─────────────────────
 
-chrome.action.onClicked.addListener(async (tab) => {
+async function handleSaveAction(tab) {
   if (!tab?.url || tab.url.startsWith("chrome://") || tab.url.startsWith("chrome-extension://")) return;
-
   const existing = await storage.getByUrl(tab.url);
-  if (existing) {
-    // 取消收藏
-    await storage.remove(existing.id);
-    await flashBadge(tab.id, "✕", "#999");
-    await updateIcon(tab.url);
-    sync.deleteBookmark(existing);
-  } else {
-    // 收藏
-    await flashBadge(tab.id, "✓", "#00C853");
-    await saveBookmark(tab.url, tab.title);
-  }
-});
+  if (existing) return; // 已收藏 → 静默忽略
+  await flashBadge(tab.id, "✓", "#00C853");
+  const bookmark = await saveBookmark(tab.url, tab.title);
+  if (bookmark) notifyNewtab(bookmark);
+}
+
+chrome.action.onClicked.addListener(handleSaveAction);
 
 // ─── 右键菜单处理 ────────────────────────────────────────────────────────────
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  let bookmark;
   if (info.menuItemId === "kyo-save-page") {
-    await saveBookmark(tab.url, tab.title);
+    bookmark = await saveBookmark(tab.url, tab.title);
   } else if (info.menuItemId === "kyo-save-link") {
-    await saveBookmark(info.linkUrl, info.linkUrl);
+    bookmark = await saveBookmark(info.linkUrl, info.linkUrl);
   } else if (info.menuItemId === "kyo-save-selection") {
-    await saveBookmark(tab.url, tab.title, info.selectionText);
+    bookmark = await saveBookmark(tab.url, tab.title, info.selectionText);
   }
+  if (bookmark) notifyNewtab(bookmark);
 });
 
 // ─── 快捷键 Alt+K ────────────────────────────────────────────────────────────
 
 chrome.commands.onCommand.addListener(async (command) => {
-  if (command === "save-bookmark") {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.url) {
-      // 快捷键也走 toggle 逻辑
-      const existing = await storage.getByUrl(tab.url);
-      if (existing) {
-        await storage.remove(existing.id);
-        await flashBadge(tab.id, "✕", "#999");
-        await updateIcon(tab.url);
-        sync.deleteBookmark(existing);
-      } else {
-        await flashBadge(tab.id, "✓", "#00C853");
-        await saveBookmark(tab.url, tab.title);
-      }
-    }
-  }
+  if (command !== "save-bookmark") return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab) await handleSaveAction(tab);
 });
 
 // ─── Tab 切换时更新图标状态 ──────────────────────────────────────────────────
@@ -100,6 +83,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     handleAuthSession(msg.session).then(() => sendResponse({ ok: true }));
     return true;
   }
+  if (msg.action === "get-bookmarks") {
+    storage.getAll().then((items) => sendResponse({ items }));
+    return true;
+  }
 });
 
 async function handleAuthSession(session) {
@@ -112,10 +99,10 @@ async function handleAuthSession(session) {
 }
 
 // ─── 核心：保存书签 ─────────────────────────────────────────────────────────
-// 流程：存本地 → 更新图标 → 增强元数据 → 推送云端（顺序执行，只推一次）
+// 流程：存本地 → 立即推云端 → 异步 enrich 后再补推一次
 
 async function saveBookmark(url, title, note) {
-  if (!url || url.startsWith("chrome://") || url.startsWith("chrome-extension://")) return;
+  if (!url || url.startsWith("chrome://") || url.startsWith("chrome-extension://")) return null;
 
   const bookmark = await storage.add({
     title: title || url,
@@ -124,10 +111,18 @@ async function saveBookmark(url, title, note) {
   });
 
   await updateIcon(url);
-  await enrichBookmark(bookmark);
+  await sync.pushBookmark(bookmark);
 
-  const latest = await storage.getByUrl(url);
-  await sync.pushBookmark(latest || bookmark);
+  // 异步增强元数据，完成后补推更新
+  enrichBookmark(bookmark).then(async () => {
+    const latest = await storage.getByUrl(url);
+    if (latest) {
+      sync.pushBookmark(latest);
+      notifyNewtab(latest);
+    }
+  });
+
+  return bookmark;
 }
 
 // ─── 元数据增强（纯本地操作）────────────────────────────────────────────────
@@ -178,4 +173,10 @@ async function flashBadge(tabId, text, color) {
     const tab = await chrome.tabs.get(tabId).catch(() => null);
     if (tab?.url) await updateIcon(tab.url);
   }, 1500);
+}
+
+// ─── 通知 newtab 页面（书签桥接到 kyo.is iframe）────────────────────────────
+
+function notifyNewtab(bookmark) {
+  chrome.runtime.sendMessage({ action: "bookmark-added", bookmark }).catch(() => {});
 }

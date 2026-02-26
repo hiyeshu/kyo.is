@@ -2,14 +2,14 @@
 > L2 | 父级: /CLAUDE.md
 
 Kyo Chrome Extension — Manifest V3
-新标签页 iframe 嵌入 kyo.is + 点击图标 toggle 收藏 + postMessage 认证桥接
+新标签页 iframe 嵌入 kyo.is + 点击图标只收藏（不取消）+ postMessage 认证桥接
 
 ## 成员清单
 
-manifest.json: Manifest V3 配置，无 popup，点击图标触发 onClicked toggle
+manifest.json: Manifest V3 配置，无 popup，点击图标触发 onClicked 只收藏
 newtab.html: 新标签页，全屏 iframe 嵌入 kyo.is，加载 newtab-bridge.js（MV3 禁止 inline script）
-newtab-bridge.js: auth 桥接脚本，握手 → 中继 session（从 newtab.html 外链，绕过 CSP）
-background.js: Service Worker 入口，图标 toggle、右键菜单、快捷键、图标状态、定时同步、auth session 接收
+newtab-bridge.js: 双向桥接脚本，auth 中继（kyo.is→background）+ 书签中继（background→kyo.is iframe）
+background.js: Service Worker 入口，图标只收藏（不取消）、右键菜单、快捷键、图标状态、定时同步、auth session 接收
 lib/storage.js: chrome.storage.local 书签 CRUD，_synced 标记追踪同步状态
 lib/auth.js: session 读取 + token 自动刷新（session 由 newtab iframe 桥接写入，不再自己做 OAuth）
 lib/sync.js: Supabase REST API 直连云同步，push/delete/pull/initialSync
@@ -21,9 +21,11 @@ icons/: 插件图标 16/48/128 PNG
 认证：kyo.is (iframe) → postMessage → newtab.html 中继 → background.js 存 session
      握手协议：newtab 先发 kyo:handshake → kyo.is 验证 chrome-extension:// 来源 → 回传 kyo:auth
 
-收藏：用户点击图标 → background onClicked → toggle 本地 → 更新图标 → 异步 sync 云端
-     已收藏 → remove 本地 + delete 云端
-     未收藏 → add 本地 + enrich 元数据 + push 云端
+收藏：用户点击图标/Alt+K/右键菜单 → handleSaveAction → 已收藏则静默忽略 → 未收藏则存本地 + enrich + push 云端
+     取消收藏只在 kyo.is 桌面操作，插件不提供取消入口
+
+书签桥接（无需登录）：background 收藏成功 → chrome.tabs.sendMessage → newtab-bridge 中继 → postMessage kyo:bookmark-add → kyo.is useBookmarkStore.addBookmark
+     enrich 完成后再推一次更新版本
 
 首次安装：本地收藏（_synced: false）→ 用户在 newtab 登录 → initialSync 上传所有未同步书签
 ```

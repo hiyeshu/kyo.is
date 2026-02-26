@@ -17,6 +17,7 @@
       "askKyo": "Ask Kyo"
     },
     "loading": {
+      "default": "Loading...",
       "openingAppletStore": "Opening Applet Store...",
       "openingSharedIELink": "Opening shared Internet Explorer link...",
       "openingSharedApplet": "Opening shared applet...",

@@ -211,7 +211,7 @@ export function AddWebsiteDialog({
             }}
           >
             {isLoading 
-              ? t("common.loading", "新增中...") 
+              ? t("common.loading.default", "新增中...")
               : isMacTheme 
                 ? t("common.desktop.addToDock", "加入 Dock") 
                 : t("common.desktop.addToDesktop", "加入桌面")}

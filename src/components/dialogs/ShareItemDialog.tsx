@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useTranslation } from "react-i18next";
 
 interface ShareItemDialogProps {
@@ -260,6 +261,9 @@ export function ShareItemDialog({
           }}
           onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
         >
+          <VisuallyHidden>
+            <DialogTitle>{t("common.dialog.share.shareItem", { itemType: translatedItemType })}</DialogTitle>
+          </VisuallyHidden>
           <div
             className="title-bar"
             style={currentTheme === "xp" ? { minHeight: "30px" } : undefined}

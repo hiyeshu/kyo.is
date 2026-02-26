@@ -2621,6 +2621,7 @@
       "enter": "确定"
     },
     "loading": {
+      "default": "载入中...",
       "openingAppletStore": "正在开启小程序商店...",
       "openingSharedApplet": "正在开启共享小程序...",
       "openingSharedIELink": "正在开启共享 Internet Explorer 连结...",

@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 @/lib/supabase 的客户端，依赖 useSyncStore 的 initialSync / startRealtime / stopRealtime
+ * [INPUT]: 依赖 @/lib/supabase 的客户端，依赖 useSyncStore 的 initialSync / startRealtime / stopRealtime，依赖 useBookmarkStore 的 addBookmark / getBookmarkByUrl
  * [OUTPUT]: 对外提供 useAuthStore — user / loading / signInWithGoogle / signOut
- * [POS]: stores/ 的认证状态管理，被 App.tsx 和 AppleMenu 消费
+ * [POS]: stores/ 的认证状态管理，被 App.tsx 和 AppleMenu 消费，同时承载 extension iframe 桥接（auth + 书签）
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -9,6 +9,7 @@ import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useSyncStore } from "./useSyncStore";
+import { useBookmarkStore } from "./useBookmarkStore";
 
 const SYNC_DONE_KEY = "kyo:sync-done-session";
 
@@ -21,12 +22,33 @@ let extensionOrigin: string | null = null;
 function initExtensionBridge() {
   if (window.parent === window) return; // 不在 iframe 中
   window.addEventListener("message", (e) => {
-    if (e.data?.type === "kyo:handshake" && e.origin.startsWith("chrome-extension://")) {
+    if (!e.origin.startsWith("chrome-extension://")) return;
+
+    // 握手：记录来源，回传 session
+    if (e.data?.type === "kyo:handshake") {
       extensionOrigin = e.origin;
-      // 握手成功，立即发送当前 session
       supabase.auth.getSession().then(({ data }) => {
         postSessionToExtension(data.session);
       });
+    }
+
+    // 书签桥接：插件收藏 → 写入本地 store（无需登录）
+    if (e.data?.type === "kyo:bookmark-add" && e.data.bookmark) {
+      const bm = e.data.bookmark;
+      const store = useBookmarkStore.getState();
+      if (!store.getBookmarkByUrl(bm.url)) {
+        store.addBookmark(bm.title, bm.url, bm.favicon, { onDesktop: true });
+      }
+    }
+
+    // 全量书签同步：newtab 加载时从插件拉取所有书签
+    if (e.data?.type === "kyo:bookmark-sync" && Array.isArray(e.data.bookmarks)) {
+      const store = useBookmarkStore.getState();
+      for (const bm of e.data.bookmarks) {
+        if (bm.url && !store.getBookmarkByUrl(bm.url)) {
+          store.addBookmark(bm.title, bm.url, bm.favicon, { onDesktop: bm.onDesktop ?? true });
+        }
+      }
     }
   });
 }
