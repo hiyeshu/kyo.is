@@ -15,6 +15,7 @@ src/ - 前端源码 (8 子目录: apps, components, config, hooks, lib, stores, 
   types/ - TypeScript 类型定义
 public/ - 静态资源 (图标、壁纸、音效、字体)
 src-tauri/ - Tauri 桌面应用配置 (Rust 后端)
+extension/ - Chrome Extension (Manifest V3, 新标签页 + 一键收藏 + 云同步)
 scripts/ - 构建与开发脚本 (图标生成、文档生成、i18n 工具)
 tests/ - 测试套件 (API 测试、功能测试)
 docs/ - 项目文档 (架构、API 参考、开发指南)

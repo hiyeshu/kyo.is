@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "Kyo",
+  "version": "0.1.0",
+  "description": "Your bookmarks, on a desktop. Paste to save, type to find.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png"
+    },
+    "default_popup": "popup.html",
+    "default_title": "Kyo — Save to bookmarks"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "permissions": [
+    "storage",
+    "identity",
+    "contextMenus",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://kyo.is/*"
+  ],
+  "commands": {
+    "save-bookmark": {
+      "suggested_key": {
+        "default": "Alt+K"
+      },
+      "description": "Save current page to Kyo"
+    }
+  },
+  "oauth2": {
+    "client_id": "",
+    "scopes": ["openid", "email", "profile"]
+  }
+}

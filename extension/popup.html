@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 280px;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      color: #1d1d1f;
+      background: #fff;
+    }
+
+    /* ── 头部 ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .header img { width: 24px; height: 24px; }
+    .header span { font-size: 14px; font-weight: 600; }
+
+    /* ── 状态区 ── */
+    .status {
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .status-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 10px;
+      font-size: 18px;
+    }
+    .status-icon.saved { background: #f0f0f0; }
+    .status-icon.unsaved { background: #f5f5f5; color: #999; }
+    .status-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .status-desc { font-size: 12px; color: #999; }
+
+    /* ── 按钮 ── */
+    .actions { padding: 0 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .btn {
+      display: block; width: 100%; padding: 8px 0;
+      border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; text-align: center;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #1d1d1f; color: #fff; }
+    .btn-secondary { background: #f5f5f5; color: #333; }
+
+    /* ── 底部 ── */
+    .footer {
+      padding: 10px 16px;
+      border-top: 1px solid #f0f0f0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-user { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #999; }
+    .footer-user img { width: 16px; height: 16px; border-radius: 50%; }
+    .footer-sync { font-size: 11px; color: #28C840; }
+    .footer-login { font-size: 11px; color: #3F9CFF; cursor: pointer; border: none; background: none; }
+    .footer-login:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icons/icon-48.png" alt="Kyo">
+    <span>Kyo</span>
+  </div>
+
+  <div class="status" id="status">
+    <!-- JS 填充 -->
+  </div>
+
+  <div class="actions" id="actions">
+    <!-- JS 填充 -->
+  </div>
+
+  <div class="footer" id="footer">
+    <!-- JS 填充 -->
+  </div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>
