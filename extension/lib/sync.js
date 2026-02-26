@@ -62,22 +62,19 @@ export async function pullAll() {
   if (!(await isLoggedIn())) return [];
 
   const result = await authFetch("/sync", { method: "GET" });
-  if (!result?.items) return [];
+  if (!result?.bookmarks) return [];
 
-  // 只取 bookmark 类型
-  return result.items
-    .filter((item) => item.type === "bookmark")
-    .map((item) => ({
-      id: item.id,
-      title: item.title,
-      url: item.url,
-      summary: item.summary || "",
-      tags: item.tags || [],
-      favicon: item.favicon || "",
-      createdAt: item.created_at,
-      onDesktop: item.on_desktop ?? true,
-      inDock: item.in_dock ?? false,
-    }));
+  return result.bookmarks.map((b) => ({
+    id: b.id,
+    title: b.title,
+    url: b.url,
+    summary: b.summary || "",
+    tags: b.tags || [],
+    favicon: b.favicon || "",
+    createdAt: b.createdAt,
+    onDesktop: b.onDesktop ?? true,
+    inDock: false,
+  }));
 }
 
 // ─── 初始同步（登录后触发）──────────────────────────────────────────────────

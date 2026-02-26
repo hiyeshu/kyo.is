@@ -17,7 +17,8 @@
     "default_title": "Kyo — Save to bookmarks"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "chrome_url_overrides": {
     "newtab": "newtab.html"
@@ -40,7 +41,7 @@
     }
   },
   "oauth2": {
-    "client_id": "",
+    "client_id": "78750573362-4r4v462s9n3nliecus16maecrshfp0a5.apps.googleusercontent.com",
     "scopes": ["openid", "email", "profile"]
   }
 }

@@ -19,8 +19,14 @@ async function init() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || "";
   const title = tab?.title || "";
-  const loggedIn = await auth.isLoggedIn();
-  const session = await auth.getSession();
+
+  let loggedIn = false;
+  let session = null;
+  try {
+    loggedIn = await auth.isLoggedIn();
+    session = await auth.getSession();
+  } catch {}
+
   const saved = url ? await storage.has(url) : false;
 
   renderStatus(saved, url);
@@ -31,25 +37,28 @@ async function init() {
 // ─── 状态区 ──────────────────────────────────────────────────────────────────
 
 function renderStatus(saved, url) {
-  if (!url || url.startsWith("chrome://")) {
+  if (!url || url.startsWith("chrome://") || url.startsWith("chrome-extension://")) {
     $status.innerHTML = `
       <div class="status-icon unsaved">—</div>
-      <div class="status-desc">Can't save this page</div>
+      <div class="status-desc">无法收藏此页面</div>
     `;
     return;
   }
 
+  let hostname = url;
+  try { hostname = new URL(url).hostname; } catch {}
+
   if (saved) {
     $status.innerHTML = `
       <div class="status-icon saved">✓</div>
-      <div class="status-title">Saved</div>
-      <div class="status-desc">${new URL(url).hostname}</div>
+      <div class="status-title">已收藏</div>
+      <div class="status-desc">${hostname}</div>
     `;
   } else {
     $status.innerHTML = `
       <div class="status-icon unsaved">+</div>
-      <div class="status-title">Not saved</div>
-      <div class="status-desc">${new URL(url).hostname}</div>
+      <div class="status-title">未收藏</div>
+      <div class="status-desc">${hostname}</div>
     `;
   }
 }
@@ -57,32 +66,26 @@ function renderStatus(saved, url) {
 // ─── 操作按钮 ────────────────────────────────────────────────────────────────
 
 function renderActions(saved, url, title) {
-  if (!url || url.startsWith("chrome://")) {
+  if (!url || url.startsWith("chrome://") || url.startsWith("chrome-extension://")) {
     $actions.innerHTML = "";
     return;
   }
 
   if (saved) {
-    $actions.innerHTML = `
-      <button class="btn btn-secondary" id="btn-remove">Remove</button>
-    `;
+    $actions.innerHTML = `<button class="aqua-btn secondary" id="btn-remove"><span>移除收藏</span></button>`;
     document.getElementById("btn-remove").addEventListener("click", async () => {
       const bookmark = await storage.getByUrl(url);
       if (bookmark) await storage.remove(bookmark.id);
       window.close();
     });
   } else {
-    $actions.innerHTML = `
-      <button class="btn btn-primary" id="btn-save">Save to Kyo</button>
-    `;
+    $actions.innerHTML = `<button class="aqua-btn primary" id="btn-save"><span>收藏到 Kyo</span></button>`;
     document.getElementById("btn-save").addEventListener("click", async () => {
-      // 通过 background.js 保存（触发元数据增强 + 同步）
-      await chrome.runtime.sendMessage({
-        type: "save-bookmark",
-        url,
-        title,
-      });
-      window.close();
+      // 通知 background 执行完整保存流程（本地 + 元数据 + 云端同步）
+      chrome.runtime.sendMessage({ action: "save-bookmark", url, title });
+      renderStatus(true, url);
+      renderActions(true, url, title);
+      setTimeout(() => window.close(), 600);
     });
   }
 }
@@ -98,30 +101,30 @@ function renderFooter(loggedIn, session) {
         ${avatar ? `<img src="${avatar}" alt="">` : ""}
         <span>${name}</span>
       </div>
-      <span class="footer-sync">Synced</span>
+      <span class="footer-sync">已同步</span>
     `;
   } else {
-    $footer.innerHTML = `
-      <button class="footer-login" id="btn-login">Sign in to sync</button>
-    `;
+    $footer.innerHTML = `<button class="footer-login" id="btn-login">登录 Google 同步收藏</button>`;
     document.getElementById("btn-login").addEventListener("click", async () => {
-      const session = await auth.signIn();
-      if (session) {
-        // 登录成功 → 触发无感迁移
-        await sync.initialSync();
-        init(); // 刷新 UI
+      const btn = document.getElementById("btn-login");
+      btn.textContent = "登录中...";
+      btn.style.pointerEvents = "none";
+      try {
+        const session = await auth.signIn();
+        if (session) {
+          await sync.initialSync();
+          init();
+        } else {
+          btn.textContent = "登录失败，点击重试";
+          btn.style.pointerEvents = "";
+        }
+      } catch (err) {
+        console.error("[kyo:popup] login error:", err);
+        btn.textContent = "登录失败，点击重试";
+        btn.style.pointerEvents = "";
       }
     });
   }
 }
-
-// ─── 监听 background.js 消息 ────────────────────────────────────────────────
-
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === "save-bookmark") {
-    // background.js 处理实际保存
-    return;
-  }
-});
 
 init();

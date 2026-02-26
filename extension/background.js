@@ -17,21 +17,21 @@ chrome.runtime.onInstalled.addListener(() => {
   // 右键菜单：页面
   chrome.contextMenus.create({
     id: "kyo-save-page",
-    title: "Save to Kyo",
+    title: "收藏到 Kyo",
     contexts: ["page"],
   });
 
   // 右键菜单：链接
   chrome.contextMenus.create({
     id: "kyo-save-link",
-    title: "Save link to Kyo",
+    title: "收藏链接到 Kyo",
     contexts: ["link"],
   });
 
   // 右键菜单：选中文字
   chrome.contextMenus.create({
     id: "kyo-save-selection",
-    title: "Save to Kyo with note",
+    title: "收藏到 Kyo（含备注）",
     contexts: ["selection"],
   });
 
@@ -78,6 +78,15 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === "kyo-sync") {
     await sync.syncUnsynced();
+  }
+});
+
+// ─── 来自 popup 的消息 ───────────────────────────────────────────────────────
+
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg.action === "save-bookmark") {
+    saveBookmark(msg.url, msg.title);
+    sendResponse({ ok: true });
   }
 });
 
