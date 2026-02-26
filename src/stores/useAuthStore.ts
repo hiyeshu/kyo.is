@@ -12,6 +12,40 @@ import { useSyncStore } from "./useSyncStore";
 
 const SYNC_DONE_KEY = "kyo:sync-done-session";
 
+// ─── Extension iframe 桥接 ──────────────────────────────────────────────────
+// 如果 kyo.is 运行在插件的 newtab iframe 中，通过 postMessage 传递 session
+// newtab.html 先发握手消息，kyo.is 收到后才回传，用 event.origin 验证来源
+
+let extensionOrigin: string | null = null;
+
+function initExtensionBridge() {
+  if (window.parent === window) return; // 不在 iframe 中
+  window.addEventListener("message", (e) => {
+    if (e.data?.type === "kyo:handshake" && e.origin.startsWith("chrome-extension://")) {
+      extensionOrigin = e.origin;
+      // 握手成功，立即发送当前 session
+      supabase.auth.getSession().then(({ data }) => {
+        postSessionToExtension(data.session);
+      });
+    }
+  });
+}
+
+function postSessionToExtension(session: Session | null) {
+  if (!extensionOrigin) return;
+  const payload = session
+    ? {
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at,
+        user: session.user,
+      }
+    : null;
+  window.parent.postMessage({ type: "kyo:auth", session: payload }, extensionOrigin);
+}
+
+// ─── 用户就绪 ────────────────────────────────────────────────────────────────
+
 interface AuthState {
   user: User | null;
   loading: boolean;
@@ -36,10 +70,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
 
   init: () => {
+    initExtensionBridge();
+
     supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       const user = data.session?.user ?? null;
       set({ user, loading: false });
       if (user) handleUserReady(user);
+      postSessionToExtension(data.session);
     });
 
     supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
@@ -47,11 +84,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (event === "SIGNED_IN" && session?.user) {
         handleUserReady(session.user);
+        postSessionToExtension(session);
       }
 
       if (event === "SIGNED_OUT") {
         sessionStorage.removeItem(SYNC_DONE_KEY);
         useSyncStore.getState().stopRealtime();
+        postSessionToExtension(null);
       }
     });
   },

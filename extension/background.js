@@ -1,7 +1,7 @@
 /**
  * [INPUT]: chrome.* APIs, lib/storage.js, lib/auth.js, lib/sync.js
  * [OUTPUT]: Service Worker 入口，注册事件监听器
- * [POS]: extension 的核心控制器，管理收藏、右键菜单、快捷键、图标状态、定时同步
+ * [POS]: extension 的核心控制器，图标点击 toggle 收藏、右键菜单、快捷键、图标状态、定时同步
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -14,29 +14,29 @@ const API_BASE = "https://kyo.is/api";
 // ─── 安装时初始化 ────────────────────────────────────────────────────────────
 
 chrome.runtime.onInstalled.addListener(() => {
-  // 右键菜单：页面
-  chrome.contextMenus.create({
-    id: "kyo-save-page",
-    title: "收藏到 Kyo",
-    contexts: ["page"],
-  });
-
-  // 右键菜单：链接
-  chrome.contextMenus.create({
-    id: "kyo-save-link",
-    title: "收藏链接到 Kyo",
-    contexts: ["link"],
-  });
-
-  // 右键菜单：选中文字
-  chrome.contextMenus.create({
-    id: "kyo-save-selection",
-    title: "收藏到 Kyo（含备注）",
-    contexts: ["selection"],
-  });
-
-  // 定时同步（每 5 分钟）
+  chrome.contextMenus.create({ id: "kyo-save-page", title: "收藏到 Kyo", contexts: ["page"] });
+  chrome.contextMenus.create({ id: "kyo-save-link", title: "收藏链接到 Kyo", contexts: ["link"] });
+  chrome.contextMenus.create({ id: "kyo-save-selection", title: "收藏到 Kyo（含备注）", contexts: ["selection"] });
   chrome.alarms.create("kyo-sync", { periodInMinutes: 5 });
+});
+
+// ─── 点击图标：toggle 收藏状态 ──────────────────────────────────────────────
+
+chrome.action.onClicked.addListener(async (tab) => {
+  if (!tab?.url || tab.url.startsWith("chrome://") || tab.url.startsWith("chrome-extension://")) return;
+
+  const existing = await storage.getByUrl(tab.url);
+  if (existing) {
+    // 取消收藏
+    await storage.remove(existing.id);
+    await flashBadge(tab.id, "✕", "#999");
+    await updateIcon(tab.url);
+    sync.deleteBookmark(existing);
+  } else {
+    // 收藏
+    await flashBadge(tab.id, "✓", "#00C853");
+    await saveBookmark(tab.url, tab.title);
+  }
 });
 
 // ─── 右键菜单处理 ────────────────────────────────────────────────────────────
@@ -56,7 +56,19 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === "save-bookmark") {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.url) await saveBookmark(tab.url, tab.title);
+    if (tab?.url) {
+      // 快捷键也走 toggle 逻辑
+      const existing = await storage.getByUrl(tab.url);
+      if (existing) {
+        await storage.remove(existing.id);
+        await flashBadge(tab.id, "✕", "#999");
+        await updateIcon(tab.url);
+        sync.deleteBookmark(existing);
+      } else {
+        await flashBadge(tab.id, "✓", "#00C853");
+        await saveBookmark(tab.url, tab.title);
+      }
+    }
   }
 });
 
@@ -81,38 +93,44 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 });
 
-// ─── 来自 popup 的消息 ───────────────────────────────────────────────────────
+// ─── 消息处理（来自 newtab iframe 桥接）──────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg.action === "save-bookmark") {
-    saveBookmark(msg.url, msg.title);
-    sendResponse({ ok: true });
+  if (msg.action === "auth-session") {
+    handleAuthSession(msg.session).then(() => sendResponse({ ok: true }));
+    return true;
   }
 });
 
+async function handleAuthSession(session) {
+  if (session) {
+    await auth.saveSession(session);
+    await sync.initialSync();
+  } else {
+    await auth.clearSession();
+  }
+}
+
 // ─── 核心：保存书签 ─────────────────────────────────────────────────────────
+// 流程：存本地 → 更新图标 → 增强元数据 → 推送云端（顺序执行，只推一次）
 
 async function saveBookmark(url, title, note) {
   if (!url || url.startsWith("chrome://") || url.startsWith("chrome-extension://")) return;
 
-  // 1. 先存本地（即时反馈）
   const bookmark = await storage.add({
     title: title || url,
     url,
     summary: note || "",
   });
 
-  // 2. 更新图标为已收藏
   await updateIcon(url);
+  await enrichBookmark(bookmark);
 
-  // 3. 异步获取元数据（AI 摘要 + 标签）
-  enrichBookmark(bookmark);
-
-  // 4. 如果已登录，推送到云端
-  sync.pushBookmark(bookmark);
+  const latest = await storage.getByUrl(url);
+  await sync.pushBookmark(latest || bookmark);
 }
 
-// ─── 异步元数据增强 ─────────────────────────────────────────────────────────
+// ─── 元数据增强（纯本地操作）────────────────────────────────────────────────
 
 async function enrichBookmark(bookmark) {
   try {
@@ -121,43 +139,43 @@ async function enrichBookmark(bookmark) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: bookmark.url }),
     });
-
     if (!res.ok) return;
     const meta = await res.json();
 
-    // 更新本地书签
     const all = await storage.getAll();
     const item = all.find((b) => b.id === bookmark.id);
-    if (item) {
-      if (meta.title) item.title = meta.title;
-      if (meta.summary) item.summary = meta.summary;
-      if (meta.tags?.length) item.tags = meta.tags;
-      if (meta.faviconUrl) item.favicon = meta.faviconUrl;
-      await chrome.storage.local.set({ "kyo:bookmarks": all });
+    if (!item) return;
 
-      // 如果已登录，重新推送更新后的数据
-      sync.pushBookmark(item);
-    }
+    if (meta.title) item.title = meta.title;
+    if (meta.summary) item.summary = meta.summary;
+    if (meta.tags?.length) item.tags = meta.tags;
+    if (meta.faviconUrl) item.favicon = meta.faviconUrl;
+    await chrome.storage.local.set({ "kyo:bookmarks": all });
   } catch (err) {
     console.error("[kyo:bg] enrich failed:", err);
   }
 }
 
-// ─── 图标状态：已收藏 / 未收藏 ──────────────────────────────────────────────
+// ─── 图标状态 ────────────────────────────────────────────────────────────────
 
 async function updateIcon(url) {
   const saved = await storage.has(url);
-  // TODO: 用不同图标区分已收藏/未收藏
-  // 暂时用 badge 文字标记
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tab?.id) {
-    await chrome.action.setBadgeText({
-      tabId: tab.id,
-      text: saved ? "✓" : "",
-    });
-    await chrome.action.setBadgeBackgroundColor({
-      tabId: tab.id,
-      color: saved ? "#333" : "#999",
-    });
+    await chrome.action.setBadgeText({ tabId: tab.id, text: saved ? "✓" : "" });
+    await chrome.action.setBadgeBackgroundColor({ tabId: tab.id, color: "#333" });
   }
+}
+
+// ─── Badge 闪烁反馈（1.5s 后消失）──────────────────────────────────────────
+
+async function flashBadge(tabId, text, color) {
+  if (!tabId) return;
+  await chrome.action.setBadgeText({ tabId, text });
+  await chrome.action.setBadgeBackgroundColor({ tabId, color });
+  setTimeout(async () => {
+    // 闪烁结束后恢复真实状态
+    const tab = await chrome.tabs.get(tabId).catch(() => null);
+    if (tab?.url) await updateIcon(tab.url);
+  }, 1500);
 }

@@ -13,7 +13,6 @@
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png"
     },
-    "default_popup": "popup.html",
     "default_title": "Kyo — Save to bookmarks"
   },
   "background": {
@@ -25,12 +24,14 @@
   },
   "permissions": [
     "storage",
-    "identity",
     "contextMenus",
-    "activeTab"
+    "activeTab",
+    "alarms",
+    "tabs"
   ],
   "host_permissions": [
-    "https://kyo.is/*"
+    "https://kyo.is/*",
+    "https://icrcrtriimlfyqwuonnz.supabase.co/*"
   ],
   "commands": {
     "save-bookmark": {
@@ -39,9 +40,5 @@
       },
       "description": "Save current page to Kyo"
     }
-  },
-  "oauth2": {
-    "client_id": "78750573362-4r4v462s9n3nliecus16maecrshfp0a5.apps.googleusercontent.com",
-    "scopes": ["openid", "email", "profile"]
   }
 }
