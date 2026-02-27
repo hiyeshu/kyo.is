@@ -47,14 +47,17 @@ function cloudRowToBookmark(row: Record<string, unknown>): Bookmark {
   };
 }
 
-function cloudRowToNote(row: Record<string, unknown>): StickyNote {
+function cloudRowToNote(row: Record<string, unknown>, index = 0): StickyNote {
+  // 错位排列：每个便利贴偏移 30px，超出屏幕高度时换列
+  const col = Math.floor(index / 6);
+  const rowIdx = index % 6;
   return {
     id: row.id as string,
     content: (row.text as string) || "",
     color: ((row.color as string) || "yellow") as StickyNote["color"],
     tags: (row.tags as string[]) || [],
     onDesktop: (row.on_desktop as boolean) || false,
-    position: { x: 100, y: 100 },
+    position: { x: 100 + col * 240 + rowIdx * 30, y: 100 + rowIdx * 30 },
     size: { width: 220, height: 240 },
     createdAt: new Date(row.created_at as string).getTime(),
     updatedAt: new Date((row.updated_at as string) || (row.created_at as string)).getTime(),
@@ -97,7 +100,14 @@ export const useSyncStore = create<SyncState>((set) => ({
         const bookmarkItems = cloudBookmarks.map((b) => cloudRowToBookmark(b as unknown as Record<string, unknown>));
         useBookmarkStore.setState({ items: bookmarkItems });
 
-        const stickyNotes = cloudNotes.map((n) => cloudRowToNote(n as unknown as Record<string, unknown>));
+        const localNotes = useStickiesStore.getState().notes;
+        const stickyNotes = cloudNotes.map((n, i) => {
+          const note = cloudRowToNote(n as unknown as Record<string, unknown>, i);
+          const local = localNotes.find((ln) => ln.id === note.id);
+          return local
+            ? { ...note, position: local.position, size: local.size }
+            : note;
+        });
         useStickiesStore.setState({ notes: stickyNotes });
       } else {
         const localBookmarks = useBookmarkStore.getState().items;
@@ -220,8 +230,9 @@ function handleNoteChange(
   if (event === "INSERT" && newRow) {
     const exists = store.notes.some((n) => n.id === newRow.id);
     if (!exists) {
+      const index = store.notes.length;
       useStickiesStore.setState({
-        notes: [...store.notes, cloudRowToNote(newRow)],
+        notes: [...store.notes, cloudRowToNote(newRow, index)],
       });
     }
   } else if (event === "UPDATE" && newRow) {
