@@ -2,7 +2,7 @@
  * [INPUT]: 依赖 @/stores/useBookmarkStore 的 updateBookmark，依赖 @/stores/useLinkMetaStore 的 LinkMeta 缓存
  * [OUTPUT]: BookmarkFaviconImg 组件
  * [POS]: components/shared 的书签 favicon 渲染器，封装三层回退状态机（primary → linkmeta → emoji），
- *        加载成功后 canvas 转 128x128 base64 写回 store 实现本地化缓存，
+ *        加载成功后尝试 canvas 转 128x128 base64 写回 store（同源图片本地化，跨域静默跳过），
  *        被 BookmarkIconDisplay / Desktop / Dock / CommandPalette 消费，替代所有裸 <img> 标签
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -37,13 +37,13 @@ const CACHE_SIZE = 128;
 
 // ─── 工具函数 ──────────────────────────────────────────────────────────────────
 
-// 判断 src 是否已经是本地数据（base64 / 本地路径 / SVG），无需再转换
+// 判断 src 是否已经是本地数据（base64 / 本地路径），无需再转换
 function isLocalSrc(src: string): boolean {
   return src.startsWith("data:") || src.startsWith("/") || src.startsWith("blob:");
 }
 
 // 将 <img> 元素通过 canvas 转为 128x128 PNG base64
-// 跨域图片需要 crossOrigin="anonymous"，否则 canvas 被污染无法 toDataURL
+// 跨域图片 canvas 会被污染，toDataURL 抛 SecurityError，被 catch 静默吞掉
 function imgToBase64(img: HTMLImageElement): string | null {
   try {
     const canvas = document.createElement("canvas");
@@ -54,7 +54,7 @@ function imgToBase64(img: HTMLImageElement): string | null {
     ctx.drawImage(img, 0, 0, CACHE_SIZE, CACHE_SIZE);
     return canvas.toDataURL("image/png");
   } catch {
-    // canvas 被污染（CORS 拒绝）或其他异常，静默忽略
+    // canvas 被污染（跨域图片）或其他异常，静默忽略
     return null;
   }
 }
@@ -74,7 +74,6 @@ export function BookmarkFaviconImg({
 }: BookmarkFaviconImgProps) {
   const [stage, setStage] = useState<FaviconStage>("primary");
   const [resolvedBroken, setResolvedBroken] = useState(false);
-  const [corsMode, setCorsMode] = useState(true); // true: 带 CORS 尝试转 base64；false: 降级，放弃转换
   const writtenRef = useRef(false);
 
   // ─── 写回 store（防重复） ──────────────────────────────────────────────────────
@@ -94,7 +93,7 @@ export function BookmarkFaviconImg({
       markResolved();
       return;
     }
-    // 网络图片：canvas 转 128x128 base64 写回
+    // 尝试 canvas 转 base64：同源图片能成功，跨域图片会被 catch 静默跳过
     const base64 = imgToBase64(img);
     markResolved(base64 || undefined);
   }, [markResolved]);
@@ -174,16 +173,10 @@ export function BookmarkFaviconImg({
   // ─── primary / linkmeta 阶段：渲染 <img> ─────────────────────────────────────
   const imgSrc = stage === "primary" ? src : getLinkMetaFavicon() || src;
 
-  // key 包含 corsMode：切换时强制 React 销毁重建 <img>，
-  // 避免浏览器复用 CORS 失败的缓存响应
   return (
     <img
-      key={`${imgSrc}-${corsMode}`}
       src={imgSrc}
       alt=""
-      // corsMode=true: 带 CORS 请求，canvas 可读像素转 base64
-      // corsMode=false: 降级，图片能显示但无法转 base64
-      crossOrigin={corsMode ? "anonymous" : undefined}
       className={className}
       style={style}
       draggable={draggable}
@@ -195,18 +188,10 @@ export function BookmarkFaviconImg({
           advance("primary");
           return;
         }
-        // 真正加载成功 → canvas 转 base64 本地化
+        // 真正加载成功 → 尝试 base64 本地化（跨域静默跳过）
         handleLoadSuccess(img);
       }}
-      onError={() => {
-        // CORS 模式加载失败：可能是服务器不支持 CORS，降级重试（不带 crossOrigin）
-        if (corsMode) {
-          setCorsMode(false);
-          return;
-        }
-        // 非 CORS 模式也失败：真正的加载失败，推进到下一阶段
-        advance(stage);
-      }}
+      onError={() => advance(stage)}
     />
   );
 }
