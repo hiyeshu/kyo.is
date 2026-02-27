@@ -323,6 +323,21 @@ export default defineConfig({
             },
           },
           {
+            // Cache favicon proxy services (Google S2 + cccyun)
+            urlPattern: /^https:\/\/(www\.google\.com\/s2\/favicons|favicon\.cccyun\.cc)\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "favicons",
+              expiration: {
+                maxEntries: 500,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
             // Cache audio files (used by useSound.ts)
             // Match audio extensions with optional query params
             urlPattern: /\.(?:mp3|wav|ogg|m4a)(?:\?.*)?$/i,

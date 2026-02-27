@@ -3,7 +3,7 @@
 
 ## 成员清单
 
-BookmarkFaviconImg.tsx: 书签 favicon 渲染器，三层回退状态机（Google S2 → LinkMeta 缓存 → 首字母 Emoji），解析后写回 faviconResolved 避免重复执行
+BookmarkFaviconImg.tsx: 书签 favicon 渲染器，三层回退状态机（Google S2 → LinkMeta 缓存 → 首字母 Emoji），加载成功后 canvas 转 128x128 base64 写回 store 实现本地化缓存（零网络请求），CORS 降级机制保证兼容性
 PrefetchToast.tsx: 预加载提示组件，显示资源预加载进度、桌面应用更新提示
 ThemedIcon.tsx: 主题图标组件，根据当前主题显示不同风格的图标
 TrafficLightButton.tsx: 交通灯按钮组件，macOS 风格窗口控制按钮（关闭、最小化、最大化）
