@@ -174,8 +174,11 @@ export function BookmarkFaviconImg({
   // ─── primary / linkmeta 阶段：渲染 <img> ─────────────────────────────────────
   const imgSrc = stage === "primary" ? src : getLinkMetaFavicon() || src;
 
+  // key 包含 corsMode：切换时强制 React 销毁重建 <img>，
+  // 避免浏览器复用 CORS 失败的缓存响应
   return (
     <img
+      key={`${imgSrc}-${corsMode}`}
       src={imgSrc}
       alt=""
       // corsMode=true: 带 CORS 请求，canvas 可读像素转 base64
