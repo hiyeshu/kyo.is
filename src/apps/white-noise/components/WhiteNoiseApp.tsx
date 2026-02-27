@@ -493,6 +493,8 @@ export function WhiteNoiseApp({
     const audio = new Audio(sound.src);
     audio.loop = true;
     audio.volume = volume;
+    // iOS PWA: 预加载音频数据，避免 play() 时数据未就绪被拒绝
+    audio.preload = "auto";
     audioRef.current = audio;
     setActiveSound(sound.id);
     lastSoundRef.current = sound;
@@ -506,10 +508,40 @@ export function WhiteNoiseApp({
         // 播放成功后异步 resume AudioContext + 启动频谱
         resumeAudioContext().then(() => tryStartAnalysis(audio));
       })
-      .catch((err) => {
-        console.error("[WhiteNoise] Playback failed:", err);
-        audioRef.current = null;
-        setActiveSound(null);
+      .catch(() => {
+        // iOS PWA 首次 play() 可能因数据未缓冲被拒绝
+        // 等音频就绪后重试一次（此时已脱离手势栈，但 iOS 通常允许已解锁的 audio 元素重试）
+        const retry = () => {
+          // 确认这个 audio 还是当前活跃的（用户没有切换/停止）
+          if (audioRef.current !== audio) return;
+          audio.play()
+            .then(() => {
+              resumeAudioContext().then(() => tryStartAnalysis(audio));
+            })
+            .catch((retryErr) => {
+              console.error("[WhiteNoise] Playback retry failed:", retryErr);
+              // 彻底失败，重置状态
+              if (audioRef.current === audio) {
+                audioRef.current = null;
+                setActiveSound(null);
+              }
+            });
+        };
+
+        // 如果音频已经有足够数据，直接重试；否则等 canplaythrough
+        if (audio.readyState >= 3) {
+          retry();
+        } else {
+          audio.addEventListener("canplaythrough", retry, { once: true });
+          // 超时兜底：5 秒后如果还没就绪，放弃
+          setTimeout(() => {
+            audio.removeEventListener("canplaythrough", retry);
+            if (audioRef.current === audio && audio.paused) {
+              audioRef.current = null;
+              setActiveSound(null);
+            }
+          }, 5000);
+        }
       });
   }, [activeSound, tryStartAnalysis, stopPlayback, volume]);
 
