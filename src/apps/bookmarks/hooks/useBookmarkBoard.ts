@@ -138,11 +138,14 @@ export function useBookmarkBoard() {
     };
 
     setIsAiCreating(true);
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 15_000);
     try {
       const systemPrompt = `You are a link ingestion assistant. Return JSON only: {"title":"...","summary":"...","tags":["..."]}. Summary should be two or three sentences. Tags and summary must be in ${i18n.language} language. No extra text.`;
       const response = await fetch(getApiUrl("/api/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: abort.signal,
         body: JSON.stringify({
           messages: [
             { role: "user", content: parsedUrl.toString() },
@@ -172,6 +175,7 @@ export function useBookmarkBoard() {
     } catch {
       addFallbackBookmark();
     } finally {
+      clearTimeout(timer);
       setIsAiCreating(false);
     }
   }, [addUrl, isAiCreating, store, t]);
