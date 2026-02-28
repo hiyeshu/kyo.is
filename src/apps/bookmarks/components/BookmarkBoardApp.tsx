@@ -323,20 +323,59 @@ export function BookmarkBoardApp({
         <div className="flex flex-col h-full w-full bg-white/85">
           {/* ── 搜索栏 ─────────────────────────────────────────── */}
           {h.isXpTheme ? (
-            <div className="flex items-center gap-2 px-2 py-2 bg-white border-b border-[#919b9c]">
-              <MagnifyingGlass size={16} className="text-black/40 shrink-0" />
-              <input
-                type="text"
-                value={h.searchQuery}
-                onChange={(e) => h.setSearchQuery(e.target.value)}
-                placeholder={t("apps.bookmarks.search", "Search bookmarks...")}
-                className="flex-1 text-[13px] bg-transparent outline-none placeholder:text-black/40"
-              />
+            <div 
+              className="flex items-center gap-3 px-3 border-b"
+              style={{
+                height: "44px",
+                backgroundColor: "#ece9d8",
+                borderColor: "#919b9c",
+              }}
+            >
+              {/* 搜索输入框 — 经典 3D inset 边框 */}
+              <div 
+                className="flex items-center flex-1 gap-2 px-3"
+                style={{
+                  height: "28px",
+                  backgroundColor: "#ffffff",
+                  boxShadow: "inset 1px 1px 0 #808080, inset -1px -1px 0 #fff, inset 2px 2px 0 #404040",
+                  border: "1px solid #000",
+                }}
+              >
+                <MagnifyingGlass size={16} className="text-black/50 shrink-0" />
+                <input
+                  type="text"
+                  value={h.searchQuery}
+                  onChange={(e) => h.setSearchQuery(e.target.value)}
+                  placeholder={t("apps.bookmarks.search", "Search bookmarks...")}
+                  className="flex-1 bg-transparent outline-none placeholder:text-black/40"
+                  style={{
+                    fontSize: "13px",
+                    fontFamily: '"Pixelated MS Sans Serif", Tahoma, Arial, sans-serif',
+                  }}
+                />
+              </div>
+              {/* 添加按钮 — 经典 3D raised 按钮 */}
               <button
                 onClick={() => h.openAddDialog()}
-                className="w-7 h-7 flex items-center justify-center shrink-0 hover:bg-black/5 active:bg-black/10"
+                className="flex items-center justify-center shrink-0"
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  backgroundColor: "#ece9d8",
+                  boxShadow: "inset -1px -1px 0 #404040, inset 1px 1px 0 #fff, inset -2px -2px 0 #808080, inset 2px 2px 0 #ece9d8",
+                  border: "1px solid #000",
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.boxShadow = "inset 1px 1px 0 #404040, inset -1px -1px 0 #fff";
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.boxShadow = "inset -1px -1px 0 #404040, inset 1px 1px 0 #fff, inset -2px -2px 0 #808080, inset 2px 2px 0 #ece9d8";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "inset -1px -1px 0 #404040, inset 1px 1px 0 #fff, inset -2px -2px 0 #808080, inset 2px 2px 0 #ece9d8";
+                }}
               >
-                <Plus size={16} weight="bold" className="text-black/60" />
+                <Plus size={16} weight="bold" className="text-black/70" />
               </button>
             </div>
           ) : (
