@@ -37,14 +37,29 @@ const CACHE_SIZE = 128;
 
 // ─── 工具函数 ──────────────────────────────────────────────────────────────────
 
-// 字符串哈希 → 柔和 HSL 背景色，让字母回退看起来像 Gmail 头像
+// 预设色板 — 手工挑选 12 色，覆盖色相环，饱和明亮，白色字母清晰可读
+const AVATAR_COLORS = [
+  "#E06C75", // 珊瑚红
+  "#E5A05B", // 琥珀橙
+  "#D4B84E", // 金黄
+  "#7EC699", // 薄荷绿
+  "#56B6C2", // 青蓝
+  "#5B9FE4", // 天蓝
+  "#6C8DD5", // 钴蓝
+  "#9B7FCA", // 薰衣草紫
+  "#C678DD", // 亮紫
+  "#E06CA5", // 玫粉
+  "#7DAF6E", // 草绿
+  "#5AAFBE", // 湖蓝
+];
+
+// 字符串哈希 → 从预设色板取色
 function titleToColor(title: string): string {
   let hash = 0;
   for (let i = 0; i < title.length; i++) {
     hash = title.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const h = Math.abs(hash) % 360;
-  return `hsl(${h}, 50%, 60%)`;
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
 // 字母回退的通用样式：彩色背景 + 白色粗体字母 + 填满容器
