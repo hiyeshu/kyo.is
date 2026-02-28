@@ -129,21 +129,29 @@ export function useBookmarkBoard() {
       return;
     }
 
+    // ── fallback: 从 URL 提取基础元数据，确保书签总能被创建 ──
+    const fallbackTitle = parsedUrl.hostname.replace(/^www\./, "");
+    const addFallbackBookmark = () => {
+      store.addAiBookmark(fallbackTitle, parsedUrl!.toString(), "", []);
+      setAddDialogOpen(false);
+      setAddUrl("");
+    };
+
     setIsAiCreating(true);
     try {
+      const systemPrompt = `You are a link ingestion assistant. Return JSON only: {"title":"...","summary":"...","tags":["..."]}. Summary should be two or three sentences. Tags and summary must be in ${i18n.language} language. No extra text.`;
       const response = await fetch(getApiUrl("/api/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
-            { role: "system", content: `You are a link ingestion assistant. Return JSON only: {"title":"...","summary":"...","tags":["..."]}. Summary should be two or three sentences. Tags and summary must be in ${i18n.language} language. No extra text.` },
             { role: "user", content: parsedUrl.toString() },
           ],
-          task: "link-ingest",
+          context: systemPrompt,
         }),
       });
 
-      if (!response.ok) return;
+      if (!response.ok) { addFallbackBookmark(); return; }
 
       const text = await response.text();
       const fullContent = text
@@ -152,16 +160,18 @@ export function useBookmarkBoard() {
         .map((line) => { try { return JSON.parse(line.slice(2)) as string; } catch { return ""; } })
         .join("");
       const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return;
-      const data = JSON.parse(jsonMatch[0]) as { title: string; summary: string; tags: string[] };
+      if (!jsonMatch) { addFallbackBookmark(); return; }
 
-      if (!data.title || !data.summary || !Array.isArray(data.tags)) return;
+      const data = JSON.parse(jsonMatch[0]) as { title: string; summary: string; tags: string[] };
+      if (!data.title || !data.summary || !Array.isArray(data.tags)) { addFallbackBookmark(); return; }
 
       const trimmedTags = data.tags.filter((tag) => tag && tag.trim());
       store.addAiBookmark(data.title, parsedUrl.toString(), data.summary, trimmedTags);
       setAddDialogOpen(false);
       setAddUrl("");
-    } catch { /* noop */ } finally {
+    } catch {
+      addFallbackBookmark();
+    } finally {
       setIsAiCreating(false);
     }
   }, [addUrl, isAiCreating, store, t]);
