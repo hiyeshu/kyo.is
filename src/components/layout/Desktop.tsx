@@ -709,8 +709,8 @@ function BookmarkDesktopIcon({
           >
             {iconInfo.value}
           </span>
-        ) : isMacTheme ? (
-          // macOS Aqua: iOS 风格圆角 + 白底 + 水晶高光
+        ) : (
+          // 统一圆角容器 — 所有主题共用 iOS 风格圆角 + 白底 + 阴影
           <div
             className="relative overflow-hidden w-12 h-12"
             style={{
@@ -729,37 +729,16 @@ function BookmarkDesktopIcon({
               style={{ imageRendering: "-webkit-optimize-contrast" }}
               loading="lazy"
             />
-            {/* Aqua 水晶高光 */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                borderRadius: "22%",
-                background: AQUA_HIGHLIGHT,
-              }}
-            />
-          </div>
-        ) : (
-          // XP/Win98: Windows 风格容器 — 白底 + 主题边框，让字母回退也像正经图标
-          <div
-            className="relative overflow-hidden w-12 h-12"
-            style={{
-              borderRadius: isXpTheme ? "4px" : "0px",
-              backgroundColor: "#ffffff",
-              boxShadow: isWin98Theme
-                ? "inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf"
-                : "0 1px 3px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08)",
-            }}
-          >
-            <BookmarkFaviconImg
-              bookmarkId={bookmark.id}
-              src={iconInfo.value}
-              bookmarkUrl={bookmark.url}
-              bookmarkTitle={bookmark.title}
-              faviconResolved={bookmark.faviconResolved}
-              className="w-full h-full object-cover"
-              style={{ imageRendering: "auto" }}
-              loading="lazy"
-            />
+            {/* Aqua 水晶高光 — 仅 macOS */}
+            {isMacTheme && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  borderRadius: "22%",
+                  background: AQUA_HIGHLIGHT,
+                }}
+              />
+            )}
           </div>
         )}
       </div>

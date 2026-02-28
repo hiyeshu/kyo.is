@@ -37,6 +37,31 @@ const CACHE_SIZE = 128;
 
 // ─── 工具函数 ──────────────────────────────────────────────────────────────────
 
+// 字符串哈希 → 柔和 HSL 背景色，让字母回退看起来像 Gmail 头像
+function titleToColor(title: string): string {
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 50%, 60%)`;
+}
+
+// 字母回退的通用样式：彩色背景 + 白色粗体字母 + 填满容器
+function emojiStyle(title: string, baseStyle?: React.CSSProperties): React.CSSProperties {
+  return {
+    ...baseStyle,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: titleToColor(title),
+    color: "#ffffff",
+    fontWeight: 700,
+    fontSize: "1.25rem",
+    borderRadius: "inherit",
+  };
+}
+
 // 判断 src 是否已经是本地数据（base64 / 本地路径），无需再转换
 function isLocalSrc(src: string): boolean {
   return src.startsWith("data:") || src.startsWith("/") || src.startsWith("blob:");
@@ -144,10 +169,7 @@ export function BookmarkFaviconImg({
 
   if (resolvedBroken) {
     return (
-      <span
-        className={className}
-        style={{ ...style, display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
+      <span className={className} style={emojiStyle(bookmarkTitle, style)}>
         {getEmojiChar()}
       </span>
     );
@@ -156,15 +178,7 @@ export function BookmarkFaviconImg({
   // ─── Emoji 终态 ───────────────────────────────────────────────────────────────
   if (stage === "emoji") {
     return (
-      <span
-        className={className}
-        style={{
-          ...style,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <span className={className} style={emojiStyle(bookmarkTitle, style)}>
         {getEmojiChar()}
       </span>
     );
