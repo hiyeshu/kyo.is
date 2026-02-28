@@ -30,8 +30,11 @@ u {
 a {
   color: #00f;
 }
-a:focus {
+a:focus-visible {
   outline: 1px dotted #00f;
+}
+a:focus:not(:focus-visible) {
+  outline: none;
 }
 code,
 code * {
@@ -49,8 +52,11 @@ pre,
 pre * {
   font-family: Perfect DOS VGA\437 Win;
 }
-summary:focus {
+summary:focus-visible {
   outline: 1px dotted #000;
+}
+summary:focus:not(:focus-visible) {
+  outline: none;
 }
 ::-webkit-scrollbar {
   width: 16px;
@@ -106,9 +112,12 @@ button:not(:disabled):active {
     inset -2px -2px #dfdfdf, inset 2px 2px grey;
 }
 button.focused,
-button:focus {
+button:focus-visible {
   outline: 1px dotted #000;
   outline-offset: -4px;
+}
+button:focus:not(:focus-visible) {
+  outline: none;
 }
 button::-moz-focus-inner {
   border: 0;
@@ -220,7 +229,7 @@ input[type="radio"]:checked + label:after {
   position: absolute;
   background: url("data:image/svg+xml;charset=utf-8,%3Csvg width='4' height='4' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M3 0H1v1H0v2h1v1h2V3h1V1H3V0z' fill='%23000'/%3E%3C/svg%3E");
 }
-input[type="radio"]:focus + label {
+input[type="radio"]:focus-visible + label {
   outline: 1px dotted #000;
 }
 input[type="checkbox"] {
@@ -247,7 +256,7 @@ input[type="checkbox"] + label:before {
   height: 13px;
   margin-right: 6px;
 }
-input[type="checkbox"]:focus + label {
+input[type="checkbox"]:focus-visible + label {
   outline: 1px dotted #000;
 }
 input[type="checkbox"]:active + label:before {
@@ -561,7 +570,7 @@ menu[role="tablist"] button[aria-selected="true"] {
   margin-left: -3px;
   margin-bottom: 1px;
 }
-menu[role="tablist"] button:focus {
+menu[role="tablist"] button:focus-visible {
   outline: 1px dotted #222;
   outline-offset: -4px;
 }

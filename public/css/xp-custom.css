@@ -42,8 +42,12 @@ a {
   color: #00f;
 }
 
-a:focus {
+a:focus-visible {
   outline: 1px dotted #00f;
+}
+
+a:focus:not(:focus-visible) {
+  outline: none;
 }
 
 code,
@@ -65,8 +69,12 @@ pre * {
   font-family: Perfect DOS VGA\437 Win;
 }
 
-summary:focus {
+summary:focus-visible {
   outline: 1px dotted #000;
+}
+
+summary:focus:not(:focus-visible) {
+  outline: none;
 }
 
 ::-webkit-scrollbar {
@@ -127,9 +135,13 @@ button:not(:disabled):active {
 }
 
 button.focused,
-button:focus {
+button:focus-visible {
   outline: 1px dotted #000;
   outline-offset: -4px;
+}
+
+button:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* Preset/games grid cards: keep dark card styling, do not apply XP button skin */
@@ -340,8 +352,12 @@ input[type="checkbox"] + label:before {
   margin-right: 6px;
 }
 
-input[type="checkbox"]:focus + label {
+input[type="checkbox"]:focus-visible + label {
   outline: 1px dotted #000;
+}
+
+input[type="checkbox"]:focus:not(:focus-visible) + label {
+  outline: none;
 }
 
 input[type="checkbox"]:active + label:before {
@@ -669,7 +685,7 @@ menu[role="tablist"] button[aria-selected="true"] {
   margin-bottom: 0px;
 }
 
-menu[role="tablist"] button:focus {
+menu[role="tablist"] button:focus-visible {
   outline: 1px dotted #222;
   outline-offset: -4px;
 }
@@ -986,7 +1002,7 @@ input[type="radio"]:checked + label:after {
   background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -0.5 5 5' shape-rendering='crispEdges'%3E%3Cpath stroke='%23a9dca6' d='M1 0h1M0 1h1'/%3E%3Cpath stroke='%234dbf4a' d='M2 0h1M0 2h1'/%3E%3Cpath stroke='%23a0d29e' d='M3 0h1M0 3h1'/%3E%3Cpath stroke='%2355d551' d='M1 1h1'/%3E%3Cpath stroke='%2343c33f' d='M2 1h1'/%3E%3Cpath stroke='%2329a826' d='M3 1h1'/%3E%3Cpath stroke='%239acc98' d='M4 1h1M1 4h1'/%3E%3Cpath stroke='%2342c33f' d='M1 2h1'/%3E%3Cpath stroke='%2338b935' d='M2 2h1'/%3E%3Cpath stroke='%2321a121' d='M3 2h1'/%3E%3Cpath stroke='%23269623' d='M4 2h1'/%3E%3Cpath stroke='%232aa827' d='M1 3h1'/%3E%3Cpath stroke='%2322a220' d='M2 3h1'/%3E%3Cpath stroke='%23139210' d='M3 3h1'/%3E%3Cpath stroke='%2398c897' d='M4 3h1'/%3E%3Cpath stroke='%23249624' d='M2 4h1'/%3E%3Cpath stroke='%2398c997' d='M3 4h1'/%3E%3C/svg%3E");
 }
 
-input[type="radio"]:focus + label {
+input[type="radio"]:focus-visible + label {
   outline: 1px dotted #000;
 }
 
