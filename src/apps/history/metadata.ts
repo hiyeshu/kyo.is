@@ -13,7 +13,7 @@ export const appMetadata = {
     url: "https://github.com/hiyeshu",
   },
   github: "https://github.com/hiyeshu/kyo.is",
-  icon: "/icons/macosx/minesweeper.png",
+  icon: "/icons/macosx/history.png",
 };
 
 export const helpItems = [
