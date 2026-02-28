@@ -21,12 +21,37 @@ async function getUserId(): Promise<string | null> {
 export async function cloudUpsertItem(item: Record<string, unknown>) {
   const userId = await getUserId();
   if (!userId) return;
-  const payload = { ...item, user_id: userId };
-  const { error } = await supabase
+  const payload: Record<string, unknown> = { ...item, user_id: userId };
+
+  // 先按 id 查是否已存在，存在则 update，否则 insert
+  // 避免 upsert 的 onConflict 与唯一索引不匹配
+  const { data: existing } = await supabase
     .from("kyo_items")
-    .upsert(payload, { onConflict: "user_id,url,type", ignoreDuplicates: false });
-  if (error) {
-    console.error("[cloudSync] upsert failed:", error.code, error.message);
+    .select("id")
+    .eq("id", payload.id as string)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("kyo_items")
+      .update(payload)
+      .eq("id", payload.id as string);
+    if (error) console.error("[cloudSync] update failed:", error.code, error.message);
+  } else {
+    const { error } = await supabase.from("kyo_items").insert(payload);
+    if (error) {
+      // 23505 = 唯一约束冲突（同 URL 已存在），降级为按 user_id+url 更新
+      if (error.code === "23505" && payload.url) {
+        const { error: e2 } = await supabase
+          .from("kyo_items")
+          .update(payload)
+          .eq("user_id", userId)
+          .eq("url", payload.url as string);
+        if (e2) console.error("[cloudSync] fallback update failed:", e2.code, e2.message);
+      } else {
+        console.error("[cloudSync] insert failed:", error.code, error.message);
+      }
+    }
   }
 }
 
