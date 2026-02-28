@@ -30,7 +30,7 @@ function CopyButton({ text, onCopied }: { text: string; onCopied?: () => void })
   return (
     <button
       type="button"
-      className="shrink-0 opacity-0 group-data-[selected=true]:opacity-60 hover:!opacity-100 transition-opacity p-0.5 cursor-pointer"
+      className="shrink-0 opacity-0 group-hover:opacity-60 group-data-[selected=true]:opacity-100 hover:!opacity-100 transition-opacity p-1 rounded cursor-pointer hover:bg-black/10 group-data-[selected=true]:bg-white/90 group-data-[selected=true]:text-black group-data-[selected=true]:hover:bg-white"
       onClick={(e) => {
         e.stopPropagation();
         navigator.clipboard.writeText(text);
@@ -366,11 +366,11 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
   };
 
   const itemFontStyle: React.CSSProperties = {
-    fontSize: isMacTheme ? "13px" : isXpTheme ? "11px" : "12px",
+    fontSize: isMacTheme ? "13px" : "14px",
     fontFamily: isMacTheme
       ? "var(--os-font-ui)"
       : isXpTheme
-      ? '"Pixelated MS Sans Serif", Arial'
+      ? '"Pixelated MS Sans Serif", Tahoma, Arial'
       : "var(--os-font-ui, Geneva)",
   };
 
@@ -404,6 +404,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                 ? "1px solid #ACA899"
                 : "1px solid rgba(0, 0, 0, 0.2)",
               backgroundColor: isXpTheme ? "#ffffff" : undefined,
+              minHeight: isMacTheme ? undefined : "48px",
             }}
           >
             {isSearching ? (
@@ -438,11 +439,12 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               value={search}
               onValueChange={(v) => { setSearch(v); searchRef.current = v; }}
               placeholder={t("common.search.appsAndBookmarks", "搜索应用和书签...")}
-              className="w-full py-3 bg-transparent outline-none"
-              style={isMacTheme ? macInputStyle : {
-                fontSize: isXpTheme ? "11px" : "12px",
+              className="w-full bg-transparent outline-none"
+              style={isMacTheme ? { ...macInputStyle, padding: "12px 0" } : {
+                fontSize: "15px",
+                padding: "14px 0",
                 fontFamily: isXpTheme
-                  ? '"Pixelated MS Sans Serif", Arial'
+                  ? '"Pixelated MS Sans Serif", Tahoma, Arial'
                   : "var(--os-font-ui, Geneva)",
               }}
             />
@@ -478,9 +480,9 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               <div
                 className="py-6 text-center"
                 style={{
-                  fontSize: isMacTheme ? "13px" : isXpTheme ? "11px" : "12px",
+                  fontSize: isMacTheme ? "13px" : "14px",
                   color: "rgba(0, 0, 0, 0.4)",
-                  fontFamily: isMacTheme ? "var(--os-font-ui)" : undefined,
+                  fontFamily: isMacTheme ? "var(--os-font-ui)" : isXpTheme ? '"Pixelated MS Sans Serif", Tahoma, Arial' : undefined,
                 }}
               >
                 {t("common.search.noResults", "找不到结果")}
@@ -565,11 +567,11 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                         <div className="flex-1 min-w-0">
                           <div className="truncate">{item.title || item.url}</div>
                           {match?.text && match.field !== "title" ? (
-                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.6 }}>
+                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "12px", opacity: 0.6 }}>
                               <HighlightText text={match.text} query={q} />
                             </div>
                           ) : (
-                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}>
+                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "12px", opacity: 0.5 }}>
                               {item.url}
                             </div>
                           )}
@@ -615,11 +617,11 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                         <div className="flex-1 min-w-0">
                           <div className="truncate">{bm.title}</div>
                           {match?.text && match.field !== "title" ? (
-                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.6 }}>
+                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "12px", opacity: 0.6 }}>
                               <HighlightText text={match.text} query={q} />
                             </div>
                           ) : (
-                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "9px", opacity: 0.5 }}>
+                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "12px", opacity: 0.5 }}>
                               {bm.url}
                             </div>
                           )}
@@ -748,9 +750,9 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                 : isXpTheme
                 ? "1px solid #ACA899"
                 : "1px solid rgba(0, 0, 0, 0.15)",
-              fontSize: "10px",
+              fontSize: isMacTheme ? "10px" : "11px",
               color: "rgba(0, 0, 0, 0.4)",
-              fontFamily: isMacTheme ? "var(--os-font-ui)" : undefined,
+              fontFamily: isMacTheme ? "var(--os-font-ui)" : isXpTheme ? '"Pixelated MS Sans Serif", Tahoma, Arial' : undefined,
             }}
           >
             <span>
@@ -785,9 +787,9 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
         }
         [cmdk-group-heading] {
           padding: 4px 8px;
-          font-size: ${isMacTheme ? "11px" : "10px"};
+          font-size: ${isMacTheme ? "11px" : "12px"};
           color: rgba(0, 0, 0, 0.4);
-          font-family: ${isMacTheme ? "var(--os-font-ui)" : "inherit"};
+          font-family: ${isMacTheme ? "var(--os-font-ui)" : isXpTheme ? '"Pixelated MS Sans Serif", Tahoma, Arial' : "inherit"};
         }
       `}</style>
     </div>
