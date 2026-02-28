@@ -1,0 +1,10 @@
+{
+  "extName": { "message": "Kyo" },
+  "extDescription": { "message": "你的书签桌面。粘贴即收藏，输入即搜索。" },
+  "actionTitle": { "message": "Kyo — 收藏到书签" },
+  "commandSaveBookmark": { "message": "收藏当前页面到 Kyo" },
+  "contextMenuSavePage": { "message": "收藏到 Kyo" },
+  "contextMenuSaveLink": { "message": "收藏链接到 Kyo" },
+  "contextMenuSaveSelection": { "message": "收藏到 Kyo（含备注）" },
+  "newtabLoadError": { "message": "加载失败，点击重试" }
+}

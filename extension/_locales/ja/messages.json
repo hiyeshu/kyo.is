@@ -1,0 +1,10 @@
+{
+  "extName": { "message": "Kyo" },
+  "extDescription": { "message": "ブックマークをデスクトップに。貼り付けて保存、入力して検索。" },
+  "actionTitle": { "message": "Kyo — ブックマークに保存" },
+  "commandSaveBookmark": { "message": "現在のページを Kyo に保存" },
+  "contextMenuSavePage": { "message": "Kyo に保存" },
+  "contextMenuSaveLink": { "message": "リンクを Kyo に保存" },
+  "contextMenuSaveSelection": { "message": "Kyo に保存（メモ付き）" },
+  "newtabLoadError": { "message": "読み込みに失敗しました。クリックして再試行。" }
+}

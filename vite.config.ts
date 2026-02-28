@@ -225,6 +225,11 @@ export default defineConfig({
         // Cache strategy for different asset types
         runtimeCaching: [
           {
+            // Supabase API — bypass SW completely, never cache, never wrap errors
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: "NetworkOnly",
+          },
+          {
             // Navigation requests (/, /foo, etc.) - network first to avoid stale index.html
             // Critical for Safari which can error on missing chunks after updates
             urlPattern: ({ request }) => request.mode === 'navigate',

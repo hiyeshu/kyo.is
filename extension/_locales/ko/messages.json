@@ -1,0 +1,10 @@
+{
+  "extName": { "message": "Kyo" },
+  "extDescription": { "message": "북마크를 데스크톱에. 붙여넣기로 저장, 입력으로 검색." },
+  "actionTitle": { "message": "Kyo — 북마크에 저장" },
+  "commandSaveBookmark": { "message": "현재 페이지를 Kyo에 저장" },
+  "contextMenuSavePage": { "message": "Kyo에 저장" },
+  "contextMenuSaveLink": { "message": "링크를 Kyo에 저장" },
+  "contextMenuSaveSelection": { "message": "Kyo에 저장 (메모 포함)" },
+  "newtabLoadError": { "message": "로드 실패. 클릭하여 다시 시도." }
+}

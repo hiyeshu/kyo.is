@@ -22,7 +22,9 @@ export async function cloudUpsertItem(item: Record<string, unknown>) {
   const userId = await getUserId();
   if (!userId) return;
   const payload = { ...item, user_id: userId };
-  const { error } = await supabase.from("kyo_items").upsert(payload);
+  const { error } = await supabase
+    .from("kyo_items")
+    .upsert(payload, { onConflict: "user_id,url,type", ignoreDuplicates: false });
   if (error) {
     console.error("[cloudSync] upsert failed:", error.code, error.message);
   }

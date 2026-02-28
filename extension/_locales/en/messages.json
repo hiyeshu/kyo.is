@@ -1,0 +1,10 @@
+{
+  "extName": { "message": "Kyo" },
+  "extDescription": { "message": "Your bookmarks, on a desktop. Paste to save, type to find." },
+  "actionTitle": { "message": "Kyo — Save to bookmarks" },
+  "commandSaveBookmark": { "message": "Save current page to Kyo" },
+  "contextMenuSavePage": { "message": "Save to Kyo" },
+  "contextMenuSaveLink": { "message": "Save link to Kyo" },
+  "contextMenuSaveSelection": { "message": "Save to Kyo (with note)" },
+  "newtabLoadError": { "message": "Failed to load. Click to retry." }
+}

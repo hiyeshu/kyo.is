@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 依赖 lib/storage.js, lib/auth.js, Supabase REST API
+ * [INPUT]: 依赖 lib/storage.js, lib/auth.js, lib/config.js, Supabase REST API
  * [OUTPUT]: pushBookmark, deleteBookmark, pullAll, initialSync, syncUnsynced
  * [POS]: extension/lib 的云同步层，直接写 Supabase kyo_items 表（与主站 cloudSync 同构）
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -7,12 +7,40 @@
 
 import { getAll, getUnsynced, markSynced, mergeFromCloud } from "./storage.js";
 import { getAccessToken, getSession, isLoggedIn } from "./auth.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 
-const SUPABASE_URL = "https://icrcrtriimlfyqwuonnz.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_3dc-PxcnVxabpjwHPED9Rg_PT-2aNXg";
+// ─── 并发控制 ─────────────────────────────────────────────────────────────────
 
-// ─── Supabase REST 辅助 ──────────────────────────────────────────────────────
+const CONCURRENCY = 5;
 
+/**
+ * 限制并发执行异步任务
+ * @template T
+ * @param {Array<T>} items
+ * @param {(item: T) => Promise<boolean>} fn
+ * @param {number} limit
+ * @returns {Promise<number>} 成功数
+ */
+async function mapConcurrent(items, fn, limit = CONCURRENCY) {
+  let ok = 0;
+  let i = 0;
+  const run = async () => {
+    while (i < items.length) {
+      const item = items[i++];
+      if (await fn(item)) ok++;
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, run));
+  return ok;
+}
+
+// ─── Supabase REST 辅助 ───────────────────────────────────────────────────────
+
+/**
+ * @param {string} table
+ * @param {{ method?: string, body?: Object, query?: string }} opts
+ * @returns {Promise<Object|Array|null>}
+ */
 async function supabaseRest(table, { method = "GET", body, query = "" } = {}) {
   const token = await getAccessToken();
   if (!token) return null;
@@ -38,8 +66,12 @@ async function supabaseRest(table, { method = "GET", body, query = "" } = {}) {
   return res.json();
 }
 
-// ─── 推送单个书签（查重后 insert 或 update，与主站 cloudSync 同构）────────────
+// ─── 推送单个书签（查重后 insert 或 update）──────────────────────────────────
 
+/**
+ * @param {Object} bookmark
+ * @returns {Promise<boolean>}
+ */
 export async function pushBookmark(bookmark) {
   if (!(await isLoggedIn())) return false;
 
@@ -47,7 +79,6 @@ export async function pushBookmark(bookmark) {
   const userId = session?.user?.id;
   if (!userId) return false;
 
-  // 先查是否已存在
   const existing = await supabaseRest("kyo_items", {
     query: `?user_id=eq.${userId}&url=eq.${encodeURIComponent(bookmark.url)}&select=id&limit=1`,
   });
@@ -65,7 +96,6 @@ export async function pushBookmark(bookmark) {
 
   let result;
   if (existing?.length) {
-    // 已存在 → 更新
     result = await supabaseRest("kyo_items", {
       method: "PATCH",
       query: `?id=eq.${existing[0].id}`,
@@ -77,7 +107,6 @@ export async function pushBookmark(bookmark) {
       },
     });
   } else {
-    // 不存在 → 插入
     result = await supabaseRest("kyo_items", {
       method: "POST",
       body: payload,
@@ -91,8 +120,11 @@ export async function pushBookmark(bookmark) {
   return false;
 }
 
-// ─── 拉取云端所有书签 ────────────────────────────────────────────────────────
+// ─── 拉取云端所有书签 ─────────────────────────────────────────────────────────
 
+/**
+ * @returns {Promise<Array<Object>>}
+ */
 export async function pullAll() {
   if (!(await isLoggedIn())) return [];
 
@@ -114,8 +146,11 @@ export async function pullAll() {
   }));
 }
 
-// ─── 删除云端书签 ────────────────────────────────────────────────────────────
+// ─── 删除云端书签 ─────────────────────────────────────────────────────────────
 
+/**
+ * @param {Object} bookmark
+ */
 export async function deleteBookmark(bookmark) {
   if (!(await isLoggedIn())) return;
 
@@ -129,8 +164,11 @@ export async function deleteBookmark(bookmark) {
   });
 }
 
-// ─── 初始同步（登录后触发）──────────────────────────────────────────────────
+// ─── 初始同步（登录后触发）───────────────────────────────────────────────────
 
+/**
+ * @returns {Promise<{ uploaded: number, downloaded: number }>}
+ */
 export async function initialSync() {
   if (!(await isLoggedIn())) return { uploaded: 0, downloaded: 0 };
 
@@ -138,26 +176,19 @@ export async function initialSync() {
   const downloaded = await mergeFromCloud(cloudBookmarks);
 
   const unsynced = await getUnsynced();
-  let uploaded = 0;
-  for (const bookmark of unsynced) {
-    const ok = await pushBookmark(bookmark);
-    if (ok) uploaded++;
-  }
+  const uploaded = await mapConcurrent(unsynced, pushBookmark);
 
   console.log(`[kyo:sync] initialSync done: ↑${uploaded} ↓${downloaded}`);
   return { uploaded, downloaded };
 }
 
-// ─── 同步所有未同步的书签 ────────────────────────────────────────────────────
+// ─── 同步所有未同步的书签 ─────────────────────────────────────────────────────
 
+/**
+ * @returns {Promise<number>} 成功同步数
+ */
 export async function syncUnsynced() {
   if (!(await isLoggedIn())) return 0;
-
   const unsynced = await getUnsynced();
-  let count = 0;
-  for (const bookmark of unsynced) {
-    const ok = await pushBookmark(bookmark);
-    if (ok) count++;
-  }
-  return count;
+  return mapConcurrent(unsynced, pushBookmark);
 }
