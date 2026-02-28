@@ -5,7 +5,6 @@ import { useThemeStore } from "@/stores/useThemeStore";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AboutDialog } from "@/components/dialogs/AboutDialog";
@@ -13,6 +12,50 @@ import { AnyApp } from "@/apps/base/types";
 import { AppId } from "@/config/appIds";
 import { ThemedIcon } from "@/components/shared/ThemedIcon";
 import { getTranslatedAppName } from "@/utils/i18n";
+
+// ─── 开始菜单行项 ─────────────────────────────────────────────────────────────
+// 统一行高 40px、间距 12px、字体、hover 高亮，对标 ryOS / 真实 Windows XP
+
+function StartMenuItem({
+  children,
+  onClick,
+  theme,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  theme: string;
+}) {
+  return (
+    <div
+      role="menuitem"
+      tabIndex={-1}
+      onClick={onClick}
+      className="flex items-center cursor-default select-none hover:bg-[#2b61d1] hover:text-white"
+      style={{
+        height: theme === "win98" ? "36px" : "40px",
+        padding: "0 12px",
+        gap: "12px",
+        fontSize: theme === "win98" ? "13px" : "14px",
+        color: "#000000",
+        fontFamily: '"Pixelated MS Sans Serif", Tahoma, Arial, sans-serif',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// 图标容器 — 固定 32x32，内容居中，杜绝大小不一
+function StartMenuIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="flex items-center justify-center shrink-0"
+      style={{ width: "32px", height: "32px" }}
+    >
+      {children}
+    </div>
+  );
+}
 
 interface StartMenuProps {
   apps: AnyApp[];
@@ -125,8 +168,7 @@ export function StartMenu({ apps }: StartMenuProps) {
           sideOffset={0}
           className="p-0 overflow-hidden"
           style={{
-            // Narrower overall width; differentiate slightly for themes if desired
-            width: "280px",
+            width: "300px",
             maxHeight: "80vh",
             background:
               currentTheme === "xp" || currentTheme === "win98"
@@ -189,74 +231,49 @@ export function StartMenu({ apps }: StartMenuProps) {
               {/* All Menu Items Section */}
               <div className="py-1 overflow-y-auto flex-1 min-h-0">
                 {/* About This Computer */}
-                <DropdownMenuItem
-                  onClick={() => setAboutOpen(true)}
-                  className="px-3 flex items-center hover:bg-blue-500 hover:text-white"
-                  style={{
-                    height: "var(--os-spacing-xl)",
-                    fontSize: "var(--os-text-base)",
-                    color: "#000000",
-                    fontFamily: "var(--font-ms-sans)",
-                    imageRendering: "pixelated",
-                    gap: "var(--os-menu-item-gap, 8px)",
-                  }}
-                >
-                  <ThemedIcon
-                    name="info.png"
-                    alt="About"
-                    className="[image-rendering:pixelated]"
-                    style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
-                  />
+                <StartMenuItem onClick={() => setAboutOpen(true)} theme={currentTheme}>
+                  <StartMenuIcon>
+                    <ThemedIcon
+                      name="info.png"
+                      alt="About"
+                      className="w-full h-full [image-rendering:pixelated] object-contain"
+                    />
+                  </StartMenuIcon>
                   {t("common.startMenu.aboutThisComputer")}
-                </DropdownMenuItem>
+                </StartMenuItem>
 
                 {/* Separator */}
                 <div
-                  className="border-b mx-2 my-1"
+                  className="border-b mx-3 my-1"
                   style={{ borderColor: "#9e9e9e" }}
                 />
 
                 {/* Apps */}
                 {apps.map((app) => (
-                  <DropdownMenuItem
-                    key={app.id}
-                    onClick={() => handleAppClick(app.id)}
-                    className="px-3 flex items-center hover:bg-blue-500 hover:text-white"
-                    style={{
-                      height: "var(--os-spacing-xl)",
-                      fontSize: "var(--os-text-base)",
-                      color: "#000000",
-                      fontFamily: "var(--font-ms-sans)",
-                      imageRendering: "pixelated",
-                      gap: "var(--os-menu-item-gap, 8px)",
-                    }}
-                  >
-                    {typeof app.icon === "string" ? (
-                      app.icon.startsWith("/icons/") ? (
+                  <StartMenuItem key={app.id} onClick={() => handleAppClick(app.id)} theme={currentTheme}>
+                    <StartMenuIcon>
+                      {typeof app.icon === "string" ? (
+                        app.icon.startsWith("/icons/") ? (
                           <ThemedIcon
                             name={app.icon}
                             alt={getTranslatedAppName(app.id as AppId)}
-                          className="[image-rendering:pixelated]"
-                          style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
-                        />
+                            className="w-full h-full [image-rendering:pixelated] object-contain"
+                          />
+                        ) : (
+                          <span className="flex items-center justify-center w-full h-full">
+                            {app.icon}
+                          </span>
+                        )
                       ) : (
-                        <div 
-                          className="flex items-center justify-center"
-                          style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
-                        >
-                          {app.icon}
-                        </div>
-                      )
-                    ) : (
                         <ThemedIcon
                           name={app.icon.src}
                           alt={getTranslatedAppName(app.id as AppId)}
-                        className="[image-rendering:pixelated]"
-                        style={{ width: "var(--os-icon-menu)", height: "var(--os-icon-menu)" }}
-                      />
-                    )}
+                          className="w-full h-full [image-rendering:pixelated] object-contain"
+                        />
+                      )}
+                    </StartMenuIcon>
                     {getTranslatedAppName(app.id as AppId)}
-                  </DropdownMenuItem>
+                  </StartMenuItem>
                 ))}
               </div>
             </div>
