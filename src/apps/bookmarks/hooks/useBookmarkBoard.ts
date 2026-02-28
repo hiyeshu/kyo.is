@@ -112,7 +112,7 @@ export function useBookmarkBoard() {
     setAddDialogOpen(true);
   }, []);
 
-  // ─── AI 添加书签 ──────────────────────────────────────────────────────────
+  // ─── AI 添加书签（异步渐进模式）────────────────────────────────────────────
   const submitAiBookmark = useCallback(async () => {
     const input = addUrl.trim();
     if (!input || isAiCreating) return;
@@ -129,14 +129,17 @@ export function useBookmarkBoard() {
       return;
     }
 
-    // ── fallback: 从 URL 提取基础元数据，确保书签总能被创建 ──
+    // ── Phase 1: 立即创建占位书签，关闭对话框 ──
     const fallbackTitle = parsedUrl.hostname.replace(/^www\./, "");
-    const addFallbackBookmark = () => {
-      store.addAiBookmark(fallbackTitle, parsedUrl!.toString(), "", []);
-      setAddDialogOpen(false);
-      setAddUrl("");
-    };
+    let hostname = "example.com";
+    try { hostname = new URL(parsedUrl.toString()).hostname; } catch { /* noop */ }
+    const favicon = getFaviconUrl(hostname);
+    
+    const bookmarkId = store.addBookmark(fallbackTitle, parsedUrl.toString(), favicon);
+    setAddDialogOpen(false);
+    setAddUrl("");
 
+    // ── Phase 2: 后台异步获取 AI 元数据并更新 ──
     setIsAiCreating(true);
     const abort = new AbortController();
     const timer = setTimeout(() => abort.abort(), 15_000);
@@ -154,7 +157,7 @@ export function useBookmarkBoard() {
         }),
       });
 
-      if (!response.ok) { addFallbackBookmark(); return; }
+      if (!response.ok) return;
 
       const text = await response.text();
       const fullContent = text
@@ -163,22 +166,24 @@ export function useBookmarkBoard() {
         .map((line) => { try { return JSON.parse(line.slice(2)) as string; } catch { return ""; } })
         .join("");
       const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) { addFallbackBookmark(); return; }
+      if (!jsonMatch) return;
 
       const data = JSON.parse(jsonMatch[0]) as { title: string; summary: string; tags: string[] };
-      if (!data.title || !data.summary || !Array.isArray(data.tags)) { addFallbackBookmark(); return; }
+      if (!data.title || !data.summary || !Array.isArray(data.tags)) return;
 
       const trimmedTags = data.tags.filter((tag) => tag && tag.trim());
-      store.addAiBookmark(data.title, parsedUrl.toString(), data.summary, trimmedTags);
-      setAddDialogOpen(false);
-      setAddUrl("");
+      store.updateBookmark(bookmarkId, {
+        title: data.title,
+        summary: data.summary,
+        tags: trimmedTags,
+      });
     } catch {
-      addFallbackBookmark();
+      // AI 失败？没关系，书签已经存在了
     } finally {
       clearTimeout(timer);
       setIsAiCreating(false);
     }
-  }, [addUrl, isAiCreating, store, t]);
+  }, [addUrl, isAiCreating, store, t, i18n.language]);
 
   // ─── 打开书签 ──────────────────────────────────────────────────────────────
   const openBookmark = useCallback((id: string, url: string) => {
