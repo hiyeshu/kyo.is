@@ -122,7 +122,7 @@ function BookmarkCard({
     >
       <div 
         className={cn(
-          "rounded-xl flex items-center justify-center relative overflow-hidden",
+          "flex items-center justify-center relative overflow-hidden",
           "bg-gradient-to-b from-white to-white/90",
           "border border-black/10",
           "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]",
@@ -133,13 +133,15 @@ function BookmarkCard({
         style={{
           width: "var(--os-icon-bookmark)",
           height: "var(--os-icon-bookmark)",
+          borderRadius: "22%",
         }}
       >
         <BookmarkIconDisplay bookmark={bm} size="sm" />
         {isMacTheme && (
-          <div 
-            className="absolute inset-0 pointer-events-none rounded-xl"
+          <div
+            className="absolute inset-0 pointer-events-none"
             style={{
+              borderRadius: "22%",
               background: "linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 50%, transparent 50%, rgba(0,0,0,0.03) 100%)",
             }}
           />

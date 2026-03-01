@@ -802,17 +802,13 @@ function BookmarkDesktopIcon({
             {iconInfo.value}
           </span>
         ) : (
-          // 主题差异化图标容器
+          // 统一 iOS 风格圆角 —— 所有主题保持一致
           <div
             className="relative overflow-hidden w-12 h-12"
             style={{
-              // macOS: iOS 风格圆角 22%
-              // XP/Win98: 方形无圆角，回归经典
-              borderRadius: isMacTheme ? "22%" : "0",
+              borderRadius: "22%",
               backgroundColor: "#ffffff",
-              boxShadow: isMacTheme
-                ? "0 1px 0 rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.12)"
-                : "0 1px 2px rgba(0,0,0,0.3)",
+              boxShadow: "0 1px 0 rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.12)",
             }}
           >
             <BookmarkFaviconImg

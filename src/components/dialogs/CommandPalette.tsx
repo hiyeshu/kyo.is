@@ -561,7 +561,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                           src={item.favicon || "/icons/default/internet.png"}
                           alt=""
                           className="w-4 h-4 shrink-0 object-contain self-start mt-0.5"
-                          style={{ borderRadius: "3px" }}
+                          style={{ borderRadius: "22%" }}
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = "/icons/default/internet.png";
                           }}
@@ -613,7 +613,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                             bookmarkTitle={bm.title}
                             faviconResolved={bm.faviconResolved}
                             className="w-4 h-4 shrink-0 object-contain self-start mt-0.5"
-                            style={{ borderRadius: "3px" }}
+                            style={{ borderRadius: "22%" }}
                           />
                         )}
                         <div className="flex-1 min-w-0">
