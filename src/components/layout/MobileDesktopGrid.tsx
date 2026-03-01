@@ -6,7 +6,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { memo, useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -43,6 +43,85 @@ const SEARCH_BAR_AREA = 44; // 搜索栏 + 圆点指示器区域高度
 // Dock 高度通过 CSS 变量感知：var(--os-dock-height) + safe-area
 const DOCK_BOTTOM_CSS = "calc(var(--os-dock-height, 56px) + env(safe-area-inset-bottom, 0px))";
 
+// ─── 记忆化图标包装器（稳定回调，消除翻页时无意义重渲染）────────────
+
+const MobileAppIcon = memo(function MobileAppIcon({
+  appId,
+  theme,
+  isSelected,
+  onAppClick,
+  onAppContextMenu,
+}: {
+  appId: string;
+  theme: string;
+  isSelected: boolean;
+  onAppClick: (appId: string, rect: DOMRect) => void;
+  onAppContextMenu: (appId: string, x: number, y: number) => void;
+}) {
+  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    onAppClick(appId, rect);
+  }, [appId, onAppClick]);
+
+  const handleDoubleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onAppContextMenu(appId, e.clientX, e.clientY);
+  }, [appId, onAppContextMenu]);
+
+  return (
+    <DesktopIcon
+      label={getTranslatedAppName(appId as AppId)}
+      icon={getAppIconPath(appId as AppId, theme)}
+      isSelected={isSelected}
+      theme={theme}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
+    />
+  );
+});
+
+const MobileBookmarkItem = memo(function MobileBookmarkItem({
+  bookmark,
+  isSelected,
+  theme,
+  onBookmarkOpen,
+  onBookmarkSelect,
+  onBookmarkContextMenu,
+}: {
+  bookmark: Bookmark;
+  isSelected: boolean;
+  theme: string;
+  onBookmarkOpen: (bookmark: Bookmark) => void;
+  onBookmarkSelect: (bookmark: Bookmark) => void;
+  onBookmarkContextMenu: (bookmark: Bookmark, x: number, y: number) => void;
+}) {
+  const handleOpen = useCallback(() => onBookmarkOpen(bookmark), [bookmark, onBookmarkOpen]);
+  const handleSelect = useCallback(() => onBookmarkSelect(bookmark), [bookmark, onBookmarkSelect]);
+  const handleContextMenu = useCallback(
+    (cx: number, cy: number) => onBookmarkContextMenu(bookmark, cx, cy),
+    [bookmark, onBookmarkContextMenu]
+  );
+
+  return (
+    <BookmarkIconWrapper
+      bookmark={bookmark}
+      isMobile={true}
+      isSelected={isSelected}
+      theme={theme}
+      onOpen={handleOpen}
+      onSelect={handleSelect}
+      onContextMenu={handleContextMenu}
+    />
+  );
+});
+
 // ─── 主组件 ───────────────────────────────────────────────────────────
 
 export function MobileDesktopGrid({
@@ -63,8 +142,9 @@ export function MobileDesktopGrid({
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [currentPage, setCurrentPage] = useState(0);
-  const [dotsVisible, setDotsVisible] = useState(false);
   const dotsTimerRef = useRef<number | null>(null);
+  const dotsElRef = useRef<HTMLDivElement>(null);
+  const searchBtnRef = useRef<HTMLButtonElement>(null);
   const pullStartY = useRef<number | null>(null);
   const x = useMotionValue(0);
 
@@ -124,12 +204,16 @@ export function MobileDesktopGrid({
   // ─── 圆点指示器显隐 ─────────────────────────────────────────────
   const showDots = useCallback(() => {
     if (dotsTimerRef.current) clearTimeout(dotsTimerRef.current);
-    setDotsVisible(true);
+    if (dotsElRef.current) dotsElRef.current.style.opacity = "1";
+    if (searchBtnRef.current) searchBtnRef.current.style.opacity = "0";
   }, []);
 
   const hidDotsDelayed = useCallback(() => {
     if (dotsTimerRef.current) clearTimeout(dotsTimerRef.current);
-    dotsTimerRef.current = window.setTimeout(() => setDotsVisible(false), 1200);
+    dotsTimerRef.current = window.setTimeout(() => {
+      if (dotsElRef.current) dotsElRef.current.style.opacity = "0";
+      if (searchBtnRef.current) searchBtnRef.current.style.opacity = "1";
+    }, 1200);
   }, []);
 
   useEffect(() => {
@@ -227,23 +311,13 @@ export function MobileDesktopGrid({
                   const app = appMap.get(item.id);
                   if (!app) return null;
                   return (
-                    <DesktopIcon
+                    <MobileAppIcon
                       key={item.id}
-                      label={getTranslatedAppName(app.id as AppId)}
-                      icon={getAppIconPath(app.id as AppId, theme)}
-                      isSelected={selectedAppId === app.id}
+                      appId={app.id}
                       theme={theme}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        onAppClick(app.id, rect);
-                      }}
-                      onDoubleClick={(e) => e.stopPropagation()}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onAppContextMenu(app.id, e.clientX, e.clientY);
-                      }}
+                      isSelected={selectedAppId === app.id}
+                      onAppClick={onAppClick}
+                      onAppContextMenu={onAppContextMenu}
                     />
                   );
                 }
@@ -251,15 +325,14 @@ export function MobileDesktopGrid({
                 const bm = bookmarkMap.get(item.id);
                 if (!bm) return null;
                 return (
-                  <BookmarkIconWrapper
+                  <MobileBookmarkItem
                     key={item.id}
                     bookmark={bm}
-                    isMobile={true}
                     isSelected={selectedBookmarkIds.has(bm.id)}
                     theme={theme}
-                    onOpen={() => onBookmarkOpen(bm)}
-                    onSelect={() => onBookmarkSelect(bm)}
-                    onContextMenu={(cx, cy) => onBookmarkContextMenu(bm, cx, cy)}
+                    onBookmarkOpen={onBookmarkOpen}
+                    onBookmarkSelect={onBookmarkSelect}
+                    onBookmarkContextMenu={onBookmarkContextMenu}
                   />
                 );
               })}
@@ -281,12 +354,12 @@ export function MobileDesktopGrid({
         >
           {/* 搜索栏 — 常驻 */}
           <button
+            ref={searchBtnRef}
             className="pointer-events-auto flex items-center gap-1.5 px-4 h-8 rounded-full transition-opacity duration-300"
             style={{
               background: "rgba(255,255,255,0.15)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
-              opacity: dotsVisible ? 0 : 1,
             }}
             onClick={onOpenSearch}
           >
@@ -296,8 +369,9 @@ export function MobileDesktopGrid({
 
           {/* 圆点指示器 — 滑动时淡入 */}
           <div
+            ref={dotsElRef}
             className="absolute inset-0 flex justify-center items-center gap-1.5 transition-opacity duration-300 pointer-events-none"
-            style={{ opacity: dotsVisible ? 1 : 0 }}
+            style={{ opacity: 0 }}
           >
             {Array.from({ length: Math.max(totalPages, 1) }, (_, i) => (
               <button

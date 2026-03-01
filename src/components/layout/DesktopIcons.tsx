@@ -1,11 +1,11 @@
 /**
  * [INPUT]: 依赖 stores/useBookmarkStore 的 Bookmark 类型和 getBookmarkIconInfo，依赖 components/shared/BookmarkFaviconImg
- * [OUTPUT]: 对外提供 DesktopIcon、BookmarkDesktopIcon、BookmarkIconWrapper 组件，以及图标常量
+ * [OUTPUT]: 对外提供 DesktopIcon(memo)、BookmarkDesktopIcon(memo)、BookmarkIconWrapper(memo) 组件，以及图标常量
  * [POS]: components/layout/ 的桌面图标组件集，被 Desktop.tsx 和 MobileDesktopGrid.tsx 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useRef, useCallback } from "react";
+import { memo, useRef, useCallback } from "react";
 import { getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
 
@@ -29,7 +29,7 @@ function useThemeFlags(theme: string) {
 }
 
 // ─── 图标标签样式（消除 DesktopIcon / BookmarkDesktopIcon 重复） ──────
-function IconLabel({
+const IconLabel = memo(function IconLabel({
   text,
   isSelected,
   theme,
@@ -71,11 +71,11 @@ function IconLabel({
       {text}
     </span>
   );
-}
+});
 
 // ─── 应用桌面图标 ─────────────────────────────────────────────────────
 
-export function DesktopIcon({
+export const DesktopIcon = memo(function DesktopIcon({
   label,
   icon,
   isSelected,
@@ -121,11 +121,11 @@ export function DesktopIcon({
       <IconLabel text={label} isSelected={isSelected} theme={theme} />
     </div>
   );
-}
+});
 
 // ─── 书签桌面图标 ─────────────────────────────────────────────────────
 
-export function BookmarkDesktopIcon({
+export const BookmarkDesktopIcon = memo(function BookmarkDesktopIcon({
   bookmark,
   isSelected,
   onClick,
@@ -202,11 +202,11 @@ export function BookmarkDesktopIcon({
       />
     </div>
   );
-}
+});
 
 // ─── 书签图标包装器（长按 → 右键菜单） ────────────────────────────────
 
-export function BookmarkIconWrapper({
+export const BookmarkIconWrapper = memo(function BookmarkIconWrapper({
   bookmark,
   isMobile,
   isSelected,
@@ -300,4 +300,4 @@ export function BookmarkIconWrapper({
       />
     </div>
   );
-}
+});
