@@ -25,7 +25,6 @@ interface MobileDesktopGridProps {
   bookmarks: Bookmark[];
   theme: string;
   isXpTheme: boolean;
-  toggleApp: (appId: AppId, initialData?: unknown, launchOrigin?: LaunchOriginRect) => void;
   selectedAppId: string | null;
   selectedBookmarkIds: Set<string>;
   onAppClick: (appId: string, rect: DOMRect) => void;
@@ -49,7 +48,6 @@ export function MobileDesktopGrid({
   bookmarks,
   theme,
   isXpTheme,
-  toggleApp,
   selectedAppId,
   selectedBookmarkIds,
   onAppClick,
