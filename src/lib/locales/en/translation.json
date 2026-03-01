@@ -13,6 +13,9 @@
       "appsGroup": "Apps",
       "bookmarksGroup": "Bookmarks",
       "notesGroup": "Notes",
+      "browserBookmarksGroup": "Browser Bookmarks",
+      "recentVisitsGroup": "Recent Visits",
+      "visits": "visits",
       "emptyNote": "Empty note",
       "noResults": "No results found",
       "askKyo": "Ask Kyo"

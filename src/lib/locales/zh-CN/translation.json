@@ -2416,6 +2416,9 @@
       "appsGroup": "应用",
       "bookmarksGroup": "书签",
       "notesGroup": "便签",
+      "browserBookmarksGroup": "浏览器书签",
+      "recentVisitsGroup": "最近访问",
+      "visits": "次访问",
       "emptyNote": "空便签",
       "noResults": "找不到书签",
       "askKyo": "问问 Kyo"

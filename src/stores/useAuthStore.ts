@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 @/lib/supabase 的客户端，依赖 useSyncStore 的 initialSync / startRealtime / stopRealtime，依赖 useBookmarkStore 的 addBookmark / getBookmarkByUrl
+ * [INPUT]: 依赖 @/lib/supabase 的客户端，依赖 useSyncStore 的 initialSync / startRealtime / stopRealtime，依赖 useBookmarkStore 的 addBookmark / getBookmarkByUrl，依赖 useBrowserDataStore 的 setBrowserData
  * [OUTPUT]: 对外提供 useAuthStore — user / loading / signInWithGoogle / signOut
- * [POS]: stores/ 的认证状态管理，被 App.tsx 和 AppleMenu 消费，同时承载 extension iframe 桥接（auth + 书签）
+ * [POS]: stores/ 的认证状态管理，被 App.tsx 和 AppleMenu 消费，同时承载 extension iframe 桥接（auth + 书签 + 浏览器原生数据）
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useSyncStore } from "./useSyncStore";
 import { useBookmarkStore } from "./useBookmarkStore";
+import { useBrowserDataStore } from "./useBrowserDataStore";
 
 const SYNC_DONE_KEY = "kyo:sync-done-session";
 
@@ -49,6 +50,14 @@ function initExtensionBridge() {
           store.addBookmark(bm.title, bm.url, bm.favicon, { onDesktop: bm.onDesktop ?? true });
         }
       }
+    }
+
+    // 浏览器原生数据：书签 + 历史记录 → useBrowserDataStore
+    if (e.data?.type === "kyo:browser-data") {
+      useBrowserDataStore.getState().setBrowserData(
+        e.data.bookmarks || [],
+        e.data.history || [],
+      );
     }
   });
 }

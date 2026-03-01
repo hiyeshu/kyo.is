@@ -16,6 +16,7 @@ useStickiesStore.ts: 便利贴状态，便签列表、颜色、位置与尺寸�
 useSyncStore.ts: 云端数据加载，登录时 initialSync 拉取云端覆盖本地，首次登录推送本地到云端
 useKyoItemStore.ts: KyoItem 统一查询层，不持有数据，从 bookmark + stickies 派生 KyoItem 格式
 useLinkMetaStore.ts: 链接元数据缓存，URL 预览信息（标题、描述、图片）
+useBrowserDataStore.ts: 浏览器原生数据瞬态存储，接收插件通过 postMessage 注入的 Chrome 书签和历史记录，不持久化，被 CommandPalette 消费
 
 ## 已删除文件（Phase 1 清理）
 - useFilesStore.ts (文件系统，Kyo 无文件系统)

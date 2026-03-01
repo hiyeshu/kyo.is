@@ -2414,6 +2414,9 @@
       "appsGroup": "應用程式",
       "bookmarksGroup": "書籤",
       "notesGroup": "便利貼",
+      "browserBookmarksGroup": "瀏覽器書籤",
+      "recentVisitsGroup": "最近造訪",
+      "visits": "次造訪",
       "emptyNote": "空白便利貼",
       "noResults": "找不到結果",
       "askKyo": "問問 Kyo"

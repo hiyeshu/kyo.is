@@ -236,11 +236,21 @@ export function AppManager({ apps }: AppManagerProps) {
       }
     };
 
+    // 插件 postMessage 桥接：收到 kyo:open-search 自动打开搜索
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === "kyo:open-search") {
+        setInitialSearch("");
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
     window.addEventListener("toggleExposeView", handleExposeToggle);
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("message", handleMessage);
     return () => {
       window.removeEventListener("toggleExposeView", handleExposeToggle);
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("message", handleMessage);
     };
   }, []);
 

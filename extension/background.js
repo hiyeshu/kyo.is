@@ -114,6 +114,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     storage.getAll().then((items) => sendResponse({ items }));
     return true;
   }
+  if (msg.action === "get-browser-data") {
+    getBrowserData().then((data) => sendResponse(data));
+    return true;
+  }
 });
 
 /**
@@ -126,6 +130,49 @@ async function handleAuthSession(session) {
   } else {
     await auth.clearSession();
   }
+}
+
+// ─── 浏览器原生数据采集 ──────────────────────────────────────────────────────
+
+/**
+ * 采集 Chrome 原生书签（扁平化）+ 最近历史记录
+ * @returns {Promise<{bookmarks: Array, history: Array}>}
+ */
+async function getBrowserData() {
+  const [bookmarkTree, historyItems] = await Promise.all([
+    chrome.bookmarks.getTree().catch(() => []),
+    chrome.history.search({ text: "", maxResults: 200, startTime: 0 }).catch(() => []),
+  ]);
+
+  // 书签树扁平化，保留文件夹路径
+  const bookmarks = [];
+  function flatten(nodes, folder) {
+    for (const node of nodes) {
+      if (node.url) {
+        bookmarks.push({
+          id: node.id,
+          title: node.title || node.url,
+          url: node.url,
+          dateAdded: node.dateAdded,
+          folder,
+        });
+      }
+      if (node.children) {
+        flatten(node.children, node.title || folder);
+      }
+    }
+  }
+  flatten(bookmarkTree, "");
+
+  const history = historyItems.map((h) => ({
+    id: h.id,
+    title: h.title || h.url,
+    url: h.url,
+    lastVisitTime: h.lastVisitTime,
+    visitCount: h.visitCount || 0,
+  }));
+
+  return { bookmarks, history };
 }
 
 // ─── 核心：保存书签 ──────────────────────────────────────────────────────────

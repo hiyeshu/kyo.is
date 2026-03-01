@@ -1,8 +1,8 @@
 /**
- * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useAuthStore, supabase, useThemeStore, appRegistry, useAppStore, i18n
+ * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useAuthStore, useBrowserDataStore, supabase, useThemeStore, appRegistry, useAppStore, i18n
  * [OUTPUT]: CommandPalette 组件, getMatchInfo 命中推断, HighlightText 关键词高亮
- * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签，已登录时 debounced Supabase RPC ILIKE 搜索，未登录时客户端过滤，
- *        搜索结果根据命中字段（title/summary/text/tags/url）展示命中原因 + 关键词高亮，被 AppManager 挂载
+ * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签 + 浏览器原生书签/历史，已登录时 debounced Supabase RPC ILIKE 搜索，未登录时客户端过滤，
+ *        搜索结果根据命中字段展示命中原因 + 全量关键词高亮（加粗+蓝色），浏览器数据与 kyo 书签按 URL 去重，被 AppManager 挂载
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -23,7 +23,9 @@ import { useTranslation } from "react-i18next";
 import { MagnifyingGlass, Plus, CircleNotch, CopySimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
+import { scoreItem, getMatchInfo } from "@/utils/searchScore";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useBrowserDataStore, type BrowserBookmark, type BrowserHistoryItem } from "@/stores/useBrowserDataStore";
 
 // ─── 复制按钮（hover 显示，点击复制后自动关闭搜索）─────────────────────────
 
@@ -79,91 +81,75 @@ function normalizeUrl(input: string): string {
   return /^https?:\/\//i.test(input) ? input : `https://${input}`;
 }
 
-// ─── 搜索命中推断 ─────────────────────────────────────────────────────────────
-
-type MatchField = "title" | "summary" | "text" | "tags" | "url" | "none";
-
-interface MatchInfo {
-  field: MatchField;
-  /** 需要展示给用户的命中文本（title 命中时为 null，不需要副文本） */
-  text: string | null;
+function extractDomain(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
 }
 
-/**
- * 按优先级推断搜索命中的字段，返回应展示的文本
- * - title 命中 → 不显示副文本（标题已足够说明）
- * - summary/text/url 命中 → 显示该字段内容
- * - tags 命中 → 展示命中 tag 值（可高亮），拼接 summary 补充语境
- */
-function getMatchInfo(
-  query: string,
-  fields: { title?: string | null; summary?: string | null; text?: string | null; tags?: string[] | null; url?: string | null },
-): MatchInfo {
-  const q = query.toLowerCase();
-  if (fields.title && fields.title.toLowerCase().includes(q)) return { field: "title", text: null };
-  if (fields.summary && fields.summary.toLowerCase().includes(q)) return { field: "summary", text: fields.summary };
-  if (fields.text && fields.text.toLowerCase().includes(q)) return { field: "text", text: fields.text };
-  if (fields.tags?.some((t) => t.toLowerCase().includes(q))) {
-    // 找到命中的 tag，将其置于文本开头以便 HighlightText 高亮
-    const hit = fields.tags.find((t) => t.toLowerCase().includes(q)) || "";
-    const suffix = fields.summary ? ` · ${fields.summary}` : "";
-    return { field: "tags", text: hit + suffix };
-  }
-  if (fields.url && fields.url.toLowerCase().includes(q)) return { field: "url", text: fields.url };
-  return { field: "none", text: null };
-}
+// ─── 相关性评分 → @/utils/searchScore ──────────────────────────────────────
 
 /**
- * 高亮文本中的搜索关键词
- * 截取关键词附近的片段（前后各 30 字符），用 <mark> 高亮
+ * 高亮文本中所有匹配的搜索关键词（不只是第一个）
+ * 长文本先截取到命中区域附近，再对截取结果做全量高亮
  */
 function HighlightText({ text, query, maxLen = 80 }: { text: string; query: string; maxLen?: number }) {
   const lower = text.toLowerCase();
   const q = query.toLowerCase();
-  const idx = lower.indexOf(q);
+  const firstIdx = lower.indexOf(q);
 
-  if (idx === -1) {
-    // 未命中（tags → summary 场景），直接截取
+  if (firstIdx === -1) {
     return <span>{text.length > maxLen ? text.slice(0, maxLen) + "…" : text}</span>;
   }
 
-  // 计算截取窗口：以命中位置为中心
-  const pad = Math.floor((maxLen - query.length) / 2);
-  const start = Math.max(0, idx - pad);
-  const end = Math.min(text.length, idx + query.length + pad);
-  const before = (start > 0 ? "…" : "") + text.slice(start, idx);
-  const match = text.slice(idx, idx + query.length);
-  const after = text.slice(idx + query.length, end) + (end < text.length ? "…" : "");
+  // 长文本：以首次命中为中心截取窗口
+  let display = text;
+  let prefix = "";
+  let suffix = "";
+  if (text.length > maxLen) {
+    const pad = Math.floor((maxLen - query.length) / 2);
+    const start = Math.max(0, firstIdx - pad);
+    const end = Math.min(text.length, start + maxLen);
+    if (start > 0) prefix = "…";
+    if (end < text.length) suffix = "…";
+    display = text.slice(start, end);
+  }
 
-  return (
-    <span>
-      {before}
-      <mark style={{ backgroundColor: "rgba(255, 210, 0, 0.35)", color: "inherit", borderRadius: "2px", padding: "0 1px" }}>
-        {match}
-      </mark>
-      {after}
-    </span>
-  );
+  // 拆分：遍历所有匹配位置
+  const parts: React.ReactNode[] = [];
+  const dl = display.toLowerCase();
+  let cursor = 0;
+  let i = dl.indexOf(q, cursor);
+  while (i !== -1) {
+    if (i > cursor) parts.push(display.slice(cursor, i));
+    parts.push(<mark key={i} className="search-highlight">{display.slice(i, i + q.length)}</mark>);
+    cursor = i + q.length;
+    i = dl.indexOf(q, cursor);
+  }
+  if (cursor < display.length) parts.push(display.slice(cursor));
+
+  return <span>{prefix}{parts}{suffix}</span>;
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const macPanelStyle: React.CSSProperties = {
-  borderRadius: "12px",
-  backgroundColor: "rgba(240, 240, 240, 0.92)",
+  borderRadius: "14px",
+  backgroundColor: "rgba(246, 246, 246, 0.88)",
   backgroundImage: "var(--os-pinstripe-window)",
-  border: "0.5px solid rgba(0, 0, 0, 0.2)",
-  boxShadow: "0 16px 70px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(255, 255, 255, 0.6) inset",
+  border: "0.5px solid rgba(0, 0, 0, 0.15)",
+  boxShadow:
+    "0 24px 80px rgba(0, 0, 0, 0.28), " +
+    "0 8px 24px rgba(0, 0, 0, 0.12), " +
+    "0 0 0 0.5px rgba(255, 255, 255, 0.5) inset",
   overflow: "hidden",
-  backdropFilter: "blur(40px)",
-  WebkitBackdropFilter: "blur(40px)",
+  backdropFilter: "blur(50px)",
+  WebkitBackdropFilter: "blur(50px)",
 };
 
 const macInputStyle: React.CSSProperties = {
   fontFamily: "var(--os-font-ui)",
-  fontSize: "16px",
-  fontWeight: 300,
-  letterSpacing: "-0.01em",
+  fontSize: "20px",
+  fontWeight: 400,
+  letterSpacing: "-0.02em",
   WebkitFontSmoothing: "antialiased",
 };
 
@@ -207,20 +193,68 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
 
   const allBookmarks: FlatBookmark[] = items as FlatBookmark[];
 
-  // ─── 客户端过滤（无输入时不展示任何结果）───────────────────────────────────
+  // ─── 客户端过滤 + 相关性排序 ─────────────────────────────────────────────────
+  // 应用：只匹配翻译后的名称（避免英文 ID 产生噪音），最多 3 条
   const filteredApps = q
-    ? appList.filter((a) => a.searchLabel.toLowerCase().includes(q))
+    ? appList
+        .map((a) => ({ ...a, _score: scoreItem(q, { title: a.name }) }))
+        .filter((a) => a._score >= 60)
+        .sort((a, b) => b._score - a._score)
+        .slice(0, 3)
     : [];
 
+  // 书签：分数 >= 40（至少域名级命中），最多 6 条
   const filteredBookmarks = q
-    ? allBookmarks.filter((bm) => {
-        const haystack = [bm.title, bm.url, bm.summary || "", (bm.tags || []).join(" ")].join(" ").toLowerCase();
-        return haystack.includes(q);
-      })
+    ? allBookmarks
+        .map((bm) => ({
+          ...bm,
+          _score: scoreItem(q, {
+            title: bm.title, url: bm.url, summary: bm.summary,
+            tags: bm.tags, createdAt: new Date(bm.createdAt).getTime(),
+          }),
+        }))
+        .filter((bm) => bm._score >= 40)
+        .sort((a, b) => b._score - a._score)
+        .slice(0, 6)
     : [];
 
+  // 便签：分数 >= 25（至少内容命中），最多 4 条
   const filteredNotes = q
-    ? notes.filter((n) => n.content.toLowerCase().includes(q))
+    ? notes
+        .map((n) => ({
+          ...n,
+          _score: scoreItem(q, {
+            title: n.content.slice(0, 60), text: n.content,
+            tags: n.tags, createdAt: n.createdAt,
+          }),
+        }))
+        .filter((n) => n._score >= 25)
+        .sort((a, b) => b._score - a._score)
+        .slice(0, 4)
+    : [];
+
+  // ─── 浏览器原生数据过滤（插件注入时才有数据）──────────────────────────────
+  const { bookmarks: browserBookmarks, history: browserHistory, loaded: browserLoaded } = useBrowserDataStore();
+
+  // kyo 书签 URL 集合，用于去重
+  const kyoUrlSet = new Set(allBookmarks.map((bm) => bm.url));
+
+  const filteredBrowserBookmarks: (BrowserBookmark & { _score: number })[] = q && browserLoaded
+    ? browserBookmarks
+        .filter((bb) => !kyoUrlSet.has(bb.url))
+        .map((bb) => ({ ...bb, _score: scoreItem(q, { title: bb.title, url: bb.url }) }))
+        .filter((bb) => bb._score >= 40)
+        .sort((a, b) => b._score - a._score)
+        .slice(0, 4)
+    : [];
+
+  const filteredBrowserHistory: (BrowserHistoryItem & { _score: number })[] = q && browserLoaded
+    ? browserHistory
+        .filter((bh) => !kyoUrlSet.has(bh.url))
+        .map((bh) => ({ ...bh, _score: scoreItem(q, { title: bh.title, url: bh.url }) }))
+        .filter((bh) => bh._score >= 35)
+        .sort((a, b) => b._score - a._score)
+        .slice(0, 4)
     : [];
 
   // ─── 服务端 vs 客户端决策 ────────────────────────────────────────────────────
@@ -395,7 +429,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
 
       {/* Command Panel */}
       <div
-        className="absolute left-1/2 top-[20%] -translate-x-1/2 w-full max-w-[520px] px-4"
+        className="absolute left-1/2 top-[18%] -translate-x-1/2 w-full max-w-[640px] px-4"
         onClick={(e) => e.stopPropagation()}
       >
         <Command className="overflow-hidden" style={getPanelStyle()} loop shouldFilter={false}>
@@ -416,11 +450,11 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
             {isSearching ? (
               <CircleNotch
                 className="shrink-0 animate-spin"
-                size={18}
+                size={isMacTheme ? 22 : 18}
                 weight="regular"
                 style={{
                   color: isMacTheme
-                    ? "rgba(0, 0, 0, 0.35)"
+                    ? "rgba(0, 0, 0, 0.3)"
                     : isXpTheme
                     ? "#0054E3"
                     : "#666666",
@@ -429,11 +463,11 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
             ) : (
               <MagnifyingGlass
                 className="shrink-0"
-                size={18}
+                size={isMacTheme ? 22 : 18}
                 weight="regular"
                 style={{
                   color: isMacTheme
-                    ? "rgba(0, 0, 0, 0.35)"
+                    ? "rgba(0, 0, 0, 0.3)"
                     : isXpTheme
                     ? "#0054E3"
                     : "#666666",
@@ -445,10 +479,10 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               value={search}
               onValueChange={(v) => { setSearch(v); searchRef.current = v; }}
               placeholder={t("common.search.appsAndBookmarks", "搜索应用和书签...")}
-              className="w-full bg-transparent outline-none placeholder:text-black/25"
-              style={isMacTheme ? { ...macInputStyle, padding: "14px 0" } : {
+              className="w-full bg-transparent outline-none placeholder:text-black/20"
+              style={isMacTheme ? { ...macInputStyle, padding: "18px 0" } : {
                 fontSize: "15px",
-                padding: "14px 0",
+                padding: "16px 0",
                 fontFamily: isXpTheme
                   ? '"Pixelated MS Sans Serif", Tahoma, Arial'
                   : "var(--os-font-ui, Geneva)",
@@ -517,35 +551,6 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               </Command.Group>
             )}
 
-            {/* 应用组 — 始终客户端过滤 */}
-            {filteredApps.length > 0 && (
-              <Command.Group heading={t("common.search.appsGroup", "应用")}>
-                {filteredApps.map((app) => (
-                  <Command.Item
-                    key={app.id}
-                    value={app.searchLabel}
-                    onSelect={() => handleSelectApp(app.id)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 cursor-pointer",
-                      "data-[selected=true]:text-white"
-                    )}
-                    style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
-                  >
-                    <img
-                      src={app.icon}
-                      alt=""
-                      className="w-4 h-4 shrink-0 object-contain"
-                      style={{ borderRadius: "3px" }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/icons/default/application.png";
-                      }}
-                    />
-                    <span className="truncate">{app.name}</span>
-                  </Command.Item>
-                ))}
-              </Command.Group>
-            )}
-
             {/* 书签组 — 服务端结果 or 客户端过滤 */}
             {displayBookmarks ? (
               displayBookmarks.length > 0 && (
@@ -573,16 +578,41 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                           }}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="truncate">{item.title || item.url}</div>
-                          {match?.text && match.field !== "title" ? (
-                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "12px", opacity: 0.6 }}>
+                          <div className="flex items-center gap-2">
+                            <span className="truncate font-medium">
+                              {q ? <HighlightText text={item.title || item.url || ""} query={q} maxLen={50} /> : (item.title || item.url)}
+                            </span>
+                            {item.tags && item.tags.length > 0 && (
+                              <span className="shrink-0 flex items-center gap-1">
+                                {item.tags.slice(0, 2).map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="bookmark-tag"
+                                    style={{
+                                      fontSize: "9px",
+                                      padding: "1px 5px",
+                                      borderRadius: "3px",
+                                      backgroundColor: "rgba(0, 0, 0, 0.06)",
+                                      color: "rgba(0, 0, 0, 0.4)",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </span>
+                            )}
+                          </div>
+                          <div className="truncate" style={{ fontSize: isMacTheme ? "10px" : "11px", opacity: 0.4 }}>
+                            {match?.text && match.field !== "title" ? (
                               <HighlightText text={match.text} query={q} />
-                            </div>
-                          ) : (
-                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "12px", opacity: 0.5 }}>
-                              {item.url}
-                            </div>
-                          )}
+                            ) : item.url ? (
+                              <>
+                                {extractDomain(item.url)}
+                                {item.summary && <span style={{ opacity: 0.7 }}> · {item.summary.slice(0, 60)}</span>}
+                              </>
+                            ) : null}
+                          </div>
                         </div>
                         {item.url && <CopyButton text={item.url} onCopied={() => onOpenChange(false)} />}
                       </Command.Item>
@@ -623,16 +653,41 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                           />
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="truncate">{bm.title}</div>
-                          {match?.text && match.field !== "title" ? (
-                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "12px", opacity: 0.6 }}>
+                          <div className="flex items-center gap-2">
+                            <span className="truncate font-medium">
+                              {q ? <HighlightText text={bm.title} query={q} maxLen={50} /> : bm.title}
+                            </span>
+                            {bm.tags?.length > 0 && (
+                              <span className="shrink-0 flex items-center gap-1">
+                                {bm.tags.slice(0, 2).map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="bookmark-tag"
+                                    style={{
+                                      fontSize: "9px",
+                                      padding: "1px 5px",
+                                      borderRadius: "3px",
+                                      backgroundColor: "rgba(0, 0, 0, 0.06)",
+                                      color: "rgba(0, 0, 0, 0.4)",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </span>
+                            )}
+                          </div>
+                          <div className="truncate" style={{ fontSize: isMacTheme ? "10px" : "11px", opacity: 0.4 }}>
+                            {match?.text && match.field !== "title" ? (
                               <HighlightText text={match.text} query={q} />
-                            </div>
-                          ) : (
-                            <div className="truncate" style={{ fontSize: isMacTheme ? "11px" : "12px", opacity: 0.5 }}>
-                              {bm.url}
-                            </div>
-                          )}
+                            ) : (
+                              <>
+                                {extractDomain(bm.url)}
+                                {bm.summary && <span style={{ opacity: 0.7 }}> · {bm.summary.slice(0, 60)}</span>}
+                              </>
+                            )}
+                          </div>
                         </div>
                         <CopyButton text={bm.url} onCopied={() => onOpenChange(false)} />
                       </Command.Item>
@@ -707,6 +762,127 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               )
             )}
 
+            {/* 浏览器书签组（插件注入，去重后显示） */}
+            {filteredBrowserBookmarks.length > 0 && (
+              <Command.Group heading={t("common.search.browserBookmarksGroup", "浏览器书签")}>
+                {filteredBrowserBookmarks.map((bb) => (
+                  <Command.Item
+                    key={`bb-${bb.id}`}
+                    value={`${bb.title} ${bb.url}`}
+                    onSelect={() => handleSelectBookmark(bb.url)}
+                    className={cn(
+                      "group flex items-center gap-3 px-3 py-2 cursor-pointer",
+                      "data-[selected=true]:text-white"
+                    )}
+                    style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                  >
+                    <img
+                      src={`https://www.google.com/s2/favicons?domain=${extractDomain(bb.url)}&sz=32`}
+                      alt=""
+                      className="w-4 h-4 shrink-0 object-contain"
+                      style={{ borderRadius: "22%" }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/icons/default/internet.png"; }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-medium">
+                          <HighlightText text={bb.title} query={q} maxLen={50} />
+                        </span>
+                        {bb.folder && (
+                          <span
+                            className="bookmark-tag shrink-0"
+                            style={{
+                              fontSize: "9px",
+                              padding: "1px 5px",
+                              borderRadius: "3px",
+                              backgroundColor: "rgba(0, 0, 0, 0.06)",
+                              color: "rgba(0, 0, 0, 0.4)",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {bb.folder}
+                          </span>
+                        )}
+                      </div>
+                      <div className="truncate" style={{ fontSize: isMacTheme ? "10px" : "11px", opacity: 0.4 }}>
+                        {extractDomain(bb.url)}
+                      </div>
+                    </div>
+                    <CopyButton text={bb.url} onCopied={() => onOpenChange(false)} />
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* 最近访问组（浏览器历史，插件注入） */}
+            {filteredBrowserHistory.length > 0 && (
+              <Command.Group heading={t("common.search.recentVisitsGroup", "最近访问")}>
+                {filteredBrowserHistory.map((bh) => (
+                  <Command.Item
+                    key={`bh-${bh.id}`}
+                    value={`${bh.title} ${bh.url}`}
+                    onSelect={() => handleSelectBookmark(bh.url)}
+                    className={cn(
+                      "group flex items-center gap-3 px-3 py-2 cursor-pointer",
+                      "data-[selected=true]:text-white"
+                    )}
+                    style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                  >
+                    <img
+                      src={`https://www.google.com/s2/favicons?domain=${extractDomain(bh.url)}&sz=32`}
+                      alt=""
+                      className="w-4 h-4 shrink-0 object-contain"
+                      style={{ borderRadius: "22%" }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/icons/default/internet.png"; }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="truncate font-medium">
+                        <HighlightText text={bh.title} query={q} maxLen={50} />
+                      </div>
+                      <div className="truncate" style={{ fontSize: isMacTheme ? "10px" : "11px", opacity: 0.4 }}>
+                        {extractDomain(bh.url)}
+                        {bh.visitCount > 1 && (
+                          <span style={{ opacity: 0.7 }}> · {bh.visitCount} {t("common.search.visits", "次访问")}</span>
+                        )}
+                      </div>
+                    </div>
+                    <CopyButton text={bh.url} onCopied={() => onOpenChange(false)} />
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* 应用组 */}
+            {filteredApps.length > 0 && (
+              <Command.Group heading={t("common.search.appsGroup", "应用")}>
+                {filteredApps.map((app) => (
+                  <Command.Item
+                    key={app.id}
+                    value={app.searchLabel}
+                    onSelect={() => handleSelectApp(app.id)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                      "data-[selected=true]:text-white"
+                    )}
+                    style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
+                  >
+                    <img
+                      src={app.icon}
+                      alt=""
+                      className="w-4 h-4 shrink-0 object-contain"
+                      style={{ borderRadius: "3px" }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/icons/default/application.png";
+                      }}
+                    />
+                    <span className="truncate">
+                      {q ? <HighlightText text={app.name} query={q} maxLen={40} /> : app.name}
+                    </span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
             {/* 问问 Kyo 兜底 — 有输入且非 URL 时始终显示 */}
             {trimmedSearch && !isUrlInput && (
               <Command.Group heading="Kyo">
@@ -778,6 +954,11 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
 
       {/* cmdk 选中样式 */}
       <style>{`
+        .search-highlight {
+          background: none;
+          color: ${isMacTheme ? "#1a6dca" : isXpTheme ? "#0054E3" : "#0066cc"};
+          font-weight: 700;
+        }
         [cmdk-item][data-selected=true] {
           background-color: ${
             isMacTheme
@@ -788,18 +969,20 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
           };
           color: #ffffff;
         }
-        [cmdk-item][data-selected=true] span {
-          color: rgba(255, 255, 255, 0.7) !important;
-        }
-        [cmdk-item][data-selected=true] mark {
-          background-color: rgba(255, 255, 255, 0.2) !important;
+        [cmdk-item][data-selected=true] .search-highlight {
           color: #ffffff !important;
+        }
+        [cmdk-item][data-selected=true] .bookmark-tag {
+          background-color: rgba(255, 255, 255, 0.18) !important;
+          color: rgba(255, 255, 255, 0.7) !important;
         }
         [cmdk-group-heading] {
           padding: 4px 8px;
-          font-size: ${isMacTheme ? "11px" : "12px"};
-          color: rgba(0, 0, 0, 0.4);
+          font-size: ${isMacTheme ? "11px" : "10px"};
+          color: rgba(0, 0, 0, 0.35);
           font-family: ${isMacTheme ? "var(--os-font-ui)" : isXpTheme ? '"Pixelated MS Sans Serif", Tahoma, Arial' : "inherit"};
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
       `}</style>
     </div>

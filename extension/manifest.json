@@ -28,7 +28,9 @@
     "contextMenus",
     "activeTab",
     "alarms",
-    "tabs"
+    "tabs",
+    "bookmarks",
+    "history"
   ],
   "host_permissions": [
     "https://kyo.is/*",

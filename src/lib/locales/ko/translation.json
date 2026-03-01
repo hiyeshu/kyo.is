@@ -2403,6 +2403,9 @@
       "appsGroup": "앱",
       "bookmarksGroup": "북마크",
       "notesGroup": "메모",
+      "browserBookmarksGroup": "브라우저 북마크",
+      "recentVisitsGroup": "최근 방문",
+      "visits": "회 방문",
       "emptyNote": "빈 메모",
       "noResults": "결과를 찾을 수 없습니다",
       "askKyo": "Kyo에게 물어보기"
