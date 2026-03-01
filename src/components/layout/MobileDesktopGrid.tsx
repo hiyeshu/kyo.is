@@ -1,0 +1,291 @@
+/**
+ * [INPUT]: 依赖 framer-motion 的 motion/useMotionValue/animate，依赖 hooks/useDesktopGrid 的分页计算，
+ *          依赖 components/layout/DesktopIcons 的图标组件，依赖 config/appRegistry 的应用配置
+ * [OUTPUT]: 对外提供 MobileDesktopGrid 组件，移动端 iPhone 风格滑页桌面
+ * [POS]: components/layout/ 的移动端桌面布局，被 Desktop.tsx 在 isMobile 时渲染
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
+import { useState, useRef, useCallback, useEffect } from "react";
+import { motion, useMotionValue, animate } from "framer-motion";
+import { useTranslation } from "react-i18next";
+import { MagnifyingGlass } from "@phosphor-icons/react";
+import { useDesktopGrid, type DesktopGridItem } from "@/hooks/useDesktopGrid";
+import { DesktopIcon, BookmarkIconWrapper } from "@/components/layout/DesktopIcons";
+import { AppId, getAppIconPath } from "@/config/appRegistry";
+import { getTranslatedAppName } from "@/utils/i18n";
+import type { AnyApp } from "@/apps/base/types";
+import type { Bookmark } from "@/stores/useBookmarkStore";
+import type { LaunchOriginRect } from "@/stores/useAppStore";
+
+// ─── Props ────────────────────────────────────────────────────────────
+
+interface MobileDesktopGridProps {
+  apps: AnyApp[];
+  bookmarks: Bookmark[];
+  theme: string;
+  isXpTheme: boolean;
+  toggleApp: (appId: AppId, initialData?: unknown, launchOrigin?: LaunchOriginRect) => void;
+  selectedAppId: string | null;
+  selectedBookmarkIds: Set<string>;
+  onAppClick: (appId: string, rect: DOMRect) => void;
+  onAppContextMenu: (appId: string, x: number, y: number) => void;
+  onBookmarkOpen: (bookmark: Bookmark) => void;
+  onBookmarkSelect: (bookmark: Bookmark) => void;
+  onBookmarkContextMenu: (bookmark: Bookmark, x: number, y: number) => void;
+  onOpenSearch?: () => void;
+}
+
+// ─── 滑页常量 ─────────────────────────────────────────────────────────
+const SNAP_THRESHOLD = 0.2; // 页宽的 20% 触发翻页
+const VELOCITY_THRESHOLD = 500; // px/s 快速滑动触发翻页
+const SPRING_CONFIG = { stiffness: 300, damping: 30 };
+const DOCK_RESERVE = 72; // Dock 高度预留（56px base + 16px 呼吸空间）
+
+// ─── 主组件 ───────────────────────────────────────────────────────────
+
+export function MobileDesktopGrid({
+  apps,
+  bookmarks,
+  theme,
+  isXpTheme,
+  toggleApp,
+  selectedAppId,
+  selectedBookmarkIds,
+  onAppClick,
+  onAppContextMenu,
+  onBookmarkOpen,
+  onBookmarkSelect,
+  onBookmarkContextMenu,
+  onOpenSearch,
+}: MobileDesktopGridProps) {
+  const { t } = useTranslation();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [dotsVisible, setDotsVisible] = useState(false);
+  const dotsTimerRef = useRef<number | null>(null);
+  const pullStartY = useRef<number | null>(null);
+  const x = useMotionValue(0);
+
+  // ─── 下拉触发搜索 ─────────────────────────────────────────────
+  const PULL_THRESHOLD = 80;
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    pullStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (pullStartY.current === null) return;
+    const dy = e.changedTouches[0].clientY - pullStartY.current;
+    pullStartY.current = null;
+    if (dy > PULL_THRESHOLD) onOpenSearch?.();
+  }, [onOpenSearch]);
+
+  // ─── 容器尺寸监听 ───────────────────────────────────────────────
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      setContainerSize({ width, height });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // ─── 构建统一图标列表 ───────────────────────────────────────────
+  const items: DesktopGridItem[] = [
+    ...apps.map((app) => ({ id: app.id, type: "app" as const })),
+    ...bookmarks.map((bm) => ({ id: bm.id, type: "bookmark" as const })),
+  ];
+
+  const { columns, totalPages, pages } = useDesktopGrid(
+    items,
+    containerSize.width,
+    containerSize.height
+  );
+
+  const pageWidth = containerSize.width;
+
+  // ─── 页码越界修正 ───────────────────────────────────────────────
+  useEffect(() => {
+    if (currentPage >= totalPages && totalPages > 0) {
+      const safePage = totalPages - 1;
+      setCurrentPage(safePage);
+      animate(x, -safePage * pageWidth, SPRING_CONFIG);
+    }
+  }, [totalPages, currentPage, pageWidth, x]);
+
+  // ─── 圆点指示器显隐 ─────────────────────────────────────────────
+  const showDots = useCallback(() => {
+    if (dotsTimerRef.current) clearTimeout(dotsTimerRef.current);
+    setDotsVisible(true);
+  }, []);
+
+  const hidDotsDelayed = useCallback(() => {
+    if (dotsTimerRef.current) clearTimeout(dotsTimerRef.current);
+    dotsTimerRef.current = window.setTimeout(() => setDotsVisible(false), 1200);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (dotsTimerRef.current) clearTimeout(dotsTimerRef.current); };
+  }, []);
+
+  // ─── 滑动结束处理 ───────────────────────────────────────────────
+  const handleDragEnd = useCallback(
+    (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
+      if (pageWidth <= 0) return;
+
+      let newPage = currentPage;
+      const offsetRatio = Math.abs(info.offset.x) / pageWidth;
+
+      if (info.offset.x < 0 && (offsetRatio > SNAP_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD)) {
+        newPage = Math.min(currentPage + 1, totalPages - 1);
+      } else if (info.offset.x > 0 && (offsetRatio > SNAP_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD)) {
+        newPage = Math.max(currentPage - 1, 0);
+      }
+
+      setCurrentPage(newPage);
+      animate(x, -newPage * pageWidth, SPRING_CONFIG);
+      hidDotsDelayed();
+    },
+    [currentPage, totalPages, pageWidth, x, hidDotsDelayed]
+  );
+
+  // ─── 点击圆点跳转 ───────────────────────────────────────────────
+  const goToPage = useCallback(
+    (page: number) => {
+      setCurrentPage(page);
+      animate(x, -page * pageWidth, SPRING_CONFIG);
+    },
+    [pageWidth, x]
+  );
+
+  // ─── 查找原始数据 ──────────────────────────────────────────────
+  const appMap = new Map(apps.map((a) => [a.id, a]));
+  const bookmarkMap = new Map(bookmarks.map((b) => [b.id, b]));
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full h-full flex flex-col z-10"
+      style={{
+        paddingTop: isXpTheme ? 8 : 24,
+        paddingBottom: DOCK_RESERVE,
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* 滑页容器 */}
+      <div className="flex-1 overflow-hidden" style={{ paddingBottom: 44 }}>
+        <motion.div
+          className="flex h-full"
+          style={{ x, width: `${totalPages * 100}%`, touchAction: "pan-y" }}
+          drag={totalPages > 1 ? "x" : false}
+          dragConstraints={{
+            left: -(totalPages - 1) * pageWidth,
+            right: 0,
+          }}
+          dragElastic={0.15}
+          dragDirectionLock
+          onDragStart={showDots}
+          onDragEnd={handleDragEnd}
+          dragMomentum={false}
+        >
+          {pages.map((pageItems, pageIndex) => (
+            <div
+              key={pageIndex}
+              className="grid place-items-center"
+              style={{
+                width: pageWidth || "100%",
+                gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                alignContent: "start",
+                padding: "8px 12px 0",
+                gap: "12px 0",
+              }}
+            >
+              {pageItems.map((item) => {
+                if (item.type === "app") {
+                  const app = appMap.get(item.id);
+                  if (!app) return null;
+                  return (
+                    <DesktopIcon
+                      key={item.id}
+                      label={getTranslatedAppName(app.id as AppId)}
+                      icon={getAppIconPath(app.id as AppId, theme)}
+                      isSelected={selectedAppId === app.id}
+                      theme={theme}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        onAppClick(app.id, rect);
+                      }}
+                      onDoubleClick={(e) => e.stopPropagation()}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onAppContextMenu(app.id, e.clientX, e.clientY);
+                      }}
+                    />
+                  );
+                }
+
+                const bm = bookmarkMap.get(item.id);
+                if (!bm) return null;
+                return (
+                  <BookmarkIconWrapper
+                    key={item.id}
+                    bookmark={bm}
+                    isMobile={true}
+                    isSelected={selectedBookmarkIds.has(bm.id)}
+                    theme={theme}
+                    onOpen={() => onBookmarkOpen(bm)}
+                    onSelect={() => onBookmarkSelect(bm)}
+                    onContextMenu={(cx, cy) => onBookmarkContextMenu(bm, cx, cy)}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* 搜索栏 + 圆点 — 绝对定位浮在 Dock 上方 */}
+      <div className="absolute left-0 right-0 flex justify-center items-center" style={{ bottom: DOCK_RESERVE + 8, height: 36 }}>
+        {/* 搜索栏 — 常驻 */}
+        <button
+          className="flex items-center gap-1.5 px-4 h-8 rounded-full transition-opacity duration-300"
+          style={{
+            background: "rgba(255,255,255,0.15)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            opacity: dotsVisible ? 0 : 1,
+          }}
+          onClick={onOpenSearch}
+        >
+          <MagnifyingGlass size={13} weight="bold" className="text-white/70" />
+          <span className="text-[11px] text-white/70">{t("common.search.label", "搜索")}</span>
+        </button>
+
+        {/* 圆点指示器 — 滑动时淡入 */}
+        <div
+          className="absolute inset-0 flex justify-center items-center gap-1.5 transition-opacity duration-300"
+          style={{ opacity: dotsVisible ? 1 : 0, pointerEvents: dotsVisible ? "auto" : "none" }}
+        >
+          {Array.from({ length: Math.max(totalPages, 1) }, (_, i) => (
+            <button
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
+                i === currentPage ? "bg-white" : "bg-white/30"
+              }`}
+              onClick={() => totalPages > 1 && goToPage(i)}
+              aria-label={`Page ${i + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
