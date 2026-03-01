@@ -6,7 +6,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { MagnifyingGlass } from "@phosphor-icons/react";
@@ -39,6 +39,7 @@ const SNAP_THRESHOLD = 0.2; // 页宽的 20% 触发翻页
 const VELOCITY_THRESHOLD = 500; // px/s 快速滑动触发翻页
 const SPRING_CONFIG = { stiffness: 300, damping: 30 };
 const DOCK_RESERVE = 72; // Dock 高度预留（56px base + 16px 呼吸空间）
+const SEARCH_BAR_AREA = 44; // 搜索栏 + 圆点指示器区域高度
 
 // ─── 主组件 ───────────────────────────────────────────────────────────
 
@@ -92,16 +93,19 @@ export function MobileDesktopGrid({
     return () => observer.disconnect();
   }, []);
 
-  // ─── 构建统一图标列表 ───────────────────────────────────────────
-  const items: DesktopGridItem[] = [
-    ...apps.map((app) => ({ id: app.id, type: "app" as const })),
-    ...bookmarks.map((bm) => ({ id: bm.id, type: "bookmark" as const })),
-  ];
+  // ─── 构建统一图标列表（记忆化，防止 useMemo 失效）─────────────────
+  const items = useMemo<DesktopGridItem[]>(
+    () => [
+      ...apps.map((app) => ({ id: app.id, type: "app" as const })),
+      ...bookmarks.map((bm) => ({ id: bm.id, type: "bookmark" as const })),
+    ],
+    [apps, bookmarks]
+  );
 
   const { columns, totalPages, pages } = useDesktopGrid(
     items,
     containerSize.width,
-    containerSize.height
+    containerSize.height - SEARCH_BAR_AREA
   );
 
   const pageWidth = containerSize.width;
@@ -160,9 +164,9 @@ export function MobileDesktopGrid({
     [pageWidth, x]
   );
 
-  // ─── 查找原始数据 ──────────────────────────────────────────────
-  const appMap = new Map(apps.map((a) => [a.id, a]));
-  const bookmarkMap = new Map(bookmarks.map((b) => [b.id, b]));
+  // ─── 查找原始数据（记忆化）────────────────────────────────────────
+  const appMap = useMemo(() => new Map(apps.map((a) => [a.id, a])), [apps]);
+  const bookmarkMap = useMemo(() => new Map(bookmarks.map((b) => [b.id, b])), [bookmarks]);
 
   return (
     <div
@@ -176,10 +180,16 @@ export function MobileDesktopGrid({
       onTouchEnd={handleTouchEnd}
     >
       {/* 滑页容器 */}
-      <div className="flex-1 overflow-hidden" style={{ paddingBottom: 44 }}>
+      <div className="flex-1 overflow-hidden" style={{ paddingBottom: SEARCH_BAR_AREA }}>
         <motion.div
           className="flex h-full"
-          style={{ x, width: `${totalPages * 100}%`, touchAction: "pan-y" }}
+          style={{
+            x,
+            width: `${totalPages * 100}%`,
+            touchAction: "pan-y",
+            willChange: "transform",
+            backfaceVisibility: "hidden",
+          }}
           drag={totalPages > 1 ? "x" : false}
           dragConstraints={{
             left: -(totalPages - 1) * pageWidth,
@@ -191,19 +201,26 @@ export function MobileDesktopGrid({
           onDragEnd={handleDragEnd}
           dragMomentum={false}
         >
-          {pages.map((pageItems, pageIndex) => (
-            <div
-              key={pageIndex}
-              className="grid place-items-center"
-              style={{
-                width: pageWidth || "100%",
-                gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                alignContent: "start",
-                padding: "8px 12px 0",
-                gap: "12px 0",
-              }}
-            >
-              {pageItems.map((item) => {
+          {pages.map((pageItems, pageIndex) => {
+            // 只渲染当前页 ± 1，其余占位（虚拟化）
+            const isVisible = Math.abs(pageIndex - currentPage) <= 1;
+
+            return (
+              <div
+                key={pageIndex}
+                className="grid place-items-center"
+                style={{
+                  width: pageWidth || "100%",
+                  gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                  alignContent: "start",
+                  padding: "8px 12px 0",
+                  gap: "12px 0",
+                  // 隐藏页：保持占位但不渲染子元素
+                  visibility: isVisible ? "visible" : "hidden",
+                  contain: "layout style paint",
+                }}
+              >
+                {isVisible && pageItems.map((item) => {
                 if (item.type === "app") {
                   const app = appMap.get(item.id);
                   if (!app) return null;
@@ -244,8 +261,9 @@ export function MobileDesktopGrid({
                   />
                 );
               })}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </motion.div>
       </div>
 

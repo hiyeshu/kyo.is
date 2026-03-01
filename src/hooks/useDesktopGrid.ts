@@ -8,13 +8,16 @@
 import { useMemo } from "react";
 
 // ─── 网格常量 ─────────────────────────────────────────────────────────
-// 单元格尺寸：匹配 DesktopIcon 的 96px 宽度 + 垂直间距
+// 单元格尺寸：匹配 DesktopIcon 的 96px 宽 × 100px 高
 const CELL_WIDTH = 96;
 const CELL_HEIGHT = 100;
+// 布局间距：与 MobileDesktopGrid 的 CSS 保持同构
+const GRID_PAD_TOP = 8;
+const GAP_Y = 12;
 const MIN_COLS = 3;
 const MAX_COLS = 5;
 const MIN_ROWS = 3;
-const MAX_ROWS = 6;
+const MAX_ROWS = 5;
 
 // ─── 类型 ─────────────────────────────────────────────────────────────
 
@@ -55,7 +58,14 @@ export function useDesktopGrid(
 ): GridConfig {
   return useMemo(() => {
     const columns = clamp(Math.floor(containerWidth / CELL_WIDTH), MIN_COLS, MAX_COLS);
-    const rows = clamp(Math.floor(containerHeight / CELL_HEIGHT), MIN_ROWS, MAX_ROWS);
+    // 真实可用高度扣除网格顶部内边距
+    // N 行 = N × CELL_HEIGHT + (N-1) × GAP_Y，解出 N:
+    const usable = containerHeight - GRID_PAD_TOP;
+    const rows = clamp(
+      Math.floor((usable + GAP_Y) / (CELL_HEIGHT + GAP_Y)),
+      MIN_ROWS,
+      MAX_ROWS
+    );
     const iconsPerPage = columns * rows;
     const pages = chunk(items, iconsPerPage);
     const totalPages = pages.length;
