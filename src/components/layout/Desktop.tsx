@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 依赖 apps/base/types 的应用类型，依赖 config/appRegistry 的应用配置，依赖 hooks/useWallpaper 的壁纸管理，依赖 hooks/useLongPress 的长按检测，依赖 stores/useThemeStore 的主题状态，依赖 hooks/useMarqueeSelection 的框选逻辑
+ * [INPUT]: 依赖 apps/base/types 的应用类型，依赖 config/appRegistry 的应用配置，依赖 hooks/useWallpaper 的壁纸管理，依赖 hooks/useLongPress 的长按检测，依赖 stores/useThemeStore 的主题状态，依赖 hooks/useMarqueeSelection 的框选逻辑，依赖 components/layout/BookmarkHoverCard 的悬浮信息卡
  * [OUTPUT]: 对外提供 Desktop 组件，桌面环境核心（壁纸显示、桌面图标、右键菜单、应用启动、框选交互）
  * [POS]: components/layout/ 的桌面组件，被 App.tsx 使用，是桌面环境的主容器
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -13,8 +13,9 @@ import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
-import { useBookmarkStore, openBookmarkUrl, getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
+import { useBookmarkStore, openBookmarkUrl, getBookmarkIconInfo, getBookmarkShortName, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
+import { BookmarkHoverCard } from "@/components/layout/BookmarkHoverCard";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
@@ -678,6 +679,10 @@ function BookmarkIconWrapper({
 }) {
   const longPressTimer = useRef<number | null>(null);
   const didLongPress = useRef(false);
+  const iconRef = useRef<HTMLDivElement>(null);
+  const hoverTimer = useRef<number | null>(null);
+  const [showHoverCard, setShowHoverCard] = useState(false);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
 
   const clearTimer = useCallback(() => {
     if (longPressTimer.current !== null) {
@@ -686,11 +691,21 @@ function BookmarkIconWrapper({
     }
   }, []);
 
+  const closeHoverCard = useCallback(() => {
+    if (hoverTimer.current !== null) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+    setShowHoverCard(false);
+  }, []);
+
   return (
     <div
+      ref={iconRef}
       data-bookmark-id={bookmark.id}
       draggable={!isMobile}
       onDragStart={(e) => {
+        closeHoverCard();
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData(
           "application/json",
@@ -703,6 +718,14 @@ function BookmarkIconWrapper({
         e.dataTransfer.setDragImage(dragImage, e.nativeEvent.offsetX, e.nativeEvent.offsetY);
         setTimeout(() => document.body.removeChild(dragImage), 0);
       }}
+      onMouseEnter={() => {
+        if (isMobile) return;
+        hoverTimer.current = window.setTimeout(() => {
+          const rect = iconRef.current?.getBoundingClientRect();
+          if (rect) { setAnchorRect(rect); setShowHoverCard(true); }
+        }, 350);
+      }}
+      onMouseLeave={closeHoverCard}
       // 长按触发右键菜单（iOS 触屏）
       onTouchStart={(e) => {
         if (e.touches.length !== 1) return;
@@ -748,6 +771,15 @@ function BookmarkIconWrapper({
           onContextMenu(e.clientX, e.clientY);
         }}
       />
+      {showHoverCard && anchorRect && (
+        <BookmarkHoverCard
+          title={bookmark.title}
+          url={bookmark.url}
+          summary={bookmark.summary}
+          tags={bookmark.tags}
+          anchorRect={anchorRect}
+        />
+      )}
     </div>
   );
 }
@@ -855,7 +887,7 @@ function BookmarkDesktopIcon({
           fontFamily: (isXpTheme || isWin98Theme) ? '"Pixelated MS Sans Serif", Arial' : undefined,
         }}
       >
-        {bookmark.title}
+        {getBookmarkShortName(bookmark.title, bookmark.url)}
       </span>
     </div>
   );

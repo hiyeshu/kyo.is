@@ -1,11 +1,11 @@
 /**
- * [INPUT]: 依赖 components/layout/WindowFrame, components/ui, hooks/useBookmarkBoard, stores/useBookmarkStore
+ * [INPUT]: 依赖 components/layout/WindowFrame, components/ui, hooks/useBookmarkBoard, stores/useBookmarkStore, components/layout/BookmarkHoverCard
  * [OUTPUT]: 对外提供 BookmarkBoardApp 组件
  * [POS]: apps/bookmarks/components/ 的根组件，书签应用主容器，平铺布局 + 排序 + 域名聚合
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import { AppProps } from "../../base/types";
 import { WindowFrame } from "@/components/layout/WindowFrame";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ import { BookmarkBoardMenuBar } from "./BookmarkBoardMenuBar";
 import { useBookmarkBoard } from "../hooks/useBookmarkBoard";
 import { useBookmarkStore, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkIconDisplay } from "./BookmarkIconDisplay";
+import { BookmarkHoverCard } from "@/components/layout/BookmarkHoverCard";
 import { useTranslation } from "react-i18next";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,18 @@ function BookmarkCard({
 }) {
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const hoverTimer = useRef<number | null>(null);
+  const [showHoverCard, setShowHoverCard] = useState(false);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+
+  const closeHoverCard = useCallback(() => {
+    if (hoverTimer.current !== null) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+    setShowHoverCard(false);
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -99,6 +112,7 @@ function BookmarkCard({
 
   return (
     <div
+      ref={cardRef}
       className={cn(
         "flex flex-col items-center gap-1.5 p-2 rounded-xl cursor-pointer group relative transition-all",
         isDragging ? "opacity-50 scale-95" : "hover:bg-black/[0.06] active:bg-black/10",
@@ -112,13 +126,19 @@ function BookmarkCard({
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
       draggable
-      onDragStart={onDragStart}
+      onDragStart={(e) => { closeHoverCard(); onDragStart(e); }}
       onDragOver={onDragOver}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
-      title={bm.url}
+      onMouseEnter={() => {
+        hoverTimer.current = window.setTimeout(() => {
+          const rect = cardRef.current?.getBoundingClientRect();
+          if (rect) { setAnchorRect(rect); setShowHoverCard(true); }
+        }, 350);
+      }}
+      onMouseLeave={closeHoverCard}
     >
       <div 
         className={cn(
@@ -153,6 +173,15 @@ function BookmarkCard({
       >
         {bm.title}
       </span>
+      {showHoverCard && anchorRect && (
+        <BookmarkHoverCard
+          title={bm.title}
+          url={bm.url}
+          summary={bm.summary}
+          tags={bm.tags}
+          anchorRect={anchorRect}
+        />
+      )}
     </div>
   );
 }

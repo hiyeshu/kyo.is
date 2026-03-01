@@ -1,6 +1,6 @@
 /**
  * [INPUT]: zustand + zustand/middleware(persist)，依赖 @/lib/cloudSync 云端写入
- * [OUTPUT]: useBookmarkStore, Bookmark, isBookmark, openBookmarkUrl, getBookmarkIconInfo, getFaviconUrl, SortMode
+ * [OUTPUT]: useBookmarkStore, Bookmark, isBookmark, openBookmarkUrl, getBookmarkIconInfo, getBookmarkShortName, getFaviconUrl, SortMode
  * [POS]: 书签数据的单一真相源，管理 onDesktop/inDock 展示位置、排序偏好，被 bookmark-board、Dock、Desktop 消费，每次变更同步写云端
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -495,6 +495,24 @@ export function getBookmarkIconInfo(bookmark: Bookmark): BookmarkIconInfo {
     isCustom: false,
     isFavicon: false,
   };
+}
+
+// ─── 品牌短名提取 ─────────────────────────────────────────────────────────────
+// "YouTube - Broadcast Yourself" → "YouTube"
+// "GitHub: Let's build from here" → "GitHub"
+// "" → domain fallback "youtube.com"
+
+// 提取主域名：去掉 www/m/app/web/v 等常见子域名前缀
+function getMainDomain(hostname: string): string {
+  return hostname.replace(/^(www|m|app|web|v|mobile|wap)\./i, "");
+}
+
+export function getBookmarkShortName(title: string, url: string): string {
+  if (!title.trim()) {
+    try { return getMainDomain(new URL(url).hostname); } catch { return url; }
+  }
+  const brand = title.split(/\s[-|—:·]\s/)[0].trim();
+  return brand.length > 15 ? brand.slice(0, 15) : brand;
 }
 
 // ─── 创建带 ID 的书签 ─────────────────────────────────────────────────────────

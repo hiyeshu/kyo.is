@@ -413,6 +413,12 @@
   font-smooth: auto;
 }
 
+/* Bookmark hover card fade-in */
+@keyframes hovercard-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Aqua button pulse animation - classic Mac OS X pulsing effect */
 @keyframes aqua-pulse {
   0%, 100% {

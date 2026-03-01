@@ -1,13 +1,14 @@
 /**
- * [INPUT]: 依赖 stores/useBookmarkStore 的 Bookmark 类型和 getBookmarkIconInfo，依赖 components/shared/BookmarkFaviconImg
+ * [INPUT]: 依赖 stores/useBookmarkStore 的 Bookmark 类型、getBookmarkIconInfo、getBookmarkShortName，依赖 components/shared/BookmarkFaviconImg，依赖 components/layout/BookmarkHoverCard
  * [OUTPUT]: 对外提供 DesktopIcon(memo)、BookmarkDesktopIcon(memo)、BookmarkIconWrapper(memo) 组件，以及图标常量
  * [POS]: components/layout/ 的桌面图标组件集，被 Desktop.tsx 和 MobileDesktopGrid.tsx 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { memo, useRef, useCallback } from "react";
-import { getBookmarkIconInfo, type Bookmark } from "@/stores/useBookmarkStore";
+import { memo, useRef, useCallback, useState } from "react";
+import { getBookmarkIconInfo, getBookmarkShortName, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
+import { BookmarkHoverCard } from "@/components/layout/BookmarkHoverCard";
 
 // ─── 桌面图标常量 ─────────────────────────────────────────────────────
 // Aqua 水晶高光渐变 —— 与 BookmarkIconDisplay 统一
@@ -196,7 +197,7 @@ export const BookmarkDesktopIcon = memo(function BookmarkDesktopIcon({
         )}
       </div>
       <IconLabel
-        text={bookmark.title}
+        text={getBookmarkShortName(bookmark.title, bookmark.url)}
         isSelected={isSelected}
         theme={theme}
       />
@@ -225,6 +226,10 @@ export const BookmarkIconWrapper = memo(function BookmarkIconWrapper({
 }) {
   const longPressTimer = useRef<number | null>(null);
   const didLongPress = useRef(false);
+  const iconRef = useRef<HTMLDivElement>(null);
+  const hoverTimer = useRef<number | null>(null);
+  const [showHoverCard, setShowHoverCard] = useState(false);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
 
   const clearTimer = useCallback(() => {
     if (longPressTimer.current !== null) {
@@ -233,11 +238,21 @@ export const BookmarkIconWrapper = memo(function BookmarkIconWrapper({
     }
   }, []);
 
+  const closeHoverCard = useCallback(() => {
+    if (hoverTimer.current !== null) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+    setShowHoverCard(false);
+  }, []);
+
   return (
     <div
+      ref={iconRef}
       data-bookmark-id={bookmark.id}
       draggable={!isMobile}
       onDragStart={(e) => {
+        closeHoverCard();
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData(
           "application/json",
@@ -254,6 +269,14 @@ export const BookmarkIconWrapper = memo(function BookmarkIconWrapper({
         );
         setTimeout(() => document.body.removeChild(dragImage), 0);
       }}
+      onMouseEnter={() => {
+        if (isMobile) return;
+        hoverTimer.current = window.setTimeout(() => {
+          const rect = iconRef.current?.getBoundingClientRect();
+          if (rect) { setAnchorRect(rect); setShowHoverCard(true); }
+        }, 350);
+      }}
+      onMouseLeave={closeHoverCard}
       // 长按触发右键菜单（iOS 触屏）
       onTouchStart={(e) => {
         if (e.touches.length !== 1) return;
@@ -298,6 +321,15 @@ export const BookmarkIconWrapper = memo(function BookmarkIconWrapper({
           onContextMenu(e.clientX, e.clientY);
         }}
       />
+      {showHoverCard && anchorRect && (
+        <BookmarkHoverCard
+          title={bookmark.title}
+          url={bookmark.url}
+          summary={bookmark.summary}
+          tags={bookmark.tags}
+          anchorRect={anchorRect}
+        />
+      )}
     </div>
   );
 });
