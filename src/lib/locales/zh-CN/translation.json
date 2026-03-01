@@ -2410,6 +2410,7 @@
       "unmute": "取消静音"
     },
     "search": {
+      "label": "搜索",
       "bookmarks": "搜索书签...",
       "appsAndBookmarks": "搜索应用和书签...",
       "appsGroup": "应用",
