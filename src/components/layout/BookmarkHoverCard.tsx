@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 依赖 react 的 useState/useEffect/useRef/useMemo，依赖 react-dom 的 createPortal，依赖 PageShot 截图 API
+ * [INPUT]: 依赖 react 的 useState/useEffect/useRef/useMemo，依赖 react-dom 的 createPortal，依赖 utils/platform 的 getApiUrl
  * [OUTPUT]: 对外提供 BookmarkHoverCard 组件
  * [POS]: components/layout/ 的书签悬浮信息卡，被 DesktopIcons.tsx / Desktop.tsx / BookmarkBoardApp.tsx 消费，负责截图预览缓存与降级显示
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -7,6 +7,7 @@
 
 import { useRef, useLayoutEffect, useState, memo, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { getApiUrl } from "@/utils/platform";
 
 // ─── 截图缓存（URL 级）─────────────────────────────────────────────────────
 
@@ -50,7 +51,7 @@ function buildScreenshotUrl(normalizedUrl: string): string {
     block_ads: "true",
     timeout: "15000",
   });
-  return `https://pageshot.site/v1/screenshot?${params.toString()}`;
+  return getApiUrl(`/api/bookmark-preview?${params.toString()}`);
 }
 
 function readPreviewStorage(): Record<string, PreviewCacheEntry> {
