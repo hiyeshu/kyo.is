@@ -92,8 +92,8 @@ export function HelpDialog({
     // Get the doc name for this app (use mapping or fall back to appId)
     const docName = appId ? (APP_DOC_NAMES[appId] || appId) : "";
     const docsUrl = docName
-      ? `https://os.ryo.lu/docs/${docName}`
-      : "https://os.ryo.lu/docs";
+      ? `https://kyo.is/docs/${docName}`
+      : "https://kyo.is/docs";
 
     // Open docs in new tab (Kyo doesn't have a browser app)
     window.open(docsUrl, "_blank", "noopener,noreferrer");

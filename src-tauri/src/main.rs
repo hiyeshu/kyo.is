@@ -4,12 +4,12 @@
 use tauri::{Manager, Url};
 
 fn main() {
-    // Always load the hosted app (https://os.ryo.lu) so Tauri uses a stable origin
+    // Always load the hosted app (https://kyo.is) so Tauri uses a stable origin
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             if let Some(window) = app.get_webview_window("main") {
-                let url = Url::parse("https://os.ryo.lu")?;
+                let url = Url::parse("https://kyo.is")?;
                 window.set_title("")?;
                 window.navigate(url)?;
             }

@@ -1,8 +1,8 @@
 [package]
-name = "ryos"
+name = "kyo"
 version = "1.0.0"
-description = "An AI OS experience, made with Cursor"
-authors = ["ryo"]
+description = "Web-Based Agentic AI OS"
+authors = ["kyo"]
 license = ""
 repository = ""
 edition = "2021"

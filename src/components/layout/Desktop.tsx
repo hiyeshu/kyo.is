@@ -651,7 +651,7 @@ export function Desktop({
 const AQUA_HIGHLIGHT =
   "linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 50%, rgba(0,0,0,0.03) 100%)";
 
-// Text shadow (matches ryos FileIcon)
+// Text shadow (matches FileIcon)
 // macOS: rgba(0,0,0,0.9) 0px 1px 0px, rgba(0,0,0,0.85) 0px 1px 3px, rgba(0,0,0,0.45) 0px 2px 3px
 // XP: 1px 1px 2px rgba(0,0,0,0.8)
 const MACOS_TEXT_SHADOW = "rgba(0, 0, 0, 0.9) 0px 1px 0px, rgba(0, 0, 0, 0.85) 0px 1px 3px, rgba(0, 0, 0, 0.45) 0px 2px 3px";

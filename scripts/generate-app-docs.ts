@@ -145,9 +145,9 @@ async function readAppIndex(appId: string): Promise<{
           version: versionMatch ? versionMatch[1] : "1.0",
           creator: {
             name: "Ryo Lu",
-            url: "https://ryo.lu",
+            url: "https://hiyeshu.com",
           },
-          github: "https://github.com/ryokun6/ryos",
+          github: "https://github.com/hiyeshu/kyo.is",
           icon: iconMatch ? iconMatch[1] : "/icons/default/question.png",
         };
       }

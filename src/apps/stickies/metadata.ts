@@ -9,10 +9,10 @@ export const appMetadata = {
   name: "Stickies",
   version: "1.0.0",
   creator: {
-    name: "Ryo Lu",
-    url: "https://ryo.lu",
+    name: "Yeshu",
+    url: "https://hiyeshu.com",
   },
-  github: "https://github.com/ryokun6/ryos",
+  github: "https://github.com/hiyeshu/kyo.is",
   icon: "/icons/default/stickies.png",
 };
 

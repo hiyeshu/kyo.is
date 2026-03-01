@@ -5,8 +5,7 @@
   "windows": ["main"],
   "remote": {
     "urls": [
-      "https://os.ryo.lu",
-      "https://ryo.lu",
+      "https://kyo.is",
       "http://localhost:*"
     ]
   },
