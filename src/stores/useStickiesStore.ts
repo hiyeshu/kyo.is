@@ -13,6 +13,15 @@ import { useHistoryStore } from "./useHistoryStore";
 
 export type StickyColor = "yellow" | "blue" | "green" | "pink" | "purple" | "orange";
 
+// ─── 颜色轮换：新建便签自动取下一个颜色 ────────────────────────────
+const COLOR_CYCLE: StickyColor[] = ["yellow", "blue", "green", "pink", "purple", "orange"];
+
+function nextColor(current?: StickyColor): StickyColor {
+  if (!current) return COLOR_CYCLE[0];
+  const i = COLOR_CYCLE.indexOf(current);
+  return COLOR_CYCLE[(i + 1) % COLOR_CYCLE.length];
+}
+
 export interface StickyNote {
   id: string;
   content: string;
@@ -149,17 +158,19 @@ export const useStickiesStore = create<StickiesState>()(
       notes: [createWelcomeNote()],
 
       addNote: (
-        color: StickyColor = "yellow",
+        color?: StickyColor,
         anchorId?: string | null,
         onDesktop: boolean = false
       ) => {
         const id = crypto.randomUUID();
         const now = Date.now();
         const existingNotes = get().notes;
+        // 未指定颜色 → 取最后一张的下一个颜色，自动轮换
+        const resolvedColor = color ?? nextColor(existingNotes[existingNotes.length - 1]?.color);
         const newNote: StickyNote = {
           id,
           content: "",
-          color,
+          color: resolvedColor,
           tags: [],
           onDesktop,
           position: getNextPosition(existingNotes, anchorId),

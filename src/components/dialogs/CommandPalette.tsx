@@ -149,17 +149,21 @@ function HighlightText({ text, query, maxLen = 80 }: { text: string; query: stri
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const macPanelStyle: React.CSSProperties = {
-  borderRadius: "var(--os-metrics-radius, 7.2px)",
-  backgroundColor: "var(--os-color-window-bg, #ececec)",
+  borderRadius: "12px",
+  backgroundColor: "rgba(240, 240, 240, 0.92)",
   backgroundImage: "var(--os-pinstripe-window)",
-  border: "0.5px solid rgba(0, 0, 0, 0.4)",
-  boxShadow: "var(--os-window-shadow, 0 3px 10px rgba(0, 0, 0, 0.3))",
+  border: "0.5px solid rgba(0, 0, 0, 0.2)",
+  boxShadow: "0 16px 70px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(255, 255, 255, 0.6) inset",
   overflow: "hidden",
+  backdropFilter: "blur(40px)",
+  WebkitBackdropFilter: "blur(40px)",
 };
 
 const macInputStyle: React.CSSProperties = {
   fontFamily: "var(--os-font-ui)",
-  fontSize: "13px",
+  fontSize: "16px",
+  fontWeight: 300,
+  letterSpacing: "-0.01em",
   WebkitFontSmoothing: "antialiased",
 };
 
@@ -203,24 +207,21 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
 
   const allBookmarks: FlatBookmark[] = items as FlatBookmark[];
 
-  // ─── 客户端过滤 ──────────────────────────────────────────────────────────────
-  // 应用：始终客户端即时过滤
+  // ─── 客户端过滤（无输入时不展示任何结果）───────────────────────────────────
   const filteredApps = q
     ? appList.filter((a) => a.searchLabel.toLowerCase().includes(q))
-    : appList;
+    : [];
 
-  // 书签：扩展搜索范围到 title + url + summary + tags
   const filteredBookmarks = q
     ? allBookmarks.filter((bm) => {
         const haystack = [bm.title, bm.url, bm.summary || "", (bm.tags || []).join(" ")].join(" ").toLowerCase();
         return haystack.includes(q);
       })
-    : allBookmarks;
+    : [];
 
-  // 便签：搜索 content
   const filteredNotes = q
     ? notes.filter((n) => n.content.toLowerCase().includes(q))
-    : notes.filter((n) => n.content.trim().length > 0);
+    : [];
 
   // ─── 服务端 vs 客户端决策 ────────────────────────────────────────────────────
   const useServer = !!user && q.length > 0;
@@ -379,14 +380,16 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999]" onClick={() => onOpenChange(false)}>
+    <div className="fixed inset-0 z-[10010]" onClick={() => onOpenChange(false)}>
       {/* Backdrop */}
       <div
         className="absolute inset-0"
         style={{
           backgroundColor: isMacTheme
-            ? "rgba(0, 0, 0, 0.3)"
-            : "rgba(0, 0, 0, 0.5)",
+            ? "rgba(0, 0, 0, 0.25)"
+            : "rgba(0, 0, 0, 0.4)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}
       />
 
@@ -398,25 +401,26 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
         <Command className="overflow-hidden" style={getPanelStyle()} loop shouldFilter={false}>
           {/* Input Area */}
           <div
-            className="flex items-center gap-2 px-3"
+            className="flex items-center gap-3 px-4"
             style={{
-              borderBottom: isMacTheme
-                ? "1px solid rgba(0, 0, 0, 0.15)"
-                : isXpTheme
-                ? "1px solid #ACA899"
-                : "1px solid rgba(0, 0, 0, 0.2)",
+              borderBottom: q
+                ? (isMacTheme
+                    ? "1px solid rgba(0, 0, 0, 0.12)"
+                    : isXpTheme
+                    ? "1px solid #ACA899"
+                    : "1px solid rgba(0, 0, 0, 0.15)")
+                : "none",
               backgroundColor: isXpTheme ? "#ffffff" : undefined,
-              minHeight: isMacTheme ? undefined : "48px",
             }}
           >
             {isSearching ? (
               <CircleNotch
                 className="shrink-0 animate-spin"
-                size={16}
+                size={18}
                 weight="regular"
                 style={{
                   color: isMacTheme
-                    ? "rgba(0, 0, 0, 0.4)"
+                    ? "rgba(0, 0, 0, 0.35)"
                     : isXpTheme
                     ? "#0054E3"
                     : "#666666",
@@ -425,11 +429,11 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
             ) : (
               <MagnifyingGlass
                 className="shrink-0"
-                size={16}
+                size={18}
                 weight="regular"
                 style={{
                   color: isMacTheme
-                    ? "rgba(0, 0, 0, 0.4)"
+                    ? "rgba(0, 0, 0, 0.35)"
                     : isXpTheme
                     ? "#0054E3"
                     : "#666666",
@@ -441,8 +445,8 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               value={search}
               onValueChange={(v) => { setSearch(v); searchRef.current = v; }}
               placeholder={t("common.search.appsAndBookmarks", "搜索应用和书签...")}
-              className="w-full bg-transparent outline-none"
-              style={isMacTheme ? { ...macInputStyle, padding: "12px 0" } : {
+              className="w-full bg-transparent outline-none placeholder:text-black/25"
+              style={isMacTheme ? { ...macInputStyle, padding: "14px 0" } : {
                 fontSize: "15px",
                 padding: "14px 0",
                 fontFamily: isXpTheme
@@ -450,23 +454,25 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                   : "var(--os-font-ui, Geneva)",
               }}
             />
-            <kbd
-              className="hidden sm:inline-flex items-center shrink-0"
-              style={{
-                padding: "2px 6px",
-                borderRadius: isMacTheme ? "4px" : "2px",
-                fontSize: "10px",
-                backgroundColor: isMacTheme
-                  ? "rgba(0, 0, 0, 0.06)"
-                  : isXpTheme
-                  ? "#D4D0C8"
-                  : "#f0f0f0",
-                color: isMacTheme ? "rgba(0, 0, 0, 0.4)" : "#666666",
-                border: isXpTheme ? "1px solid #808080" : undefined,
-              }}
-            >
-              ESC
-            </kbd>
+            {q && (
+              <kbd
+                className="hidden sm:inline-flex items-center shrink-0"
+                style={{
+                  padding: "2px 6px",
+                  borderRadius: isMacTheme ? "4px" : "2px",
+                  fontSize: "10px",
+                  backgroundColor: isMacTheme
+                    ? "rgba(0, 0, 0, 0.06)"
+                    : isXpTheme
+                    ? "#D4D0C8"
+                    : "#f0f0f0",
+                  color: isMacTheme ? "rgba(0, 0, 0, 0.4)" : "#666666",
+                  border: isXpTheme ? "1px solid #808080" : undefined,
+                }}
+              >
+                ESC
+              </kbd>
+            )}
           </div>
 
           {/* List */}
@@ -743,8 +749,8 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
             )}
           </Command.List>
 
-          {/* Footer（移动端隐藏）*/}
-          {!isMobile && (
+          {/* Footer：有输入时才显示 */}
+          {!isMobile && q && (
           <div
             className="flex items-center justify-between px-3 py-2"
             style={{

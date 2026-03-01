@@ -19,11 +19,57 @@ const STICKY_EXIT_ANIMATION = {
   transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] as const },
 };
 
+// ─── 便签间磁吸：找到最近的边对齐 ──────────────────────────────────
+type SnapRect = { x: number; y: number; width: number; height: number };
+const SNAP_THRESHOLD = 8; // px
+
+function applySnap(
+  pos: { x: number; y: number },
+  size: { width: number; height: number },
+  targets: SnapRect[]
+): { x: number; y: number } {
+  let snapX: number | null = null;
+  let snapY: number | null = null;
+  let bestDx = SNAP_THRESHOLD;
+  let bestDy = SNAP_THRESHOLD;
+
+  const r = pos.x + size.width;
+  const b = pos.y + size.height;
+
+  for (const t of targets) {
+    const tr = t.x + t.width;
+    const tb = t.y + t.height;
+
+    // X 轴：四种边对齐（左左、左右、右左、右右）
+    for (const [dist, val] of [
+      [Math.abs(pos.x - t.x), t.x],
+      [Math.abs(pos.x - tr), tr],
+      [Math.abs(r - t.x), t.x - size.width],
+      [Math.abs(r - tr), tr - size.width],
+    ] as [number, number][]) {
+      if (dist < bestDx) { bestDx = dist; snapX = val; }
+    }
+
+    // Y 轴：四种边对齐（上上、上下、下上、下下）
+    for (const [dist, val] of [
+      [Math.abs(pos.y - t.y), t.y],
+      [Math.abs(pos.y - tb), tb],
+      [Math.abs(b - t.y), t.y - size.height],
+      [Math.abs(b - tb), tb - size.height],
+    ] as [number, number][]) {
+      if (dist < bestDy) { bestDy = dist; snapY = val; }
+    }
+  }
+
+  return { x: snapX ?? pos.x, y: snapY ?? pos.y };
+}
+
 interface StickyNoteProps {
   note: StickyNoteType;
   onSelect: () => void;
   onUpdate: (updates: Partial<Omit<StickyNoteType, "id" | "createdAt">>) => void;
   onDelete: () => void;
+  getSnapTargets: (excludeId: string) => SnapRect[];
   zIndex: number;
   isForeground: boolean;
 }
@@ -75,6 +121,7 @@ export function StickyNote({
   onSelect,
   onUpdate,
   onDelete,
+  getSnapTargets,
   zIndex,
   isForeground,
 }: StickyNoteProps) {
@@ -215,13 +262,20 @@ export function StickyNote({
         let newX = clientX - dragOffset.x;
         let newY = clientY - dragOffset.y;
 
-        // Constrain to viewport bounds
+        // 视口边界约束
         const maxX = window.innerWidth - draftSizeRef.current.width;
         const maxY = window.innerHeight - draftSizeRef.current.height;
         newX = Math.max(0, Math.min(newX, maxX));
-        newY = Math.max(24, Math.min(newY, maxY)); // 24px for menu bar
+        newY = Math.max(24, Math.min(newY, maxY));
 
-        const nextPosition = { x: newX, y: newY };
+        // 便签间磁吸
+        const snapped = applySnap(
+          { x: newX, y: newY },
+          draftSizeRef.current,
+          getSnapTargets(note.id)
+        );
+
+        const nextPosition = { x: snapped.x, y: snapped.y };
         draftPositionRef.current = nextPosition;
         setDraftPosition(nextPosition);
       }
@@ -303,6 +357,8 @@ export function StickyNote({
     note.position.y,
     note.size.width,
     note.size.height,
+    getSnapTargets,
+    note.id,
     onUpdate,
   ]);
 

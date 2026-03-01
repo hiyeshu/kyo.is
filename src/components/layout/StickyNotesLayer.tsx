@@ -11,7 +11,7 @@ import { useStickiesStore } from "@/stores/useStickiesStore";
 import { useAppStore } from "@/stores/useAppStore";
 import { StickyNote } from "@/apps/stickies/components/StickyNote";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 /**
  * StickyNotesLayer - 便签统一渲染层
@@ -85,6 +85,16 @@ export function StickyNotesLayer() {
 
   if (visibleNotes.length === 0) return null;
 
+  // ─── 吸附目标：稳定回调，拖拽时读取最新兄弟位置 ─────────────────────
+  const visibleNotesRef = useRef(visibleNotes);
+  visibleNotesRef.current = visibleNotes;
+
+  const getSnapTargets = useCallback((excludeId: string) => {
+    return visibleNotesRef.current
+      .filter((n) => n.id !== excludeId)
+      .map((n) => ({ x: n.position.x, y: n.position.y, width: n.size.width, height: n.size.height }));
+  }, []);
+
   return createPortal(
     <AnimatePresence>
       {visibleNotes.map((note) => (
@@ -94,8 +104,8 @@ export function StickyNotesLayer() {
           onSelect={() => handleNoteSelect(note.id)}
           onUpdate={(updates) => handleNoteUpdate(note.id, updates)}
           onDelete={() => handleNoteDelete(note.id)}
+          getSnapTargets={getSnapTargets}
           zIndex={getZIndexForNote(note.id)}
-          // 便签是一等公民：选中即可操作，不依赖 stickies 应用是否打开
           isForeground={note.id === selectedNoteId}
         />
       ))}
