@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 stores/useStickiesStore, stores/useAppStore, framer-motion
+ * [INPUT]: 依赖 stores/useStickiesStore, stores/useAppStore, hooks/useIsMobile, framer-motion
  * [OUTPUT]: 对外提供 StickyNotesLayer 组件
- * [POS]: components/layout/ 的便签统一渲染层，便签是桌面一等公民，永远可用
+ * [POS]: components/layout/ 的便签统一渲染层，桌面端一等公民，移动端按需显示
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -10,16 +10,18 @@ import { AnimatePresence } from "framer-motion";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import { useAppStore } from "@/stores/useAppStore";
 import { StickyNote } from "@/apps/stickies/components/StickyNote";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useCallback, useState } from "react";
 
 /**
  * StickyNotesLayer - 便签统一渲染层
- * 
- * 设计哲学：便签是桌面的一等公民，不依赖 stickies 应用是否打开
- * - 便签永远渲染在桌面层（通过 portal）
- * - 永远可拖动、可编辑、可删除
+ *
+ * 设计哲学：
+ * - 桌面端：便签是一等公民，永远渲染在桌面层
+ * - 移动端：屏幕寸土寸金，便签不主动占桌面
+ *   → stickies 应用打开时才渲染（用户主动召唤）
  * - stickies 应用只是"便签管理器"（提供菜单栏操作）
- * 
+ *
  * 单一真相源：useStickiesStore
  */
 export function StickyNotesLayer() {
@@ -27,6 +29,7 @@ export function StickyNotesLayer() {
   const updateNote = useStickiesStore((state) => state.updateNote);
   const deleteNote = useStickiesStore((state) => state.deleteNote);
   const bringToFront = useStickiesStore((state) => state.bringToFront);
+  const isMobile = useIsMobile();
   
   // 当前选中的便签
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
@@ -74,9 +77,11 @@ export function StickyNotesLayer() {
     return baseZ + index;
   }, [isStickiesOpen, notes, selectedNoteId]);
   
-  const visibleNotes = isStickiesOpen 
+  const visibleNotes = isStickiesOpen
     ? notes  // stickies 打开时显示所有便签
-    : notes.filter((note) => note.onDesktop);  // 否则只显示桌面便签
+    : isMobile
+      ? []   // 移动端：便签不占桌面，打开 app 才看
+      : notes.filter((note) => note.onDesktop);  // 桌面端：显示桌面便签
 
   if (visibleNotes.length === 0) return null;
 

@@ -7,6 +7,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { MagnifyingGlass } from "@phosphor-icons/react";
@@ -38,8 +39,9 @@ interface MobileDesktopGridProps {
 const SNAP_THRESHOLD = 0.2; // 页宽的 20% 触发翻页
 const VELOCITY_THRESHOLD = 500; // px/s 快速滑动触发翻页
 const SPRING_CONFIG = { stiffness: 300, damping: 30 };
-const DOCK_RESERVE = 72; // Dock 高度预留（56px base + 16px 呼吸空间）
 const SEARCH_BAR_AREA = 44; // 搜索栏 + 圆点指示器区域高度
+// Dock 高度通过 CSS 变量感知：var(--os-dock-height) + safe-area
+const DOCK_BOTTOM_CSS = "calc(var(--os-dock-height, 56px) + env(safe-area-inset-bottom, 0px))";
 
 // ─── 主组件 ───────────────────────────────────────────────────────────
 
@@ -174,7 +176,7 @@ export function MobileDesktopGrid({
       className="relative w-full h-full flex flex-col z-10"
       style={{
         paddingTop: isXpTheme ? 8 : 24,
-        paddingBottom: DOCK_RESERVE,
+        paddingBottom: `calc(${DOCK_BOTTOM_CSS} + 16px)`,
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -267,40 +269,50 @@ export function MobileDesktopGrid({
         </motion.div>
       </div>
 
-      {/* 搜索栏 + 圆点 — 绝对定位浮在 Dock 上方 */}
-      <div className="absolute left-0 right-0 flex justify-center items-center" style={{ bottom: DOCK_RESERVE + 8, height: 36 }}>
-        {/* 搜索栏 — 常驻 */}
-        <button
-          className="flex items-center gap-1.5 px-4 h-8 rounded-full transition-opacity duration-300"
-          style={{
-            background: "rgba(255,255,255,0.15)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            opacity: dotsVisible ? 0 : 1,
-          }}
-          onClick={onOpenSearch}
-        >
-          <MagnifyingGlass size={13} weight="bold" className="text-white/70" />
-          <span className="text-[11px] text-white/70">{t("common.search.label", "搜索")}</span>
-        </button>
-
-        {/* 圆点指示器 — 滑动时淡入 */}
+      {/* 搜索栏 + 圆点 — Portal 逃离 z-10 牢笼，浮在 Dock 之上 */}
+      {createPortal(
         <div
-          className="absolute inset-0 flex justify-center items-center gap-1.5 transition-opacity duration-300"
-          style={{ opacity: dotsVisible ? 1 : 0, pointerEvents: dotsVisible ? "auto" : "none" }}
+          className="fixed left-0 right-0 flex justify-center items-center pointer-events-none"
+          style={{
+            bottom: `calc(${DOCK_BOTTOM_CSS} + 8px)`,
+            height: 36,
+            zIndex: 51,
+          }}
         >
-          {Array.from({ length: Math.max(totalPages, 1) }, (_, i) => (
-            <button
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
-                i === currentPage ? "bg-white" : "bg-white/30"
-              }`}
-              onClick={() => totalPages > 1 && goToPage(i)}
-              aria-label={`Page ${i + 1}`}
-            />
-          ))}
-        </div>
-      </div>
+          {/* 搜索栏 — 常驻 */}
+          <button
+            className="pointer-events-auto flex items-center gap-1.5 px-4 h-8 rounded-full transition-opacity duration-300"
+            style={{
+              background: "rgba(255,255,255,0.15)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              opacity: dotsVisible ? 0 : 1,
+            }}
+            onClick={onOpenSearch}
+          >
+            <MagnifyingGlass size={13} weight="bold" className="text-white/70" />
+            <span className="text-[11px] text-white/70">{t("common.search.label", "搜索")}</span>
+          </button>
+
+          {/* 圆点指示器 — 滑动时淡入 */}
+          <div
+            className="absolute inset-0 flex justify-center items-center gap-1.5 transition-opacity duration-300 pointer-events-none"
+            style={{ opacity: dotsVisible ? 1 : 0 }}
+          >
+            {Array.from({ length: Math.max(totalPages, 1) }, (_, i) => (
+              <button
+                key={i}
+                className={`pointer-events-auto w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
+                  i === currentPage ? "bg-white" : "bg-white/30"
+                }`}
+                onClick={() => totalPages > 1 && goToPage(i)}
+                aria-label={`Page ${i + 1}`}
+              />
+            ))}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
