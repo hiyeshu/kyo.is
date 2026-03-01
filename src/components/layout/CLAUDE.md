@@ -5,7 +5,7 @@
 
 AppleMenu.tsx: Apple 菜单组件，macOS 风格左上角菜单，关于、系统偏好、最近使用项目、登入/登出
 AppMenu.tsx: 应用菜单组件，当前应用的菜单栏，文件、编辑、视图、帮助
-BookmarkHoverCard.tsx: 书签悬浮信息卡，Portal 渲染，显示完整标题+域名+摘要，350ms 延迟出现，自动翻转定位，被 DesktopIcons.tsx 和 Desktop.tsx 消费
+BookmarkHoverCard.tsx: 书签悬浮信息卡，Portal 渲染，显示完整标题+域名+摘要，集成 PageShot 缩略图缓存（成功 7 天 / 失败指数退避），350ms 延迟出现，自动翻转定位，被 DesktopIcons.tsx、Desktop.tsx、BookmarkBoardApp.tsx 消费
 Desktop.tsx: 桌面组件，桌面环境核心，管理壁纸、图标、书签桌面显示、框选多选（marquee selection）、右键菜单（粘贴链接/移除桌面/批量移除）、⌘A 全选、Delete 批量删除
 DesktopIcons.tsx: 桌面图标组件集，DesktopIcon（应用图标）、BookmarkDesktopIcon（书签图标+短名标签）、BookmarkIconWrapper（长按/拖拽/悬浮信息卡），被 Desktop.tsx 和 MobileDesktopGrid.tsx 消费
 Dock.tsx: Dock 栏组件，macOS 风格底部应用栏，应用图标、网站链接、最小化窗口、拖拽排序、右键添加网站
