@@ -16,7 +16,6 @@ import { AppId, getAppIconPath } from "@/config/appRegistry";
 import { getTranslatedAppName } from "@/utils/i18n";
 import type { AnyApp } from "@/apps/base/types";
 import type { Bookmark } from "@/stores/useBookmarkStore";
-import type { LaunchOriginRect } from "@/stores/useAppStore";
 
 // ─── Props ────────────────────────────────────────────────────────────
 

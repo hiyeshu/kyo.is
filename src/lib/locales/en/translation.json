@@ -7,6 +7,7 @@
       "unmute": "Unmute"
     },
     "search": {
+      "label": "Search",
       "bookmarks": "Search bookmarks...",
       "appsAndBookmarks": "Search apps and bookmarks...",
       "appsGroup": "Apps",

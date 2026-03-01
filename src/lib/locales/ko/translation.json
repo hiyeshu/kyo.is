@@ -2397,6 +2397,7 @@
       "unmute": "음소거 해제"
     },
     "search": {
+      "label": "검색",
       "bookmarks": "북마크 검색...",
       "appsAndBookmarks": "앱 및 북마크 검색...",
       "appsGroup": "앱",

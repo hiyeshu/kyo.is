@@ -311,6 +311,7 @@ export function AppManager({ apps }: AppManagerProps) {
         }}
         appStates={{ windowOrder: instanceOrder, apps: legacyAppStates }}
         onDoubleClick={() => setIsCommandPaletteOpen(true)}
+        onOpenSearch={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Expose View (Mission Control) - Backdrop and labels */}

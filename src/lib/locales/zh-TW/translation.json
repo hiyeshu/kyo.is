@@ -2408,6 +2408,7 @@
       "unmute": "取消靜音"
     },
     "search": {
+      "label": "搜尋",
       "bookmarks": "搜尋書籤...",
       "appsAndBookmarks": "搜尋應用程式和書籤...",
       "appsGroup": "應用程式",

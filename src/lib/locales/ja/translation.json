@@ -2397,6 +2397,7 @@
       "unmute": "ミュート解除"
     },
     "search": {
+      "label": "検索",
       "bookmarks": "ブックマークを検索...",
       "appsAndBookmarks": "アプリとブックマークを検索...",
       "appsGroup": "アプリ",

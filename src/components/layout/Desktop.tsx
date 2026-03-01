@@ -23,6 +23,7 @@ import { getTranslatedAppName } from "@/utils/i18n";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { handleUrlPaste } from "@/hooks/usePasteHandler";
+import { MobileDesktopGrid } from "@/components/layout/MobileDesktopGrid";
 
 interface DesktopStyles {
   backgroundColor?: string;
@@ -44,6 +45,7 @@ interface DesktopProps {
   onClick?: () => void;
   onDoubleClick?: () => void;
   desktopStyles?: DesktopStyles;
+  onOpenSearch?: () => void;
 }
 
 /**
@@ -55,6 +57,7 @@ export function Desktop({
   onClick,
   onDoubleClick,
   desktopStyles,
+  onOpenSearch,
 }: DesktopProps) {
   const { t } = useTranslation();
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
@@ -309,6 +312,95 @@ export function Desktop({
     ];
   };
 
+  // ─── 移动端渲染 MobileDesktopGrid ─────────────────────────────────
+  if (isMobile) {
+    const desktopBookmarks = bookmarkStore.items.filter((b) => b.onDesktop);
+
+    return (
+      <div
+        ref={desktopRef}
+        className="absolute inset-0 min-h-screen h-full z-0 desktop-background"
+        style={finalStyles}
+      >
+        {/* Video wallpaper */}
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover z-[-10]"
+          src={wallpaperSource}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          data-webkit-playsinline="true"
+          style={{ display: isVideoWallpaper ? "block" : "none" }}
+        />
+
+        <MobileDesktopGrid
+          apps={displayedApps}
+          bookmarks={desktopBookmarks}
+          theme={currentTheme}
+          isXpTheme={isXpTheme}
+          selectedAppId={selectedAppId}
+          selectedBookmarkIds={selectedBookmarkIds}
+          onAppClick={(appId, rect) => {
+            toggleApp(appId as AppId, undefined, {
+              x: rect.left,
+              y: rect.top,
+              width: rect.width,
+              height: rect.height,
+            });
+            setSelectedAppId(null);
+          }}
+          onAppContextMenu={(appId, x, y) => {
+            setContextMenuPos({ x, y });
+            setContextMenuAppId(appId);
+            setContextMenuBookmark(null);
+            setSelectedAppId(appId);
+          }}
+          onBookmarkOpen={(bm) => {
+            openBookmarkUrl(bm.url);
+            clearSelection();
+          }}
+          onBookmarkSelect={(bm) => {
+            setSelectedBookmarkIds(new Set([bm.id]));
+            setSelectedAppId(null);
+          }}
+          onBookmarkContextMenu={(bm, x, y) => {
+            setContextMenuPos({ x, y });
+            setContextMenuBookmark(bm);
+            setContextMenuAppId(null);
+            if (!selectedBookmarkIds.has(bm.id)) {
+              setSelectedBookmarkIds(new Set([bm.id]));
+            }
+          }}
+          onOpenSearch={() => {
+            // 打开 CommandPalette
+            onOpenSearch?.();
+          }}
+        />
+
+        <RightClickMenu
+          position={contextMenuPos}
+          onClose={() => {
+            setContextMenuPos(null);
+            setContextMenuAppId(null);
+            setContextMenuBookmark(null);
+          }}
+          items={getContextMenuItems()}
+        />
+        <ConfirmDialog
+          isOpen={isBatchRemoveDialogOpen}
+          onOpenChange={setIsBatchRemoveDialogOpen}
+          onConfirm={handleBatchRemove}
+          title={t("common.desktop.batchRemoveTitle", "移除书签")}
+          description={t("common.desktop.batchRemoveDesc", "确定要将选中的 {{count}} 个书签从桌面移除吗？", { count: batchRemoveIds.size })}
+        />
+      </div>
+    );
+  }
+
+  // ─── 桌面端渲染（原有逻辑）─────────────────────────────────────────
   return (
     <div
       ref={desktopRef}
@@ -710,13 +802,17 @@ function BookmarkDesktopIcon({
             {iconInfo.value}
           </span>
         ) : (
-          // 统一圆角容器 — 所有主题共用 iOS 风格圆角 + 白底 + 阴影
+          // 主题差异化图标容器
           <div
             className="relative overflow-hidden w-12 h-12"
             style={{
-              borderRadius: "22%",
+              // macOS: iOS 风格圆角 22%
+              // XP/Win98: 方形无圆角，回归经典
+              borderRadius: isMacTheme ? "22%" : "0",
               backgroundColor: "#ffffff",
-              boxShadow: "0 1px 0 rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.12)",
+              boxShadow: isMacTheme
+                ? "0 1px 0 rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.12)"
+                : "0 1px 2px rgba(0,0,0,0.3)",
             }}
           >
             <BookmarkFaviconImg

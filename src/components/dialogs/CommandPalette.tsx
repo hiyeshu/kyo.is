@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { MagnifyingGlass, Plus, CircleNotch, CopySimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // ─── 复制按钮（hover 显示，点击复制后自动关闭搜索）─────────────────────────
 
@@ -177,6 +178,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
   const { notes } = useStickiesStore();
   const user = useAuthStore((s) => s.user);
   const currentTheme = useThemeStore((s) => s.current);
+  const isMobile = useIsMobile();
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const searchRef = useRef("");
@@ -741,7 +743,8 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
             )}
           </Command.List>
 
-          {/* Footer */}
+          {/* Footer（移动端隐藏）*/}
+          {!isMobile && (
           <div
             className="flex items-center justify-between px-3 py-2"
             style={{
@@ -763,6 +766,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               <span>ESC {t("common.action.close", "關閉")}</span>
             </div>
           </div>
+          )}
         </Command>
       </div>
 
