@@ -33,7 +33,7 @@ function CopyButton({ text, onCopied }: { text: string; onCopied?: () => void })
   return (
     <button
       type="button"
-      className="shrink-0 opacity-0 group-hover:opacity-60 group-data-[selected=true]:opacity-100 hover:!opacity-100 transition-opacity p-1 rounded cursor-pointer hover:bg-black/10 group-data-[selected=true]:bg-white/90 group-data-[selected=true]:text-black group-data-[selected=true]:hover:bg-white"
+      className="shrink-0 opacity-0 group-hover:opacity-60 group-data-[selected=true]:opacity-100 hover:!opacity-100 transition-all p-1 rounded cursor-pointer hover:bg-black/15 group-data-[selected=true]:bg-white group-data-[selected=true]:text-black group-data-[selected=true]:hover:bg-gray-100"
       onClick={(e) => {
         e.stopPropagation();
         navigator.clipboard.writeText(text);
@@ -133,7 +133,7 @@ function HighlightText({ text, query, maxLen = 80 }: { text: string; query: stri
 
 const macPanelStyle: React.CSSProperties = {
   borderRadius: "14px",
-  backgroundColor: "rgba(246, 246, 246, 0.88)",
+  backgroundColor: "rgba(255, 255, 255, 0.35)",
   backgroundImage: "var(--os-pinstripe-window)",
   border: "0.5px solid rgba(0, 0, 0, 0.15)",
   boxShadow:
@@ -563,8 +563,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                         value={`${item.title || ""} ${item.url || ""}`}
                         onSelect={() => item.url && handleSelectBookmark(item.url)}
                         className={cn(
-                          "group flex items-center gap-3 px-3 py-2 cursor-pointer",
-                          "data-[selected=true]:text-white"
+                          "group flex items-center gap-3 px-3 py-2 cursor-pointer"
                         )}
                         style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
                       >
@@ -632,8 +631,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                         value={`${bm.title} ${bm.url}`}
                         onSelect={() => handleSelectBookmark(bm.url)}
                         className={cn(
-                          "group flex items-center gap-3 px-3 py-2 cursor-pointer",
-                          "data-[selected=true]:text-white"
+                          "group flex items-center gap-3 px-3 py-2 cursor-pointer"
                         )}
                         style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
                       >
@@ -654,38 +652,39 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="truncate font-medium">
+                            <span className="truncate font-semibold text-[14px]">
                               {q ? <HighlightText text={bm.title} query={q} maxLen={50} /> : bm.title}
                             </span>
                             {bm.tags?.length > 0 && (
                               <span className="shrink-0 flex items-center gap-1">
-                                {bm.tags.slice(0, 2).map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="bookmark-tag"
-                                    style={{
-                                      fontSize: "9px",
-                                      padding: "1px 5px",
-                                      borderRadius: "3px",
-                                      backgroundColor: "rgba(0, 0, 0, 0.06)",
-                                      color: "rgba(0, 0, 0, 0.4)",
-                                      whiteSpace: "nowrap",
-                                    }}
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
+                                {bm.tags.slice(0, 2).map((tag) => {
+                                  const isTagMatched = q && tag.toLowerCase().includes(q.toLowerCase());
+                                  return (
+                                    <span
+                                      key={tag}
+                                      className={cn(
+                                        "bookmark-tag text-[10px] px-2 py-0.5 rounded-full",
+                                        isTagMatched
+                                          ? "bg-blue-100 text-blue-800"
+                                          : "bg-gray-100 text-gray-600"
+                                      )}
+                                    >
+                                      {tag}
+                                    </span>
+                                  );
+                                })}
                               </span>
                             )}
                           </div>
-                          <div className="truncate" style={{ fontSize: isMacTheme ? "10px" : "11px", opacity: 0.4 }}>
-                            {match?.text && match.field !== "title" ? (
-                              <HighlightText text={match.text} query={q} />
+                          <div className="truncate text-[11px] text-gray-600">
+                            {match?.field === "summary" && match.text ? (
+                              // 命中描述：显示描述片段
+                              <HighlightText text={match.text} query={q} maxLen={80} />
                             ) : (
-                              <>
+                              // 未命中描述：显示 URL
+                              <span className="text-gray-500">
                                 {extractDomain(bm.url)}
-                                {bm.summary && <span style={{ opacity: 0.7 }}> · {bm.summary.slice(0, 60)}</span>}
-                              </>
+                              </span>
                             )}
                           </div>
                         </div>
@@ -955,26 +954,25 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
       {/* cmdk 选中样式 */}
       <style>{`
         .search-highlight {
-          background: none;
-          color: ${isMacTheme ? "#1a6dca" : isXpTheme ? "#0054E3" : "#0066cc"};
-          font-weight: 700;
-        }
-        [cmdk-item][data-selected=true] {
-          background-color: ${
-            isMacTheme
-              ? "rgba(39, 101, 202, 0.88)"
-              : isXpTheme
-              ? "#0054E3"
-              : "#000000"
-          };
-          color: #ffffff;
+          background: #dbeafe;
+          color: inherit;
+          font-weight: 500;
+          padding: 0 2px;
+          border-radius: 2px;
         }
         [cmdk-item][data-selected=true] .search-highlight {
-          color: #ffffff !important;
+          background: #bfdbfe;
+        }
+        [cmdk-item][data-selected=true] {
+          background-color: #e0e0e0;
+          color: inherit;
+        }
+        [cmdk-item][data-selected=true] .search-highlight {
+          color: inherit !important;
         }
         [cmdk-item][data-selected=true] .bookmark-tag {
-          background-color: rgba(255, 255, 255, 0.18) !important;
-          color: rgba(255, 255, 255, 0.7) !important;
+          background-color: #d4d4d4 !important;
+          color: #666666 !important;
         }
         [cmdk-group-heading] {
           padding: 4px 8px;
