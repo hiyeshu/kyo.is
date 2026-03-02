@@ -226,14 +226,24 @@ export default async function handler(req: Request) {
             headers: { "Content-Type": "application/json" },
           });
         }
-        const aiMeta = await generateAiMeta(cached.title, cached.description, url, lang);
-        if (bookmarkId && userId) {
-          waitUntil(writeBackToKyoItems(bookmarkId, userId, {
-            title: cached.title, summary: aiMeta.summary, tags: aiMeta.tags,
-            favicon: cached.faviconUrl || null,
-          }));
-        }
-        return new Response(JSON.stringify({ ...cached, summary: aiMeta.summary, tags: aiMeta.tags }), {
+        // 缓存无 summary/tags，先返回缓存的基础数据，Dify 放后台
+        waitUntil((async () => {
+          const aiMeta = await generateAiMeta(cached.title, cached.description, url, lang);
+          await writeCache({
+            url, title: cached.title, description: cached.description,
+            og_image: cached.ogImage || null, favicon_url: cached.faviconUrl || null,
+            site_name: cached.siteName || null, theme_color: cached.themeColor || null,
+            summary: aiMeta.summary, tags: aiMeta.tags,
+            fetched_at: new Date().toISOString(),
+          });
+          if (bookmarkId && userId) {
+            await writeBackToKyoItems(bookmarkId, userId, {
+              title: cached.title, summary: aiMeta.summary, tags: aiMeta.tags,
+              favicon: cached.faviconUrl || null,
+            });
+          }
+        })());
+        return new Response(JSON.stringify(cached), {
           headers: { "Content-Type": "application/json" },
         });
       }
