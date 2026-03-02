@@ -19,8 +19,10 @@ import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useBookmarkStore, getFaviconUrl as getBookmarkFaviconUrl } from "@/stores/useBookmarkStore";
 import { fetchLinkMeta } from "@/lib/linkMeta";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { warmPreview } from "@/components/layout/BookmarkHoverCard";
 
 interface AddWebsiteDialogProps {
   isOpen: boolean;
@@ -89,9 +91,11 @@ export function AddWebsiteDialog({
       const bookmarkId = addBookmark(title, normalizedUrl, faviconUrl, {
         inDock: isMacTheme,
       });
+      warmPreview(normalizedUrl);
 
       // 3. 后台异步获取元数据，更新 title 和 favicon
-      fetchLinkMeta(normalizedUrl)
+      const userId = (await supabase.auth.getSession()).data.session?.user?.id;
+      fetchLinkMeta(normalizedUrl, { bookmarkId, userId })
         .then((meta) => {
           const updates: Record<string, unknown> = {};
           if (meta.title) updates.title = meta.title;
@@ -103,7 +107,7 @@ export function AddWebsiteDialog({
           }
         })
         .catch(() => {
-          // 元数据获取失败不影响书签创建
+          // 元数据获取失败不影响书签创建，服务端已直写 kyo_items
         });
 
       // 成功

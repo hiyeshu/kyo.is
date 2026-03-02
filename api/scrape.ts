@@ -163,6 +163,33 @@ Return JSON only: {"summary":"...","tags":["..."]}`;
   }
 }
 
+// ─── 服务端直写 kyo_items（Dify 结果不丢失） ────────────────────────────────
+
+async function writeBackToKyoItems(
+  bookmarkId: string,
+  userId: string,
+  data: { title: string; summary: string; tags: string[]; favicon: string | null }
+): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+
+  try {
+    await sb
+      .from("kyo_items")
+      .update({
+        title: data.title,
+        summary: data.summary,
+        tags: data.tags,
+        favicon: data.favicon,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", bookmarkId)
+      .eq("user_id", userId);
+  } catch (e) {
+    console.error("[scrape] writeBackToKyoItems failed:", e);
+  }
+}
+
 // ─── 主处理函数 ───────────────────────────────────────────────────────────────
 
 export default async function handler(req: Request) {
@@ -171,8 +198,8 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const body = (await req.json()) as { url: string; no_cache?: boolean; lang?: string };
-    const { url, no_cache, lang } = body;
+    const body = (await req.json()) as { url: string; no_cache?: boolean; lang?: string; bookmarkId?: string; userId?: string };
+    const { url, no_cache, lang, bookmarkId, userId } = body;
 
     if (!url || typeof url !== "string") {
       return new Response("Missing url", { status: 400 });
@@ -189,27 +216,36 @@ export default async function handler(req: Request) {
       const cached = await readCache(url);
       if (cached) {
         if (cached.summary && cached.tags?.length) {
+          if (bookmarkId && userId) {
+            waitUntil(writeBackToKyoItems(bookmarkId, userId, {
+              title: cached.title, summary: cached.summary, tags: cached.tags,
+              favicon: cached.faviconUrl || null,
+            }));
+          }
           return new Response(JSON.stringify(cached), {
             headers: { "Content-Type": "application/json" },
           });
         }
-        // 缓存无 summary/tags，用缓存的原始元数据 + AI 重新生成
         const aiMeta = await generateAiMeta(cached.title, cached.description, url, lang);
+        if (bookmarkId && userId) {
+          waitUntil(writeBackToKyoItems(bookmarkId, userId, {
+            title: cached.title, summary: aiMeta.summary, tags: aiMeta.tags,
+            favicon: cached.faviconUrl || null,
+          }));
+        }
         return new Response(JSON.stringify({ ...cached, summary: aiMeta.summary, tags: aiMeta.tags }), {
           headers: { "Content-Type": "application/json" },
         });
       }
     }
 
-    // 2. 调 LinkMeta API（同步，快）
+    // 2. 调 LinkMeta API（同步，快，1-3s）
     const meta = await fetchFromLinkMeta(url);
     const title = meta.title || new URL(url).hostname;
     const description = meta.description || "";
 
-    // 3. 调 Dify AI 生成摘要和标签（带超时保护，失败则降级）
-    const aiMeta = await generateAiMeta(title, description, url, lang);
-
-    const result: ScrapeResult = {
+    // 3. 立即返回 LinkMeta 结果给客户端（用户先看到真实标题和图标）
+    const quickResult: ScrapeResult = {
       url,
       title,
       description,
@@ -217,27 +253,39 @@ export default async function handler(req: Request) {
       faviconUrl: meta.favicon || undefined,
       siteName: meta.siteName || undefined,
       themeColor: meta.themeColor || undefined,
-      summary: aiMeta.summary,
-      tags: aiMeta.tags,
+      summary: "",
+      tags: [],
       fetchedAt: Date.now(),
     };
 
-    // 4. 写入 LinkMeta 缓存（含 AI 摘要和标签）
-    const cacheRow: Record<string, unknown> = {
-      url,
-      title,
-      description,
-      og_image: meta.image || null,
-      favicon_url: meta.favicon || null,
-      site_name: meta.siteName || null,
-      theme_color: meta.themeColor || null,
-      summary: aiMeta.summary,
-      tags: aiMeta.tags,
-      fetched_at: new Date().toISOString(),
-    };
-    waitUntil(writeCache(cacheRow));
+    // 4. Dify + 缓存 + kyo_items 回写全部放到后台（用户不用等）
+    waitUntil((async () => {
+      const aiMeta = await generateAiMeta(title, description, url, lang);
 
-    return new Response(JSON.stringify(result), {
+      await writeCache({
+        url,
+        title,
+        description,
+        og_image: meta.image || null,
+        favicon_url: meta.favicon || null,
+        site_name: meta.siteName || null,
+        theme_color: meta.themeColor || null,
+        summary: aiMeta.summary,
+        tags: aiMeta.tags,
+        fetched_at: new Date().toISOString(),
+      });
+
+      if (bookmarkId && userId) {
+        await writeBackToKyoItems(bookmarkId, userId, {
+          title,
+          summary: aiMeta.summary,
+          tags: aiMeta.tags,
+          favicon: meta.favicon || null,
+        });
+      }
+    })());
+
+    return new Response(JSON.stringify(quickResult), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {

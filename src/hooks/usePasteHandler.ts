@@ -12,6 +12,8 @@ import { useStickiesStore } from "@/stores/useStickiesStore";
 import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
 import { fetchLinkMeta } from "@/lib/linkMeta";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/lib/supabase";
+import { warmPreview } from "@/components/layout/BookmarkHoverCard";
 
 const URL_REGEX = /^https?:\/\/\S+$/i;
 
@@ -53,7 +55,7 @@ export function usePasteHandler() {
 
 // ─── URL 粘贴 → 书签（导出供右键菜单等场景直接调用）────────────────────────
 
-export function handleUrlPaste(url: string, t: (key: string, fallback?: string) => string) {
+export async function handleUrlPaste(url: string, t: (key: string, fallback?: string) => string) {
   const { getBookmarkByUrl, addAiBookmark, addBookmark } = useBookmarkStore.getState();
   const linkMetaStore = useLinkMetaStore.getState();
 
@@ -76,16 +78,17 @@ export function handleUrlPaste(url: string, t: (key: string, fallback?: string) 
   try { hostname = new URL(url).hostname; } catch { /* noop */ }
   const tempId = addBookmark(hostname, url, undefined, { onDesktop: true });
   toast(t("paste.fetchingMeta", "正在获取网页信息..."));
+  warmPreview(url);
 
-  fetchLinkMeta(url)
+  // 获取当前用户 ID，传给 scrape 端点实现服务端直写 kyo_items
+  const userId = (await supabase.auth.getSession()).data.session?.user?.id;
+
+  fetchLinkMeta(url, { bookmarkId: tempId, userId })
     .then((meta) => {
       linkMetaStore.set(url, meta);
-      const updates: Record<string, unknown> = {
-        title: meta.title,
-        summary: meta.summary,
-        tags: meta.tags,
-      };
-      // 仅在用户未自定义图标时，用 LinkMeta favicon 覆盖
+      const updates: Record<string, unknown> = { title: meta.title };
+      if (meta.summary) updates.summary = meta.summary;
+      if (meta.tags?.length) updates.tags = meta.tags;
       const bookmark = useBookmarkStore.getState().getBookmarkById(tempId);
       if (meta.faviconUrl && bookmark && !bookmark.icon) {
         updates.favicon = meta.faviconUrl;
@@ -94,7 +97,7 @@ export function handleUrlPaste(url: string, t: (key: string, fallback?: string) 
       toast(t("paste.bookmarkUpdated", "书签信息已更新"));
     })
     .catch(() => {
-      // 保留占位书签，不删除
+      toast(t("paste.fetchFailed", "网页信息获取失败，书签已保留"));
     });
 }
 

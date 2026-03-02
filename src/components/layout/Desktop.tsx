@@ -7,7 +7,7 @@
 
 import { AnyApp } from "@/apps/base/types";
 import { AppId, getAppIconPath } from "@/config/appRegistry";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useWallpaper } from "@/hooks/useWallpaper";
 import { RightClickMenu, MenuItem } from "@/components/ui/right-click-menu";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
@@ -15,7 +15,7 @@ import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useBookmarkStore, openBookmarkUrl, getBookmarkIconInfo, getBookmarkShortName, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
-import { BookmarkHoverCard } from "@/components/layout/BookmarkHoverCard";
+import { BookmarkHoverCard, prefetchBookmarkPreviews } from "@/components/layout/BookmarkHoverCard";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
@@ -115,6 +115,15 @@ export function Desktop({
   );
 
   const desktopBookmarks = bookmarkStore.items.filter((b) => b.onDesktop) as Bookmark[];
+
+  // 页面空闲时静默预热桌面书签的截图缓存
+  useEffect(() => {
+    if (desktopBookmarks.length === 0) return;
+    const urls = desktopBookmarks.map((b) => b.url);
+    const timer = setTimeout(() => prefetchBookmarkPreviews(urls), 2000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [desktopBookmarks.length]);
 
   // ─── Keyboard shortcuts ─────────────────────────────────────────────
   useEventListener("keydown", useCallback((e: KeyboardEvent) => {

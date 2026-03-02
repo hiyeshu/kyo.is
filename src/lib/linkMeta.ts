@@ -14,27 +14,34 @@ import i18n from "@/lib/i18n";
  * 1. 本地 store（内存 + localStorage）
  * 2. Supabase link_meta 表（通过 /api/scrape 端点透传）
  * 3. LinkMeta API（通过 /api/scrape 端点调用）
+ *
+ * 传入 bookmarkId + userId 时，scrape 端点会直接将结果写入 kyo_items，
+ * 即使客户端断开也不会丢失 Dify 生成的 summary/tags。
  */
-export async function fetchLinkMeta(url: string): Promise<LinkMeta> {
+export async function fetchLinkMeta(
+  url: string,
+  opts?: { bookmarkId?: string; userId?: string }
+): Promise<LinkMeta> {
   const store = useLinkMetaStore.getState();
 
-  // 层 1：本地 store 缓存
   if (store.has(url)) {
     return store.get(url)!;
   }
 
-  // 层 2+3：/api/scrape 内部处理 Supabase 缓存 + LinkMeta API
   const res = await fetch("/api/scrape", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url, lang: i18n.language }),
+    body: JSON.stringify({
+      url,
+      lang: i18n.language,
+      bookmarkId: opts?.bookmarkId,
+      userId: opts?.userId,
+    }),
   });
 
   if (!res.ok) throw new Error("Scrape failed");
 
   const meta: LinkMeta = await res.json();
-
-  // 写入本地 store 缓存
   store.set(url, meta);
 
   return meta;

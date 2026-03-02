@@ -9,6 +9,8 @@ import { useBookmarkStore } from "@/stores/useBookmarkStore";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
 import { searchItems, getRecent } from "@/stores/useKyoItemStore";
+import { supabase } from "@/lib/supabase";
+import { warmPreview } from "@/components/layout/BookmarkHoverCard";
 import type { KyoItem } from "@/types/kyoItem";
 
 // ─── 意图类型 ─────────────────────────────────────────────────────────────────
@@ -149,21 +151,23 @@ export async function executeIntent(intent: ChatIntent): Promise<string | null> 
       let hostname = "example.com";
       try { hostname = new URL(intent.url).hostname; } catch { /* noop */ }
       const tempId = addBookmark(hostname, intent.url);
+      warmPreview(intent.url);
+
+      const userId = (await supabase.auth.getSession()).data.session?.user?.id;
 
       try {
         const res = await fetch("/api/scrape", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: intent.url }),
+          body: JSON.stringify({ url: intent.url, bookmarkId: tempId, userId }),
         });
         if (res.ok) {
           const meta = await res.json();
           linkMetaStore.set(intent.url, meta);
-          useBookmarkStore.getState().updateBookmark(tempId, {
-            title: meta.title,
-            summary: meta.summary,
-            tags: meta.tags,
-          });
+          const updates: Record<string, unknown> = { title: meta.title };
+          if (meta.summary) updates.summary = meta.summary;
+          if (meta.tags?.length) updates.tags = meta.tags;
+          useBookmarkStore.getState().updateBookmark(tempId, updates);
           return `已保存: ${meta.title} 🔖`;
         }
       } catch { /* noop */ }

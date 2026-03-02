@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 react 的 useState/useEffect/useRef/useMemo，依赖 react-dom 的 createPortal，依赖 utils/platform 的 getApiUrl
- * [OUTPUT]: 对外提供 BookmarkHoverCard 组件
+ * [OUTPUT]: 对外提供 BookmarkHoverCard 组件，warmPreview / prefetchBookmarkPreviews 预热函数
  * [POS]: components/layout/ 的书签悬浮信息卡，被 DesktopIcons.tsx / Desktop.tsx / BookmarkBoardApp.tsx 消费，负责截图预览缓存与降级显示
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -177,6 +177,62 @@ async function loadPreview(url: string): Promise<PreviewCacheEntry> {
 
   previewInFlight.set(url, request);
   return request;
+}
+
+// ─── 预热 API（供外部调用） ──────────────────────────────────────────────
+
+const PREFETCH_CONCURRENCY = 2;
+const PREFETCH_INTERVAL_MS = 3000;
+
+/**
+ * 预热单个 URL 的截图缓存（静默，不阻塞 UI）。
+ * 书签创建后调用，让用户第一次悬停时就能看到截图。
+ */
+export function warmPreview(rawUrl: string): void {
+  const url = normalizeBookmarkUrl(rawUrl);
+  if (!url) return;
+  if (getCachedPreview(url)) return;
+  loadPreview(url);
+}
+
+/**
+ * 批量预热一组 URL 的截图缓存。
+ * 限并发 2、批次间隔 3 秒，使用 requestIdleCallback 在浏览器空闲时执行，
+ * 确保不超过 PageShot 的 30 次/分钟 和 5 并发限制。
+ */
+export function prefetchBookmarkPreviews(urls: string[]): void {
+  const toFetch = urls
+    .map(normalizeBookmarkUrl)
+    .filter((u): u is string => u !== null && !getCachedPreview(u));
+
+  if (toFetch.length === 0) return;
+
+  let idx = 0;
+
+  function nextBatch() {
+    if (idx >= toFetch.length) return;
+
+    const batch = toFetch.slice(idx, idx + PREFETCH_CONCURRENCY);
+    idx += PREFETCH_CONCURRENCY;
+
+    batch.forEach((url) => loadPreview(url));
+
+    if (idx < toFetch.length) {
+      setTimeout(() => {
+        if (typeof requestIdleCallback === "function") {
+          requestIdleCallback(() => nextBatch());
+        } else {
+          nextBatch();
+        }
+      }, PREFETCH_INTERVAL_MS);
+    }
+  }
+
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(() => nextBatch());
+  } else {
+    setTimeout(() => nextBatch(), 1000);
+  }
 }
 
 // ─── 书签悬浮信息卡 ─────────────────────────────────────────────────────
