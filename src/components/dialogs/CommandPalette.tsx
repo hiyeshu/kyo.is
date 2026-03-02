@@ -133,7 +133,7 @@ function HighlightText({ text, query, maxLen = 80 }: { text: string; query: stri
 
 const macPanelStyle: React.CSSProperties = {
   borderRadius: "14px",
-  backgroundColor: "rgba(255, 255, 255, 0.35)",
+  backgroundColor: "var(--os-color-window-bg, #ffffff)",
   backgroundImage: "var(--os-pinstripe-window)",
   border: "0.5px solid rgba(0, 0, 0, 0.15)",
   boxShadow:
@@ -141,8 +141,6 @@ const macPanelStyle: React.CSSProperties = {
     "0 8px 24px rgba(0, 0, 0, 0.12), " +
     "0 0 0 0.5px rgba(255, 255, 255, 0.5) inset",
   overflow: "hidden",
-  backdropFilter: "blur(50px)",
-  WebkitBackdropFilter: "blur(50px)",
 };
 
 const macInputStyle: React.CSSProperties = {
@@ -432,7 +430,12 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
         className="absolute left-1/2 top-[18%] -translate-x-1/2 w-full max-w-[640px] px-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <Command className="overflow-hidden" style={getPanelStyle()} loop shouldFilter={false}>
+        <div style={getPanelStyle()}>
+          <div 
+            className={isMacTheme ? "bg-white/85" : ""}
+            style={isMacTheme ? { borderRadius: "14px", overflow: "hidden" } : undefined}
+          >
+            <Command className="overflow-hidden bg-transparent" loop shouldFilter={false}>
           {/* Input Area */}
           <div
             className="flex items-center gap-3 px-4"
@@ -949,9 +952,11 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
           </div>
           )}
         </Command>
+          </div>
+        </div>
       </div>
 
-      {/* cmdk 选中样式 */}
+      {/* cmdk 选中样式 + macOS 滚动条 */}
       <style>{`
         .search-highlight {
           background: #dbeafe;
@@ -981,6 +986,25 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
           font-family: ${isMacTheme ? "var(--os-font-ui)" : isXpTheme ? '"Pixelated MS Sans Serif", Tahoma, Arial' : "inherit"};
           text-transform: uppercase;
           letter-spacing: 0.05em;
+        }
+        
+        /* macOS 风格滚动条 */
+        [cmdk-list]::-webkit-scrollbar {
+          width: 8px;
+        }
+        [cmdk-list]::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        [cmdk-list]::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 4px;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+        [cmdk-list]::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 0, 0, 0.3);
+          border: 2px solid transparent;
+          background-clip: padding-box;
         }
       `}</style>
     </div>

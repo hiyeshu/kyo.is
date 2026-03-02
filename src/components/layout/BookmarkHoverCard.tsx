@@ -254,27 +254,31 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
       <div
         className="shadow-xl overflow-hidden"
         style={{
-          background: "var(--os-color-dock-tooltip-bg)",
-          color: "var(--os-color-dock-tooltip-text)",
+          background: "rgba(255, 255, 255, 0.75)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          color: "rgba(0, 0, 0, 0.95)",
           maxWidth: 240,
-          padding: "var(--os-spacing-sm) var(--os-spacing-md)",
-          borderRadius: "var(--os-metrics-radius)",
+          padding: "12px",
+          borderRadius: "8px",
+          border: "0.5px solid rgba(0, 0, 0, 0.1)",
+          boxShadow: "0 2px 12px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(255, 255, 255, 0.5) inset",
           animation: "hovercard-in 150ms ease-out forwards",
         }}
       >
-        <div className="font-semibold truncate" style={{ fontSize: "var(--os-text-sm)" }}>{title}</div>
-        <div className="truncate" style={{ fontSize: "var(--os-text-xs)", opacity: 0.5 }}>{domain}</div>
+        <div className="font-semibold truncate" style={{ fontSize: "13px", fontWeight: 600, color: "rgba(0, 0, 0, 0.95)" }}>{title}</div>
+        <div className="truncate" style={{ fontSize: "11px", color: "rgba(0, 0, 0, 0.4)", marginTop: "2px" }}>{domain}</div>
         {summary && (
-          <div className="line-clamp-2" style={{ fontSize: "var(--os-text-xs)", opacity: 0.7, marginTop: "var(--os-spacing-xs)" }}>{summary}</div>
+          <div className="line-clamp-2" style={{ fontSize: "12px", color: "rgba(0, 0, 0, 0.65)", marginTop: "8px", lineHeight: "1.4" }}>{summary}</div>
         )}
         {previewUrl && (
           <div
             className="overflow-hidden"
             style={{
-              borderRadius: "calc(var(--os-metrics-radius) - 2px)",
-              marginTop: "var(--os-spacing-sm)",
-              marginBottom: "var(--os-spacing-xs)",
-              background: "rgba(0,0,0,0.08)",
+              borderRadius: "6px",
+              marginTop: "8px",
+              marginBottom: "4px",
+              background: "rgba(0,0,0,0.04)",
             }}
           >
             <img
@@ -288,17 +292,17 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
           </div>
         )}
         {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-1" style={{ marginTop: "var(--os-spacing-xs)" }}>
+          <div className="flex flex-wrap gap-1" style={{ marginTop: "6px" }}>
             {tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
                 className="truncate"
                 style={{
-                  fontSize: "var(--os-text-xs)",
-                  padding: "1px var(--os-spacing-xs)",
-                  borderRadius: "var(--os-metrics-radius)",
-                  background: "color-mix(in srgb, currentColor 15%, transparent)",
-                  opacity: 0.8,
+                  fontSize: "10px",
+                  padding: "2px 6px",
+                  borderRadius: "4px",
+                  background: "rgba(0, 0, 0, 0.06)",
+                  color: "rgba(0, 0, 0, 0.5)",
                 }}
               >
                 {tag}
