@@ -1,7 +1,7 @@
 /**
- * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useAuthStore, useBrowserDataStore, supabase, useThemeStore, appRegistry, useAppStore, i18n
- * [OUTPUT]: CommandPalette 组件, getMatchInfo 命中推断, HighlightText 关键词高亮
- * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签 + 浏览器原生书签/历史，已登录时 debounced Supabase RPC ILIKE 搜索，未登录时客户端过滤，
+ * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useBrowserDataStore, useThemeStore, appRegistry, useAppStore, i18n
+ * [OUTPUT]: CommandPalette 组件, HighlightText 关键词高亮
+ * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签 + 浏览器原生书签/历史，纯客户端 scoreItem 评分搜索（秒开），
  *        搜索结果根据命中字段展示命中原因 + 全量关键词高亮（加粗+蓝色），浏览器数据与 kyo 书签按 URL 去重，被 AppManager 挂载
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -10,8 +10,6 @@ import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
 import { useBookmarkStore, getBookmarkIconInfo, openBookmarkUrl, type Bookmark } from "@/stores/useBookmarkStore";
 import { useStickiesStore } from "@/stores/useStickiesStore";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { supabase } from "@/lib/supabase";
 import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useAppStore } from "@/stores/useAppStore";
@@ -20,7 +18,7 @@ import type { AppId } from "@/config/appRegistry";
 import { getTranslatedAppName } from "@/utils/i18n";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { MagnifyingGlass, Plus, CircleNotch, CopySimple } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus, CopySimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
 import { scoreItem, getMatchInfo } from "@/utils/searchScore";
@@ -55,21 +53,6 @@ interface CommandPaletteProps {
 }
 
 type FlatBookmark = Bookmark;
-
-// Supabase RPC 返回的 kyo_items 行
-interface ServerItem {
-  id: string;
-  type: "bookmark" | "note";
-  title: string | null;
-  url: string | null;
-  summary: string | null;
-  text: string | null;
-  favicon: string | null;
-  tags: string[] | null;
-  color: string | null;
-  on_desktop: boolean | null;
-  created_at: string;
-}
 
 // URL 检测：有协议头，或者 xxx.xxx 格式（无空格）
 function looksLikeUrl(input: string): boolean {
@@ -164,17 +147,11 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
   const { t } = useTranslation();
   const { items, getBookmarkByUrl, addBookmark, updateBookmark } = useBookmarkStore();
   const { notes } = useStickiesStore();
-  const user = useAuthStore((s) => s.user);
   const currentTheme = useThemeStore((s) => s.current);
   const isMobile = useIsMobile();
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const searchRef = useRef("");
-
-  // ─── 服务端搜索状态 ──────────────────────────────────────────────────────────
-  const [serverResults, setServerResults] = useState<ServerItem[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const q = search.trim().toLowerCase();
 
@@ -255,12 +232,6 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
         .slice(0, 4)
     : [];
 
-  // ─── 搜索决策：始终使用客户端评分搜索（秒开） ──────────────────────────────
-  // 数据已通过 initialSync + Realtime 完整同步到本地，
-  // 客户端 scoreItem 加权评分比服务端 ILIKE 更精准，且零延迟
-  const displayBookmarks = null;
-  const displayNotes = null;
-
   // URL 检测
   const trimmedSearch = search.trim();
   const isUrlInput = trimmedSearch.length > 0 && looksLikeUrl(trimmedSearch);
@@ -270,11 +241,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
   const noteCount = filteredNotes.length;
   const isEmpty = q.length > 0 && filteredApps.length === 0 && bookmarkCount === 0 && noteCount === 0 && !isUrlInput;
 
-  // ─── 搜索已改为纯客户端（数据已同步到本地，无需服务端 RPC） ─────────────────
-  useEffect(() => {
-    setServerResults([]);
-    setIsSearching(false);
-  }, [search]);
+  // 搜索已改为纯客户端（数据已通过 initialSync + Realtime 同步到本地）
 
   // 打开时聚焦输入框 + 填入初始字符 + ESC/Tab 处理
   useEffect(() => {
@@ -434,33 +401,18 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               backgroundColor: isXpTheme ? "#ffffff" : undefined,
             }}
           >
-            {isSearching ? (
-              <CircleNotch
-                className="shrink-0 animate-spin"
-                size={isMacTheme ? 22 : 18}
-                weight="regular"
-                style={{
-                  color: isMacTheme
-                    ? "rgba(0, 0, 0, 0.3)"
-                    : isXpTheme
-                    ? "#0054E3"
-                    : "#666666",
-                }}
-              />
-            ) : (
-              <MagnifyingGlass
-                className="shrink-0"
-                size={isMacTheme ? 22 : 18}
-                weight="regular"
-                style={{
-                  color: isMacTheme
-                    ? "rgba(0, 0, 0, 0.3)"
-                    : isXpTheme
-                    ? "#0054E3"
-                    : "#666666",
-                }}
-              />
-            )}
+            <MagnifyingGlass
+              className="shrink-0"
+              size={isMacTheme ? 22 : 18}
+              weight="regular"
+              style={{
+                color: isMacTheme
+                  ? "rgba(0, 0, 0, 0.3)"
+                  : isXpTheme
+                  ? "#0054E3"
+                  : "#666666",
+              }}
+            />
             <Command.Input
               ref={inputRef}
               value={search}
@@ -505,7 +457,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
             }}
           >
             {/* 手动空状态（shouldFilter=false 时 Command.Empty 不可靠） */}
-            {isEmpty && !isSearching && (
+            {isEmpty && (
               <div
                 className="py-6 text-center"
                 style={{
@@ -538,78 +490,10 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               </Command.Group>
             )}
 
-            {/* 书签组 — 服务端结果 or 客户端过滤 */}
-            {displayBookmarks ? (
-              displayBookmarks.length > 0 && (
-                <Command.Group>
-                  {displayBookmarks.map((item) => {
-                    const match = q ? getMatchInfo(q, { title: item.title, summary: item.summary, text: item.text, tags: item.tags, url: item.url }) : null;
-                    return (
-                      <Command.Item
-                        key={item.id}
-                        value={`${item.title || ""} ${item.url || ""}`}
-                        onSelect={() => item.url && handleSelectBookmark(item.url)}
-                        className={cn(
-                          "group flex items-center gap-3 px-3 py-2 cursor-pointer"
-                        )}
-                        style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
-                      >
-                        <img
-                          src={item.favicon || "/icons/default/internet.png"}
-                          alt=""
-                          className="w-4 h-4 shrink-0 object-contain self-start mt-0.5"
-                          style={{ borderRadius: "22%" }}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/icons/default/internet.png";
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate font-semibold text-[14px]">
-                              {q ? <HighlightText text={item.title || item.url || ""} query={q} maxLen={50} /> : (item.title || item.url)}
-                            </span>
-                            {item.tags && item.tags.length > 0 && (
-                              <span className="shrink-0 flex items-center gap-1">
-                                {item.tags.slice(0, 2).map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="bookmark-tag"
-                                    style={{
-                                      fontSize: "9px",
-                                      padding: "1px 5px",
-                                      borderRadius: "3px",
-                                      backgroundColor: "rgba(0, 0, 0, 0.06)",
-                                      color: "rgba(0, 0, 0, 0.4)",
-                                      whiteSpace: "nowrap",
-                                    }}
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </span>
-                            )}
-                          </div>
-                          <div className="truncate" style={{ fontSize: isMacTheme ? "10px" : "11px", opacity: 0.4 }}>
-                            {match?.text && match.field !== "title" ? (
-                              <HighlightText text={match.text} query={q} />
-                            ) : item.url ? (
-                              <>
-                                {extractDomain(item.url)}
-                                {item.summary && <span style={{ opacity: 0.7 }}> · {item.summary.slice(0, 60)}</span>}
-                              </>
-                            ) : null}
-                          </div>
-                        </div>
-                        {item.url && <CopyButton text={item.url} onCopied={() => onOpenChange(false)} />}
-                      </Command.Item>
-                    );
-                  })}
-                </Command.Group>
-              )
-            ) : (
-              filteredBookmarks.length > 0 && (
-                <Command.Group>
-                  {filteredBookmarks.map((bm) => {
+            {/* 书签组 */}
+            {filteredBookmarks.length > 0 && (
+              <Command.Group>
+                {filteredBookmarks.map((bm) => {
                     const iconInfo = getBookmarkIconInfo(bm);
                     const match = q ? getMatchInfo(q, { title: bm.title, summary: bm.summary, tags: bm.tags, url: bm.url }) : null;
                     return (
@@ -680,48 +564,12 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                     );
                   })}
                 </Command.Group>
-              )
             )}
 
-            {/* 便签组 — 服务端结果 or 客户端过滤 */}
-            {displayNotes ? (
-              displayNotes.length > 0 && (
-                <Command.Group>
-                  {displayNotes.map((item) => (
-                    <Command.Item
-                      key={item.id}
-                      value={item.text || ""}
-                      onSelect={() => handleSelectNote(item.id)}
-                      className={cn(
-                        "group flex items-center gap-3 px-3 py-2 cursor-pointer",
-                        "data-[selected=true]:text-white"
-                      )}
-                      style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
-                    >
-                      <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm self-start mt-0.5">
-                        📝
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate font-semibold text-[14px]">
-                          {q ? <HighlightText text={item.text || ""} query={q} maxLen={50} /> : (item.text || "").slice(0, 50)}
-                        </div>
-                        <div className="truncate text-[8px] text-gray-500 font-light">
-                          {new Date(item.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                      {item.text && <CopyButton text={item.text} onCopied={() => onOpenChange(false)} />}
-                      <span
-                        className="shrink-0 w-3 h-3 rounded-full"
-                        style={{ backgroundColor: `var(--os-sticky-${item.color || "yellow"}, #fef08a)` }}
-                      />
-                    </Command.Item>
-                  ))}
-                </Command.Group>
-              )
-            ) : (
-              filteredNotes.length > 0 && (
-                <Command.Group>
-                  {filteredNotes.map((note) => (
+            {/* 便签组 */}
+            {filteredNotes.length > 0 && (
+              <Command.Group>
+                {filteredNotes.map((note) => (
                     <Command.Item
                       key={note.id}
                       value={note.content}
@@ -751,7 +599,6 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                     </Command.Item>
                   ))}
                 </Command.Group>
-              )
             )}
 
             {/* 浏览器书签组（插件注入，去重后显示） */}
