@@ -280,16 +280,24 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
       return;
     }
 
-    setIsSearching(true);
+    // 延迟 300ms 后才显示 loading，避免快速输入时闪烁
+    const loadingTimer = setTimeout(() => {
+      setIsSearching(true);
+    }, 300);
+
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       const { data, error } = await supabase.rpc("search_items", { q: search.trim() });
+      clearTimeout(loadingTimer);
       if (!error && data) setServerResults(data as ServerItem[]);
       else setServerResults([]);
       setIsSearching(false);
     }, 300);
 
-    return () => clearTimeout(debounceRef.current);
+    return () => {
+      clearTimeout(debounceRef.current);
+      clearTimeout(loadingTimer);
+    };
   }, [search, user]);
 
   // 打开时聚焦输入框 + 填入初始字符 + ESC/Tab 处理
@@ -536,7 +544,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
 
             {/* URL 检测 → 添加书签 */}
             {isUrlInput && (
-              <Command.Group heading={t("common.search.actions", "操作")}>
+              <Command.Group>
                 <Command.Item
                   value={`__add_url__ ${trimmedSearch}`}
                   onSelect={handleAddBookmarkFromUrl}
@@ -557,7 +565,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
             {/* 书签组 — 服务端结果 or 客户端过滤 */}
             {displayBookmarks ? (
               displayBookmarks.length > 0 && (
-                <Command.Group heading={t("common.search.bookmarksGroup", "书签")}>
+                <Command.Group>
                   {displayBookmarks.map((item) => {
                     const match = q ? getMatchInfo(q, { title: item.title, summary: item.summary, text: item.text, tags: item.tags, url: item.url }) : null;
                     return (
@@ -624,7 +632,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               )
             ) : (
               filteredBookmarks.length > 0 && (
-                <Command.Group heading={t("common.search.bookmarksGroup", "书签")}>
+                <Command.Group>
                   {filteredBookmarks.map((bm) => {
                     const iconInfo = getBookmarkIconInfo(bm);
                     const match = q ? getMatchInfo(q, { title: bm.title, summary: bm.summary, tags: bm.tags, url: bm.url }) : null;
@@ -702,7 +710,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
             {/* 便签组 — 服务端结果 or 客户端过滤 */}
             {displayNotes ? (
               displayNotes.length > 0 && (
-                <Command.Group heading={t("common.search.notesGroup", "便签")}>
+                <Command.Group>
                   {displayNotes.map((item) => (
                     <Command.Item
                       key={item.id}
@@ -714,12 +722,15 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       )}
                       style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
                     >
-                      <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
+                      <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm self-start mt-0.5">
                         📝
                       </span>
                       <div className="flex-1 min-w-0">
-                        <div className="truncate">
-                          {q ? <HighlightText text={item.text || ""} query={q} maxLen={120} /> : (item.text || "").slice(0, 60)}
+                        <div className="truncate font-semibold text-[14px]">
+                          {q ? <HighlightText text={item.text || ""} query={q} maxLen={50} /> : (item.text || "").slice(0, 50)}
+                        </div>
+                        <div className="truncate text-[8px] text-gray-500 font-light">
+                          {new Date(item.created_at).toLocaleDateString()}
                         </div>
                       </div>
                       {item.text && <CopyButton text={item.text} onCopied={() => onOpenChange(false)} />}
@@ -733,7 +744,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
               )
             ) : (
               filteredNotes.length > 0 && (
-                <Command.Group heading={t("common.search.notesGroup", "便签")}>
+                <Command.Group>
                   {filteredNotes.map((note) => (
                     <Command.Item
                       key={note.id}
@@ -745,12 +756,15 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       )}
                       style={{ borderRadius: isMacTheme ? "5px" : "2px", ...itemFontStyle }}
                     >
-                      <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm">
+                      <span className="w-4 h-4 shrink-0 flex items-center justify-center text-sm self-start mt-0.5">
                         📝
                       </span>
                       <div className="flex-1 min-w-0">
-                        <div className="truncate">
-                          {q ? <HighlightText text={note.content} query={q} maxLen={120} /> : note.content.slice(0, 60)}
+                        <div className="truncate font-semibold text-[14px]">
+                          {q ? <HighlightText text={note.content} query={q} maxLen={50} /> : note.content.slice(0, 50)}
+                        </div>
+                        <div className="truncate text-[8px] text-gray-500 font-light">
+                          {new Date(note.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                       <CopyButton text={note.content} onCopied={() => onOpenChange(false)} />
@@ -766,7 +780,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
 
             {/* 浏览器书签组（插件注入，去重后显示） */}
             {filteredBrowserBookmarks.length > 0 && (
-              <Command.Group heading={t("common.search.browserBookmarksGroup", "浏览器书签")}>
+              <Command.Group>
                 {filteredBrowserBookmarks.map((bb) => (
                   <Command.Item
                     key={`bb-${bb.id}`}
@@ -818,7 +832,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
 
             {/* 最近访问组（浏览器历史，插件注入） */}
             {filteredBrowserHistory.length > 0 && (
-              <Command.Group heading={t("common.search.recentVisitsGroup", "最近访问")}>
+              <Command.Group>
                 {filteredBrowserHistory.map((bh) => (
                   <Command.Item
                     key={`bh-${bh.id}`}
@@ -856,7 +870,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
 
             {/* 应用组 */}
             {filteredApps.length > 0 && (
-              <Command.Group heading={t("common.search.appsGroup", "应用")}>
+              <Command.Group>
                 {filteredApps.map((app) => (
                   <Command.Item
                     key={app.id}
@@ -887,7 +901,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
 
             {/* 问问 Kyo 兜底 — 有输入且非 URL 时始终显示 */}
             {trimmedSearch && !isUrlInput && (
-              <Command.Group heading="Kyo">
+              <Command.Group>
                 <Command.Item
                   value={`__ask_ai__ ${trimmedSearch}`}
                   onSelect={handleAskAi}
@@ -900,11 +914,16 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                   <img
                     src="/favicon.svg"
                     alt=""
-                    className="w-4 h-4 shrink-0 object-contain"
+                    className="w-4 h-4 shrink-0 object-contain self-start mt-0.5"
                   />
-                  <span className="flex-1 truncate">
-                    {t("common.search.askKyo", "问问 Kyo")} → {trimmedSearch}
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate font-semibold text-[14px]">
+                      {trimmedSearch}
+                    </div>
+                    <div className="truncate text-[11px] text-gray-500">
+                      在聊天中问 Kyo
+                    </div>
+                  </div>
                   <kbd
                     className="shrink-0"
                     style={{
@@ -930,15 +949,15 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
           {/* Footer：有输入时才显示 */}
           {!isMobile && q && (
           <div
-            className="flex items-center justify-between px-3 py-2"
+            className="flex items-center justify-between px-3 py-1.5"
             style={{
               borderTop: isMacTheme
-                ? "1px solid rgba(0, 0, 0, 0.1)"
+                ? "1px solid rgba(0, 0, 0, 0.08)"
                 : isXpTheme
                 ? "1px solid #ACA899"
                 : "1px solid rgba(0, 0, 0, 0.15)",
-              fontSize: isMacTheme ? "10px" : "11px",
-              color: "rgba(0, 0, 0, 0.4)",
+              fontSize: isMacTheme ? "9px" : "10px",
+              color: "rgba(0, 0, 0, 0.3)",
               fontFamily: isMacTheme ? "var(--os-font-ui)" : isXpTheme ? '"Pixelated MS Sans Serif", Tahoma, Arial' : undefined,
             }}
           >
