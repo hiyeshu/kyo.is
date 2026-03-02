@@ -8,7 +8,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { cloudUpsertItem, cloudDeleteItem, cloudDeleteByType } from "@/lib/cloudSync";
-import { markLocalChange } from "./useSyncStore";
+import { markLocalChange, trackDeletion } from "./useSyncStore";
 import { useHistoryStore } from "./useHistoryStore";
 
 export type StickyColor = "yellow" | "blue" | "green" | "pink" | "purple" | "orange";
@@ -210,6 +210,7 @@ export const useStickiesStore = create<StickiesState>()(
           notes: state.notes.filter((note) => note.id !== id),
         }));
         markLocalChange(id);
+        trackDeletion(id);
         cloudDeleteItem(id).catch((e) =>
           console.error("[stickies] delete failed:", e)
         );
@@ -230,6 +231,7 @@ export const useStickiesStore = create<StickiesState>()(
       },
 
       clearAllNotes: () => {
+        get().notes.forEach((n) => trackDeletion(n.id));
         set({ notes: [] });
         cloudDeleteByType("note").catch((e) =>
           console.error("[stickies] clearAll failed:", e)

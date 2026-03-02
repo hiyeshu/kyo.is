@@ -12,7 +12,8 @@ import { useSyncStore } from "./useSyncStore";
 import { useBookmarkStore } from "./useBookmarkStore";
 import { useBrowserDataStore } from "./useBrowserDataStore";
 
-const SYNC_DONE_KEY = "kyo:sync-done-session";
+const SYNC_DONE_KEY = "kyo:sync-done";
+const SYNC_TTL = 5 * 60 * 1000;
 
 // ─── Extension iframe 桥接 ──────────────────────────────────────────────────
 // 如果 kyo.is 运行在插件的 newtab iframe 中，通过 postMessage 传递 session
@@ -85,12 +86,13 @@ interface AuthState {
   signOut: () => Promise<void>;
 }
 
-function handleUserReady(user: User) {
+async function handleUserReady(user: User) {
   const sync = useSyncStore.getState();
 
-  if (!sessionStorage.getItem(SYNC_DONE_KEY)) {
-    sessionStorage.setItem(SYNC_DONE_KEY, "true");
-    sync.initialSync();
+  const lastSync = parseInt(localStorage.getItem(SYNC_DONE_KEY) || "0", 10);
+  if (Date.now() - lastSync > SYNC_TTL) {
+    localStorage.setItem(SYNC_DONE_KEY, String(Date.now()));
+    await sync.initialSync();
   }
 
   sync.startRealtime(user.id);
@@ -119,7 +121,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       if (event === "SIGNED_OUT") {
-        sessionStorage.removeItem(SYNC_DONE_KEY);
+        localStorage.removeItem(SYNC_DONE_KEY);
         useSyncStore.getState().stopRealtime();
         postSessionToExtension(null);
       }

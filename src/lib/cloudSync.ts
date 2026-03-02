@@ -58,7 +58,7 @@ export async function cloudUpsertItem(item: Record<string, unknown>) {
 export async function cloudDeleteItem(id: string) {
   const userId = await getUserId();
   if (!userId) return;
-  const { error } = await supabase.from("kyo_items").delete().eq("id", id);
+  const { error } = await supabase.from("kyo_items").delete().eq("id", id).eq("user_id", userId);
   if (error) console.error("[cloudSync] delete failed:", error.message, { id });
 }
 
@@ -86,6 +86,7 @@ export interface CloudBookmarkRaw {
   on_desktop: boolean | null;
   in_dock: boolean | null;
   created_at: string;
+  updated_at: string | null;
 }
 
 export interface CloudNoteRaw {

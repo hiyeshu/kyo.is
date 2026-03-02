@@ -8,7 +8,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { cloudUpsertItem, cloudDeleteItem } from "@/lib/cloudSync";
-import { markLocalChange } from "./useSyncStore";
+import { markLocalChange, trackDeletion } from "./useSyncStore";
 import { useHistoryStore } from "./useHistoryStore";
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
@@ -138,6 +138,7 @@ function bookmarkToCloud(b: Bookmark) {
     on_desktop: b.onDesktop || false,
     in_dock: b.inDock || false,
     created_at: b.createdAt || new Date().toISOString(),
+    updated_at: b.updatedAt || b.createdAt || new Date().toISOString(),
   };
 }
 
@@ -433,6 +434,7 @@ export interface Bookmark {
   summary: string;
   tags: string[];
   createdAt: string;
+  updatedAt?: string;
   lastUsed?: string;
   onDesktop?: boolean;
   inDock?: boolean;
@@ -529,6 +531,7 @@ const createBookmark = (
   summary: meta?.summary ?? "",
   tags: meta?.tags ?? [],
   createdAt: meta?.createdAt ?? new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   onDesktop: meta?.onDesktop ?? false,
   inDock: meta?.inDock ?? false,
   favicon: favicon || fav(new URL(url).hostname),
@@ -624,7 +627,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           merged.faviconResolved = false;
         }
         set((s) => ({
-          items: s.items.map((b) => b.id === id ? { ...b, ...merged } : b),
+          items: s.items.map((b) => b.id === id ? { ...b, ...merged, updatedAt: new Date().toISOString() } : b),
         }));
         const updated = get().items.find((b) => b.id === id);
         if (updated) {
@@ -636,6 +639,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
       removeBookmark: (id) => {
         set((s) => ({ items: s.items.filter((b) => b.id !== id) }));
         markLocalChange(id);
+        trackDeletion(id);
         cloudDeleteItem(id);
         useHistoryStore.getState().markDeleted(id);
       },
@@ -643,7 +647,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
       touchBookmark: (id) => {
         const now = new Date().toISOString();
         set((s) => ({
-          items: s.items.map((b) => b.id === id ? { ...b, lastUsed: now } : b),
+          items: s.items.map((b) => b.id === id ? { ...b, lastUsed: now, updatedAt: now } : b),
         }));
         const touched = get().items.find((b) => b.id === id);
         if (touched) {
@@ -669,7 +673,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
     }),
     {
       name: "kyo:bookmark-store",
-      version: 8, // v8: flatten folders, add lastUsed + sortMode + groupByDomain
+      version: 9, // v9: add updatedAt for sync merge
       migrate: (persisted, version) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const old = persisted as any;
@@ -728,6 +732,14 @@ export const useBookmarkStore = create<BookmarkStore>()(
           old.items = flat;
           old.sortMode = old.sortMode ?? "recent";
           old.groupByDomain = old.groupByDomain ?? false;
+        }
+
+        // v9: add updatedAt
+        if (version < 9 && old.items) {
+          old.items = old.items.map((item: Bookmark) => ({
+            ...item,
+            updatedAt: item.updatedAt ?? item.createdAt ?? new Date().toISOString(),
+          }));
         }
 
         return persisted as BookmarkStore;
