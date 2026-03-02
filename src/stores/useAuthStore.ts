@@ -13,7 +13,10 @@ import { useBookmarkStore } from "./useBookmarkStore";
 import { useBrowserDataStore } from "./useBrowserDataStore";
 
 const SYNC_DONE_KEY = "kyo:sync-done";
-const SYNC_TTL = 5 * 60 * 1000;
+const SYNC_COOLDOWN = 30_000;
+
+let visibilityHandler: (() => void) | null = null;
+let lastSyncTime = 0;
 
 // ─── Extension iframe 桥接 ──────────────────────────────────────────────────
 // 如果 kyo.is 运行在插件的 newtab iframe 中，通过 postMessage 传递 session
@@ -89,13 +92,22 @@ interface AuthState {
 async function handleUserReady(user: User) {
   const sync = useSyncStore.getState();
 
-  const lastSync = parseInt(localStorage.getItem(SYNC_DONE_KEY) || "0", 10);
-  if (Date.now() - lastSync > SYNC_TTL) {
-    localStorage.setItem(SYNC_DONE_KEY, String(Date.now()));
+  if (!localStorage.getItem(SYNC_DONE_KEY)) {
+    localStorage.setItem(SYNC_DONE_KEY, "1");
     await sync.initialSync();
+    lastSyncTime = Date.now();
   }
 
   sync.startRealtime(user.id);
+
+  if (visibilityHandler) document.removeEventListener("visibilitychange", visibilityHandler);
+  visibilityHandler = () => {
+    if (document.visibilityState === "visible" && Date.now() - lastSyncTime > SYNC_COOLDOWN) {
+      lastSyncTime = Date.now();
+      sync.initialSync();
+    }
+  };
+  document.addEventListener("visibilitychange", visibilityHandler);
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -123,6 +135,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (event === "SIGNED_OUT") {
         localStorage.removeItem(SYNC_DONE_KEY);
         useSyncStore.getState().stopRealtime();
+        if (visibilityHandler) {
+          document.removeEventListener("visibilitychange", visibilityHandler);
+          visibilityHandler = null;
+        }
         postSessionToExtension(null);
       }
     });
