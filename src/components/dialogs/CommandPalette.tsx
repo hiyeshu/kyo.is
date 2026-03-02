@@ -255,50 +255,26 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
         .slice(0, 4)
     : [];
 
-  // ─── 服务端 vs 客户端决策 ────────────────────────────────────────────────────
-  const useServer = !!user && q.length > 0;
-  const serverBookmarks = serverResults.filter((r) => r.type === "bookmark");
-  const serverNotes = serverResults.filter((r) => r.type === "note");
-
-  const displayBookmarks = useServer ? serverBookmarks : null;
-  const displayNotes = useServer ? serverNotes : null;
+  // ─── 搜索决策：始终使用客户端评分搜索（秒开） ──────────────────────────────
+  // 数据已通过 initialSync + Realtime 完整同步到本地，
+  // 客户端 scoreItem 加权评分比服务端 ILIKE 更精准，且零延迟
+  const displayBookmarks = null;
+  const displayNotes = null;
 
   // URL 检测
   const trimmedSearch = search.trim();
   const isUrlInput = trimmedSearch.length > 0 && looksLikeUrl(trimmedSearch);
 
   // 空状态判断（手动，因为 shouldFilter=false）
-  const bookmarkCount = useServer ? serverBookmarks.length : filteredBookmarks.length;
-  const noteCount = useServer ? serverNotes.length : filteredNotes.length;
+  const bookmarkCount = filteredBookmarks.length;
+  const noteCount = filteredNotes.length;
   const isEmpty = q.length > 0 && filteredApps.length === 0 && bookmarkCount === 0 && noteCount === 0 && !isUrlInput;
 
-  // ─── 服务端搜索 debounce ─────────────────────────────────────────────────────
+  // ─── 搜索已改为纯客户端（数据已同步到本地，无需服务端 RPC） ─────────────────
   useEffect(() => {
-    if (!user || !search.trim()) {
-      setServerResults([]);
-      setIsSearching(false);
-      return;
-    }
-
-    // 延迟 300ms 后才显示 loading，避免快速输入时闪烁
-    const loadingTimer = setTimeout(() => {
-      setIsSearching(true);
-    }, 300);
-
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      const { data, error } = await supabase.rpc("search_items", { q: search.trim() });
-      clearTimeout(loadingTimer);
-      if (!error && data) setServerResults(data as ServerItem[]);
-      else setServerResults([]);
-      setIsSearching(false);
-    }, 300);
-
-    return () => {
-      clearTimeout(debounceRef.current);
-      clearTimeout(loadingTimer);
-    };
-  }, [search, user]);
+    setServerResults([]);
+    setIsSearching(false);
+  }, [search]);
 
   // 打开时聚焦输入框 + 填入初始字符 + ESC/Tab 处理
   useEffect(() => {
@@ -589,7 +565,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="truncate font-medium">
+                            <span className="truncate font-semibold text-[14px]">
                               {q ? <HighlightText text={item.title || item.url || ""} query={q} maxLen={50} /> : (item.title || item.url)}
                             </span>
                             {item.tags && item.tags.length > 0 && (
@@ -801,7 +777,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="truncate font-medium">
+                        <span className="truncate font-semibold text-[14px]">
                           <HighlightText text={bb.title} query={q} maxLen={50} />
                         </span>
                         {bb.folder && (
@@ -852,10 +828,10 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       onError={(e) => { (e.target as HTMLImageElement).src = "/icons/default/internet.png"; }}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="truncate font-medium">
+                      <div className="truncate font-semibold text-[14px]">
                         <HighlightText text={bh.title} query={q} maxLen={50} />
                       </div>
-                      <div className="truncate" style={{ fontSize: isMacTheme ? "10px" : "11px", opacity: 0.4 }}>
+                      <div className="truncate text-[11px] text-gray-500">
                         {extractDomain(bh.url)}
                         {bh.visitCount > 1 && (
                           <span style={{ opacity: 0.7 }}> · {bh.visitCount} {t("common.search.visits", "次访问")}</span>
