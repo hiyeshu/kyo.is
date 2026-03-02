@@ -803,8 +803,8 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
         .search-highlight {
           background: #dbeafe;
           color: inherit;
-          font-weight: 500;
-          padding: 0 2px;
+          font-weight: inherit;
+          padding: 0 1px;
           border-radius: 2px;
         }
         [cmdk-item][data-selected=true] .search-highlight {
