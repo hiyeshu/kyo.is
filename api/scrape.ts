@@ -163,18 +163,28 @@ Return JSON only: {"summary":"...","tags":["..."]}`;
   }
 }
 
-// ─── 服务端直写 kyo_items（Dify 结果不丢失） ────────────────────────────────
+// ─── 服务端直写 kyo_items（需要 service role key 绕过 RLS） ─────────────────
+
+function getServiceSupabase() {
+  const url = process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
 
 async function writeBackToKyoItems(
   bookmarkId: string,
   userId: string,
   data: { title: string; summary: string; tags: string[]; favicon: string | null }
 ): Promise<void> {
-  const sb = getSupabase();
-  if (!sb) return;
+  const sb = getServiceSupabase();
+  if (!sb) {
+    console.warn("[scrape] writeBackToKyoItems skipped: SUPABASE_SERVICE_ROLE_KEY not set");
+    return;
+  }
 
   try {
-    await sb
+    const { error } = await sb
       .from("kyo_items")
       .update({
         title: data.title,
@@ -185,8 +195,11 @@ async function writeBackToKyoItems(
       })
       .eq("id", bookmarkId)
       .eq("user_id", userId);
+    if (error) {
+      console.error("[scrape] writeBackToKyoItems failed:", error.code, error.message);
+    }
   } catch (e) {
-    console.error("[scrape] writeBackToKyoItems failed:", e);
+    console.error("[scrape] writeBackToKyoItems error:", e);
   }
 }
 
