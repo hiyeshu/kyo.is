@@ -120,7 +120,7 @@ async function generateAiMeta(title: string, description: string, url: string, l
   }
 
   try {
-    const prompt = `Generate a one-sentence summary and 3-5 tags for this webpage. Summary and tags must be in ${lang} language.
+    const prompt = `For this webpage, generate a short summary (under 20 Chinese characters or 60 English characters) and 2-4 keyword tags. Summary and tags must be in ${lang} language. Summary should capture the core point, not describe the page.
 Title: ${title}
 Description: ${description}
 URL: ${url}
