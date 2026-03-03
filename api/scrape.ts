@@ -192,12 +192,17 @@ async function downloadImageAsBase64(imageUrl: string): Promise<string | null> {
 }
 
 async function fetchFaviconAsBase64(pageUrl: string, linkMetaFavicon: string | undefined | null): Promise<string | null> {
-  // 优先 Google S2 128px（高清），失败再 fallback 到 LinkMeta 的 favicon
+  // 优先级：Icon Horse（多策略最高清）→ Google S2 128px → LinkMeta favicon
   try {
     const hostname = new URL(pageUrl).hostname;
+
+    const iconHorse = `https://icon.horse/icon/${hostname}`;
+    const ihResult = await downloadImageAsBase64(iconHorse);
+    if (ihResult) return ihResult;
+
     const googleS2 = `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
-    const result = await downloadImageAsBase64(googleS2);
-    if (result) return result;
+    const gsResult = await downloadImageAsBase64(googleS2);
+    if (gsResult) return gsResult;
   } catch { /* hostname 解析失败，跳过 */ }
 
   if (linkMetaFavicon) {
