@@ -20,11 +20,11 @@ import i18n from "@/lib/i18n";
  */
 export async function fetchLinkMeta(
   url: string,
-  opts?: { bookmarkId?: string; userId?: string }
+  opts?: { bookmarkId?: string; userId?: string; skipLocalCache?: boolean }
 ): Promise<LinkMeta> {
   const store = useLinkMetaStore.getState();
 
-  if (store.has(url)) {
+  if (!opts?.skipLocalCache && store.has(url)) {
     return store.get(url)!;
   }
 

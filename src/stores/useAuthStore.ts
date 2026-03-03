@@ -111,7 +111,7 @@ async function backfillEmptySummaries(userId: string) {
 
     await Promise.allSettled(
       batch.map((b) =>
-        fetchLinkMeta(b.url, { bookmarkId: b.id, userId }).then((meta) => {
+        fetchLinkMeta(b.url, { bookmarkId: b.id, userId, skipLocalCache: true }).then((meta) => {
           const updates: Record<string, unknown> = {};
           if (meta.title && meta.title !== b.title) updates.title = meta.title;
           if (meta.summary) updates.summary = meta.summary;
