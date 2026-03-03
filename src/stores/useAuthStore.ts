@@ -98,7 +98,7 @@ interface AuthState {
  */
 async function backfillEmptySummaries(userId: string) {
   const bookmarks = useBookmarkStore.getState().items;
-  const toFill = bookmarks.filter((b) => b.url && (!b.summary || b.summary === b.url));
+  const toFill = bookmarks.filter((b) => b.url && (!b.summary || b.summary === b.url || !b.tags?.length));
   if (toFill.length === 0) return;
 
   let idx = 0;
