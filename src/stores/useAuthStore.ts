@@ -11,9 +11,12 @@ import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useSyncStore } from "./useSyncStore";
 import { useBookmarkStore } from "./useBookmarkStore";
 import { useBrowserDataStore } from "./useBrowserDataStore";
+import { fetchLinkMeta } from "@/lib/linkMeta";
 
 const SYNC_DONE_KEY = "kyo:sync-done";
 const SYNC_COOLDOWN = 30_000;
+const BACKFILL_CONCURRENCY = 2;
+const BACKFILL_INTERVAL_MS = 5_000;
 
 let visibilityHandler: (() => void) | null = null;
 let lastSyncTime = 0;
@@ -89,6 +92,56 @@ interface AuthState {
   signOut: () => Promise<void>;
 }
 
+/**
+ * 自愈机制：扫描 summary 为空的书签，后台批量补数据。
+ * 从 link_meta 缓存回填（秒回）或重新走 Dify（后台完成）。
+ */
+async function backfillEmptySummaries(userId: string) {
+  const bookmarks = useBookmarkStore.getState().items;
+  const toFill = bookmarks.filter((b) => b.url && (!b.summary || b.summary === b.url));
+  if (toFill.length === 0) return;
+
+  let idx = 0;
+
+  async function nextBatch() {
+    if (idx >= toFill.length) return;
+
+    const batch = toFill.slice(idx, idx + BACKFILL_CONCURRENCY);
+    idx += BACKFILL_CONCURRENCY;
+
+    await Promise.allSettled(
+      batch.map((b) =>
+        fetchLinkMeta(b.url, { bookmarkId: b.id, userId }).then((meta) => {
+          const updates: Record<string, unknown> = {};
+          if (meta.title && meta.title !== b.title) updates.title = meta.title;
+          if (meta.summary) updates.summary = meta.summary;
+          if (meta.tags?.length) updates.tags = meta.tags;
+          if (meta.faviconUrl && !b.icon) updates.favicon = meta.faviconUrl;
+          if (Object.keys(updates).length > 0) {
+            useBookmarkStore.getState().updateBookmark(b.id, updates);
+          }
+        }).catch(() => { /* 单个失败不影响其他 */ })
+      )
+    );
+
+    if (idx < toFill.length) {
+      setTimeout(() => {
+        if (typeof requestIdleCallback === "function") {
+          requestIdleCallback(() => nextBatch());
+        } else {
+          nextBatch();
+        }
+      }, BACKFILL_INTERVAL_MS);
+    }
+  }
+
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(() => nextBatch());
+  } else {
+    setTimeout(() => nextBatch(), 2000);
+  }
+}
+
 async function handleUserReady(user: User) {
   const sync = useSyncStore.getState();
 
@@ -99,12 +152,13 @@ async function handleUserReady(user: User) {
   }
 
   sync.startRealtime(user.id);
+  backfillEmptySummaries(user.id);
 
   if (visibilityHandler) document.removeEventListener("visibilitychange", visibilityHandler);
   visibilityHandler = () => {
     if (document.visibilityState === "visible" && Date.now() - lastSyncTime > SYNC_COOLDOWN) {
       lastSyncTime = Date.now();
-      sync.initialSync();
+      sync.initialSync().then(() => backfillEmptySummaries(user.id));
     }
   };
   document.addEventListener("visibilitychange", visibilityHandler);
