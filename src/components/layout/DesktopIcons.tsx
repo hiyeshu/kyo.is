@@ -8,7 +8,7 @@
 import { memo, useRef, useCallback, useState } from "react";
 import { getBookmarkIconInfo, getBookmarkShortName, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
-import { BookmarkHoverCard } from "@/components/layout/BookmarkHoverCard";
+import { BookmarkHoverCard, registerActiveHoverCard, unregisterActiveHoverCard } from "@/components/layout/BookmarkHoverCard";
 
 // ─── 桌面图标常量 ─────────────────────────────────────────────────────
 // Aqua 水晶高光渐变 —— 与 BookmarkIconDisplay 统一
@@ -244,7 +244,11 @@ export const BookmarkIconWrapper = memo(function BookmarkIconWrapper({
       hoverTimer.current = null;
     }
     setShowHoverCard(false);
+    unregisterActiveHoverCard(closeHoverCardStable.current);
   }, []);
+
+  const closeHoverCardStable = useRef(closeHoverCard);
+  closeHoverCardStable.current = closeHoverCard;
 
   return (
     <div
@@ -271,6 +275,7 @@ export const BookmarkIconWrapper = memo(function BookmarkIconWrapper({
       }}
       onMouseEnter={() => {
         if (isMobile) return;
+        registerActiveHoverCard(closeHoverCardStable.current);
         hoverTimer.current = window.setTimeout(() => {
           const rect = iconRef.current?.getBoundingClientRect();
           if (rect) { setAnchorRect(rect); setShowHoverCard(true); }

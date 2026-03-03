@@ -235,6 +235,19 @@ export function prefetchBookmarkPreviews(urls: string[]): void {
   }
 }
 
+// ─── 全局互斥：同一时刻只显示一个 hover card ─────────────────────────────
+
+let activeDismiss: (() => void) | null = null;
+
+export function registerActiveHoverCard(dismiss: () => void): void {
+  if (activeDismiss && activeDismiss !== dismiss) activeDismiss();
+  activeDismiss = dismiss;
+}
+
+export function unregisterActiveHoverCard(dismiss: () => void): void {
+  if (activeDismiss === dismiss) activeDismiss = null;
+}
+
 // ─── 书签悬浮信息卡 ─────────────────────────────────────────────────────
 
 interface BookmarkHoverCardProps {

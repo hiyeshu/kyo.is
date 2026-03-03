@@ -15,7 +15,7 @@ import { useLongPress } from "@/hooks/useLongPress";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useBookmarkStore, openBookmarkUrl, getBookmarkIconInfo, getBookmarkShortName, type Bookmark } from "@/stores/useBookmarkStore";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
-import { BookmarkHoverCard, prefetchBookmarkPreviews } from "@/components/layout/BookmarkHoverCard";
+import { BookmarkHoverCard, prefetchBookmarkPreviews, registerActiveHoverCard, unregisterActiveHoverCard } from "@/components/layout/BookmarkHoverCard";
 import { useStickiesStore } from "@/stores/useStickiesStore";
 import type { LaunchOriginRect } from "@/stores/useAppStore";
 import { useEventListener } from "@/hooks/useEventListener";
@@ -706,7 +706,11 @@ function BookmarkIconWrapper({
       hoverTimer.current = null;
     }
     setShowHoverCard(false);
+    unregisterActiveHoverCard(closeHoverCardStable.current);
   }, []);
+
+  const closeHoverCardStable = useRef(closeHoverCard);
+  closeHoverCardStable.current = closeHoverCard;
 
   return (
     <div
@@ -729,6 +733,7 @@ function BookmarkIconWrapper({
       }}
       onMouseEnter={() => {
         if (isMobile) return;
+        registerActiveHoverCard(closeHoverCardStable.current);
         hoverTimer.current = window.setTimeout(() => {
           const rect = iconRef.current?.getBoundingClientRect();
           if (rect) { setAnchorRect(rect); setShowHoverCard(true); }
