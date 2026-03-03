@@ -168,10 +168,9 @@ Return JSON only: {"summary":"...","tags":["..."]}`;
 const FAVICON_MAX_BYTES = 50 * 1024; // 50KB 上限
 const FAVICON_TIMEOUT_MS = 5000;
 
-async function fetchFaviconAsBase64(faviconUrl: string | undefined | null): Promise<string | null> {
-  if (!faviconUrl) return null;
+async function downloadImageAsBase64(imageUrl: string): Promise<string | null> {
   try {
-    const res = await fetch(faviconUrl, {
+    const res = await fetch(imageUrl, {
       signal: AbortSignal.timeout(FAVICON_TIMEOUT_MS),
       headers: { Accept: "image/*" },
     });
@@ -190,6 +189,21 @@ async function fetchFaviconAsBase64(faviconUrl: string | undefined | null): Prom
   } catch {
     return null;
   }
+}
+
+async function fetchFaviconAsBase64(pageUrl: string, linkMetaFavicon: string | undefined | null): Promise<string | null> {
+  // 优先 Google S2 128px（高清），失败再 fallback 到 LinkMeta 的 favicon
+  try {
+    const hostname = new URL(pageUrl).hostname;
+    const googleS2 = `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
+    const result = await downloadImageAsBase64(googleS2);
+    if (result) return result;
+  } catch { /* hostname 解析失败，跳过 */ }
+
+  if (linkMetaFavicon) {
+    return downloadImageAsBase64(linkMetaFavicon);
+  }
+  return null;
 }
 
 // ─── 服务端直写 kyo_items（需要 service role key 绕过 RLS） ─────────────────
@@ -260,7 +274,7 @@ export default async function handler(req: Request) {
         if (cached.summary && cached.tags?.length) {
           if (bookmarkId && userId) {
             waitUntil((async () => {
-              const faviconBase64 = await fetchFaviconAsBase64(cached.faviconUrl);
+              const faviconBase64 = await fetchFaviconAsBase64(url, cached.faviconUrl);
               await writeBackToKyoItems(bookmarkId, userId, {
                 title: cached.title, summary: cached.summary, tags: cached.tags,
                 favicon: faviconBase64 || cached.faviconUrl || null,
@@ -282,7 +296,7 @@ export default async function handler(req: Request) {
             fetched_at: new Date().toISOString(),
           });
           if (bookmarkId && userId) {
-            const faviconBase64 = await fetchFaviconAsBase64(cached.faviconUrl);
+            const faviconBase64 = await fetchFaviconAsBase64(url, cached.faviconUrl);
             await writeBackToKyoItems(bookmarkId, userId, {
               title: cached.title, summary: aiMeta.summary, tags: aiMeta.tags,
               favicon: faviconBase64 || cached.faviconUrl || null,
@@ -332,7 +346,7 @@ export default async function handler(req: Request) {
       });
 
       if (bookmarkId && userId) {
-        const faviconBase64 = await fetchFaviconAsBase64(meta.favicon);
+        const faviconBase64 = await fetchFaviconAsBase64(url, meta.favicon);
         await writeBackToKyoItems(bookmarkId, userId, {
           title,
           summary: aiMeta.summary,
