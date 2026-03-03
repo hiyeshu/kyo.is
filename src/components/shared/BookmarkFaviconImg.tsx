@@ -202,6 +202,8 @@ export function BookmarkFaviconImg({
   // ─── primary / linkmeta 阶段：渲染 <img> ─────────────────────────────────────
   const imgSrc = stage === "primary" ? src : getLinkMetaFavicon() || src;
 
+  const needCors = !isLocalSrc(imgSrc);
+
   return (
     <img
       src={imgSrc}
@@ -210,14 +212,13 @@ export function BookmarkFaviconImg({
       style={style}
       draggable={draggable}
       loading={loading}
+      crossOrigin={needCors ? "anonymous" : undefined}
       onLoad={(e) => {
         const img = e.target as HTMLImageElement;
-        // Google S2 假成功检测：返回 16x16 默认地球图标
         if (stage === "primary" && img.naturalWidth <= FAKE_SUCCESS_THRESHOLD && img.naturalHeight <= FAKE_SUCCESS_THRESHOLD) {
           advance("primary");
           return;
         }
-        // 真正加载成功 → 尝试 base64 本地化（跨域静默跳过）
         handleLoadSuccess(img);
       }}
       onError={() => advance(stage)}

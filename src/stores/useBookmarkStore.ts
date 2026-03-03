@@ -105,13 +105,8 @@ function getFaviconUrl(domain: string): string {
   const mainOverride = FAVICON_OVERRIDES[mainDomain];
   if (mainOverride) return mainOverride;
   
-  // 3. fallback 到 favicon 服务
-  const cached = localStorage.getItem(FAVICON_REGION_KEY);
-  if (cached === "cn") {
-    return `https://favicon.cccyun.cc/${domain}`;
-  }
-  // 国际线路用 Google
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+  // 3. Icon Horse（支持 CORS，客户端可直接 canvas 转 base64）
+  return `https://icon.horse/icon/${domain}`;
 }
 
 // 初始化地区检测（在模块加载时执行一次）
