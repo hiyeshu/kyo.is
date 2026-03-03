@@ -99,7 +99,7 @@ export function AddWebsiteDialog({
         .then((meta) => {
           const updates: Record<string, unknown> = {};
           if (meta.title) updates.title = meta.title;
-          if (meta.faviconUrl) updates.favicon = meta.faviconUrl;
+          // favicon 由服务端 writeBackToKyoItems 以 base64 写入，客户端不再覆盖
           if (meta.summary) updates.summary = meta.summary;
           if (meta.tags?.length) updates.tags = meta.tags;
           if (Object.keys(updates).length > 0) {

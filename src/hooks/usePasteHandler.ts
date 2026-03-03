@@ -89,10 +89,7 @@ export async function handleUrlPaste(url: string, t: (key: string, fallback?: st
       const updates: Record<string, unknown> = { title: meta.title };
       if (meta.summary) updates.summary = meta.summary;
       if (meta.tags?.length) updates.tags = meta.tags;
-      const bookmark = useBookmarkStore.getState().getBookmarkById(tempId);
-      if (meta.faviconUrl && bookmark && !bookmark.icon) {
-        updates.favicon = meta.faviconUrl;
-      }
+      // favicon 由服务端 writeBackToKyoItems 以 base64 写入，客户端不再覆盖
       useBookmarkStore.getState().updateBookmark(tempId, updates);
       toast(t("paste.bookmarkUpdated", "书签信息已更新"));
     })

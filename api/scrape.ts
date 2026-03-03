@@ -163,6 +163,35 @@ Return JSON only: {"summary":"...","tags":["..."]}`;
   }
 }
 
+// ─── 服务端下载 favicon → base64（Edge 环境，无 CORS 限制） ──────────────────
+
+const FAVICON_MAX_BYTES = 50 * 1024; // 50KB 上限
+const FAVICON_TIMEOUT_MS = 5000;
+
+async function fetchFaviconAsBase64(faviconUrl: string | undefined | null): Promise<string | null> {
+  if (!faviconUrl) return null;
+  try {
+    const res = await fetch(faviconUrl, {
+      signal: AbortSignal.timeout(FAVICON_TIMEOUT_MS),
+      headers: { Accept: "image/*" },
+    });
+    if (!res.ok) return null;
+
+    const contentType = res.headers.get("content-type") || "image/x-icon";
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength === 0 || buf.byteLength > FAVICON_MAX_BYTES) return null;
+
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return `data:${contentType.split(";")[0]};base64,${btoa(binary)}`;
+  } catch {
+    return null;
+  }
+}
+
 // ─── 服务端直写 kyo_items（需要 service role key 绕过 RLS） ─────────────────
 
 function getServiceSupabase() {
@@ -230,10 +259,13 @@ export default async function handler(req: Request) {
       if (cached) {
         if (cached.summary && cached.tags?.length) {
           if (bookmarkId && userId) {
-            waitUntil(writeBackToKyoItems(bookmarkId, userId, {
-              title: cached.title, summary: cached.summary, tags: cached.tags,
-              favicon: cached.faviconUrl || null,
-            }));
+            waitUntil((async () => {
+              const faviconBase64 = await fetchFaviconAsBase64(cached.faviconUrl);
+              await writeBackToKyoItems(bookmarkId, userId, {
+                title: cached.title, summary: cached.summary, tags: cached.tags,
+                favicon: faviconBase64 || cached.faviconUrl || null,
+              });
+            })());
           }
           return new Response(JSON.stringify(cached), {
             headers: { "Content-Type": "application/json" },
@@ -250,9 +282,10 @@ export default async function handler(req: Request) {
             fetched_at: new Date().toISOString(),
           });
           if (bookmarkId && userId) {
+            const faviconBase64 = await fetchFaviconAsBase64(cached.faviconUrl);
             await writeBackToKyoItems(bookmarkId, userId, {
               title: cached.title, summary: aiMeta.summary, tags: aiMeta.tags,
-              favicon: cached.faviconUrl || null,
+              favicon: faviconBase64 || cached.faviconUrl || null,
             });
           }
         })());
@@ -299,11 +332,12 @@ export default async function handler(req: Request) {
       });
 
       if (bookmarkId && userId) {
+        const faviconBase64 = await fetchFaviconAsBase64(meta.favicon);
         await writeBackToKyoItems(bookmarkId, userId, {
           title,
           summary: aiMeta.summary,
           tags: aiMeta.tags,
-          favicon: meta.favicon || null,
+          favicon: faviconBase64 || meta.favicon || null,
         });
       }
     })());
