@@ -744,7 +744,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                       {trimmedSearch}
                     </div>
                     <div className="truncate text-[11px] text-gray-500">
-                      在聊天中问 Kyo
+                      {t("common.search.askKyoInChat", "在聊天中问 Kyo")}
                     </div>
                   </div>
                   <kbd

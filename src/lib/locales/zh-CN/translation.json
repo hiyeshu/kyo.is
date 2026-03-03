@@ -2421,7 +2421,8 @@
       "visits": "次访问",
       "emptyNote": "空便签",
       "noResults": "找不到书签",
-      "askKyo": "问问 Kyo"
+      "askKyo": "问问 Kyo",
+      "askKyoInChat": "在聊天中问 Kyo"
     },
     "about": {
       "tagline": "你的桌面上想放什么？"

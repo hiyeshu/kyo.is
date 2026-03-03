@@ -18,7 +18,8 @@
       "visits": "visits",
       "emptyNote": "Empty note",
       "noResults": "No results found",
-      "askKyo": "Ask Kyo"
+      "askKyo": "Ask Kyo",
+      "askKyoInChat": "Ask Kyo in chat"
     },
     "loading": {
       "default": "Loading...",

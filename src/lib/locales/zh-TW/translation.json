@@ -2419,7 +2419,8 @@
       "visits": "次造訪",
       "emptyNote": "空白便利貼",
       "noResults": "找不到結果",
-      "askKyo": "問問 Kyo"
+      "askKyo": "問問 Kyo",
+      "askKyoInChat": "在聊天中問 Kyo"
     },
     "about": {
       "tagline": "你的桌面上想放什麼？"

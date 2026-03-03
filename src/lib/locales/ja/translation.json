@@ -2408,7 +2408,8 @@
       "visits": "回アクセス",
       "emptyNote": "空の付箋",
       "noResults": "結果が見つかりません",
-      "askKyo": "Kyoに聞く"
+      "askKyo": "Kyoに聞く",
+      "askKyoInChat": "チャットでKyoに聞く"
     },
     "about": {
       "tagline": "あなたのデスクトップに何を置きたい？"
