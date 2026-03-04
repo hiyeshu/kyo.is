@@ -55,11 +55,15 @@ export async function cloudUpsertItem(item: Record<string, unknown>) {
   }
 }
 
-export async function cloudDeleteItem(id: string) {
+export async function cloudDeleteItem(id: string): Promise<boolean> {
   const userId = await getUserId();
-  if (!userId) return;
+  if (!userId) return false;
   const { error } = await supabase.from("kyo_items").delete().eq("id", id).eq("user_id", userId);
-  if (error) console.error("[cloudSync] delete failed:", error.message, { id });
+  if (error) {
+    console.error("[cloudSync] delete failed:", error.message, { id });
+    return false;
+  }
+  return true;
 }
 
 export async function cloudDeleteByType(type: "bookmark" | "note") {

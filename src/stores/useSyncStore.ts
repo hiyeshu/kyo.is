@@ -125,6 +125,8 @@ export function trackDeletion(id: string) {
   } catch { /* noop */ }
 }
 
+
+
 function getDeletedIds(): Set<string> {
   try {
     const raw = localStorage.getItem(DELETED_IDS_KEY);
@@ -134,8 +136,23 @@ function getDeletedIds(): Set<string> {
   }
 }
 
-function clearDeletedIds() {
-  localStorage.removeItem(DELETED_IDS_KEY);
+function clearDeletedIds(idsToRemove?: Set<string>) {
+  if (!idsToRemove) {
+    localStorage.removeItem(DELETED_IDS_KEY);
+    return;
+  }
+  try {
+    const raw = localStorage.getItem(DELETED_IDS_KEY);
+    const ids: string[] = raw ? JSON.parse(raw) : [];
+    const remaining = ids.filter((id) => !idsToRemove.has(id));
+    if (remaining.length === 0) {
+      localStorage.removeItem(DELETED_IDS_KEY);
+    } else {
+      localStorage.setItem(DELETED_IDS_KEY, JSON.stringify(remaining));
+    }
+  } catch {
+    localStorage.removeItem(DELETED_IDS_KEY);
+  }
 }
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -261,12 +278,24 @@ export const useSyncStore = create<SyncState>((set) => ({
         markLocalChange(item.id as string);
         await cloudUpsertItem(item);
       }
-      for (const id of toDeleteCloud) {
-        markLocalChange(id);
-        await cloudDeleteItem(id);
+
+      const confirmedGone = new Set<string>();
+
+      // 本来就不在云端的 → 确认消失
+      for (const id of deletedIds) {
+        if (!cloudBmMap.has(id) && !cloudNtMap.has(id)) {
+          confirmedGone.add(id);
+        }
       }
 
-      clearDeletedIds();
+      // 尝试删除云端残留的，成功的 → 确认消失
+      for (const id of toDeleteCloud) {
+        markLocalChange(id);
+        const ok = await cloudDeleteItem(id);
+        if (ok) confirmedGone.add(id);
+      }
+
+      clearDeletedIds(confirmedGone);
       set({ status: "done" });
     } catch (e) {
       console.error("[sync] initialSync failed:", e);
