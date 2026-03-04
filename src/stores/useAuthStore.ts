@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 @/lib/supabase 的客户端，依赖 useSyncStore 的 initialSync / startRealtime / stopRealtime，依赖 useBookmarkStore 的 addBookmark / getBookmarkByUrl，依赖 useBrowserDataStore 的 setBrowserData
+ * [INPUT]: 依赖 @/lib/supabase 的客户端，依赖 useSyncStore 的 initialSync / startRealtime / stopRealtime，依赖 useBookmarkStore 的 addBookmark / getBookmarkByUrl / clearAll，依赖 useStickiesStore 的 clearAllNotes，依赖 useBrowserDataStore 的 setBrowserData
  * [OUTPUT]: 对外提供 useAuthStore — user / loading / signInWithGoogle / signOut
- * [POS]: stores/ 的认证状态管理，被 App.tsx 和 AppleMenu 消费，同时承载 extension iframe 桥接（auth + 书签 + 浏览器原生数据）
+ * [POS]: stores/ 的认证状态管理，被 App.tsx 和 AppleMenu 消费，同时承载 extension iframe 桥接（auth + 书签 + 浏览器原生数据），signOut 时清空所有本地数据
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useSyncStore } from "./useSyncStore";
 import { useBookmarkStore } from "./useBookmarkStore";
+import { useStickiesStore } from "./useStickiesStore";
 import { useBrowserDataStore } from "./useBrowserDataStore";
 import { fetchLinkMeta } from "@/lib/linkMeta";
 
@@ -208,6 +209,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
+    // 停止实时同步
+    useSyncStore.getState().stopRealtime();
+
+    // 清空所有本地数据
+    useBookmarkStore.getState().clearAll();
+    useStickiesStore.getState().clearAllNotes();
+
+    // 清空删除标记
+    try {
+      localStorage.removeItem('kyo:deleted-ids');
+    } catch { /* noop */ }
+
+    // 退出登录
     await supabase.auth.signOut();
     set({ user: null });
   },

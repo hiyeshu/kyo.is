@@ -1,7 +1,7 @@
 /**
  * [INPUT]: zustand + zustand/middleware(persist)，依赖 @/lib/cloudSync 云端写入
- * [OUTPUT]: useBookmarkStore, Bookmark, isBookmark, openBookmarkUrl, getBookmarkIconInfo, getBookmarkShortName, getFaviconUrl, SortMode
- * [POS]: 书签数据的单一真相源，管理 onDesktop/inDock 展示位置、排序偏好，被 bookmark-board、Dock、Desktop 消费，每次变更同步写云端
+ * [OUTPUT]: useBookmarkStore, Bookmark, isBookmark, openBookmarkUrl, getBookmarkIconInfo, getBookmarkShortName, getFaviconUrl, SortMode, clearAll
+ * [POS]: 书签数据的单一真相源，管理 onDesktop/inDock 展示位置、排序偏好，被 bookmark-board、Dock、Desktop 消费，每次变更同步写云端，clearAll 用于退出登录时清空本地
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -528,6 +528,7 @@ interface BookmarkStore {
 
   // 重置
   resetToDefaults: () => void;
+  clearAll: () => void; // 清空所有书签（退出登录时使用）
 }
 
 export const useBookmarkStore = create<BookmarkStore>()(
@@ -621,6 +622,8 @@ export const useBookmarkStore = create<BookmarkStore>()(
       getBookmarkById: (id) => get().items.find((b) => b.id === id),
 
       resetToDefaults: () => set({ items: createDefaultItems() }),
+
+      clearAll: () => set({ items: [] }), // 清空所有书签，不恢复默认项
     }),
     {
       name: "kyo:bookmark-store",
