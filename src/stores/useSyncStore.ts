@@ -323,7 +323,6 @@ export const useSyncStore = create<SyncState>((set) => ({
 
           if (recentLocalIds.has(id)) return;
 
-          const row = (newRow || oldRow) as Record<string, unknown>;
           const type = row?.type as string;
 
           if (type === "bookmark") {
