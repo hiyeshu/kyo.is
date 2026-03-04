@@ -366,7 +366,7 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
         {summary && (
           <div className="line-clamp-2" style={{ fontSize: isMac ? "12px" : "11px", color: "rgba(0, 0, 0, 0.65)", marginTop: isMac ? "8px" : "4px", lineHeight: "1.4" }}>{summary}</div>
         )}
-        {previewUrl && !isWin98 && (
+        {previewUrl && (
           <div
             className="overflow-hidden"
             style={{
@@ -386,7 +386,7 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
             />
           </div>
         )}
-        {tags && tags.length > 0 && !isWin98 && (
+        {tags && tags.length > 0 && (
           <div className="flex flex-wrap gap-1" style={{ marginTop: "6px" }}>
             {tags.slice(0, 3).map((tag) => (
               <span
