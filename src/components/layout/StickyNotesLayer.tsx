@@ -83,8 +83,6 @@ export function StickyNotesLayer() {
       ? []   // 移动端：便签不占桌面，打开 app 才看
       : notes.filter((note) => note.onDesktop);  // 桌面端：显示桌面便签
 
-  if (visibleNotes.length === 0) return null;
-
   // ─── 吸附目标：稳定回调，拖拽时读取最新兄弟位置 ─────────────────────
   const visibleNotesRef = useRef(visibleNotes);
   visibleNotesRef.current = visibleNotes;
@@ -94,6 +92,8 @@ export function StickyNotesLayer() {
       .filter((n) => n.id !== excludeId)
       .map((n) => ({ x: n.position.x, y: n.position.y, width: n.size.width, height: n.size.height }));
   }, []);
+
+  if (visibleNotes.length === 0) return null;
 
   return createPortal(
     <AnimatePresence>
