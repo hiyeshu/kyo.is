@@ -96,11 +96,10 @@ interface AuthState {
  * 自愈机制：扫描 summary 为空的书签，后台批量补数据。
  * 从 link_meta 缓存回填（秒回）或重新走 Dify（后台完成）。
  */
-async function backfillEmptySummaries(userId: string) {
+async function backfillEmptySummaries() {
   const bookmarks = useBookmarkStore.getState().items;
   const toFill = bookmarks.filter((b) => b.url && (
-    !b.summary || b.summary === b.url || !b.tags?.length ||
-    (!b.favicon || !b.favicon.startsWith("data:"))
+    !b.summary || b.summary === b.url || !b.tags?.length
   ));
   if (toFill.length === 0) return;
 
@@ -114,7 +113,7 @@ async function backfillEmptySummaries(userId: string) {
 
     await Promise.allSettled(
       batch.map((b) =>
-        fetchLinkMeta(b.url, { bookmarkId: b.id, userId, skipLocalCache: true }).then((meta) => {
+        fetchLinkMeta(b.url, { skipLocalCache: true }).then((meta) => {
           const updates: Record<string, unknown> = {};
           if (meta.title && meta.title !== b.title) updates.title = meta.title;
           if (meta.summary) updates.summary = meta.summary;
@@ -155,13 +154,13 @@ async function handleUserReady(user: User) {
   }
 
   sync.startRealtime(user.id);
-  backfillEmptySummaries(user.id);
+  backfillEmptySummaries();
 
   if (visibilityHandler) document.removeEventListener("visibilitychange", visibilityHandler);
   visibilityHandler = () => {
     if (document.visibilityState === "visible" && Date.now() - lastSyncTime > SYNC_COOLDOWN) {
       lastSyncTime = Date.now();
-      sync.initialSync().then(() => backfillEmptySummaries(user.id));
+      sync.initialSync().then(() => backfillEmptySummaries());
     }
   };
   document.addEventListener("visibilitychange", visibilityHandler);

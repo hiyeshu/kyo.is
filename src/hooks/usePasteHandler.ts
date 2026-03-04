@@ -12,7 +12,7 @@ import { useStickiesStore } from "@/stores/useStickiesStore";
 import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
 import { fetchLinkMeta } from "@/lib/linkMeta";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@/lib/supabase";
+
 import { warmPreview } from "@/components/layout/BookmarkHoverCard";
 
 const URL_REGEX = /^https?:\/\/\S+$/i;
@@ -80,16 +80,12 @@ export async function handleUrlPaste(url: string, t: (key: string, fallback?: st
   toast(t("paste.fetchingMeta", "正在获取网页信息..."));
   warmPreview(url);
 
-  // 获取当前用户 ID，传给 scrape 端点实现服务端直写 kyo_items
-  const userId = (await supabase.auth.getSession()).data.session?.user?.id;
-
-  fetchLinkMeta(url, { bookmarkId: tempId, userId })
+  fetchLinkMeta(url)
     .then((meta) => {
       linkMetaStore.set(url, meta);
       const updates: Record<string, unknown> = { title: meta.title };
       if (meta.summary) updates.summary = meta.summary;
       if (meta.tags?.length) updates.tags = meta.tags;
-      // favicon 由服务端 writeBackToKyoItems 以 base64 写入，客户端不再覆盖
       useBookmarkStore.getState().updateBookmark(tempId, updates);
       toast(t("paste.bookmarkUpdated", "书签信息已更新"));
     })

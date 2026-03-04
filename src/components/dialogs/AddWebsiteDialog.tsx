@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useBookmarkStore, getFaviconUrl as getBookmarkFaviconUrl } from "@/stores/useBookmarkStore";
 import { fetchLinkMeta } from "@/lib/linkMeta";
-import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { warmPreview } from "@/components/layout/BookmarkHoverCard";
@@ -93,22 +92,18 @@ export function AddWebsiteDialog({
       });
       warmPreview(normalizedUrl);
 
-      // 3. 后台异步获取元数据，更新 title 和 favicon
-      const userId = (await supabase.auth.getSession()).data.session?.user?.id;
-      fetchLinkMeta(normalizedUrl, { bookmarkId, userId })
+      // 后台异步获取元数据，更新 title/summary/tags
+      fetchLinkMeta(normalizedUrl)
         .then((meta) => {
           const updates: Record<string, unknown> = {};
           if (meta.title) updates.title = meta.title;
-          // favicon 由服务端 writeBackToKyoItems 以 base64 写入，客户端不再覆盖
           if (meta.summary) updates.summary = meta.summary;
           if (meta.tags?.length) updates.tags = meta.tags;
           if (Object.keys(updates).length > 0) {
             useBookmarkStore.getState().updateBookmark(bookmarkId, updates);
           }
         })
-        .catch(() => {
-          // 元数据获取失败不影响书签创建，服务端已直写 kyo_items
-        });
+        .catch(() => {});
 
       // 成功
       setUrl("");

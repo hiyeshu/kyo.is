@@ -15,11 +15,8 @@ import { useHistoryStore } from "./useHistoryStore";
 
 const generateId = () => crypto.randomUUID();
 
-// ─── Favicon 服务选择 ─────────────────────────────────────────────────────────
-// 根据用户地理位置选择最快的 favicon 服务
-// 国内: cccyun (快) | 国外: Google (快)
-
-const FAVICON_REGION_KEY = "kyo:favicon-region";
+// ─── Favicon URL 生成 ─────────────────────────────────────────────────────────
+// 永远只生成 URL，永不存 base64 —— 让浏览器 HTTP 缓存干脏活
 
 // 热门网站的高清图标映射（这些网站的 favicon 服务通常抓不到或质量差）
 // 使用各网站官方提供的高清 logo 或 CDN 地址
@@ -70,54 +67,18 @@ const FAVICON_OVERRIDES: Record<string, string> = {
   "www.tiktok.com": "https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok/webapp/main/webapp-desktop/8152caf0c8e8bc67ae0d.png",
 };
 
-// 检测用户是否在中国（通过 IP 检测 API）
-async function detectRegion(): Promise<"cn" | "global"> {
-  try {
-    // 先检查缓存
-    const cached = localStorage.getItem(FAVICON_REGION_KEY);
-    if (cached === "cn" || cached === "global") return cached;
-    
-    // 用 Cloudflare 的 /cdn-cgi/trace 检测，免费且快
-    const res = await fetch("https://cloudflare.com/cdn-cgi/trace", { 
-      signal: AbortSignal.timeout(3000) 
-    });
-    const text = await res.text();
-    const locMatch = text.match(/loc=(\w+)/);
-    const region = locMatch?.[1] === "CN" ? "cn" : "global";
-    
-    // 缓存结果
-    localStorage.setItem(FAVICON_REGION_KEY, region);
-    return region;
-  } catch {
-    // 检测失败默认用国际线路
-    return "global";
-  }
-}
-
-// 同步获取 favicon URL（使用缓存的地区设置）
 function getFaviconUrl(domain: string): string {
-  // 1. 先检查硬编码映射（高清图标优先）
   const override = FAVICON_OVERRIDES[domain];
   if (override) return override;
   
-  // 2. 尝试提取主域名再查一次（处理 www.xxx.com 情况）
   const mainDomain = domain.replace(/^www\./, "");
   const mainOverride = FAVICON_OVERRIDES[mainDomain];
   if (mainOverride) return mainOverride;
   
-  // 3. Icon Horse（支持 CORS，客户端可直接 canvas 转 base64）
   return `https://icon.horse/icon/${domain}`;
 }
 
-// 初始化地区检测（在模块加载时执行一次）
-if (typeof window !== "undefined") {
-  detectRegion();
-}
-
-// 导出给其他模块使用
 export { getFaviconUrl };
-
-const fav = (domain: string) => getFaviconUrl(domain);
 
 // ─── 云端字段映射 ─────────────────────────────────────────────────────────────
 
@@ -435,7 +396,6 @@ export interface Bookmark {
   inDock?: boolean;
   favicon?: string;
   icon?: BookmarkIcon;
-  faviconResolved?: boolean;
 }
 
 export type SortMode = "recent" | "name";
@@ -529,7 +489,7 @@ const createBookmark = (
   updatedAt: new Date().toISOString(),
   onDesktop: meta?.onDesktop ?? false,
   inDock: meta?.inDock ?? false,
-  favicon: favicon || fav(new URL(url).hostname),
+  favicon: favicon || getFaviconUrl(new URL(url).hostname),
 });
 
 // ─── 默认数据 ───────────────────────────────────────────────────────────────
@@ -554,7 +514,7 @@ interface BookmarkStore {
   addBookmark: (title: string, url: string, favicon?: string, options?: { onDesktop?: boolean; inDock?: boolean }) => string;
   addAiBookmark: (title: string, url: string, summary: string, tags: string[], options?: { onDesktop?: boolean; inDock?: boolean }) => string;
   getBookmarkByUrl: (url: string) => Bookmark | undefined;
-  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags" | "onDesktop" | "inDock" | "faviconResolved" | "lastUsed">>) => void;
+  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags" | "onDesktop" | "inDock" | "lastUsed">>) => void;
   removeBookmark: (id: string) => void;
   touchBookmark: (id: string) => void; // 更新 lastUsed
 
@@ -617,12 +577,8 @@ export const useBookmarkStore = create<BookmarkStore>()(
       getBookmarkByUrl: (url) => get().items.find((b) => b.url === url),
 
       updateBookmark: (id, updates) => {
-        const merged = { ...updates };
-        if (("url" in merged || "favicon" in merged) && !("faviconResolved" in merged)) {
-          merged.faviconResolved = false;
-        }
         set((s) => ({
-          items: s.items.map((b) => b.id === id ? { ...b, ...merged, updatedAt: new Date().toISOString() } : b),
+          items: s.items.map((b) => b.id === id ? { ...b, ...updates, updatedAt: new Date().toISOString() } : b),
         }));
         const updated = get().items.find((b) => b.id === id);
         if (updated) {
@@ -668,7 +624,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
     }),
     {
       name: "kyo:bookmark-store",
-      version: 9, // v9: add updatedAt for sync merge
+      version: 10, // v10: favicon 只存 URL，删除 base64 和 faviconResolved
       migrate: (persisted, version) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const old = persisted as any;
@@ -735,6 +691,23 @@ export const useBookmarkStore = create<BookmarkStore>()(
             ...item,
             updatedAt: item.updatedAt ?? item.createdAt ?? new Date().toISOString(),
           }));
+        }
+
+        // v10: base64 favicon → URL，删除 faviconResolved
+        if (version < 10 && old.items) {
+          old.items = old.items.map((item: Bookmark & { faviconResolved?: boolean }) => {
+            const { faviconResolved: _, ...rest } = item;
+            // base64 data URI → 从 URL 重新生成 Icon Horse URL
+            if (rest.favicon?.startsWith("data:")) {
+              try {
+                const hostname = new URL(rest.url).hostname;
+                rest.favicon = getFaviconUrl(hostname);
+              } catch {
+                delete rest.favicon;
+              }
+            }
+            return rest;
+          });
         }
 
         return persisted as BookmarkStore;

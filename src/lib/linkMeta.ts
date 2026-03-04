@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 @/stores/useLinkMetaStore 本地缓存，依赖 /api/scrape 端点
- * [OUTPUT]: 对外提供 fetchLinkMeta 函数，三层缓存获取 URL 元数据
+ * [OUTPUT]: 对外提供 fetchLinkMeta 函数，两层缓存获取 URL 元数据
  * [POS]: lib/ 的链接元数据获取层，被 usePasteHandler 和 AddWebsiteDialog 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -10,17 +10,13 @@ import type { LinkMeta } from "@/types/kyoItem";
 import i18n from "@/lib/i18n";
 
 /**
- * 三层缓存获取 URL 元数据
+ * 两层缓存获取 URL 元数据
  * 1. 本地 store（内存 + localStorage）
- * 2. Supabase link_meta 表（通过 /api/scrape 端点透传）
- * 3. LinkMeta API（通过 /api/scrape 端点调用）
- *
- * 传入 bookmarkId + userId 时，scrape 端点会直接将结果写入 kyo_items，
- * 即使客户端断开也不会丢失 Dify 生成的 summary/tags。
+ * 2. /api/scrape → Supabase link_meta 缓存 → LinkMeta API
  */
 export async function fetchLinkMeta(
   url: string,
-  opts?: { bookmarkId?: string; userId?: string; skipLocalCache?: boolean }
+  opts?: { skipLocalCache?: boolean }
 ): Promise<LinkMeta> {
   const store = useLinkMetaStore.getState();
 
@@ -31,12 +27,7 @@ export async function fetchLinkMeta(
   const res = await fetch("/api/scrape", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      url,
-      lang: i18n.language,
-      bookmarkId: opts?.bookmarkId,
-      userId: opts?.userId,
-    }),
+    body: JSON.stringify({ url, lang: i18n.language }),
   });
 
   if (!res.ok) throw new Error("Scrape failed");
