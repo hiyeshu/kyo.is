@@ -1,13 +1,14 @@
 /**
- * [INPUT]: 依赖 react 的 useState/useEffect/useRef/useMemo，依赖 react-dom 的 createPortal，依赖 utils/platform 的 getApiUrl
+ * [INPUT]: 依赖 react 的 useState/useEffect/useRef/useMemo，依赖 react-dom 的 createPortal，依赖 utils/platform 的 getApiUrl，依赖 useThemeStore 的主题判断
  * [OUTPUT]: 对外提供 BookmarkHoverCard 组件，warmPreview / prefetchBookmarkPreviews 预热函数
- * [POS]: components/layout/ 的书签悬浮信息卡，被 DesktopIcons.tsx / Desktop.tsx / BookmarkBoardApp.tsx 消费，负责截图预览缓存与降级显示
+ * [POS]: components/layout/ 的书签悬浮信息卡，被 DesktopIcons.tsx / Desktop.tsx / BookmarkBoardApp.tsx 消费，截图预览缓存与降级显示，支持 Aqua/XP/Win98 三种主题风格
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { useRef, useLayoutEffect, useState, memo, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { getApiUrl } from "@/utils/platform";
+import { useThemeStore } from "@/stores/useThemeStore";
 
 // ─── 截图缓存（URL 级）─────────────────────────────────────────────────────
 
@@ -268,9 +269,13 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const normalizedUrl = useMemo(() => normalizeBookmarkUrl(url), [url]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [pos, setPos] = useState<{ x: number; y: number; flip: boolean }>({
-    x: 0, y: 0, flip: false,
+  const [pos, setPos] = useState<{ x: number; flip: boolean }>({
+    x: 0, flip: false,
   });
+  const currentTheme = useThemeStore((s) => s.current);
+  const isMac = currentTheme === "macosx";
+  const isXp = currentTheme === "xp";
+  const isWin98 = currentTheme === "win98";
 
   useEffect(() => {
     let disposed = false;
@@ -292,24 +297,21 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
     };
   }, [normalizedUrl]);
 
-  // 计算定位：图标下方居中，超出视口则翻转到上方
-  // 用预估最大高度判断翻转，避免预览图加载后才发现空间不够
+  // 计算定位：只算水平居中 + 翻转方向
+  // 翻转时用 bottom 锚定，卡片向上生长，内容变化不影响位置
   useLayoutEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-    const { width: cw, height: ch } = el.getBoundingClientRect();
+    const { width: cw } = el.getBoundingClientRect();
     const cx = anchorRect.left + anchorRect.width / 2 - cw / 2;
-    const safeBottom = window.innerHeight - 80; // 为 Dock 预留空间
+    const safeBottom = window.innerHeight - 80;
     const below = anchorRect.bottom + 6;
-    const above = anchorRect.top - ch - 6;
-    // 预估最大高度 280px（标题+域名+摘要+预览图+标签），避免预览图加载后翻转闪烁
-    const flip = below + Math.max(ch, 280) > safeBottom && above > 0;
+    const flip = below + 280 > safeBottom && anchorRect.top > 280;
     setPos({
       x: Math.max(8, Math.min(cx, window.innerWidth - cw - 8)),
-      y: flip ? above : below,
       flip,
     });
-  }, [anchorRect, previewUrl]);
+  }, [anchorRect]);
 
   let domain = "";
   try { domain = new URL(url).hostname.replace(/^(www|m|app|web|v|mobile|wap)\./i, ""); } catch { domain = url; }
@@ -320,30 +322,51 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
       className="fixed z-[9999] pointer-events-none"
       style={{
         left: pos.x,
-        top: pos.y,
+        ...(pos.flip
+          ? { bottom: window.innerHeight - anchorRect.top + 6 }
+          : { top: anchorRect.bottom + 6 }),
       }}
     >
       <div
         className="shadow-xl overflow-hidden"
         style={{
-          background: "rgba(255, 255, 255, 0.75)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          // ─── 主题适配 ───────────────────────────────────
+          ...(isWin98 ? {
+            background: "#FFFFE1",
+            border: "1px solid #000000",
+            borderRadius: "0px",
+            boxShadow: "none",
+            padding: "4px 6px",
+            maxWidth: 220,
+            fontFamily: '"Pixelated MS Sans Serif", "MS Sans Serif", Tahoma, Arial',
+          } : isXp ? {
+            background: "#FFFFE1",
+            border: "1px solid #000000",
+            borderRadius: "1px",
+            boxShadow: "1px 1px 2px rgba(0,0,0,0.2)",
+            padding: "6px 8px",
+            maxWidth: 240,
+            fontFamily: '"Pixelated MS Sans Serif", Tahoma, Arial',
+          } : {
+            background: "rgba(255, 255, 255, 0.75)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderRadius: "8px",
+            border: "0.5px solid rgba(0, 0, 0, 0.1)",
+            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(255, 255, 255, 0.5) inset",
+            padding: "12px",
+            maxWidth: 240,
+          }),
           color: "rgba(0, 0, 0, 0.95)",
-          maxWidth: 240,
-          padding: "12px",
-          borderRadius: "8px",
-          border: "0.5px solid rgba(0, 0, 0, 0.1)",
-          boxShadow: "0 2px 12px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(255, 255, 255, 0.5) inset",
           animation: "hovercard-in 150ms ease-out forwards",
         }}
       >
-        <div className="font-semibold truncate" style={{ fontSize: "13px", fontWeight: 600, color: "rgba(0, 0, 0, 0.95)" }}>{title}</div>
-        <div className="truncate" style={{ fontSize: "11px", color: "rgba(0, 0, 0, 0.4)", marginTop: "2px" }}>{domain}</div>
+        <div className="font-semibold truncate" style={{ fontSize: isMac ? "13px" : "12px", fontWeight: 600, color: "rgba(0, 0, 0, 0.95)" }}>{title}</div>
+        <div className="truncate" style={{ fontSize: isMac ? "11px" : "11px", color: "rgba(0, 0, 0, 0.4)", marginTop: "2px" }}>{domain}</div>
         {summary && (
-          <div className="line-clamp-2" style={{ fontSize: "12px", color: "rgba(0, 0, 0, 0.65)", marginTop: "8px", lineHeight: "1.4" }}>{summary}</div>
+          <div className="line-clamp-2" style={{ fontSize: isMac ? "12px" : "11px", color: "rgba(0, 0, 0, 0.65)", marginTop: isMac ? "8px" : "4px", lineHeight: "1.4" }}>{summary}</div>
         )}
-        {previewUrl && (
+        {previewUrl && !isWin98 && (
           <div
             className="overflow-hidden"
             style={{
@@ -363,7 +386,7 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
             />
           </div>
         )}
-        {tags && tags.length > 0 && (
+        {tags && tags.length > 0 && !isWin98 && (
           <div className="flex flex-wrap gap-1" style={{ marginTop: "6px" }}>
             {tags.slice(0, 3).map((tag) => (
               <span
@@ -372,7 +395,7 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
                 style={{
                   fontSize: "10px",
                   padding: "2px 6px",
-                  borderRadius: "4px",
+                  borderRadius: isMac ? "4px" : "2px",
                   background: "rgba(0, 0, 0, 0.06)",
                   color: "rgba(0, 0, 0, 0.5)",
                 }}
