@@ -46,76 +46,38 @@ Information doesn't enter your mind through compression and retrieval. It grows 
 
 ---
 
-## Architecture
-
-```
-┌─────────────────────────────────────────────┐
-│  Layer 1: Surface — What you see            │
-│  Wallpaper + Dock + Quick Access            │
-│  ← This is your "desktop"                   │
-├─────────────────────────────────────────────┤
-│  Layer 2: Portal — What you trigger         │
-│  ⌘K — The only entry point you need         │
-│  ← This is your "command center"            │
-├─────────────────────────────────────────────┤
-│  Layer 3: Depth — Where you go deep         │
-│  Chat / Notes / Custom Applets              │
-│  ← This is your "private space"             │
-└─────────────────────────────────────────────┘
-```
-
----
-
 ## Features
 
-### Surface Layer
-- 🖼️ **Wallpapers** — Static & video wallpapers with blur effects
-- 🎯 **Dock** — macOS-style dock for your most-used links
-- ✨ **Glassmorphism** — Frosted glass UI
+### Core Apps
+- 🔖 **Bookmarks** — Pinterest-style board with folders, drag-sort, and cloud sync
+- 💬 **AI Chat** — Powered by Dify, understands your link collection
+- 📝 **Stickies** — Floating notes on your desktop
+- 📜 **History** — Timeline of all your bookmarks and notes
+- 🎵 **White Noise** — Ambient sounds with spectrum visualization
+- ⚙️ **Control Panels** — Appearance, sound, and system settings
 
-### Portal Layer
-- ⌨️ **⌘K** — The only entry point you need
-- 🔖 **Bookmarks** — Your links, your way
-- 🖱️ **Drag & Drop** — Arrange your digital space
-
-### Depth Layer *(Coming Soon)*
-- 💬 **Personal AI** — Understands your link collection, not generic chat
-- 📝 **Quick Notes** — Markdown notes on your desktop
+### Desktop Experience
+- 🖼️ **Wallpapers** — 47 tiles + 45 photos + 12 videos
+- 🎨 **Themes** — macOS Aqua / Windows XP / Windows 98
+- 🔊 **Sound Effects** — 43 system sounds for full OS immersion
 
 ---
 
-## Roadmap
+## Coming Soon
 
-```
-Phase 1: Foundation (Current)
-├── Clean up legacy code
-├── PWA optimization
-├── Enhanced bookmarks: drag-sort, edit, import
-└── ⌘K upgrade
+- 🧠 **AI Memory** — Kyo remembers your preferences and decisions across conversations. Your digital assistant that grows with you.
 
-Phase 2: Personal Portal
-├── Quick Links mode: bookmark grid on desktop
-├── Link preview on hover
-├── Dock enhancement
-└── Mobile-first layout
+- 🔍 **Semantic Search** — Find bookmarks by meaning, not keywords. Search understands intent, not just text matching.
 
-Phase 3: Private Space
-├── Personal AI: search bookmarks, summarize links
-├── Quick Notes
-└── Applet framework
-```
+- 🤖 **Chat-driven Desktop** — Manage your bookmarks through natural conversation. Create, organize, and open links without leaving the chat.
+
+- 🌐 **Web Research Assistant** — Kyo can search the web, analyze pages, and collect information for you. Your personal research companion.
 
 ---
 
 ## Tech Stack
 
-- **Framework:** React 19, TypeScript, Vite
-- **Styling:** Tailwind CSS, shadcn/ui, Framer Motion
-- **State:** Zustand
-- **Storage:** IndexedDB, LocalStorage
-- **AI:** Vercel AI SDK
-- **Audio:** Tone.js
-- **Deployment:** Vercel
+React 19 · TypeScript · Vite · Tailwind CSS · Zustand · Supabase · Dify AI · Vercel
 
 ---
 
