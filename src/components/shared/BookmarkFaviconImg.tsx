@@ -15,7 +15,6 @@ interface BookmarkFaviconImgProps {
   src: string;
   bookmarkUrl?: string;
   bookmarkTitle: string;
-  faviconResolved?: boolean;
   className?: string;
   style?: React.CSSProperties;
   draggable?: boolean;

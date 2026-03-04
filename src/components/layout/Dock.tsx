@@ -60,7 +60,6 @@ interface IconButtonProps {
   bookmarkId?: string;
   bookmarkUrl?: string;
   bookmarkTitle?: string;
-  faviconResolved?: boolean;
   onDragOver?: React.DragEventHandler;
   onDrop?: React.DragEventHandler;
   onDragLeave?: React.DragEventHandler;
@@ -195,7 +194,6 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
       bookmarkId,
       bookmarkUrl,
       bookmarkTitle,
-      faviconResolved,
       onDragOver,
       onDrop,
       onDragLeave,
@@ -442,7 +440,6 @@ const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(
                     src={icon}
                     bookmarkUrl={bookmarkUrl}
                     bookmarkTitle={bookmarkTitle}
-                    faviconResolved={faviconResolved}
                     style={{
                       width: "100%",
                       height: "100%",
@@ -1942,7 +1939,6 @@ function MacDock() {
                     bookmarkId={bookmark.id}
                     bookmarkUrl={bookmark.url}
                     bookmarkTitle={bookmark.title}
-                    faviconResolved={bookmark.faviconResolved}
                     onClick={() => openBookmarkUrl(bookmark.url)}
                     onContextMenu={(e) => {
                       e.preventDefault();

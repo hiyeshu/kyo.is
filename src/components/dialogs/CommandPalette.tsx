@@ -516,7 +516,6 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
                             src={iconInfo.value}
                             bookmarkUrl={bm.url}
                             bookmarkTitle={bm.title}
-                            faviconResolved={bm.faviconResolved}
                             className="w-4 h-4 shrink-0 object-contain self-start mt-0.5"
                             style={{ borderRadius: "22%" }}
                           />

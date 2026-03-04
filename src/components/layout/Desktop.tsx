@@ -862,7 +862,6 @@ function BookmarkDesktopIcon({
               src={iconInfo.value}
               bookmarkUrl={bookmark.url}
               bookmarkTitle={bookmark.title}
-              faviconResolved={bookmark.faviconResolved}
               className="w-full h-full object-cover"
               style={{ imageRendering: "-webkit-optimize-contrast" }}
               loading="lazy"
