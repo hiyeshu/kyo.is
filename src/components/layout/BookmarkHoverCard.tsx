@@ -293,20 +293,23 @@ export const BookmarkHoverCard = memo(function BookmarkHoverCard({
   }, [normalizedUrl]);
 
   // 计算定位：图标下方居中，超出视口则翻转到上方
+  // 用预估最大高度判断翻转，避免预览图加载后才发现空间不够
   useLayoutEffect(() => {
     const el = cardRef.current;
     if (!el) return;
     const { width: cw, height: ch } = el.getBoundingClientRect();
     const cx = anchorRect.left + anchorRect.width / 2 - cw / 2;
+    const safeBottom = window.innerHeight - 80; // 为 Dock 预留空间
     const below = anchorRect.bottom + 6;
     const above = anchorRect.top - ch - 6;
-    const flip = below + ch > window.innerHeight && above > 0;
+    // 预估最大高度 280px（标题+域名+摘要+预览图+标签），避免预览图加载后翻转闪烁
+    const flip = below + Math.max(ch, 280) > safeBottom && above > 0;
     setPos({
       x: Math.max(8, Math.min(cx, window.innerWidth - cw - 8)),
       y: flip ? above : below,
       flip,
     });
-  }, [anchorRect]);
+  }, [anchorRect, previewUrl]);
 
   let domain = "";
   try { domain = new URL(url).hostname.replace(/^(www|m|app|web|v|mobile|wap)\./i, ""); } catch { domain = url; }
