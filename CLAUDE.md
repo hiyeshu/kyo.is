@@ -8,6 +8,7 @@ React 19 + TypeScript + Vite + Tailwind CSS + Zustand + Vercel AI SDK + Tauri
 - **[灵魂](./docs/ai/SOUL.md)** - 身份、哲学、交互协议
 - **[架构](./docs/ai/ARCHITECTURE.md)** - 技术架构、数据流、模块职责
 - **[规范](./docs/ai/CONVENTIONS.md)** - 编码规范、文档规范、Commit 格式
+- **[GEB 协议](./docs/ai/GEB-PROTOCOL.md)** - 分形文档系统完整协议
 - **[命令](./docs/ai/COMMANDS.md)** - 开发命令、部署流程
 - **[路线](./docs/ai/ROADMAP.md)** - 当前阶段目标、里程碑
 - **[决策](./docs/ai/DECISIONS.md)** - 架构决策日志（ADR）
