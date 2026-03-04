@@ -148,8 +148,8 @@ async function handleUserReady(user: User) {
   const sync = useSyncStore.getState();
 
   if (!localStorage.getItem(SYNC_DONE_KEY)) {
-    localStorage.setItem(SYNC_DONE_KEY, "1");
     await sync.initialSync();
+    localStorage.setItem(SYNC_DONE_KEY, "1");
     lastSyncTime = Date.now();
   }
 

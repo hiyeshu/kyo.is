@@ -111,13 +111,15 @@ function debouncedContentSync(id: string) {
   contentSyncTimers.set(id, setTimeout(() => {
     contentSyncTimers.delete(id);
     const note = useStickiesStore.getState().notes.find((n) => n.id === id);
-    if (!note || !note.content.trim()) return;
+    if (!note) return;
     markLocalChange(id);
     cloudUpsertItem(noteToCloud(note));
-    useHistoryStore.getState().addEntry({
-      id: note.id, type: "note", title: note.content.slice(0, 60),
-      content: note.content, tags: note.tags, createdAt: note.createdAt,
-    });
+    if (note.content.trim()) {
+      useHistoryStore.getState().addEntry({
+        id: note.id, type: "note", title: note.content.slice(0, 60),
+        content: note.content, tags: note.tags, createdAt: note.createdAt,
+      });
+    }
   }, 500));
 }
 

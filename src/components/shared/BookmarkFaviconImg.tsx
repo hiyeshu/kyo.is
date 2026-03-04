@@ -1,12 +1,14 @@
 /**
- * [INPUT]: 无外部 store 依赖
+ * [INPUT]: 依赖 @/stores/useLinkMetaStore 本地缓存，依赖 @/lib/linkMeta 异步获取
  * [OUTPUT]: BookmarkFaviconImg 组件
- * [POS]: components/shared 的书签 favicon 渲染器，<img> + onError 首字母彩色头像，
+ * [POS]: components/shared 的书签 favicon 渲染器，双层回退（Icon Horse → LinkMeta favicon → 首字母头像），
  *        被 BookmarkIconDisplay / Desktop / Dock / CommandPalette 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
+import { fetchLinkMeta } from "@/lib/linkMeta";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -63,27 +65,70 @@ function LetterAvatar({ title, className, style }: { title: string; className?: 
 
 export function BookmarkFaviconImg({
   src,
+  bookmarkUrl,
   bookmarkTitle,
   className = "",
   style,
   draggable = false,
   loading,
 }: BookmarkFaviconImgProps) {
-  const [broken, setBroken] = useState(false);
+  const [imgSrc, setImgSrc] = useState(src);
+  const [showAvatar, setShowAvatar] = useState(false);
+  const retriedRef = useRef(false);
 
-  if (broken || !src) {
+  useEffect(() => {
+    setImgSrc(src);
+    setShowAvatar(false);
+    retriedRef.current = false;
+  }, [src]);
+
+  const handleError = useCallback(() => {
+    if (retriedRef.current) {
+      setShowAvatar(true);
+      return;
+    }
+    retriedRef.current = true;
+
+    if (!bookmarkUrl) {
+      setShowAvatar(true);
+      return;
+    }
+
+    // 同步：检查 LinkMeta 本地缓存
+    const cached = useLinkMetaStore.getState().get(bookmarkUrl);
+    if (cached?.faviconUrl && cached.faviconUrl !== src) {
+      setImgSrc(cached.faviconUrl);
+      return;
+    }
+
+    // 异步：先显示头像，后台 fetch + 预加载，成功后无闪切换
+    setShowAvatar(true);
+    fetchLinkMeta(bookmarkUrl)
+      .then((meta) => {
+        if (!meta.faviconUrl || meta.faviconUrl === src) return;
+        const probe = new Image();
+        probe.onload = () => {
+          setImgSrc(meta.faviconUrl!);
+          setShowAvatar(false);
+        };
+        probe.src = meta.faviconUrl;
+      })
+      .catch(() => {});
+  }, [bookmarkUrl, src]);
+
+  if (showAvatar || !src) {
     return <LetterAvatar title={bookmarkTitle} className={className} style={style} />;
   }
 
   return (
     <img
-      src={src}
+      src={imgSrc}
       alt=""
       className={className}
       style={style}
       draggable={draggable}
       loading={loading}
-      onError={() => setBroken(true)}
+      onError={handleError}
     />
   );
 }
