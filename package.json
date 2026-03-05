@@ -67,6 +67,7 @@
     "@radix-ui/react-visually-hidden": "^1.2.4",
     "@supabase/supabase-js": "^2.96.0",
     "@tailwindcss/vite": "^4.1.18",
+    "@tauri-apps/plugin-shell": "^2.3.5",
     "@tiptap/core": "^2.27",
     "@tiptap/extension-task-item": "^2.27",
     "@tiptap/extension-task-list": "^2.27",
