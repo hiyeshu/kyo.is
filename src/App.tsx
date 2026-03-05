@@ -57,7 +57,7 @@ export function App() {
           e.stopPropagation();
 
           try {
-            const { open } = await import("@tauri-apps/plugin-shell");
+            const { open } = await import("@tauri-apps/api/shell");
             await open(link.href);
           } catch (err) {
             console.error('Failed to open external link:', err);
