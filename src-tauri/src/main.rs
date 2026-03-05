@@ -7,6 +7,7 @@ fn main() {
     // Always load the hosted app (https://kyo.is) so Tauri uses a stable origin
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_localhost::Builder::new(3000).build())
         .setup(|app| {
             if let Some(window) = app.get_webview_window("main") {
                 let url = Url::parse("https://kyo.is")?;

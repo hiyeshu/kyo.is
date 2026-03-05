@@ -5,13 +5,14 @@
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": "bun run build:tauri",
-    "beforeDevCommand": "bun run dev"
+    "beforeBuildCommand": "",
+    "beforeDevCommand": ""
   },
   "app": {
     "windows": [
       {
-        "title": "",
+        "title": "Kyo",
+        "url": "https://kyo.is",
         "width": 1280,
         "height": 800,
         "minWidth": 800,
@@ -29,6 +30,11 @@
       "csp": null
     },
     "withGlobalTauri": true
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
   },
   "bundle": {
     "active": true,
@@ -49,7 +55,10 @@
     "macOS": {
       "minimumSystemVersion": "10.13",
       "infoPlist": "./Info.plist",
-      "entitlements": "./entitlements.plist"
+      "entitlements": "./entitlements.plist",
+      "signingIdentity": "Developer ID Application: SHU YE (X689MYAJ7K)",
+      "providerShortName": "X689MYAJ7K",
+      "hardenedRuntime": true
     },
     "windows": {
       "digestAlgorithm": "sha256"

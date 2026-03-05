@@ -38,6 +38,40 @@ export function App() {
 
   // 初始化认证监听（同步检测在 useAuthStore.init 里触发）
   useEffect(() => { initAuth(); }, [initAuth]);
+
+  // Tauri: 拦截外部链接并用系统浏览器打开
+  useEffect(() => {
+    if (!isTauri()) return;
+
+    const handleClick = async (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a');
+
+      if (link && link.href) {
+        const url = new URL(link.href);
+        const currentOrigin = window.location.origin;
+
+        // 如果是外部链接(非当前域名),用系统浏览器打开
+        if (url.origin !== currentOrigin) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          try {
+            // @ts-ignore - Tauri API
+            if (window.__TAURI__?.shell) {
+              // @ts-ignore
+              await window.__TAURI__.shell.open(link.href);
+            }
+          } catch (err) {
+            console.error('Failed to open external link:', err);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+    return () => document.removeEventListener('click', handleClick, true);
+  }, []);
   const { isFirstBoot, setHasBooted, setLastSeenDesktopVersion, hasEnteredDesktop, setHasEnteredDesktop } = useAppStoreShallow(
     (state) => ({
       isFirstBoot: state.isFirstBoot,
