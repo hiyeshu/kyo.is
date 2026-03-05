@@ -330,7 +330,19 @@ function isIOSPWA(): boolean {
  * iOS PWA 跳转策略：
  * 使用临时 <a> 标签模拟点击，不改变当前页面 location，避免返回时重复跳转
  */
-export function openBookmarkUrl(url: string): void {
+export async function openBookmarkUrl(url: string): Promise<void> {
+  // Tauri 环境：使用 shell API 打开外部链接
+  if (typeof window !== "undefined" && "__TAURI__" in window) {
+    try {
+      const { open } = await import("@tauri-apps/plugin-shell");
+      await open(url);
+      return;
+    } catch (err) {
+      console.error("Failed to open bookmark in Tauri:", err);
+      // 失败则继续走下面的逻辑
+    }
+  }
+
   if (isIOSPWA()) {
     try {
       const fullUrl = url.startsWith("http") ? url : `https://${url}`;
