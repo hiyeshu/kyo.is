@@ -6,7 +6,24 @@
 
 Kyo.is is a personal web portal where links become your operating system. In a world where CLI and AI compress every entry point—where Notion, Figma, ChatGPT are all just URLs—you don't need to download anything anymore. You just need a place to put them.
 
-**[Live Demo → kyo.is](https://kyo.is)**
+## 🚀 Get Started
+
+### 🌐 Web Version (Recommended)
+**[Launch Kyo.is →](https://kyo.is)**
+
+No installation needed. Works on any device with a browser.
+
+### 💻 macOS Desktop App
+**[Download for macOS →](https://github.com/hiyeshu/kyo.is/releases/latest)**
+
+Native desktop experience with automatic updates.
+
+- ✅ Signed & Notarized - No security warnings
+- ✅ Universal Binary - Intel & Apple Silicon
+- ✅ Auto-updates - Always loads the latest version from kyo.is
+- ✅ System integration - Opens external links in your default browser
+
+> **Note**: The desktop app is a lightweight shell that loads kyo.is. When we update the website, your app automatically gets the new features—no need to download a new DMG!
 
 ---
 
