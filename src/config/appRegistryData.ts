@@ -6,7 +6,7 @@
  */
 
 // Kyo.is apps (Finder and Applet Viewer removed)
-export const appIds = ["bookmarks", "chat", "control-panels", "history", "stickies", "white-noise"] as const;
+export const appIds = ["bookmarks", "chat", "control-panels", "history", "stickies", "terminal", "white-noise"] as const;
 
 export type AppId = (typeof appIds)[number];
 
