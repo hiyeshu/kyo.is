@@ -135,10 +135,7 @@ const LazyWhiteNoiseApp = createLazyComponent<unknown>(
 );
 
 const LazyTerminalApp = createLazyComponent<unknown>(
-  () =>
-    import(
-      "@/apps/terminal/components/TerminalApp"
-    ).then((m) => ({ default: m.TerminalApp })),
+  () => import("@/apps/terminal"),
   "terminal"
 );
 
@@ -170,7 +167,10 @@ import {
   helpItems as whiteNoiseHelpItems,
 } from "@/apps/white-noise/metadata";
 
-import { terminalMetadata } from "@/apps/terminal/metadata";
+import {
+  terminalMetadata,
+  helpItems as terminalHelpItems,
+} from "@/apps/terminal/metadata";
 
 // ─── 注册表 ──────────────────────────────────────────────────────────────────
 // Kyo.is apps (Finder and Applet Viewer removed)
@@ -241,7 +241,7 @@ export const appRegistry = {
     id: "terminal" as const,
     icon: { type: "image" as const, src: terminalMetadata.icon },
     component: LazyTerminalApp,
-    helpItems: terminalMetadata.helpItems || [],
+    helpItems: terminalHelpItems,
     metadata: terminalMetadata,
     windowConfig: {
       defaultSize: { width: 600, height: 400 },

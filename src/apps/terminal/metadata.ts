@@ -5,47 +5,28 @@
  * [PROTOCOL]: 变更时更新此头部,然后检查 CLAUDE.md
  */
 
-import type { AppMetadata } from "../base/types";
-
-export const terminalMetadata: AppMetadata = {
-  id: "terminal",
-  name: "Terminal",
+export const terminalMetadata = {
   version: "1.0.0",
+  name: "终端",
+  creator: { name: "Kyo", url: "https://kyo.is" },
+  github: "https://github.com/hiyeshu/kyo.is",
   icon: "/icons/macosx/terminal.png",
-  category: "utility",
-  description: "Command-line interface for Kyo",
-  helpItems: [
-    {
-      title: "Basic Commands",
-      items: [
-        { label: "help", description: "Show available commands" },
-        { label: "clear", description: "Clear the terminal" },
-        { label: "echo <text>", description: "Print text" },
-      ],
-    },
-    {
-      title: "System Commands",
-      items: [
-        { label: "date", description: "Show current date and time" },
-        { label: "whoami", description: "Show current user" },
-        { label: "version", description: "Show Kyo version" },
-        { label: "theme", description: "Show current theme" },
-      ],
-    },
-    {
-      title: "Kyo Commands",
-      items: [
-        { label: "bookmarks", description: "List all bookmarks" },
-        { label: "stickies", description: "List all sticky notes" },
-      ],
-    },
-    {
-      title: "Keyboard Shortcuts",
-      items: [
-        { label: "↑/↓", description: "Navigate command history" },
-        { label: "Tab", description: "Auto-complete command" },
-        { label: "Enter", description: "Execute command" },
-      ],
-    },
-  ],
 };
+
+export const helpItems = [
+  {
+    icon: "💻",
+    title: "Basic Commands",
+    description: "help, clear, echo, date, whoami, version, theme",
+  },
+  {
+    icon: "🔖",
+    title: "Kyo Commands",
+    description: "bookmarks - List all bookmarks, stickies - List all notes",
+  },
+  {
+    icon: "⌨️",
+    title: "Keyboard Shortcuts",
+    description: "↑/↓ - Navigate history, Tab - Auto-complete, Enter - Execute",
+  },
+];

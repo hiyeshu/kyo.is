@@ -30,6 +30,7 @@ export const PROTECTED_DOCK_ITEMS = new Set(["__applications__", "__trash__"]);
 const DEFAULT_PINNED_ITEMS: DockItem[] = [
   { type: "app", id: "bookmarks" },
   { type: "app", id: "chat" },
+  { type: "app", id: "terminal" },
 ];
 
 interface DockStoreState {

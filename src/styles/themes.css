@@ -581,6 +581,20 @@
   font-smooth: auto !important;
 }
 
+/* 终端输入框在所有主题下保持统一样式 */
+.terminal-input {
+  font-family: 'SF Mono', 'PingFang SC', 'Microsoft YaHei', Menlo, Monaco, 'Courier New', monospace !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  font-weight: normal !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
 /* macOS specific font sizes and gloss effect */
 :root[data-os-theme="macosx"] .menubar {
   font-size: 0.875rem !important; /* 14px at 16px base, scales with --os-scale */

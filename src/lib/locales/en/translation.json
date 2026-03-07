@@ -1899,110 +1899,35 @@
       }
     },
     "terminal": {
-      "name": "Terminal",
-      "description": "Command line interface",
-      "menu": {
-        "clearTerminal": "Clear Terminal",
-        "increaseFontSize": "Increase Font Size",
-        "decreaseFontSize": "Decrease Font Size",
-        "resetFontSize": "Reset Font Size",
-        "muteSounds": "Mute Sounds",
-        "terminalHelp": "Terminal Help",
-        "aboutTerminal": "About Terminal"
-      },
       "commands": {
-        "about": "About terminal",
-        "ai": "Enter AI chat mode with ryo",
-        "cat": "View file contents",
-        "cd": "Change directory",
-        "chat": "Chat with ryo (alias)",
-        "clear": "Clear terminal screen",
-        "cowsay": "A talking cow",
-        "date": "Display current date/time",
-        "echo": "Display text",
-        "edit": "Open in text editor",
+        "bookmarks": "List all bookmarks",
+        "clear": "Clear the terminal",
+        "date": "Show current date and time",
+        "echo": "Print text",
         "help": "Show available commands",
-        "history": "Show command history",
-        "logout": "Log out current user",
-        "ls": "List directory contents",
-        "mkdir": "Create directory",
-        "pwd": "Show current directory",
-        "open": "Open app, file, or applet",
-        "rm": "Move file to trash",
-        "ryo": "Chat with ryo",
-        "su": "Switch or create user",
-        "touch": "Create empty file",
-        "vim": "Open file in vim editor",
-        "whoami": "Display current user",
-        "grep": "Search pattern in file",
-        "uptime": "Show system uptime"
+        "open": "Open a bookmark",
+        "stickies": "List all sticky notes",
+        "theme": "Show current theme",
+        "version": "Show Kyo version",
+        "whoami": "Show current user"
       },
+      "description": "Command line interface",
+      "name": "Terminal",
       "output": {
-        "noItemsFound": "No items found",
-        "listedItems": "Listed items",
-        "opened": "Opened",
-        "openedApp": "Opened {{app}}",
-        "openedFile": "Opened {{file}}",
-        "openedFolder": "Opened {{folder}} in Finder",
-        "openedApplet": "Opened {{applet}} in Applet Viewer",
-        "openNotFound": "Cannot open '{{target}}': no such app or file",
-        "openExamples": "Examples",
-        "readFile": "Read {{fileName}}",
-        "contentWritten": "Content written",
-        "textNotFound": "Text not found",
-        "multipleMatchesFound": "Multiple matches found",
-        "fileEdited": "File edited",
-        "fileCreated": "File created",
-        "addedAndStartedPlaying": "Added and started playing new song",
-        "playingSong": "Playing song",
-        "skippedToNextTrack": "Skipped to next track",
-        "skippedToPreviousTrack": "Skipped to previous track",
-        "playingIpod": "Playing iPod",
-        "pausedIpod": "Paused iPod",
-        "toggledIpodPlayback": "Toggled iPod playback",
-        "foundApplets": "Found {{count}} applet",
-        "foundAppletsPlural": "Found {{count}} applets",
-        "foundDocuments": "Found {{count}} document",
-        "foundDocumentsPlural": "Found {{count}} documents",
-        "foundApplications": "Found {{count}} application",
-        "foundApplicationsPlural": "Found {{count}} applications",
-        "unknown": "Unknown",
-        "untitled": "Untitled",
-        "noFilesFound": "no files found",
-        "noSuchDirectory": "cd: {{dir}}: no such directory",
-        "lastLogin": "last login: {{time}}",
-        "typeHelpForCommands": "type 'help' to see available commands",
-        "commandNotFound": "command not found: {{cmd}}. type 'help' for a list of available commands.",
-        "askRyoAnything": "ask ryo anything. type 'exit' to return to terminal.",
-        "askRyoWithPrompt": "ask ryo anything. type 'exit' to return to terminal.\n→ from your command: {{prompt}}",
-        "chatCleared": "chat cleared. you're still chatting with ryo. type 'exit' to return to terminal.",
-        "isThinking": "is thinking"
-      },
-      "help": {
-        "basicCommands": {
-          "title": "Basic Commands",
-          "description": "Use commands like ls, cd, cat, pwd, clear, and touch to navigate and manage files."
-        },
-        "navigation": {
-          "title": "Navigation",
-          "description": "Browse the same virtual file system as Finder with familiar Unix commands."
-        },
-        "commandHistory": {
-          "title": "Command History",
-          "description": "Press ↑ / ↓ arrows to cycle through previous commands and re-run them quickly."
-        },
-        "aiAssistant": {
-          "title": "AI Assistant",
-          "description": "Type \"ryo <prompt>\" to chat with Ryo AI directly inside the terminal."
-        },
-        "fileEditing": {
-          "title": "File Editing",
-          "description": "Open documents in TextEdit (edit) or Vim-style editor (vim) right from the prompt."
-        },
-        "terminalSounds": {
-          "title": "Terminal Sounds",
-          "description": "Distinct sounds for output, errors & AI replies. Toggle in View ▸ Sounds."
-        }
+        "availableCommands": "Available commands:",
+        "bookmarkNotFound": "Bookmark not found: {{name}}",
+        "builtWith": "Built with React + TypeScript + Tauri",
+        "commandNotFound": "Command not found: {{cmd}}",
+        "currentTheme": "Current theme: {{theme}}",
+        "noBookmarks": "No bookmarks found.",
+        "noStickies": "No sticky notes found.",
+        "opening": "Opening: {{name}}",
+        "totalBookmarks": "{{count}} bookmarks:",
+        "totalStickies": "{{count}} sticky notes:",
+        "typeHelpForCommands": "Type \"help\" for available commands",
+        "usageOpen": "Usage: open <bookmark-name>",
+        "welcome": "Type \"help\" for available commands",
+        "andMore": "... and {{count}} more"
       }
     },
     "applet-viewer": {
