@@ -251,10 +251,8 @@ export function TerminalApp(props: AppProps<unknown>) {
       appId="terminal"
       instanceId={props.instanceId}
       title="终端"
-      isWindowOpen={props.isWindowOpen}
       isForeground={props.isForeground}
       onClose={props.onClose}
-      helpItems={props.helpItems}
     >
       <div
         ref={terminalRef}

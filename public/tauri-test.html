@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tauri Link Test</title>
+</head>
+<body>
+  <h1>Tauri 外部链接测试</h1>
+
+  <p>点击下面的链接测试:</p>
+  <ul>
+    <li><a href="https://google.com" target="_blank">Google (外部链接)</a></li>
+    <li><a href="https://github.com" target="_blank">GitHub (外部链接)</a></li>
+    <li><a href="https://kyo.is/about" target="_blank">Kyo About (内部链接)</a></li>
+  </ul>
+
+  <div id="status"></div>
+
+  <script>
+    const status = document.getElementById('status');
+
+    // 检测 Tauri 环境
+    if (window.__TAURI__) {
+      status.innerHTML = '<p style="color: green;">✅ Tauri 环境检测成功</p>';
+
+      // 添加链接拦截器
+      document.addEventListener('click', async (e) => {
+        const target = e.target;
+        const link = target.closest('a');
+
+        if (link && link.href) {
+          const url = new URL(link.href);
+          const currentOrigin = window.location.origin;
+
+          console.log('点击链接:', link.href);
+          console.log('当前域名:', currentOrigin);
+          console.log('链接域名:', url.origin);
+
+          // 如果是外部链接
+          if (url.origin !== currentOrigin) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            status.innerHTML += `<p>尝试打开外部链接: ${link.href}</p>`;
+
+            try {
+              await window.__TAURI__.shell.open(link.href);
+              status.innerHTML += '<p style="color: green;">✅ 链接已用系统浏览器打开</p>';
+            } catch (err) {
+              status.innerHTML += `<p style="color: red;">❌ 打开失败: ${err.message}</p>`;
+            }
+          } else {
+            status.innerHTML += `<p>内部链接,允许在 WebView 中打开: ${link.href}</p>`;
+          }
+        }
+      }, true);
+    } else {
+      status.innerHTML = '<p style="color: red;">❌ 不在 Tauri 环境中</p>';
+    }
+  </script>
+</body>
+</html>
