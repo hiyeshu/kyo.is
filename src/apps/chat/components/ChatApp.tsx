@@ -418,7 +418,12 @@ export function ChatAppComponent({
 
         {/* 消息区域 */}
         <div className="flex-1 overflow-hidden">
-          <ChatMessages messages={messages} isLoading={isLoading} />
+          <ChatMessages
+            messages={messages}
+            isLoading={isLoading}
+            onSendMessage={handleSubmit}
+            onAddToInput={setInput}
+          />
         </div>
 
         {/* 输入区域 */}

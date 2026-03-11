@@ -12,6 +12,7 @@ import { CaretDown, Copy, Check } from "@phosphor-icons/react";
 
 import { useThemeStore } from "@/stores/useThemeStore";
 import type { ImageAttachment } from "../utils/imagePreprocessing";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 // ============================================================================
 // 类型定义
@@ -30,6 +31,8 @@ export interface Message {
 interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
+  onSendMessage?: (text: string) => void;
+  onAddToInput?: (text: string) => void;
 }
 
 // ============================================================================
@@ -151,6 +154,8 @@ function ScrollToBottomButton({
 export function ChatMessages({
   messages,
   isLoading,
+  onSendMessage,
+  onAddToInput,
 }: ChatMessagesProps) {
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -308,9 +313,19 @@ export function ChatMessages({
                     isEmojiOnly(message.content) ? "text-[24px]" : "text-[13px]"
                   }`}
                 >
-                  <div className="whitespace-pre-wrap select-text">
-                    {message.content}
-                  </div>
+                  {isUser ? (
+                    // 用户消息：纯文本
+                    <div className="whitespace-pre-wrap select-text">
+                      {message.content}
+                    </div>
+                  ) : (
+                    // AI 消息：Markdown + IACT 协议
+                    <MarkdownRenderer
+                      content={message.content}
+                      onSend={onSendMessage || (() => {})}
+                      onAdd={onAddToInput || (() => {})}
+                    />
+                  )}
                 </motion.div>
                 )}
               </motion.div>
