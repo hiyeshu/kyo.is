@@ -34,6 +34,7 @@ function IACTLink({ directive, payload, onSend, onAdd }: IACTLinkProps) {
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    console.log("[IACT] Click:", { directive, payload });
     if (directive === "send") {
       onSend(payload);
     } else if (directive === "add") {
@@ -41,22 +42,24 @@ function IACTLink({ directive, payload, onSend, onAdd }: IACTLinkProps) {
     }
   };
 
-  // 主题样式
+  // 主题样式 - 更明显的视觉效果
   const getThemeStyles = () => {
     if (isMacTheme) {
       return {
-        base: "inline-flex items-center px-1.5 py-0.5 rounded cursor-pointer select-none transition-all",
-        background: "bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/30",
-        text: "text-blue-600 hover:text-blue-700",
-        border: "border border-blue-300/50",
+        base: "inline-flex items-center px-2 py-1 mx-0.5 rounded-md cursor-pointer select-none transition-all font-medium",
+        background: "bg-blue-500/20 hover:bg-blue-500/30 active:bg-blue-500/40",
+        text: "text-blue-700 hover:text-blue-800",
+        border: "border-2 border-blue-400/60 hover:border-blue-500/80",
+        shadow: "shadow-sm hover:shadow-md",
       };
     }
     // Windows XP / 98 主题
     return {
-      base: "inline-flex items-center px-1.5 py-0.5 cursor-pointer select-none",
+      base: "inline-flex items-center px-2 py-1 mx-0.5 cursor-pointer select-none font-medium",
       background: "bg-[#ece9d8] hover:bg-[#d8d5c8] active:bg-[#c8c5b8]",
       text: "text-[#000080] hover:text-[#000060]",
-      border: "border border-[#0054e3]/30",
+      border: "border-2 border-[#0054e3]/50 hover:border-[#0054e3]/80",
+      shadow: "shadow-sm",
     };
   };
 
@@ -65,7 +68,7 @@ function IACTLink({ directive, payload, onSend, onAdd }: IACTLinkProps) {
   return (
     <span
       onClick={handleClick}
-      className={`${styles.base} ${styles.background} ${styles.text} ${styles.border}`}
+      className={`${styles.base} ${styles.background} ${styles.text} ${styles.border} ${styles.shadow}`}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -74,6 +77,7 @@ function IACTLink({ directive, payload, onSend, onAdd }: IACTLinkProps) {
           handleClick(e as unknown as React.MouseEvent);
         }
       }}
+      title={directive === "send" ? "点击发送" : "点击填充到输入框"}
     >
       {payload}
     </span>
@@ -95,13 +99,20 @@ export function MarkdownRenderer({
   onSend,
   onAdd,
 }: MarkdownRendererProps) {
+  // 调试：检查是否包含 IACT 格式
+  const hasIACT = content.includes("(!send)") || content.includes("(!add)");
+
   // 自定义组件：拦截链接渲染
   const components: Components = {
     a: ({ href, children }) => {
+      console.log("[IACT] Link detected:", { href, children });
+
       // 检查是否为 IACT 协议
       if (href?.startsWith("!")) {
         const directive = href.slice(1) as IACTDirective;
         const payload = extractText(children);
+
+        console.log("[IACT] IACT link found:", { directive, payload });
 
         // 只支持 !send 和 !add
         if (directive === "send" || directive === "add") {
@@ -132,6 +143,7 @@ export function MarkdownRenderer({
 
   return (
     <div className="markdown-content prose prose-sm max-w-none">
+      {hasIACT && <div className="text-xs text-gray-400 mb-1">🔗 IACT detected</div>}
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
       </ReactMarkdown>
