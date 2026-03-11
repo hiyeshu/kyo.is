@@ -129,8 +129,8 @@ export function ChatAppComponent({
   // -------------------------------------------------------------------------
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+    async (e?: React.FormEvent) => {
+      e?.preventDefault();
       const hasImages = pendingImages.length > 0;
       if ((!input.trim() && !hasImages) || isLoading) return;
 
@@ -352,6 +352,25 @@ export function ChatAppComponent({
   };
 
   // -------------------------------------------------------------------------
+  // IACT 协议回调
+  // -------------------------------------------------------------------------
+
+  const handleIACTSend = useCallback(
+    (text: string) => {
+      setInput(text);
+      // 使用 setTimeout 确保 input 状态更新后再提交
+      setTimeout(() => {
+        handleSubmit();
+      }, 0);
+    },
+    [handleSubmit]
+  );
+
+  const handleIACTAdd = useCallback((text: string) => {
+    setInput(text);
+  }, []);
+
+  // -------------------------------------------------------------------------
   // 渲染
   // -------------------------------------------------------------------------
 
@@ -421,8 +440,8 @@ export function ChatAppComponent({
           <ChatMessages
             messages={messages}
             isLoading={isLoading}
-            onSendMessage={handleSubmit}
-            onAddToInput={setInput}
+            onSendMessage={handleIACTSend}
+            onAddToInput={handleIACTAdd}
           />
         </div>
 
