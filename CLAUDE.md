@@ -30,7 +30,7 @@ package.json - 依赖管理，Bun 1.3.5，React 19，Cloudflare/Mastra 脚本命
 bun.lock - Bun 依赖锁文件，唯一锁文件真相源
 .gitignore - 忽略依赖、构建产物、Cloudflare 本地缓存、密钥文件
 vite.config.ts - Vite 构建配置，PWA 插件，产出 dist/ 给 Worker assets
-wrangler.jsonc - Cloudflare Worker 部署配置，固定 account_id，绑定 dist/ 静态资产与 kyo.is/www.kyo.is 自定义域名
+wrangler.jsonc - Cloudflare Worker 部署配置，固定 account_id，绑定 dist/ 静态资产、workers.dev 预览域与 kyo.is/www.kyo.is 自定义域名
 .dev.vars.example - Worker 本地环境变量样例，声明 Supabase 与 DeepSeek 必需变量
 scripts/check-migration-readiness.ts - Cloudflare/Supabase/Mastra 迁移发布前门禁
 scripts/configure-cloudflare-env.ts - Cloudflare Worker secret 配置脚本，从本地 env 写入远端
