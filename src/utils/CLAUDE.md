@@ -3,7 +3,7 @@
 
 ## 成员清单
 
-analytics.ts: 分析事件定义，Vercel Analytics 集成，仅保留 APP_ANALYTICS.APP_LAUNCH
+analytics.ts: 分析事件边界，定义 APP_ANALYTICS 并通过 CustomEvent 派发供应商无关事件
 audio.ts: 音频工具函数，音频格式转换、波形生成、音频分析
 bootMessage.ts: 启动消息管理，首次启动提示、调试模式，存储键 kyo:nextBootMessage
 device.ts: 设备检测，浏览器类型、操作系统、触摸支持
@@ -16,7 +16,7 @@ offline.ts: 离线检测工具，网络状态监听、离线提示
 performanceCheck.ts: 性能检测，FPS 监控、内存使用、性能警告
 platform.ts: 平台检测，Tauri 桌面应用、Web 浏览器、环境变量
 prefetch.ts: 预加载工具，资源预加载、版本检查，存储键 kyo:manifest-timestamp
-sharedUrl.ts: 分享 URL 生成，短链接、二维码、社交分享
+sharedUrl.ts: 分享 URL 生成，应用和 applet 分享链接，不依赖后端短链 API
 tabStyles.ts: 标签页样式，主题相关的标签样式生成
 wallpapers.ts: 壁纸工具，壁纸列表、预加载、视频壁纸
 windowUtils.ts: 窗口工具，窗口居中、边界检测、层级管理

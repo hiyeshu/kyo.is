@@ -72,11 +72,11 @@ This generates all platform-specific icon formats from the source `icon.png` fil
 The app uses a Content Security Policy (CSP) configured in `tauri.conf.json` that allows:
 - API calls to `os.ryo.lu` and other external services
 - YouTube embeds
-- Pusher WebSocket connections
+- Cloudflare Worker API calls
 - Various external resources needed by the app
 
 ## Notes
 
-- The web build (`bun run build`) remains unchanged and deploys to Vercel
+- The web build (`bun run build`) remains unchanged and deploys through Cloudflare Workers
 - PWA features (service worker, offline caching) are automatically disabled in Tauri builds
-- All API calls go to the hosted Vercel backend - no Rust backend code required
+- All API calls go to the hosted Cloudflare Worker backend - no Rust backend code required

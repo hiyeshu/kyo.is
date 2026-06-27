@@ -1,33 +1,43 @@
 
 # Kyo.is — Web-Based Agentic AI OS
-React 19 + TypeScript + Vite + Tailwind CSS + Zustand + Vercel AI SDK + Tauri
+React 19 + TypeScript + Vite + Tailwind CSS + Zustand + Cloudflare Workers + Mastra + DeepSeek + Supabase + Tauri
 
 <directory>
-_api/ - Vercel 无服务器 API 端点 (15+ 文件: AI 聊天、歌词、翻译、链接预览等)
-src/ - 前端源码 (8 子目录: apps, components, config, hooks, lib, stores, styles, types)
+src/ - 前端与 Worker 源码 (12 子目录: apps, components, config, hooks, lib, mastra, server, stores, styles, types, utils, worker)
   apps/ - 应用模块，每个应用独立目录 (bookmark-board, chat, finder, textedit, macpaint...)
   components/ - 共享 React 组件 (4 子目录: ui, layout, shared, dialogs)
   config/ - 配置文件 (应用清单、主题、壁纸、音效)
   hooks/ - 自定义 React Hooks (窗口管理、文件系统、AI 助手)
   lib/ - 工具库 (i18n、着色器、音频处理)
+  mastra/ - Agent 编排层 (Kyo agent + typed tools)
+  server/ - 服务端产品边界 (HTTP、Supabase、channel、DeepSeek 分类)
   stores/ - Zustand 状态管理 (系统、窗口、文件、用户)
   styles/ - 全局样式与主题 CSS
   types/ - TypeScript 类型定义
-public/ - 静态资源 (图标、壁纸、音效、字体)
+  utils/ - 平台、分享、预加载、IndexedDB、i18n 辅助工具
+  worker/ - Cloudflare Worker 入口 (/api、静态资源、SPA fallback)
+public/ - 静态资源 (图标、壁纸、音效、字体；Cloudflare 单文件小于 25 MiB)
+supabase/ - 数据库迁移、RLS 策略与函数安全边界 (kyo_items、link_meta、agent channel、message、run、workspace files)
 src-tauri/ - Tauri 桌面应用配置 (Rust 后端)
 extension/ - Chrome Extension (Manifest V3, 新标签页 + 一键收藏 + 云同步)
 scripts/ - 构建与开发脚本 (图标生成、文档生成、i18n 工具)
-tests/ - 测试套件 (API 测试、功能测试)
+tests/ - Worker API 黑盒测试 (静态资源、CORS、鉴权、兼容 API)
 docs/ - 项目文档 (架构、API 参考、开发指南)
 </directory>
 
 <config>
-package.json - 依赖管理，Bun 1.3.5，React 19，50+ 脚本命令
-vite.config.ts - Vite 构建配置，PWA 插件，Vercel 适配器
+package.json - 依赖管理，Bun 1.3.5，React 19，Cloudflare/Mastra 脚本命令
+bun.lock - Bun 依赖锁文件，唯一锁文件真相源
+.gitignore - 忽略依赖、构建产物、Cloudflare 本地缓存、密钥文件
+vite.config.ts - Vite 构建配置，PWA 插件，产出 dist/ 给 Worker assets
+wrangler.jsonc - Cloudflare Worker 部署配置，固定 account_id，绑定 dist/ 静态资产
+.dev.vars.example - Worker 本地环境变量样例，声明 Supabase 与 DeepSeek 必需变量
+scripts/check-migration-readiness.ts - Cloudflare/Supabase/Mastra 迁移发布前门禁
+scripts/configure-cloudflare-env.ts - Cloudflare Worker secret 配置脚本，从本地 env 写入远端
+scripts/verify-worker-smoke.ts - Worker smoke 验证脚本，支持本地与远端 URL
+src/worker/env.d.ts - Wrangler 生成的 Worker binding 类型，来源为 .dev.vars.example
 tailwind.config.js - Tailwind CSS 配置，自定义主题，动画扩展
 tsconfig.json - TypeScript 编译配置，严格模式
-middleware.ts - Vercel Edge 中间件，路由重写，API 代理
-vercel.json - Vercel 部署配置，无服务器函数，重定向规则
 components.json - shadcn/ui 组件配置
 eslint.config.js - ESLint 规则，React Hooks 检查
 </config>
@@ -36,8 +46,8 @@ eslint.config.js - ESLint 规则，React Hooks 检查
 数据流: Zustand 全局状态 + React Context 局部状态
 窗口系统: 多实例窗口管理器，拖拽、缩放、最小化、层级控制
 文件系统: 虚拟 FS，IndexedDB 持久化，备份/恢复
-AI 集成: Vercel AI SDK，支持 OpenAI/Anthropic/Google，流式响应
-实时通信: Pusher WebSocket，聊天室、在线状态
+AI 集成: Mastra Agent + DeepSeek v4，typed tools 读写 Supabase
+Agent channel: Supabase channel_messages 持久化会话与工具审计
 主题系统: Aqua / Windows XP / Windows 98，动态切换
 路由: 无路由器，窗口即应用实例，状态驱动 UI
 </architecture>
@@ -49,10 +59,10 @@ AI 集成: Vercel AI SDK，支持 OpenAI/Anthropic/Google，流式响应
 编辑器: TipTap (富文本) + Monaco (代码)
 状态: Zustand (全局) + React Context (局部)
 存储: IndexedDB + LocalStorage + Upstash Redis
-AI: OpenAI + Anthropic + Google (Vercel AI SDK)
-实时: Pusher (WebSocket)
+AI: Mastra + DeepSeek + typed tools
+Agent channel: Supabase + Cloudflare Worker
 构建: Vite + Bun + esbuild
-部署: Vercel (Edge Functions + Serverless)
+部署: Cloudflare Workers (Worker + Static Assets)
 桌面: Tauri 2.0 (可选)
 </tech_stack>
 
@@ -61,7 +71,7 @@ AI: OpenAI + Anthropic + Google (Vercel AI SDK)
 2. 文件系统: 使用 useFileSystem hook，禁止直接操作 IndexedDB
 3. 主题: 只使用 CSS 变量，禁止硬编码颜色/间距
 4. 状态管理: 全局状态用 Zustand，局部状态用 useState/useReducer
-5. AI 调用: 统一通过 /api/chat 端点，使用 Vercel AI SDK
+5. AI 调用: 统一通过 /api/agent/chat，Worker -> Mastra -> DeepSeek/tools
 6. 国际化: 所有文本必须通过 i18next，禁止硬编码字符串
 7. 性能: 大型列表使用虚拟滚动，图片懒加载，代码分割
 8. 安全: API 端点验证输入，DOMPurify 清理 HTML，CSP 头部
@@ -102,10 +112,16 @@ AI: OpenAI + Anthropic + Google (Vercel AI SDK)
 </i18n_rules>
 
 <development_workflow>
-本地开发: bun run dev:vercel (推荐) 或 bun dev
-构建: bun run build (生成 .vercel/output/)
+本地开发: bun run dev + bun run dev:worker
+构建: bun run build (生成 dist/)
+迁移门禁: bun run check:migration
+Cloudflare 环境配置: bun run configure:cloudflare-env
+Worker smoke 验证: bun run verify:worker 或 KYO_BASE_URL=https://kyo.is bun run verify:worker
+Worker 类型生成: bun run types:worker
+Cloudflare 预览: bun run preview:cloudflare
+Cloudflare 部署: bun run deploy:cloudflare
 预览: bun run preview
-测试: bun test (运行所有测试)
+测试: bun run test (默认验证 Cloudflare Worker API)
 Lint: bun run lint
 桌面应用: bun run tauri:dev / bun run tauri:build
 国际化: bun run i18n:extract → i18n:sync → i18n:translate
@@ -397,4 +413,3 @@ Phase 3 生根:
 维护三层完整，执行回环约束，拒绝孤立变更。
 Keep the map aligned with the terrain, or the terrain will be lost.
 </INVOCATION>
-

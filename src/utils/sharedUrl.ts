@@ -1,39 +1,9 @@
-import { getApiUrl } from "./platform";
-
 /**
- * Decodes a shared URL code from the /share/{code} path
+ * [INPUT]: 依赖浏览器 window.location
+ * [OUTPUT]: generateAppShareUrl / generateAppletShareUrl，生成应用和 applet 分享 URL
+ * [POS]: utils/ 的分享 URL 生成器，被 AppMenu 与分享弹窗消费，不持有后端状态
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
-export async function decodeSharedUrl(code: string): Promise<{ url: string; year: string } | null> {
-  try {
-    const response = await fetch(getApiUrl(`/api/share-link?action=decode&code=${encodeURIComponent(code)}`));
-    
-    if (!response.ok) {
-      console.error('Failed to decode shared URL:', await response.text());
-      return null;
-    }
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error decoding shared URL:', error);
-    return null;
-  }
-}
-
-/**
- * Extracts the code from a shared URL path
- */
-export function extractCodeFromPath(path: string): string | null {
-  // Match /internet-explorer/{code} pattern
-  const match = path.match(/^\/internet-explorer\/([^/]+)$/);
-  if (match) return match[1];
-  
-  // Match /applet-viewer/{code} pattern
-  const appletMatch = path.match(/^\/applet-viewer\/([^/]+)$/);
-  if (appletMatch) return appletMatch[1];
-  
-  return null;
-}
 
 /**
  * Generates a shareable URL for a specific app.
@@ -60,4 +30,4 @@ export function generateAppletShareUrl(id: string): string {
     return '';
   }
   return `${window.location.origin}/applet-viewer/${id}`;
-} 
+}

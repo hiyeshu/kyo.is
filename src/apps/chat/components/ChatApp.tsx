@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 react hooks，依赖 ../../base/types 的 AppProps
+ * [INPUT]: 依赖 react hooks、Supabase auth、getApiUrl、../../base/types 的 AppProps
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，对接 Dify Chatflow API，管理图片附件+autoSend（从 CommandPalette 等入口自动发送）
+ * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，管理 channelId、历史消息、图片附件、autoSend
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -13,12 +13,25 @@ import { ChatMessages, type Message } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/useThemeStore";
-import { detectIntent, executeIntent, getContextForIntent } from "../utils/chatTools";
+import { supabase } from "@/lib/supabase";
+import { getApiUrl } from "@/utils/platform";
 import {
   preprocessImage,
   validateImageFile,
   type ImageAttachment,
 } from "../utils/imagePreprocessing";
+
+interface ApiChannel {
+  id: string;
+  updated_at?: string;
+}
+
+interface ApiMessage {
+  id?: string;
+  role: "user" | "assistant" | "tool";
+  content: string;
+  created_at?: string;
+}
 
 // ============================================================================
 // 主组件
@@ -41,13 +54,13 @@ export function ChatAppComponent({
   const autoSendRef = useRef<string | null>(null);
 
   // -------------------------------------------------------------------------
-  // 状态管理（session 级别，关窗即清）
+  // 状态管理（UI 暂存，channel 历史由服务端恢复）
   // -------------------------------------------------------------------------
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [channelId, setChannelId] = useState<string | null>(null);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
   const [pendingImages, setPendingImages] = useState<ImageAttachment[]>([]);
@@ -59,6 +72,54 @@ export function ChatAppComponent({
       localStorage.removeItem("kyo.chat.history");
     } catch { /* ignore */ }
   }, []);
+
+  // -------------------------------------------------------------------------
+  // channel 记忆加载：服务端 Supabase 是真相源
+  // -------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!isWindowOpen) return;
+
+    let cancelled = false;
+    async function loadLatestChannel() {
+      try {
+        const session = (await supabase.auth.getSession()).data.session;
+        if (!session?.access_token) return;
+
+        const channelsResponse = await fetch(getApiUrl("/api/channels"), {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (!channelsResponse.ok) return;
+
+        const channelsBody = (await channelsResponse.json()) as {
+          channels?: ApiChannel[];
+        };
+        const latest = channelsBody.channels?.[0];
+        if (!latest || cancelled) return;
+
+        const messagesResponse = await fetch(
+          getApiUrl(`/api/channels/${latest.id}/messages`),
+          { headers: { Authorization: `Bearer ${session.access_token}` } }
+        );
+        if (!messagesResponse.ok) return;
+
+        const messagesBody = (await messagesResponse.json()) as {
+          messages?: ApiMessage[];
+        };
+        if (cancelled) return;
+
+        setChannelId(latest.id);
+        setMessages((messagesBody.messages ?? []).flatMap(toUiMessage));
+      } catch {
+        // 未登录、网络失败或历史加载失败时保持空会话。
+      }
+    }
+
+    loadLatestChannel();
+    return () => {
+      cancelled = true;
+    };
+  }, [isWindowOpen]);
 
   // -------------------------------------------------------------------------
   // autoSend：从 CommandPalette 等入口传入的自动发送
@@ -120,7 +181,7 @@ export function ChatAppComponent({
 
   const handleClear = useCallback(() => {
     setMessages([]);
-    setConversationId(null);
+    setChannelId(null);
     setPendingImages([]);
   }, []);
 
@@ -148,38 +209,6 @@ export function ChatAppComponent({
       setInput("");
       const imagesToSend = hasImages ? [...pendingImages] : [];
       setPendingImages([]);
-
-      // 意图检测：本地处理便签/书签/搜索等操作
-      const intent = detectIntent(userMessage.content);
-      if (intent.type !== "none") {
-        setIsLoading(true);
-        try {
-          const result = await executeIntent(intent);
-          if (result) {
-            // 本地处理完成，直接显示结果
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: `assistant-${Date.now()}`,
-                role: "assistant",
-                content: result,
-                timestamp: Date.now(),
-              },
-            ]);
-            return;
-          }
-          // result 为 null 表示需要发给 API（带 context）
-        } finally {
-          if (intent.type !== "summary") {
-            setIsLoading(false);
-          }
-        }
-        if (intent.type !== "summary") return;
-      }
-
-      // 获取 context（如果有意图需要 context）
-      const context = intent.type !== "none" ? getContextForIntent(intent) : undefined;
-
       setIsLoading(true);
 
       const controller = new AbortController();
@@ -189,18 +218,25 @@ export function ChatAppComponent({
       let hasAddedMessage = false;
 
       try {
-        console.log("[Chat] Sending request to /api/chat");
-        const response = await fetch("/api/chat", {
+        const session = (await supabase.auth.getSession()).data.session;
+        if (!session?.access_token) {
+          throw new Error("Unauthorized");
+        }
+
+        const response = await fetch(getApiUrl("/api/agent/chat"), {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
           body: JSON.stringify({
+            channelId,
+            message: userMessage.content,
             messages: updatedMessages.map((m) => ({
               role: m.role,
               content: m.content,
             })),
-            conversationId: conversationId,
-            context,
-            images: imagesToSend.map((img) => ({
+            attachments: imagesToSend.map((img) => ({
               dataUrl: img.dataUrl,
               name: img.name,
               type: img.type,
@@ -209,8 +245,6 @@ export function ChatAppComponent({
           signal: controller.signal,
         });
 
-        console.log("[Chat] Response status:", response.status, response.ok);
-        
         if (!response.ok) {
           const errorText = await response.text();
           console.error("[Chat] Error response:", errorText);
@@ -218,72 +252,71 @@ export function ChatAppComponent({
         }
 
         const reader = response.body?.getReader();
-        console.log("[Chat] Reader:", reader ? "obtained" : "null");
         if (!reader) throw new Error("No response body");
 
         const decoder = new TextDecoder();
         let fullContent = "";
         const assistantTimestamp = Date.now();
-        let chunkCount = 0;
 
-        console.log("[Chat] Starting to read stream...");
-        while (true) {
-          const { done, value } = await reader.read();
-          console.log("[Chat] Read result - done:", done, "value length:", value?.length);
-          if (done) {
-            console.log("[Chat] Stream ended, total chunks:", chunkCount);
-            break;
+        let buffer = "";
+        const processLine = (line: string) => {
+          if (!line) return;
+
+          if (line.startsWith("0:")) {
+            try {
+              const textDelta = JSON.parse(line.slice(2));
+              fullContent += textDelta;
+
+              if (!hasAddedMessage) {
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: assistantMessageId,
+                    role: "assistant",
+                    content: fullContent,
+                    timestamp: assistantTimestamp,
+                  },
+                ]);
+                hasAddedMessage = true;
+              } else {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMessageId
+                      ? { ...m, content: fullContent }
+                      : m
+                  )
+                );
+              }
+            } catch {
+              // 忽略解析错误
+            }
+            return;
           }
 
-          chunkCount++;
-          const chunk = decoder.decode(value, { stream: true });
-          console.log("[Chat] Chunk #" + chunkCount + ":", chunk);
-          const lines = chunk.split("\n");
-
-          for (const line of lines) {
-            if (!line) continue;
-            console.log("[Chat] Processing line:", line);
-
-            if (line.startsWith("0:")) {
-              try {
-                const textDelta = JSON.parse(line.slice(2));
-                fullContent += textDelta;
-
-                if (!hasAddedMessage) {
-                  setMessages((prev) => [
-                    ...prev,
-                    {
-                      id: assistantMessageId,
-                      role: "assistant",
-                      content: fullContent,
-                      timestamp: assistantTimestamp,
-                    },
-                  ]);
-                  hasAddedMessage = true;
-                } else {
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === assistantMessageId
-                        ? { ...m, content: fullContent }
-                        : m
-                    )
-                  );
-                }
-              } catch {
-                // 忽略解析错误
+          if (line.startsWith("d:")) {
+            try {
+              const data = JSON.parse(line.slice(2));
+              if (data.channelId) {
+                setChannelId(data.channelId);
               }
-            } else if (line.startsWith("d:")) {
-              try {
-                const data = JSON.parse(line.slice(2));
-                if (data.conversationId) {
-                  setConversationId(data.conversationId);
-                }
-              } catch {
-                // 忽略解析错误
-              }
+            } catch {
+              // 忽略解析错误
             }
           }
+        };
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+          for (const line of lines) {
+            processLine(line);
+          }
         }
+        processLine(buffer);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           // 用户取消
@@ -321,7 +354,7 @@ export function ChatAppComponent({
         setAbortController(null);
       }
     },
-    [input, isLoading, messages, conversationId, pendingImages, t]
+    [input, isLoading, messages, channelId, pendingImages, t]
   );
 
   // autoSend: input 就绪后自动触发发送
@@ -464,4 +497,16 @@ export function ChatAppComponent({
       </div>
     </WindowFrame>
   );
+}
+
+function toUiMessage(message: ApiMessage): Message[] {
+  if (message.role !== "user" && message.role !== "assistant") return [];
+  return [
+    {
+      id: message.id ?? `${message.role}-${message.created_at ?? crypto.randomUUID()}`,
+      role: message.role,
+      content: message.content,
+      timestamp: message.created_at ? new Date(message.created_at).getTime() : undefined,
+    },
+  ];
 }

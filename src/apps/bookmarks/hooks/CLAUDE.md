@@ -1,13 +1,14 @@
-# apps/bookmark-board/hooks/
-> L2 | 父级: /src/apps/bookmark-board/CLAUDE.md
+# apps/bookmarks/hooks/
+> L2 | 父级: /src/apps/bookmarks/CLAUDE.md
 
 ## 成员清单
 
-useBookmarkBoard.ts: 书签管理 hook，封装书签 CRUD 操作、搜索过滤、拖拽排序、导入导出逻辑
+useBookmarkBoard.ts: 书签管理 hook，封装书签 CRUD、搜索过滤、拖拽排序、导入导出、/api/scrape 链接摘要更新。
 
 ## 依赖关系
 - 依赖 @/stores/useBookmarkStore 书签状态
 - 依赖 @/hooks 共享 hooks
+- 依赖 Worker /api/scrape 与 useLinkMetaStore 缓存链接元数据
 - 被 BookmarkBoardApp 组件使用
 
 ## Hook 约束

@@ -67,7 +67,7 @@ Kyo.is 是一个个人网页入口,链接即操作系统。在 CLI 和 AI 将一
 
 ### 核心应用
 - 🔖 **书签** — Pinterest 风格看板，支持文件夹、拖拽排序、云同步
-- 💬 **AI 聊天** — 基于 Dify，理解你的链接收藏
+- 💬 **AI 聊天** — 基于 Mastra + DeepSeek，理解你的链接收藏
 - 📝 **便签** — 桌面浮动便签
 - 📜 **历史记录** — 所有书签和便签的时间线
 - 🎵 **白噪音** — 环境音效与频谱可视化
@@ -94,7 +94,7 @@ Kyo.is 是一个个人网页入口,链接即操作系统。在 CLI 和 AI 将一
 
 ## 技术栈
 
-React 19 · TypeScript · Vite · Tailwind CSS · Zustand · Supabase · Dify AI · Vercel
+React 19 · TypeScript · Vite · Tailwind CSS · Zustand · Supabase · Mastra · DeepSeek · Cloudflare Workers
 
 ---
 

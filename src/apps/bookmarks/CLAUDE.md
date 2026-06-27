@@ -14,7 +14,7 @@ components/ - 应用组件
   IconPicker.tsx: 图标选择器，三种模式（Auto/Upload/Emoji），使用设计系统 Tabs
   BookmarkIconDisplay.tsx: 图标渲染组件，使用 getBookmarkIconInfo 单一真相源
 hooks/ - 应用 hooks
-  useBookmarkBoard.ts: 书签业务逻辑，CRUD、搜索、拖拽、图标编辑
+  useBookmarkBoard.ts: 书签业务逻辑，CRUD、搜索、拖拽、图标编辑、/api/scrape 链接摘要更新
 
 ## 应用功能
 - 空间书签管理，类似 Pinterest 的卡片布局
@@ -26,6 +26,7 @@ hooks/ - 应用 hooks
 
 ## 依赖关系
 - 依赖 @/stores/useBookmarkStore 书签状态（getBookmarkIconInfo 单一真相源）
+- 依赖 Worker /api/scrape 生成链接 title/summary/tags
 - 依赖 @/components/ui UI 组件（Tabs、Button、Input、Dialog）
 - 被 appRegistry 注册
 - 被 AppManager 加载

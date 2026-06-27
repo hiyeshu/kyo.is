@@ -1,5 +1,5 @@
 /**
-  * [INPUT]: useBookmarkStore, useThemeStore, useToast, getApiUrl, extractFirstUrl, useTranslation
+  * [INPUT]: useBookmarkStore, useThemeStore, useLinkMetaStore, useToast, getApiUrl, extractFirstUrl, useTranslation
   * [OUTPUT]: useBookmarkBoard hook
   * [POS]: bookmarks 的全部业务逻辑，被 BookmarkBoardApp 消费
   * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -13,8 +13,10 @@ import {
   type Bookmark,
 } from "@/stores/useBookmarkStore";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
 import { toast } from "@/hooks/useToast";
 import { getApiUrl, extractFirstUrl } from "@/utils/platform";
+import type { LinkMeta } from "@/types/kyoItem";
 import { useTranslation } from "react-i18next";
 
 // ─── 右键菜单类型 ─────────────────────────────────────────────────────────────
@@ -139,43 +141,32 @@ export function useBookmarkBoard() {
     setAddDialogOpen(false);
     setAddUrl("");
 
-    // ── Phase 2: 后台异步获取 AI 元数据并更新 ──
+    // ── Phase 2: 后台异步获取链接元数据并更新 ──
     setIsAiCreating(true);
     const abort = new AbortController();
     const timer = setTimeout(() => abort.abort(), 15_000);
     try {
-      const systemPrompt = `You are a link ingestion assistant. Return JSON only: {"title":"...","summary":"...","tags":["..."]}. Summary should be two or three sentences. Tags and summary must be in ${i18n.language} language. No extra text.`;
-      const response = await fetch(getApiUrl("/api/chat"), {
+      const response = await fetch(getApiUrl("/api/scrape"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: abort.signal,
         body: JSON.stringify({
-          messages: [
-            { role: "user", content: parsedUrl.toString() },
-          ],
-          context: systemPrompt,
+          url: parsedUrl.toString(),
+          lang: i18n.language,
         }),
       });
 
       if (!response.ok) return;
 
-      const text = await response.text();
-      const fullContent = text
-        .split("\n")
-        .filter((line) => line.startsWith("0:"))
-        .map((line) => { try { return JSON.parse(line.slice(2)) as string; } catch { return ""; } })
-        .join("");
-      const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return;
+      const data = await response.json() as LinkMeta;
+      if (!data.title || !Array.isArray(data.tags)) return;
 
-      const data = JSON.parse(jsonMatch[0]) as { title: string; summary: string; tags: string[] };
-      if (!data.title || !data.summary || !Array.isArray(data.tags)) return;
-
-      const trimmedTags = data.tags.filter((tag) => tag && tag.trim());
+      useLinkMetaStore.getState().set(parsedUrl.toString(), data);
       store.updateBookmark(bookmarkId, {
         title: data.title,
-        summary: data.summary,
-        tags: trimmedTags,
+        summary: data.summary || "",
+        tags: data.tags.filter((tag) => tag && tag.trim()),
+        favicon: data.faviconUrl || favicon,
       });
     } catch {
       // AI 失败？没关系，书签已经存在了

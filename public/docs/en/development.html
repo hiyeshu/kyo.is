@@ -179,10 +179,30 @@
       <article><h1>Development</h1>
 <h2>Local Development</h2>
 <pre><code>bun install
-bun run dev:vercel</code></pre>
+cp .dev.vars.example .dev.vars
+bun run dev
+bun run dev:worker</code></pre>
 <p>Open <code>http://localhost:5173</code>.</p>
 <h2>Build</h2>
-<pre><code>bun run build</code></pre>
+<pre><code>bun run check:migration
+bun run build
+bun run verify:worker
+bun run test
+bun run types:worker</code></pre>
+<code>check:migration</code> is the migration gate. It checks Cloudflare Worker config, Supabase/DeepSeek env names, migration files, static asset size, and legacy provider entry residue. It reports missing variable names without printing secret values.
+<code>types:worker</code> generates <code><a href="https://github.com/hiyeshu/kyo.is/blob/main/src/worker/env.d.ts" target="_blank" rel="noopener noreferrer">src/worker/env.d.ts</a></code> from <code>.dev.vars.example</code>. Rerun it after changing Worker bindings or environment variable names.
+<code>bun run test</code> verifies the current Cloudflare Worker API by default: static assets, SPA fallback, CORS, unauthorized access, input validation, and compatibility API routes. The old serverless API, chat-room, lyrics, and TTS tests are no longer production-entry tests.
+<h2>Cloudflare Deploy</h2>
+<pre><code>wrangler login
+bun run configure:cloudflare-env
+bun run types:worker
+bun run check:migration
+bun run verify:worker
+bun run test
+bun run deploy:cloudflare
+KYO_BASE_URL=https://kyo.is bun run verify:worker</code></pre>
+<p>Before deploy, complete: <ul><li><code>wrangler login</code></li></ul><ul><li>Local <code>.dev.vars</code> or <code>.env.local</code> contains: <code>VITE_SUPABASE_URL</code>, <code>VITE_SUPABASE_ANON_KEY</code>, <code>DEEPSEEK_API_KEY</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code></li></ul></p>
+<code>configure:cloudflare-env</code> writes these four values as Cloudflare Worker secrets without printing the values.
 <h2>Project Structure</h2>
 <pre><code>src/
   apps/          Six app modules

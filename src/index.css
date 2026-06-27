@@ -795,26 +795,6 @@ button.piano-key.piano-key[class*="bg-[#ff33ff]"] {
     0 0 1px rgba(0, 0, 0, 0.15);
 }
 
-/* Add a subtle video effect when playing */
-.lcd-screen .react-player {
-  filter: brightness(1.05) contrast(1.02) saturate(1.1);
-}
-
-/* Fix 1px gap on right and bottom for video players and iframes */
-.react-player,
-.react-player > div,
-.react-player iframe,
-.react-player video {
-  display: block !important;
-  line-height: 0;
-}
-
-/* Extend react-player to cover 1px gap on right and bottom */
-.react-player {
-  width: calc(100% + 1px) !important;
-  height: calc(100% + 1px) !important;
-}
-
 /* Landing page overrides - escape OS desktop constraints */
 .landing-scrollbar,
 .landing-scrollbar * {
@@ -1159,4 +1139,3 @@ ruby.lyrics-furigana rp {
 .fullscreen-lyrics-text rt.lyrics-korean-rt {
   font-size: clamp(14px, min(5vw, 5vh), 60px) !important;
 }
-

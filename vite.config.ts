@@ -1,7 +1,13 @@
+/**
+ * [INPUT]: 依赖 Vite、React SWC、Tailwind、VitePWA，读取 NODE_ENV / TAURI_ENV
+ * [OUTPUT]: 导出 Kyo 前端构建配置，产出 Cloudflare Worker assets 使用的 dist/
+ * [POS]: 根构建配置，Cloudflare Worker 负责 API 和部署承接，Vite 只产前端静态资产
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
-import vercel from "vite-plugin-vercel";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,7 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Detect dev mode for memory optimizations
-const isDev = process.env.NODE_ENV !== 'production' && !process.env.VERCEL;
+const isDev = process.env.NODE_ENV !== 'production';
 
 // Browserslist warns if caniuse-lite is stale; suppress when up-to-date
 process.env.BROWSERSLIST_IGNORE_OLD_DATA ??= "1";
@@ -20,8 +26,7 @@ process.env.BROWSERSLIST_IGNORE_OLD_DATA ??= "1";
 export default defineConfig({
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
   define: {
-    // Expose VERCEL_ENV to the client for environment detection
-    'import.meta.env.VITE_VERCEL_ENV': JSON.stringify(process.env.VERCEL_ENV || ''),
+    'import.meta.env.VITE_DEPLOY_TARGET': JSON.stringify(process.env.CF_PAGES ? "cloudflare" : "local"),
   },
   // Optimize JSON imports for better performance
   json: {
@@ -43,7 +48,7 @@ export default defineConfig({
       ignored: [
         "**/.terminals/**",
         "**/dist/**",
-        "**/.vercel/**",
+        "**/.wrangler/**",
         "**/src-tauri/**",
         "**/_api/**",
         "**/public/**", // 500+ static files don't need HMR watching
@@ -101,12 +106,10 @@ export default defineConfig({
     ],
     // Exclude heavy deps from initial pre-bundling to reduce memory
     // These will be bundled on-demand when their apps are opened
-    // Note: AI SDK removed from exclude to fix ESM/CJS compatibility with @vercel/oidc
+    // Keep AI SDK out of exclude so Mastra/provider packages stay pre-bundleable.
     exclude: isDev ? [
-      // Audio libs - only needed when Soundboard/iPod/Synth/Karaoke opens
-      "tone",
+      // Audio waveform renderer - only needed when an audio utility is opened
       "wavesurfer.js",
-      "audio-buffer-utils",
       // 3D rendering - only needed when PC app opens
       "three",
       // Rich text editor - only needed when TextEdit opens
@@ -114,14 +117,6 @@ export default defineConfig({
       "@tiptap/react",
       "@tiptap/starter-kit",
       "@tiptap/pm",
-      // Video player - only needed when Videos app opens
-      "react-player",
-      // Realtime chat - only needed when Chats opens
-      "pusher-js",
-      // Chinese/Japanese text processing - only needed for lyrics features
-      "pinyin-pro",
-      "wanakana",
-      "hangul-romanization",
       // QR codes - only needed for specific features
       "qrcode.react",
     ] : [],
@@ -145,7 +140,7 @@ export default defineConfig({
             req.url = htmlPath;
             return next();
           }
-          // Redirect .html URLs to clean URLs (match Vercel behavior)
+          // Redirect .html URLs to clean docs URLs.
           if (url.startsWith('/docs/') && url.endsWith('.html')) {
             const cleanUrl = url.replace(/\.html$/, '');
             res.writeHead(308, { Location: cleanUrl });
@@ -158,10 +153,9 @@ export default defineConfig({
     },
     react(),
     tailwindcss(),
-    // Only include Vercel and PWA plugins when not building for Tauri
+    // Only include PWA plugin when not building for Tauri
     // Skip PWA plugin entirely in dev mode to save ~50MB memory (Workbox config is heavy)
-    ...(process.env.TAURI_ENV ? [] : isDev ? [vercel()] : [
-      vercel(),
+    ...(process.env.TAURI_ENV || isDev ? [] : [
       VitePWA({
       registerType: "autoUpdate",
       manifestFilename: "manifest.json",
@@ -216,7 +210,7 @@ export default defineConfig({
           // App routes handled by middleware for OG preview links
           /^\/bookmarks$/,
           /^\/theme-editor$/,
-          // Landing page route - bypass SW to let Vercel rewrite handle it
+          // Landing page route - bypass SW and let Worker SPA fallback handle it
           /^\/hi$/,
         ],
         // Enable navigation fallback to precached index.html for offline support
@@ -430,18 +424,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  vercel: {
-    defaultSupportsResponseStreaming: true,
-    // Fix routing for subdirectory index files
-    rewrites: [
-      // Route /api/songs to /api/songs/index
-      { source: "/api/songs", destination: "/api/songs/index" },
-      // Route /api/rooms to /api/rooms/index
-      { source: "/api/rooms", destination: "/api/rooms/index" },
-      // Route /api/users to /api/users/index
-      { source: "/api/users", destination: "/api/users/index" },
-    ],
-  },
   // esbuild options for faster dev transforms
   esbuild: {
     // Remove legal comments to reduce memory overhead
@@ -475,18 +457,6 @@ export default defineConfig({
             "@radix-ui/react-tabs",
           ],
           
-          // Heavy audio libs - deferred until Soundboard/iPod/Synth opens
-          audio: ["tone", "wavesurfer.js", "audio-buffer-utils"],
-          
-          // Media player - shared by iPod and Videos apps
-          "media-player": ["react-player"],
-
-          // Korean romanization - only needed for lyrics
-          "hangul": ["hangul-romanization"],
-          
-          // AI SDK - deferred until Chats/IE opens  
-          "ai-sdk": ["ai", "@ai-sdk/anthropic", "@ai-sdk/google", "@ai-sdk/openai", "@ai-sdk/react"],
-          
           // Rich text editor - deferred until TextEdit opens
           // Note: @tiptap/pm is excluded because it only exports subpaths (e.g. @tiptap/pm/state)
           // and has no main entry point, which causes Vite to fail
@@ -509,9 +479,6 @@ export default defineConfig({
           
           // State management
           zustand: ["zustand"],
-          
-          // Realtime chat
-          pusher: ["pusher-js"],
         },
       },
     },

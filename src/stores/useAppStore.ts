@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 依赖 zustand 的 create/persist，依赖 config/appRegistry 的应用配置，依赖 apps/base/types 的应用类型，依赖 @vercel/analytics 的事件追踪
+ * [INPUT]: 依赖 zustand 的 create/persist，依赖 config/appRegistry 的应用配置，依赖 apps/base/types 的应用类型，依赖 utils/analytics 的事件边界
  * [OUTPUT]: 对外提供 useAppStore hook，应用管理核心状态（窗口实例、最近应用、最近文档、启动动画、AI 模型选择、首次启动标记），持久化到 localStorage
  * [POS]: stores/ 的核心状态管理，被所有组件和应用消费，是应用状态的单一真相源
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -12,8 +12,7 @@ import { AppId, getWindowConfig, getMobileWindowSize } from "@/config/appRegistr
 import { appIds } from "@/config/appIds";
 import { AppManagerState, AppState } from "@/apps/base/types";
 import { AIModel } from "@/types/aiModels";
-import { track } from "@vercel/analytics";
-import { APP_ANALYTICS } from "@/utils/analytics";
+import { APP_ANALYTICS, trackAppEvent } from "@/utils/analytics";
 export type { AIModel } from "@/types/aiModels";
 
 // ---------------- Types ---------------------------------------------------------
@@ -425,7 +424,7 @@ const createUseAppStore = () =>
               : 40 + openInstances * 20,
           };
           const cfg = getWindowConfig(appId);
-          let size = isMobile
+          const size = isMobile
             ? getMobileWindowSize(appId)
             : cfg.defaultSize;
 
@@ -501,7 +500,7 @@ const createUseAppStore = () =>
             })
           );
           // Track app launch analytics
-          track(APP_ANALYTICS.APP_LAUNCH, { appId });
+          trackAppEvent(APP_ANALYTICS.APP_LAUNCH, { appId });
         }
         return createdId;
       },

@@ -34,8 +34,8 @@ export function getApiBaseUrl(): string {
 /**
  * Get the full API URL for a given path.
  * Automatically handles Tauri vs web differences.
- * @param path - API path (e.g., "/api/chat")
- * @returns Full URL (e.g., "https://kyo.is/api/chat" in Tauri, "/api/chat" in web)
+ * @param path - API path (e.g., "/api/agent/chat")
+ * @returns Full URL (e.g., "https://kyo.is/api/agent/chat" in Tauri, "/api/agent/chat" in web)
  */
 export function getApiUrl(path: string): string {
   const baseUrl = getApiBaseUrl();

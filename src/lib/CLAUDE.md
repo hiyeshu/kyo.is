@@ -6,8 +6,7 @@
 audioContext.ts: Web Audio API 上下文管理，单例模式，音频处理、合成、分析
 cloudSync.ts: 云端数据层，Supabase 直连 CRUD + 全量拉取/批量上传，被 stores 消费
 i18n.ts: 国际化配置，i18next 初始化，语言检测，导出 SUPPORTED_LANGUAGES/LANGUAGE_LABELS/changeLanguage
-linkMeta.ts: 链接元数据获取，三层缓存（本地 store → Supabase → LinkMeta API），被 usePasteHandler 和 AddWebsiteDialog 消费
-pusherClient.ts: Pusher 客户端单例，WebSocket 连接管理，实时通信
+linkMeta.ts: 链接元数据客户端，三层缓存（本地 store → Worker /api/scrape → link_meta/LinkMeta/DeepSeek），被 usePasteHandler 和 AddWebsiteDialog 消费
 reactResources.ts: React 资源管理，i18next React 集成，Suspense 支持
 supabase.ts: Supabase 客户端单例，浏览器端初始化，被 useAuthStore 和 API 层消费
 utils.ts: 通用工具函数，字符串处理、日期格式化、URL 解析、文件大小格式化
@@ -19,13 +18,12 @@ shaders/ - GLSL 着色器，Three.js 着色器代码，用于屏保和视觉效�
 
 ## 依赖关系
 - 依赖 i18next 国际化库
-- 依赖 Pusher 实时通信库
 - 依赖 Web Audio API
 - 依赖 WebGL API
 - 被所有组件和应用消费
 
 ## 库设计约束
-1. 单例模式：audioContext、pusherClient 必须是单例
+1. 单例模式：audioContext、supabase 客户端必须是单例
 2. 懒加载：i18n 资源必须按需加载，避免打包体积过大
 3. 错误处理：所有 API 调用必须有错误处理和降级方案
 4. 性能优化：WebGL 滤镜必须使用 requestAnimationFrame

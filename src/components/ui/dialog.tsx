@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 @radix-ui/react-dialog、react-i18next、主题 store、音效与震动 hooks
+ * [OUTPUT]: 对外提供 Dialog 组件族，统一系统对话框结构、标题栏、内容区与关闭行为
+ * [POS]: components/ui 的对话框基础设施，被 components/dialogs 与应用弹窗消费
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useTranslation } from "react-i18next";
@@ -146,6 +153,7 @@ const DialogHeader = ({
   const currentTheme = useThemeStore((state) => state.current);
   const isXpTheme = currentTheme === "xp" || currentTheme === "win98";
   const isMacOsxTheme = currentTheme === "macosx";
+  const closeRef = React.useRef<HTMLButtonElement>(null);
 
   if (isXpTheme) {
     return (
@@ -166,8 +174,6 @@ const DialogHeader = ({
 
   if (isMacOsxTheme) {
     const theme = getTheme(currentTheme);
-    // 对话框 close 回调：由 DialogPrimitive.Close 按钮触发
-    const closeRef = React.useRef<HTMLButtonElement>(null);
     return (
       <div
         className={cn(

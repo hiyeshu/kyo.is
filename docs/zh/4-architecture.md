@@ -13,9 +13,9 @@ Kyo 没有路由。没有页面跳转。整个应用就是一个桌面。
 | 样式 | Tailwind CSS v4 + Framer Motion |
 | 状态 | Zustand |
 | 存储 | IndexedDB + LocalStorage |
-| AI | Vercel AI SDK + Dify |
+| AI | Mastra + DeepSeek + typed tools |
 | 音频 | Tone.js + Web Audio API |
-| 部署 | Vercel |
+| 部署 | Cloudflare Workers + Static Assets |
 | 桌面 | Tauri 2.0 |
 
 ## 数据流

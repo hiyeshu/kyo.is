@@ -37,7 +37,7 @@ const DOCK_ICONS = [
 const PASTE_BOOKMARKS = [
   { label: "Linear", icon: "https://linear.app/favicon.ico" },
   { label: "Figma", icon: "https://static.figma.com/app/icon/1/favicon.ico" },
-  { label: "Vercel", icon: "https://vercel.com/favicon.ico" },
+  { label: "Cloudflare", icon: "https://www.cloudflare.com/favicon.ico" },
 ];
 
 // 搜索动画：搜索场景

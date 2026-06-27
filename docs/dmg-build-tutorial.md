@@ -219,29 +219,27 @@ open target/universal-apple-darwin/release/bundle/dmg/
 
 如果你想让用户下载,需要上传到 CDN。
 
-### 7.1 使用 Vercel Blob Storage:
+### 7.1 使用 Cloudflare R2:
 
 ```bash
-# 安装 Vercel CLI (如果还没安装)
-npm i -g vercel
+# 登录 Cloudflare
+wrangler login
 
-# 登录
-vercel login
-
-# 上传 DMG
-vercel blob upload target/universal-apple-darwin/release/bundle/dmg/Kyo_1.0.0_universal.dmg
+# 上传 DMG 到 R2 bucket
+wrangler r2 object put kyo-downloads/releases/Kyo_1.0.0_universal.dmg \
+  --file target/universal-apple-darwin/release/bundle/dmg/Kyo_1.0.0_universal.dmg
 ```
 
-会返回一个 URL,如:
+公开下载 URL 取决于 R2 自定义域配置,如:
 ```
-https://xxx.public.blob.vercel-storage.com/Kyo_1.0.0_universal.dmg
+https://downloads.kyo.is/releases/Kyo_1.0.0_universal.dmg
 ```
 
 ### 7.2 在网站添加下载链接:
 
 在 `kyo.is/download` 页面添加:
 ```html
-<a href="https://xxx.public.blob.vercel-storage.com/Kyo_1.0.0_universal.dmg">
+<a href="https://downloads.kyo.is/releases/Kyo_1.0.0_universal.dmg">
   下载 macOS 版本
 </a>
 ```

@@ -91,7 +91,7 @@ sequenceDiagram
     participant 粘贴 as usePasteHandler
     participant 书签DB as useBookmarkStore
     participant 后端 as /api/scrape
-    participant AI as Dify AI
+    participant AI as DeepSeek
     participant 云端 as Supabase
 
     用户->>用户: 在其他网站复制了一个 URL
@@ -150,8 +150,8 @@ sequenceDiagram
     participant 聊天窗口 as ChatApp
     participant 输入框 as ChatInput
     participant 消息列表 as ChatMessages
-    participant 后端 as /api/chat
-    participant AI平台 as Dify AI
+    participant 后端 as /api/agent/chat
+    participant AI平台 as Mastra + DeepSeek
 
     用户->>输入框: 输入「帮我解释量子计算」
     用户->>输入框: 点击发送按钮
@@ -159,9 +159,9 @@ sequenceDiagram
     输入框->>消息列表: 显示用户消息气泡
     输入框->>输入框: 清空输入框
 
-    输入框->>后端: POST /api/chat<br/>消息内容 + 对话 ID
+    输入框->>后端: POST /api/agent/chat<br/>消息内容 + channelId
 
-    后端->>AI平台: 转发给 Dify AI
+    后端->>AI平台: 调用 Mastra agent，DeepSeek 生成回复
 
     Note over AI平台: AI 开始思考和生成回复...
 
@@ -186,8 +186,8 @@ sequenceDiagram
     actor 用户
     participant 输入框 as ChatInput
     participant 图片处理 as imagePreprocessing
-    participant 后端 as /api/chat
-    participant AI as Dify AI
+    participant 后端 as /api/agent/chat
+    participant AI as Mastra + DeepSeek
 
     用户->>输入框: 点击图片按钮 / 粘贴图片
 

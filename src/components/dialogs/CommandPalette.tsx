@@ -1,5 +1,5 @@
 /**
- * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useBrowserDataStore, useThemeStore, appRegistry, useAppStore, i18n
+ * [INPUT]: cmdk, useBookmarkStore, useStickiesStore, useBrowserDataStore, useThemeStore, appRegistry, useAppStore, i18n, getApiUrl
  * [OUTPUT]: CommandPalette 组件, HighlightText 关键词高亮
  * [POS]: 统一搜索浮层，搜索应用 + 书签 + 便签 + 浏览器原生书签/历史，纯客户端 scoreItem 评分搜索（秒开），
  *        搜索结果根据命中字段展示命中原因 + 全量关键词高亮（加粗+蓝色），浏览器数据与 kyo 书签按 URL 去重，被 AppManager 挂载
@@ -22,6 +22,7 @@ import { MagnifyingGlass, Plus, CopySimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { BookmarkFaviconImg } from "@/components/shared/BookmarkFaviconImg";
 import { scoreItem, getMatchInfo } from "@/utils/searchScore";
+import { getApiUrl } from "@/utils/platform";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useBrowserDataStore, type BrowserBookmark, type BrowserHistoryItem } from "@/stores/useBrowserDataStore";
 
@@ -320,7 +321,7 @@ export function CommandPalette({ isOpen, onOpenChange, initialSearch = "" }: Com
     toast(t("paste.fetchingMeta", "正在获取网页信息..."));
 
     // 异步抓取元数据
-    fetch("/api/scrape", {
+    fetch(getApiUrl("/api/scrape"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),

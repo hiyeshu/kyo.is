@@ -108,7 +108,7 @@ export function AddWebsiteDialog({
       // 成功
       setUrl("");
       onOpenChange(false);
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage("Invalid URL. Please enter a valid website address.");
     } finally {
       setIsLoading(false);

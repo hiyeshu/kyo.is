@@ -1,0 +1,8 @@
+# Copy to .dev.vars locally. In Cloudflare, configure public Supabase values as vars
+# and configure SUPABASE_SERVICE_ROLE_KEY / DEEPSEEK_API_KEY as secrets.
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_publishable_key
+DEEPSEEK_API_KEY=your_deepseek_api_key
+
+# Required only for server-side link_meta cache writes.
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key

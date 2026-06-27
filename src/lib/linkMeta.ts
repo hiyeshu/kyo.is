@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 依赖 @/stores/useLinkMetaStore 本地缓存，依赖 /api/scrape 端点
+ * [INPUT]: 依赖 @/stores/useLinkMetaStore 本地缓存，依赖 getApiUrl 指向 /api/scrape
  * [OUTPUT]: 对外提供 fetchLinkMeta 函数，两层缓存获取 URL 元数据
  * [POS]: lib/ 的链接元数据获取层，被 usePasteHandler 和 AddWebsiteDialog 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
@@ -8,6 +8,7 @@
 import { useLinkMetaStore } from "@/stores/useLinkMetaStore";
 import type { LinkMeta } from "@/types/kyoItem";
 import i18n from "@/lib/i18n";
+import { getApiUrl } from "@/utils/platform";
 
 /**
  * 两层缓存获取 URL 元数据
@@ -24,7 +25,7 @@ export async function fetchLinkMeta(
     return store.get(url)!;
   }
 
-  const res = await fetch("/api/scrape", {
+  const res = await fetch(getApiUrl("/api/scrape"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url, lang: i18n.language }),

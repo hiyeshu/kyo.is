@@ -4,7 +4,9 @@
 
 ```bash
 bun install
-bun run dev:vercel
+cp .dev.vars.example .dev.vars
+bun run dev
+bun run dev:worker
 ```
 
 打开 `http://localhost:5173`。
@@ -12,8 +14,38 @@ bun run dev:vercel
 ## 构建
 
 ```bash
+bun run check:migration
 bun run build
+bun run verify:worker
+bun run test
+bun run types:worker
 ```
+
+`check:migration` 是迁移门禁：检查 Cloudflare Worker 配置、Supabase/DeepSeek 环境变量名、迁移文件、静态资源大小、旧 provider 入口残留。它不会打印密钥值，只报告缺失的变量名。
+
+`types:worker` 从 `.dev.vars.example` 生成 `src/worker/env.d.ts`。改动 Worker binding 或环境变量名后必须重新运行。
+
+`bun run test` 默认验证当前 Cloudflare Worker API：静态资源、SPA fallback、CORS、未授权、输入校验与兼容 API。旧 serverless API、聊天室、歌词、TTS 测试已经不再是生产入口。
+
+## Cloudflare 部署
+
+```bash
+wrangler login
+bun run configure:cloudflare-env
+bun run types:worker
+bun run check:migration
+bun run verify:worker
+bun run test
+bun run deploy:cloudflare
+KYO_BASE_URL=https://kyo.is bun run verify:worker
+```
+
+部署前需要先完成：
+
+- `wrangler login`
+- 本地 `.dev.vars` 或 `.env.local` 包含：`VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY`、`DEEPSEEK_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
+
+`configure:cloudflare-env` 会把这四个变量写入 Cloudflare Worker secret，不打印具体值。
 
 ## 项目结构
 

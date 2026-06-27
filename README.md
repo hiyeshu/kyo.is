@@ -67,7 +67,7 @@ Information doesn't enter your mind through compression and retrieval. It grows 
 
 ### Core Apps
 - 🔖 **Bookmarks** — Pinterest-style board with folders, drag-sort, and cloud sync
-- 💬 **AI Chat** — Powered by Dify, understands your link collection
+- 💬 **AI Chat** — Powered by Mastra + DeepSeek, understands your link collection
 - 📝 **Stickies** — Floating notes on your desktop
 - 📜 **History** — Timeline of all your bookmarks and notes
 - 🎵 **White Noise** — Ambient sounds with spectrum visualization
@@ -94,7 +94,7 @@ Information doesn't enter your mind through compression and retrieval. It grows 
 
 ## Tech Stack
 
-React 19 · TypeScript · Vite · Tailwind CSS · Zustand · Supabase · Dify AI · Vercel
+React 19 · TypeScript · Vite · Tailwind CSS · Zustand · Supabase · Mastra · DeepSeek · Cloudflare Workers
 
 ---
 

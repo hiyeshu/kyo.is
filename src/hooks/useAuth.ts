@@ -1,5 +1,8 @@
 /**
- * [STUB] Auth hook — 聊天系统移除后简化为无操作空壳
+ * [INPUT]: 依赖 react 的 useState
+ * [OUTPUT]: useAuth stub hook，返回旧认证弹窗 API 的空实现
+ * [POS]: hooks/ 的遗留兼容层，保留旧调用方类型契约，不负责 Supabase Auth
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { useState } from "react";

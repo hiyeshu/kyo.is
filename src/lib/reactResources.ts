@@ -25,10 +25,7 @@ const FETCH_RESOURCES: FetchResource[] = [
   { href: "/data/applets.json" },
 ];
 
-const PRECONNECT_RESOURCES = [
-  "https://ws-us3.pusher.com",
-  "https://sockjs-us3.pusher.com",
-];
+const PRECONNECT_RESOURCES: string[] = [];
 
 let primed = false;
 

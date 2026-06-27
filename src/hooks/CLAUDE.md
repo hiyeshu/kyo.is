@@ -5,8 +5,8 @@
 
 useActivityLabel.ts: 活动标签 hook，根据应用状态生成动态标签文本，用于 Dock 菜单显示
 useDeviceScale.ts: 设备缩放 hook，根据屏幕宽度自动设置 --device-scale CSS 变量，三层缩放系统的设备层
-useAudioTranscription.ts: 音频转录 hook，调用 /api/audio-transcribe，支持语音消息转文字，进度回调
-useAuth.ts: 认证 hook，管理用户登录状态、令牌、用户信息，调用 /api/auth 端点
+useAudioTranscription.ts: 音频转录 hook，调用 /api/audio-transcribe；旧 provider 移除后后端返回未配置状态，等待新 STT provider。
+useAuth.ts: 旧认证 hook 兼容壳，返回旧弹窗 API 的空实现；真实登录状态由 Supabase 客户端负责。
 useEventListener.ts: 事件监听 hook，自动清理的 DOM 事件监听器，支持 window/document/element
 useInterval.ts: 定时器 hook，自动清理的 setInterval，支持暂停/恢复
 useIsMobile.ts: 移动端检测 hook，监听窗口宽度变化，返回是否为移动设备（< 768px）

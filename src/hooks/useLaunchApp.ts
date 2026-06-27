@@ -29,7 +29,7 @@ export const useLaunchApp = () => {
     console.log(`[useLaunchApp] Launch event received for ${appId}`, options);
 
     // Convert initialPath to proper initialData (legacy support)
-    let initialData = options?.initialData;
+    const initialData = options?.initialData;
 
     // Kyo only has bookmarks app, no special handling needed
     // All apps use single-window mode by default

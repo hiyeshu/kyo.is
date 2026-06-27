@@ -13,9 +13,9 @@ Navigation means opening and closing windows — the same way you use a computer
 | Styling | Tailwind CSS v4 + Framer Motion |
 | State | Zustand |
 | Storage | IndexedDB + LocalStorage |
-| AI | Vercel AI SDK + Dify |
+| AI | Mastra + DeepSeek + typed tools |
 | Audio | Tone.js + Web Audio API |
-| Deploy | Vercel |
+| Deploy | Cloudflare Workers + Static Assets |
 | Desktop | Tauri 2.0 |
 
 ## Data Flow

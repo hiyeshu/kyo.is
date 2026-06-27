@@ -100,7 +100,7 @@ graph TB
         D1["浏览器本地<br/>localStorage"]
         D2["大文件存储<br/>IndexedDB"]
         D3["云端数据库<br/>Supabase"]
-        D4["后端 API<br/>Vercel 无服务器函数"]
+        D4["后端 API<br/>Cloudflare Worker"]
     end
 
     L5 --> L4
@@ -338,7 +338,7 @@ pie title 支持的语言
 ```mermaid
 graph TB
     subgraph API端点["🔌 后端 API 端点"]
-        ChatAPI["/api/chat<br/>AI 聊天代理"]
+        ChatAPI["/api/agent/chat<br/>Agent 聊天"]
         ScrapeAPI["/api/scrape<br/>网页信息抓取"]
         SaveAPI["/api/save<br/>保存书签/便签"]
         SearchAPI["/api/search<br/>全文搜索"]
@@ -348,19 +348,21 @@ graph TB
     end
 
     subgraph 外部服务["🌍 外部服务"]
-        Dify["Dify AI 平台<br/>聊天 + 摘要生成"]
+        Mastra["Mastra Agent<br/>工具编排"]
+        DeepSeek["DeepSeek<br/>聊天 + 摘要生成"]
         Supabase["Supabase<br/>数据库 + 认证 + 实时推送"]
         Google["Google OAuth<br/>用户登录"]
         LinkMeta["LinkMeta API<br/>网页元数据"]
+        STT["STT Provider<br/>待配置"]
     end
 
-    ChatAPI --> Dify
-    ScrapeAPI --> Dify & LinkMeta
+    ChatAPI --> Mastra --> DeepSeek
+    ScrapeAPI --> DeepSeek & LinkMeta
     SaveAPI --> Supabase
     SearchAPI --> Supabase
     SyncAPI --> Supabase
     ItemsAPI --> Supabase
-    AudioAPI --> Dify
+    AudioAPI -.-> STT
 
     style API端点 fill:#E8EAF6,stroke:#3F51B5
     style 外部服务 fill:#FFF3E0,stroke:#FF9800

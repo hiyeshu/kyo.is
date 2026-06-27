@@ -1,15 +1,10 @@
 #!/usr/bin/env bun
 
 /**
- * Script to extract hardcoded strings from TSX files and generate translation keys
- * 
- * This script scans TSX files for untranslated strings and suggests translation keys.
- * 
- * Usage:
- *   bun run scripts/extract-strings.ts                    # Scan all TSX files
- *   bun run scripts/extract-strings.ts --dir src/apps     # Scan specific directory
- *   bun run scripts/extract-strings.ts --pattern MenuBar  # Scan files matching pattern
- *   bun run scripts/extract-strings.ts --exclude test     # Exclude directories
+ * [INPUT]: 依赖 fs/promises 与 path，扫描 TSX 源文件和命令行过滤参数
+ * [OUTPUT]: 输出硬编码文本候选与建议翻译 key
+ * [POS]: scripts/ 的 i18n 审计工具，被手动执行用于翻译债务清理
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { readdir, readFile } from "fs/promises";
@@ -97,7 +92,7 @@ const IGNORE_DIRS = [
   "node_modules",
   "dist",
   ".git",
-  ".vercel",
+  ".wrangler",
   "dev-dist",
 ];
 
@@ -492,4 +487,3 @@ Examples:
 }
 
 main().catch(console.error);
-

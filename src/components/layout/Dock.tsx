@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 React hooks、stores、appRegistry、主题系统、窗口与书签状态
+ * [OUTPUT]: 对外提供 Dock 组件与桌面/移动端启动栏交互
+ * [POS]: components/layout 的核心导航组件，负责应用启动、窗口切换、书签快捷入口
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 import React, {
   useMemo,
   useRef,
@@ -1483,7 +1490,7 @@ function MacDock() {
       // List existing windows if any
       if (appInstances.length > 0) {
         appInstances.forEach((inst) => {
-          let windowLabel = inst.displayTitle || inst.title || getTranslatedAppName(appId);
+          const windowLabel = inst.displayTitle || inst.title || getTranslatedAppName(appId);
 
           // Kyo only has bookmarks, no special path handling needed
 

@@ -136,7 +136,7 @@ spctl -a -t open --context context:primary-signature -v "$DMG_PATH"
 - 可追踪下载量
 
 **步骤:**
-1. 上传 DMG 到 CDN (如 Vercel Blob Storage)
+1. 上传 DMG 到 Cloudflare R2 或同域 CDN
 2. 在 `kyo.is/download` 提供下载链接
 3. 用户下载后拖入 Applications 文件夹
 
@@ -245,7 +245,7 @@ A: Tauri 内置 Updater,但 Web Shell 架构下不需要:
 | 项目 | 费用 | 说明 |
 |------|------|------|
 | Apple Developer Program | $99/年 | 必需,用于代码签名和公证 |
-| CDN 存储 (Vercel Blob) | ~$0.15/GB/月 | 10MB DMG × 1000 下载 = $0.0015 |
+| CDN 存储 (Cloudflare R2) | 按 R2 存储/请求计费 | 10MB DMG × 1000 下载成本很低 |
 | 总计 | ~$100/年 | 几乎全部是开发者账号费用 |
 
 ## 推荐方案
@@ -255,7 +255,7 @@ A: Tauri 内置 Updater,但 Web Shell 架构下不需要:
 ✅ **网站直接下载 + 代码签名 + 公证**
 
 - 一次性构建 DMG (Web Shell)
-- 上传到 Vercel Blob Storage
+- 上传到 Cloudflare R2
 - 在 kyo.is/download 提供下载
 - 网站更新后,所有用户自动获得最新功能
 - 仅在 Tauri 安全更新时重新分发 DMG (每年 1-2 次)
@@ -264,6 +264,6 @@ A: Tauri 内置 Updater,但 Web Shell 架构下不需要:
 
 1. 运行 `./scripts/build-dmg.sh` 构建第一个 DMG
 2. 测试本地安装和运行
-3. 配置 Vercel Blob Storage 上传
+3. 配置 Cloudflare R2 上传与自定义域
 4. 创建 `/download` 页面
 5. (可选) 提交 Homebrew Cask

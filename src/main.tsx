@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 React 19 的 createRoot，依赖 App 根组件，依赖 lib/i18n 的国际化初始化，依赖 stores/useThemeStore 的主题状态，依赖 utils/prefetch 的资源预加载
- * [OUTPUT]: 对外提供应用入口，React 渲染、i18n 初始化、主题水合、Analytics 集成、资源预加载、错误处理
+ * [OUTPUT]: 对外提供应用入口，React 渲染、i18n 初始化、主题水合、资源预加载、错误处理
  * [POS]: src/ 的入口文件，被 index.html 加载，是整个前端应用的启动点
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -8,7 +8,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./App";
-import { Analytics } from "@vercel/analytics/react";
 import "./styles/design-system.css";
 import "./index.css";
 import { useThemeStore } from "./stores/useThemeStore";
@@ -69,6 +68,5 @@ useThemeStore.getState().hydrate();
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
-    <Analytics />
   </React.StrictMode>
 );

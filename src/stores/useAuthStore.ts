@@ -95,7 +95,7 @@ interface AuthState {
 
 /**
  * 自愈机制：扫描 summary 为空的书签，后台批量补数据。
- * 从 link_meta 缓存回填（秒回）或重新走 Dify（后台完成）。
+ * 从 link_meta 缓存回填（秒回）或重新走 /api/scrape（Worker + DeepSeek 后台完成）。
  */
 async function backfillEmptySummaries() {
   const bookmarks = useBookmarkStore.getState().items;

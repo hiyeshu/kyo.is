@@ -58,7 +58,7 @@ sequenceDiagram
     participant 书签数据库 as useBookmarkStore
     participant 缓存 as useLinkMetaStore
     participant 后端 as /api/scrape
-    participant AI as Dify AI
+    participant AI as DeepSeek
     participant 外部 as LinkMeta API
     participant 云端 as Supabase
 
@@ -467,7 +467,7 @@ graph TB
     end
 
     subgraph 外部服务["🌍 外部服务"]
-        DifyAI["Dify AI<br/>生成摘要和标签"]
+        DeepSeekAI["DeepSeek<br/>生成摘要和标签"]
         LinkMetaAPI["LinkMeta API<br/>抓取网页元数据"]
         SupabaseDB["Supabase<br/>云端数据库"]
         SupabaseRT["Supabase Realtime<br/>实时推送"]
@@ -494,7 +494,7 @@ graph TB
 
     BookmarkStore --> SaveAPI --> SupabaseDB
     StickiesStore --> SaveAPI
-    LinkMetaStore --> ScrapeAPI --> DifyAI & LinkMetaAPI
+    LinkMetaStore --> ScrapeAPI --> DeepSeekAI & LinkMetaAPI
 
     SupabaseRT --> BookmarkStore & StickiesStore
 
