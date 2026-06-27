@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 ./supabase 的可选 service-role Supabase 客户端、./deepseek 的 classifyContent、./types 的 KyoWorkerEnv
- * [OUTPUT]: resolveLinkMeta，提供链接元数据抓取、DeepSeek 摘要打标、link_meta 缓存写入任务
- * [POS]: server/ 的链接摄取边界，被 Cloudflare /api/scrape 路由消费，替代旧摘要流程
+ * [OUTPUT]: resolveLinkMeta，提供可降级链接元数据抓取、DeepSeek 摘要打标、link_meta 缓存写入任务
+ * [POS]: server/ 的链接摄取边界，被 Cloudflare /api/scrape 路由消费，隔离外部元数据供应商故障
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -103,29 +103,25 @@ function fromCacheRow(row: LinkMetaCacheRow): LinkMetaResult | null {
 
 async function fetchLinkMeta(url: string): Promise<LinkMetaResult> {
   const endpoint = `${LINK_META_ENDPOINT}?url=${encodeURIComponent(url)}`;
-  const response = await fetch(endpoint, { signal: AbortSignal.timeout(8_000) });
-  if (!response.ok && ![400, 422, 504].includes(response.status)) {
-    throw new Error(`LinkMeta API error: ${response.status}`);
+  try {
+    const response = await fetch(endpoint, { signal: AbortSignal.timeout(8_000) });
+    if (!response.ok) return fallbackLinkMeta(url);
+
+    const body = (await response.json()) as { data?: LinkMetaApiResponse };
+    const data = body.data ?? {};
+
+    return {
+      ...fallbackLinkMeta(url),
+      title: data.title || siteTitle(url),
+      description: data.description || "",
+      ogImage: data.image,
+      faviconUrl: data.favicon,
+      siteName: data.siteName,
+      themeColor: data.themeColor,
+    };
+  } catch {
+    return fallbackLinkMeta(url);
   }
-
-  const body = response.ok
-    ? ((await response.json()) as { data?: LinkMetaApiResponse })
-    : {};
-  const data = body.data ?? {};
-  const hostname = new URL(url).hostname;
-
-  return {
-    url,
-    title: data.title || hostname,
-    description: data.description || "",
-    ogImage: data.image,
-    faviconUrl: data.favicon,
-    siteName: data.siteName,
-    themeColor: data.themeColor,
-    summary: "",
-    tags: [],
-    fetchedAt: Date.now(),
-  };
 }
 
 async function enrichMeta(
@@ -159,6 +155,21 @@ async function enrichMeta(
 
 function fallbackSummary(base: LinkMetaResult): string {
   return base.summary || base.description.slice(0, 200) || base.title;
+}
+
+function fallbackLinkMeta(url: string): LinkMetaResult {
+  return {
+    url,
+    title: siteTitle(url),
+    description: "",
+    summary: "",
+    tags: [],
+    fetchedAt: Date.now(),
+  };
+}
+
+function siteTitle(url: string): string {
+  return new URL(url).hostname.replace(/^www\./, "");
 }
 
 async function writeCache(client: SupabaseClient, meta: LinkMetaResult): Promise<void> {
