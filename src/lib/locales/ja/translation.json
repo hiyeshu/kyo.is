@@ -2353,6 +2353,7 @@
       "copyMessage": "メッセージをコピー",
       "scrollToBottom": "一番下にスクロール",
       "error": "申し訳ありません、エラーが発生しました。もう一度お試しください。",
+      "loginRequired": "ログインしていないか、セッションの期限が切れています。先にログインしてください。",
       "attachImage": "画像を添付",
       "removeImage": "画像を削除",
       "imageTooLarge": "画像は10MB以下にしてください",

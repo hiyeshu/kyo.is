@@ -2366,6 +2366,7 @@
       "copyMessage": "复制消息",
       "scrollToBottom": "滚动到底部",
       "error": "抱歉，发生了错误，请重试。",
+      "loginRequired": "未登录或登录已过期，请先登录。",
       "attachImage": "添加图片",
       "removeImage": "移除图片",
       "imageTooLarge": "图片不能超过 10MB",

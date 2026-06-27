@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 react hooks、Supabase auth、getApiUrl、../../base/types 的 AppProps
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，管理 channelId、历史消息、图片附件、autoSend
+ * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，解析 0/d/3 流帧并管理 channelId、历史消息、图片附件、autoSend
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -32,6 +32,8 @@ interface ApiMessage {
   content: string;
   created_at?: string;
 }
+
+const UNAUTHORIZED = "Unauthorized";
 
 // ============================================================================
 // 主组件
@@ -220,7 +222,7 @@ export function ChatAppComponent({
       try {
         const session = (await supabase.auth.getSession()).data.session;
         if (!session?.access_token) {
-          throw new Error("Unauthorized");
+          throw new Error(UNAUTHORIZED);
         }
 
         const response = await fetch(getApiUrl("/api/agent/chat"), {
@@ -246,9 +248,7 @@ export function ChatAppComponent({
         });
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error("[Chat] Error response:", errorText);
-          throw new Error(`API error: ${response.status}`);
+          throw new Error(await readApiError(response));
         }
 
         const reader = response.body?.getReader();
@@ -302,6 +302,11 @@ export function ChatAppComponent({
             } catch {
               // 忽略解析错误
             }
+            return;
+          }
+
+          if (line.startsWith("3:")) {
+            throw new Error(readStreamError(line));
           }
         };
 
@@ -322,6 +327,11 @@ export function ChatAppComponent({
           // 用户取消
         } else {
           console.error("Chat error:", error);
+          const content = getChatErrorMessage(
+            error,
+            t("apps.chat.error", "抱歉，发生了错误，请重试。"),
+            t("apps.chat.loginRequired", "未登录或登录已过期，请先登录。")
+          );
           const errorTimestamp = Date.now();
           if (!hasAddedMessage) {
             setMessages((prev) => [
@@ -329,7 +339,7 @@ export function ChatAppComponent({
               {
                 id: assistantMessageId,
                 role: "assistant",
-                content: t("apps.chat.error", "抱歉，发生了错误，请重试。"),
+                content,
                 timestamp: errorTimestamp,
               },
             ]);
@@ -339,10 +349,7 @@ export function ChatAppComponent({
                 m.id === assistantMessageId
                   ? {
                       ...m,
-                      content: t(
-                        "apps.chat.error",
-                        "抱歉，发生了错误，请重试。"
-                      ),
+                      content,
                     }
                   : m
               )
@@ -509,4 +516,34 @@ function toUiMessage(message: ApiMessage): Message[] {
       timestamp: message.created_at ? new Date(message.created_at).getTime() : undefined,
     },
   ];
+}
+
+async function readApiError(response: Response): Promise<string> {
+  const text = await response.text();
+  try {
+    const data = JSON.parse(text) as { error?: string };
+    return data.error ?? `API error: ${response.status}`;
+  } catch {
+    return text || `API error: ${response.status}`;
+  }
+}
+
+function readStreamError(line: string): string {
+  try {
+    return JSON.parse(line.slice(2));
+  } catch {
+    return "Agent stream failed";
+  }
+}
+
+function getChatErrorMessage(
+  error: unknown,
+  fallback: string,
+  loginRequired: string
+): string {
+  if (!(error instanceof Error)) return fallback;
+  if (error.message === UNAUTHORIZED || error.message.includes("401")) {
+    return loginRequired;
+  }
+  return error.message || fallback;
 }
