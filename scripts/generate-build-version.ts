@@ -1,9 +1,8 @@
 /**
- * Generates a version.json file with build information
- * Format: MAJOR.MINOR.PATCH (e.g., 1.0.1) + commit SHA
- *
- * Version is auto-incremented by pre-commit hook (scripts/bump-patch.sh).
- * Uses VERCEL_GIT_COMMIT_SHA in production builds, falls back to 'dev' locally.
+ * [INPUT]: 依赖 git rev-parse 与 WORKERS_CI_COMMIT_SHA / VERCEL_GIT_COMMIT_SHA 环境变量。
+ * [OUTPUT]: 写入 public/version.json，提供 MAJOR.MINOR.PATCH、短提交号与构建时间。
+ * [POS]: scripts/ 的版本写入器，被 prebuild 与发布流水线调用。
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { writeFileSync } from 'fs';
@@ -16,14 +15,15 @@ import { fileURLToPath } from 'url';
 // ============================================================================
 const MAJOR = 1;
 const MINOR = 1;
-const PATCH = 82;
+const PATCH = 83;
 // ============================================================================
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicVersionPath = join(__dirname, '../public/version.json');
 
 // Get commit SHA from environment or git
-let commitSha = process.env.VERCEL_GIT_COMMIT_SHA || '';
+let commitSha =
+  process.env.WORKERS_CI_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || '';
 
 if (!commitSha) {
   try {

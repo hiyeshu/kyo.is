@@ -6,6 +6,7 @@ build-tauri.ts: Tauri 桌面构建入口，设置 TAURI_ENV 后执行 TypeScript
 check-migration-readiness.ts: Cloudflare/Supabase/Mastra 迁移门禁，检查配置、env 名称、RLS/函数迁移、agent 工具契约测试、资产大小和遗留入口。
 configure-cloudflare-env.ts: Cloudflare Worker 环境配置器，从 .dev.vars/.env.local 读取变量并通过 wrangler secret put 写入，不打印密钥值。
 extract-strings.ts: i18n 审计工具，扫描 TSX 硬编码文本并建议翻译 key。
+generate-build-version.ts: 版本写入器，从 Workers CI / Vercel / git 提取提交号，写入 public/version.json。
 verify-worker-smoke.ts: Worker smoke 验证器，检查静态入口、SPA fallback、API 鉴权、CORS，可用 KYO_BASE_URL 指向远端。
 其余 generate/test/build 脚本: 项目资产、文档、图标、测试与发布辅助工具，按 package.json scripts 调用。
 

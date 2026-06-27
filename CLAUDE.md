@@ -122,6 +122,7 @@ Worker smoke 验证: bun run verify:worker 或 KYO_BASE_URL=https://kyo.is bun r
 Worker 类型生成: bun run types:worker
 Cloudflare 预览: bun run preview:cloudflare
 Cloudflare 部署: bun run deploy:cloudflare
+发布边界: Cloudflare Worker `kyo-is` 已绑定 `kyo.is` / `www.kyo.is`；Workers Builds/Git trigger 未配置，推送 main 不会自动部署
 预览: bun run preview
 测试: bun run test (默认验证 Mastra 工具契约与 Cloudflare Worker API)
 Lint: bun run lint
