@@ -21,7 +21,7 @@ supabase/ - 数据库迁移、RLS 策略与函数安全边界 (kyo_items、link_
 src-tauri/ - Tauri 桌面应用配置 (Rust 后端)
 extension/ - Chrome Extension (Manifest V3, 新标签页 + 一键收藏 + 云同步)
 scripts/ - 构建与开发脚本 (图标生成、文档生成、i18n 工具)
-tests/ - Worker API 黑盒测试 (静态资源、CORS、鉴权、兼容 API)
+tests/ - Agent 工具契约 + Worker API 黑盒测试 (Mastra typed tools、静态资源、CORS、鉴权、兼容 API)
 docs/ - 项目文档 (架构、API 参考、开发指南)
 </directory>
 
@@ -121,7 +121,7 @@ Worker 类型生成: bun run types:worker
 Cloudflare 预览: bun run preview:cloudflare
 Cloudflare 部署: bun run deploy:cloudflare
 预览: bun run preview
-测试: bun run test (默认验证 Cloudflare Worker API)
+测试: bun run test (默认验证 Mastra 工具契约与 Cloudflare Worker API)
 Lint: bun run lint
 桌面应用: bun run tauri:dev / bun run tauri:build
 国际化: bun run i18n:extract → i18n:sync → i18n:translate

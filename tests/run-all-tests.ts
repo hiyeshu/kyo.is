@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 /**
- * [INPUT]: 依赖 ./test-worker-api 与 ./test-utils 的 BASE_URL
- * [OUTPUT]: 默认运行当前 Cloudflare Worker API 测试套件，失败时 exit 1
+ * [INPUT]: 依赖 ./test-kyo-item-tools、./test-worker-api 与 ./test-utils 的 BASE_URL
+ * [OUTPUT]: 默认运行 Mastra 工具契约 + Cloudflare Worker API 测试套件，失败时 exit 1
  * [POS]: tests/ 的统一入口，被 package.json test / test:api 调用
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
+import { runKyoItemToolTests } from "./test-kyo-item-tools";
 import { runWorkerApiTests } from "./test-worker-api";
 import { BASE_URL } from "./test-utils";
 
@@ -15,7 +16,10 @@ type TestSuiteResult = {
   failed: number;
 };
 
-const suites = [{ name: "worker-api", run: runWorkerApiTests }];
+const suites = [
+  { name: "kyo-item-tools", run: runKyoItemToolTests },
+  { name: "worker-api", run: runWorkerApiTests },
+];
 
 async function main(): Promise<void> {
   const selected = process.argv[2];

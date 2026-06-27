@@ -1863,6 +1863,7 @@
       "editBookmark": "북마크 편집",
       "openInNewTab": "새 탭에서 열기",
       "addToDock": "Dock에 추가",
+      "sortManual": "수동 정렬",
       "sortByName": "이름순 정렬",
       "sortByRecent": "최근 사용순 정렬",
       "groupByDomain": "도메인별 그룹",

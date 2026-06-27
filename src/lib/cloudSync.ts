@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 @/lib/supabase 客户端
  * [OUTPUT]: 对外提供 cloud* 系列函数 — 书签/便签的云端 CRUD + 全量拉取/上传
- * [POS]: lib/ 的云端数据层，被 useBookmarkStore / useStickiesStore / useSyncStore 消费
+ * [POS]: lib/ 的云端数据层，被 useBookmarkStore / useStickiesStore / useSyncStore 消费，保留 order_index 排序真相
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -64,6 +64,7 @@ export interface CloudBookmarkRaw {
   tags: string[] | null;
   on_desktop: boolean | null;
   in_dock: boolean | null;
+  order_index: number | null;
   created_at: string;
   updated_at: string | null;
 }
@@ -74,6 +75,7 @@ export interface CloudNoteRaw {
   color: string | null;
   tags: string[] | null;
   on_desktop: boolean | null;
+  order_index: number | null;
   created_at: string;
   updated_at: string | null;
 }
@@ -90,6 +92,7 @@ export async function cloudFetchAll(): Promise<CloudFetchResult | null> {
   const { data, error } = await supabase
     .from("kyo_items")
     .select("*")
+    .order("order_index", { ascending: true })
     .order("created_at", { ascending: true });
 
   if (error || !data) {

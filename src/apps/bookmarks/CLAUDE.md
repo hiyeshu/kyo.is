@@ -9,16 +9,16 @@ metadata.ts: 应用元数据，版本、名称、图标、帮助项
 
 ### 子目录模块
 components/ - 应用组件
-  BookmarkBoardApp.tsx: 书签应用主界面，卡片网格布局、搜索、拖拽排序
+  BookmarkBoardApp.tsx: 书签应用主界面，卡片网格布局、搜索、手动/名称/最近使用排序
   BookmarkBoardMenuBar.tsx: 应用菜单栏，文件/编辑/视图/帮助菜单
   IconPicker.tsx: 图标选择器，三种模式（Auto/Upload/Emoji），使用设计系统 Tabs
   BookmarkIconDisplay.tsx: 图标渲染组件，使用 getBookmarkIconInfo 单一真相源
 hooks/ - 应用 hooks
-  useBookmarkBoard.ts: 书签业务逻辑，CRUD、搜索、拖拽、图标编辑、/api/scrape 链接摘要更新
+  useBookmarkBoard.ts: 书签业务逻辑，CRUD、搜索、orderIndex 手动排序、图标编辑、/api/scrape 链接摘要更新
 
 ## 应用功能
 - 空间书签管理，类似 Pinterest 的卡片布局
-- 支持文件夹分类、拖拽排序
+- 支持文件夹分类、拖拽排序，手动顺序由 orderIndex 持久化
 - 支持搜索、过滤
 - 三种图标模式：Auto（自动获取）、Upload（自定义上传）、Emoji（符号选择）
 - 自定义图标直接存 base64 在 bookmark 对象里（便于账号同步）
@@ -45,6 +45,7 @@ interface Bookmark {
   id: string;
   title: string;
   url: string;
+  orderIndex: number;
   favicon?: string; // 兼容旧数据
   icon?: BookmarkIcon; // 新的图标配置
 }

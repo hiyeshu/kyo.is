@@ -1876,6 +1876,7 @@
       "editBookmark": "编辑书签",
       "openInNewTab": "在新分页开启",
       "addToDock": "加入 Dock",
+      "sortManual": "手动排序",
       "sortByName": "按名称排序",
       "sortByRecent": "按最近使用排序",
       "groupByDomain": "按域名聚合",

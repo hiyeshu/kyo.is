@@ -264,8 +264,9 @@ export function BookmarkBoardApp({
         {
           type: "radioGroup",
           value: h.sortMode,
-          onChange: (val) => { h.setSortMode(val as "recent" | "name"); h.closeContextMenu(); },
+          onChange: (val) => { h.setSortMode(val as "manual" | "recent" | "name"); h.closeContextMenu(); },
           items: [
+            { label: t("apps.bookmarks.sortManual", "手动排序"), value: "manual" },
             { label: t("apps.bookmarks.sortByName", "按名称排序"), value: "name" },
             { label: t("apps.bookmarks.sortByRecent", "按最近使用排序"), value: "recent" },
           ],

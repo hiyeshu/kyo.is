@@ -3,7 +3,7 @@
  *          依赖 useBookmarkStore/useStickiesStore 本地数据
  * [OUTPUT]: 对外提供 useSyncStore — initialSync / startRealtime / stopRealtime
  *           对外提供 markLocalChange / trackDeletion（被 bookmark/stickies store 消费）
- * [POS]: stores/ 的云端数据层，登录时双向 merge + Realtime 实时同步
+ * [POS]: stores/ 的云端数据层，登录时双向 merge + Realtime 实时同步，维护 orderIndex 排序同构
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -46,6 +46,7 @@ function cloudRowToBookmark(row: Record<string, unknown>): Bookmark {
     updatedAt: (row.updated_at as string) || (row.created_at as string),
     onDesktop: (row.on_desktop as boolean) || false,
     inDock: (row.in_dock as boolean) || false,
+    orderIndex: Number(row.order_index ?? 0),
   };
 }
 
@@ -60,6 +61,7 @@ function cloudRowToNote(row: Record<string, unknown>, index = 0): StickyNote {
     onDesktop: (row.on_desktop as boolean) || false,
     position: { x: 100 + col * 240 + rowIdx * 30, y: 100 + rowIdx * 30 },
     size: { width: 220, height: 240 },
+    orderIndex: Number(row.order_index ?? index),
     createdAt: new Date(row.created_at as string).getTime(),
     updatedAt: new Date((row.updated_at as string) || (row.created_at as string)).getTime(),
   };
@@ -78,6 +80,7 @@ function bookmarkToCloudRow(b: Bookmark): Record<string, unknown> {
     tags: b.tags || [],
     on_desktop: b.onDesktop || false,
     in_dock: b.inDock || false,
+    order_index: b.orderIndex ?? 0,
     created_at: b.createdAt || new Date().toISOString(),
     updated_at: b.updatedAt || b.createdAt || new Date().toISOString(),
   };
@@ -91,6 +94,7 @@ function noteToCloudRow(n: StickyNote): Record<string, unknown> {
     color: n.color,
     tags: n.tags || [],
     on_desktop: n.onDesktop || false,
+    order_index: n.orderIndex ?? 0,
     created_at: new Date(n.createdAt).toISOString(),
     updated_at: new Date(n.updatedAt).toISOString(),
   };
@@ -270,8 +274,8 @@ export const useSyncStore = create<SyncState>((set) => ({
       }
 
       // ── 应用合并结果 ───────────────────────────────────────────────
-      useBookmarkStore.setState({ items: mergedBookmarks });
-      useStickiesStore.setState({ notes: mergedNotes });
+      useBookmarkStore.setState({ items: sortByOrderIndex(mergedBookmarks) });
+      useStickiesStore.setState({ notes: sortByOrderIndex(mergedNotes) });
 
       // ── 回写云端（本地独有 / 本地更新的条目） ──────────────────────
       for (const item of toUpsert) {
@@ -358,14 +362,14 @@ function handleBookmarkChange(
     const exists = store.items.some((b) => b.id === newRow.id);
     if (!exists) {
       useBookmarkStore.setState({
-        items: [...store.items, cloudRowToBookmark(newRow)],
+        items: sortByOrderIndex([...store.items, cloudRowToBookmark(newRow)]),
       });
     }
   } else if (event === "UPDATE" && newRow) {
     useBookmarkStore.setState({
-      items: store.items.map((b) =>
+      items: sortByOrderIndex(store.items.map((b) =>
         b.id === newRow.id ? { ...b, ...cloudRowToBookmark(newRow) } : b
-      ),
+      )),
     });
   } else if (event === "DELETE" && oldRow) {
     useBookmarkStore.setState({
@@ -386,20 +390,28 @@ function handleNoteChange(
     if (!exists) {
       const index = store.notes.length;
       useStickiesStore.setState({
-        notes: [...store.notes, cloudRowToNote(newRow, index)],
+        notes: sortByOrderIndex([...store.notes, cloudRowToNote(newRow, index)]),
       });
     }
   } else if (event === "UPDATE" && newRow) {
     useStickiesStore.setState({
-      notes: store.notes.map((n) =>
+      notes: sortByOrderIndex(store.notes.map((n) =>
         n.id === newRow.id
           ? { ...n, ...cloudRowToNote(newRow), position: n.position, size: n.size }
           : n
-      ),
+      )),
     });
   } else if (event === "DELETE" && oldRow) {
     useStickiesStore.setState({
       notes: store.notes.filter((n) => n.id !== oldRow.id),
     });
   }
+}
+
+function sortByOrderIndex<T extends { orderIndex?: number; createdAt?: string | number }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const order = (a.orderIndex ?? 0) - (b.orderIndex ?? 0);
+    if (order !== 0) return order;
+    return String(a.createdAt ?? "").localeCompare(String(b.createdAt ?? ""));
+  });
 }

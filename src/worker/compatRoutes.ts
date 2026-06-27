@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 ../server/http/supabase/linkMeta/types 与 Supabase user-scoped client
- * [OUTPUT]: 旧 /api/* 的 Cloudflare Worker 兼容处理函数，承接 scrape、preview、items、sync
+ * [OUTPUT]: 旧 /api/* 的 Cloudflare Worker 兼容处理函数，承接 scrape、preview、items、sync，并保留 orderIndex 排序字段
  * [POS]: worker/ 的兼容路由层，把旧 API 职责收束进 Worker，避免生产入口分裂
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -29,6 +29,7 @@ interface SavePayload extends Record<string, unknown> {
   tags?: string[];
   onDesktop?: boolean;
   inDock?: boolean;
+  orderIndex?: number;
 }
 
 interface SyncPayload {
@@ -226,6 +227,7 @@ function toItemInsert(userId: string, body: SavePayload): Record<string, unknown
     tags: body.tags || [],
     on_desktop: body.onDesktop || false,
     in_dock: body.inDock || false,
+    order_index: body.orderIndex ?? 0,
   };
 }
 
@@ -251,7 +253,8 @@ async function readSync(auth: AuthContext): Promise<Response> {
     .from("kyo_items")
     .select("*")
     .eq("user_id", auth.userId)
-    .order("created_at", { ascending: false });
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: true });
   if (error) throw error;
 
   const items = data ?? [];
@@ -288,6 +291,7 @@ function toBookmark(item: Record<string, unknown>) {
     tags: item.tags || [],
     favicon: item.favicon || "",
     createdAt: item.created_at,
+    orderIndex: item.order_index ?? 0,
     onDesktop: item.on_desktop || false,
   };
 }
@@ -299,6 +303,7 @@ function toNote(item: Record<string, unknown>) {
     color: item.color || "yellow",
     tags: item.tags || [],
     onDesktop: item.on_desktop || false,
+    orderIndex: item.order_index ?? 0,
     createdAt: new Date(String(item.created_at)).getTime(),
     updatedAt: new Date(String(item.updated_at || item.created_at)).getTime(),
   };
@@ -315,6 +320,7 @@ function toBookmarkInsert(userId: string, bookmark: Record<string, unknown>) {
     tags: bookmark.tags || [],
     on_desktop: bookmark.onDesktop || false,
     in_dock: bookmark.inDock || false,
+    order_index: bookmark.orderIndex ?? 0,
     created_at: bookmark.createdAt || new Date().toISOString(),
   };
 }
@@ -327,6 +333,7 @@ function toNoteInsert(userId: string, note: Record<string, unknown>) {
     color: note.color || "yellow",
     tags: note.tags || [],
     on_desktop: note.onDesktop || false,
+    order_index: note.orderIndex ?? 0,
     created_at: numberToDate(note.createdAt),
     updated_at: numberToDate(note.updatedAt),
   };
@@ -349,6 +356,8 @@ function toItemUpdate(body: Record<string, unknown>): Record<string, unknown> {
     inDock: "in_dock",
     on_desktop: "on_desktop",
     in_dock: "in_dock",
+    orderIndex: "order_index",
+    order_index: "order_index",
   };
 
   return Object.fromEntries(

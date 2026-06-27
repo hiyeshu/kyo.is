@@ -8,7 +8,13 @@
 import { Agent } from "@mastra/core/agent";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClassifyContentTool } from "../tools/classifyContentTool";
-import { createSearchKyoItemsTool, createUpsertKyoItemTool } from "../tools/kyoItemsTool";
+import {
+  createDeleteKyoItemTool,
+  createReorderKyoItemsTool,
+  createSearchKyoItemsTool,
+  createUpdateKyoItemTool,
+  createUpsertKyoItemTool,
+} from "../tools/kyoItemsTool";
 import {
   createReadWorkspaceFileTool,
   createWriteWorkspaceFileTool,
@@ -32,6 +38,9 @@ export function createKyoAgent(context: KyoAgentContext) {
       "Operate only inside the current user's channel and workspace.",
       "Use tools for all persistent changes. Never invent that a save succeeded.",
       "When saving a URL or note, classify it first, then write it with upsert-kyo-item.",
+      "Before renaming, retagging, deleting, or reordering existing items, search for the target item and use its exact id.",
+      "Use update-kyo-item for rename, tags, note text, color, desktop pin, dock pin, and order index changes.",
+      "Use delete-kyo-item for deletion and reorder-kyo-items for explicit user-defined ordering.",
       "For file work, use read-workspace-file and write-workspace-file only.",
       "Keep replies concise and mention the concrete action you took.",
     ].join("\n"),
@@ -44,6 +53,9 @@ export function createKyoAgent(context: KyoAgentContext) {
       classifyContentTool: createClassifyContentTool(context),
       searchKyoItemsTool: createSearchKyoItemsTool(context),
       upsertKyoItemTool: createUpsertKyoItemTool(context),
+      updateKyoItemTool: createUpdateKyoItemTool(context),
+      deleteKyoItemTool: createDeleteKyoItemTool(context),
+      reorderKyoItemsTool: createReorderKyoItemsTool(context),
       readWorkspaceFileTool: createReadWorkspaceFileTool(context),
       writeWorkspaceFileTool: createWriteWorkspaceFileTool(context),
     },

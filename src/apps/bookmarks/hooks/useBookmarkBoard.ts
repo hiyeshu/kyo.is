@@ -1,7 +1,7 @@
 /**
   * [INPUT]: useBookmarkStore, useThemeStore, useLinkMetaStore, useToast, getApiUrl, extractFirstUrl, useTranslation
   * [OUTPUT]: useBookmarkBoard hook
-  * [POS]: bookmarks 的全部业务逻辑，被 BookmarkBoardApp 消费
+  * [POS]: bookmarks 的全部业务逻辑，被 BookmarkBoardApp 消费，manual 排序以 orderIndex 为真相源
   * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
   */
 
@@ -58,7 +58,9 @@ export function useBookmarkBoard() {
   // ─── 排序后的列表 ──────────────────────────────────────────────────────────
   const sortedItems = useMemo(() => {
     const list = [...filteredItems];
-    if (store.sortMode === "name") {
+    if (store.sortMode === "manual") {
+      list.sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+    } else if (store.sortMode === "name") {
       list.sort((a, b) => a.title.localeCompare(b.title));
     } else {
       // "recent": lastUsed 优先，没有 lastUsed 的按 createdAt 降序
@@ -242,10 +244,13 @@ export function useBookmarkBoard() {
     setDragOverIndex(null);
     if (!draggedItem) return;
     if (draggedItem.index !== toIndex) {
-      store.reorderItems(draggedItem.index, toIndex);
+      const visibleItems = [...sortedItems];
+      const [moved] = visibleItems.splice(draggedItem.index, 1);
+      visibleItems.splice(toIndex, 0, moved);
+      store.reorderItemsByIds(visibleItems.map((item) => item.id));
     }
     setDraggedItem(null);
-  }, [draggedItem, store]);
+  }, [draggedItem, sortedItems, store]);
 
   const handleDragEnd = useCallback(() => {
     setDraggedItem(null);

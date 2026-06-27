@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 zustand create 与 persist 中间件，依赖浏览器 crypto，依赖 @/lib/cloudSync 云端写入
  * [OUTPUT]: 对外提供 useStickiesStore、StickyColor、StickyNote 类型
- * [POS]: stores/ 中便利贴状态中心，被 stickies 应用与聊天工具消费，每次变更同步写云端
+ * [POS]: stores/ 中便利贴状态中心，管理内容/颜色/orderIndex，被 stickies 应用与聊天工具消费，每次变更同步写云端
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -30,6 +30,7 @@ export interface StickyNote {
   onDesktop: boolean;
   position: { x: number; y: number };
   size: { width: number; height: number };
+  orderIndex: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -74,6 +75,7 @@ function createWelcomeNote(): StickyNote {
     onDesktop: true,
     position: { x: 340, y: 80 },
     size: DEFAULT_NOTE_SIZE,
+    orderIndex: 0,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -89,6 +91,7 @@ function noteToCloud(n: StickyNote) {
     color: n.color,
     tags: n.tags || [],
     on_desktop: n.onDesktop || false,
+    order_index: n.orderIndex ?? 0,
     created_at: new Date(n.createdAt).toISOString(),
     updated_at: new Date(n.updatedAt).toISOString(),
   };
@@ -99,6 +102,7 @@ const NOTE_FIELD_MAP: Record<string, string> = {
   color: "color",
   tags: "tags",
   onDesktop: "on_desktop",
+  orderIndex: "order_index",
 };
 
 // ─── 内容同步 debounce（500ms，避免每次按键都写云端） ─────────────────────────
@@ -177,6 +181,7 @@ export const useStickiesStore = create<StickiesState>()(
           onDesktop,
           position: getNextPosition(existingNotes, anchorId),
           size: DEFAULT_NOTE_SIZE,
+          orderIndex: existingNotes.length,
           createdAt: now,
           updatedAt: now,
         };
@@ -223,12 +228,24 @@ export const useStickiesStore = create<StickiesState>()(
         const { notes } = get();
         const noteIndex = notes.findIndex((n) => n.id === id);
         if (noteIndex === -1 || noteIndex === notes.length - 1) return;
+        const now = Date.now();
+        let reordered: StickyNote[] = [];
 
         set((state) => {
           const newNotes = [...state.notes];
           const [note] = newNotes.splice(noteIndex, 1);
           newNotes.push(note);
-          return { notes: newNotes };
+          reordered = newNotes.map((item, orderIndex) => ({
+            ...item,
+            orderIndex,
+            updatedAt: now,
+          }));
+          return { notes: reordered };
+        });
+
+        reordered.forEach((note) => {
+          markLocalChange(note.id);
+          cloudUpsertItem(noteToCloud(note));
         });
       },
 
@@ -242,7 +259,7 @@ export const useStickiesStore = create<StickiesState>()(
     }),
     {
       name: "kyo:stickies-store",
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as { notes?: StickyNote[] };
         if (version < 2 && state.notes) {
@@ -252,6 +269,10 @@ export const useStickiesStore = create<StickiesState>()(
         if (version < 3 && state.notes) {
           // v2 → v3: 添加 onDesktop 字段
           state.notes = state.notes.map((n) => ({ ...n, onDesktop: n.onDesktop ?? false }));
+        }
+        if (version < 4 && state.notes) {
+          // v3 → v4: 添加 orderIndex 字段
+          state.notes = state.notes.map((n, orderIndex) => ({ ...n, orderIndex: n.orderIndex ?? orderIndex }));
         }
         return state as StickiesState;
       },

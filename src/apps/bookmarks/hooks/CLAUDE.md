@@ -3,7 +3,7 @@
 
 ## 成员清单
 
-useBookmarkBoard.ts: 书签管理 hook，封装书签 CRUD、搜索过滤、拖拽排序、导入导出、/api/scrape 链接摘要更新。
+useBookmarkBoard.ts: 书签管理 hook，封装书签 CRUD、搜索过滤、orderIndex 手动排序、导入导出、/api/scrape 链接摘要更新。
 
 ## 依赖关系
 - 依赖 @/stores/useBookmarkStore 书签状态
@@ -14,7 +14,7 @@ useBookmarkBoard.ts: 书签管理 hook，封装书签 CRUD、搜索过滤、拖�
 ## Hook 约束
 1. 书签数据持久化到 localStorage
 2. 搜索支持防抖，避免频繁过滤
-3. 拖拽排序实时更新状态
+3. 拖拽排序实时更新状态并切换到 manual 排序模式
 4. 导入支持浏览器书签格式（HTML）
 5. 导出支持 JSON 和 HTML 格式
 6. 书签 ID 使用 UUID 生成

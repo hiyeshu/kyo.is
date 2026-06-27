@@ -12,11 +12,7 @@ ko/ - 韩语翻译文件（한국어）
 
 ## 文件结构
 每个语言目录包含：
-- common.json: 通用翻译（按钮、标签、提示）
-- apps.json: 应用名称和描述
-- menus.json: 菜单项翻译
-- dialogs.json: 对话框文本
-- errors.json: 错误消息
+- translation.json: 单文件翻译真相源，覆盖 common/apps/menus/dialogs/errors 等命名空间
 
 ## 依赖关系
 - 被 lib/i18n.ts 加载
