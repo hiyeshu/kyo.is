@@ -17,6 +17,8 @@ type SmokeCheck = {
   expectHeader?: [string, string];
 };
 
+const REQUEST_TIMEOUT_MS = 10_000;
+
 const checks: SmokeCheck[] = [
   { name: "root asset", path: "/", expectedStatus: 200 },
   { name: "docs html", path: "/docs/overview", expectedStatus: 200 },
@@ -61,12 +63,15 @@ async function main() {
 }
 
 async function runCheck(check: SmokeCheck): Promise<{ ok: boolean; detail: string }> {
+  let response: Response | null = null;
   try {
-    const response = await fetch(`${baseUrl}${check.path}`, {
+    const signal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+    response = await fetch(`${baseUrl}${check.path}`, {
       method: check.method ?? "GET",
       headers: check.body ? { "Content-Type": "application/json" } : undefined,
       body: check.body ? JSON.stringify(check.body) : undefined,
       redirect: "manual",
+      signal,
     });
 
     if (response.status !== check.expectedStatus) {
@@ -85,6 +90,8 @@ async function runCheck(check: SmokeCheck): Promise<{ ok: boolean; detail: strin
   } catch (error) {
     const message = error instanceof Error ? error.message : "request failed";
     return { ok: false, detail: message };
+  } finally {
+    await response?.body?.cancel().catch(() => undefined);
   }
 }
 
