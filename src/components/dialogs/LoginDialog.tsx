@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 @/components/ui/dialog、@/stores/useThemeStore、@/stores/useAuthStore、react-i18next
  * [OUTPUT]: 对外提供 LoginDialog 组件，Google OAuth 登录弹窗
- * [POS]: components/dialogs 的登录弹窗，被 AppleMenu 消费
+ * [POS]: components/dialogs 的登录弹窗，被 AppleMenu 与 ChatApp 消费
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 

@@ -11,7 +11,7 @@ CommandPalette.tsx: 统一搜索浮层，搜索应用 + 书签，URL 结果通�
 ConfirmDialog.tsx: 确认对话框，通用确认弹窗，支持自定义标题、内容、按钮
 HelpDialog.tsx: 帮助对话框，显示应用帮助文档、快捷键、使用指南
 InputDialog.tsx: 输入对话框，通用输入弹窗，支持文本输入、验证
-LoginDialog.tsx: 登录对话框，用户登录界面，用户名密码输入、注册链接
+LoginDialog.tsx: 登录对话框，Google OAuth 入口，被 AppleMenu 与 ChatApp 消费
 LogoutDialog.tsx: 登出对话框，确认登出、清除会话
 ShareItemDialog.tsx: 分享对话框，生成分享链接、二维码、社交分享
 
