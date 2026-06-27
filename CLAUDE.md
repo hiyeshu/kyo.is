@@ -3,6 +3,7 @@
 React 19 + TypeScript + Vite + Tailwind CSS + Zustand + Cloudflare Workers + Mastra + DeepSeek + Supabase + Tauri
 
 <directory>
+.github/ - GitHub Actions 自动化入口 (1 子目录: workflows)
 src/ - 前端与 Worker 源码 (12 子目录: apps, components, config, hooks, lib, mastra, server, stores, styles, types, utils, worker)
   apps/ - 应用模块，每个应用独立目录 (bookmark-board, chat, finder, textedit, macpaint...)
   components/ - 共享 React 组件 (4 子目录: ui, layout, shared, dialogs)
@@ -26,6 +27,7 @@ docs/ - 项目文档 (架构、API 参考、开发指南)
 </directory>
 
 <config>
+.github/workflows/deploy-cloudflare.yml - main 分支到 Cloudflare Worker 的自动部署流水线
 package.json - 依赖管理，Bun 1.3.5，React 19，Cloudflare/Mastra 脚本命令
 bun.lock - Bun 依赖锁文件，唯一锁文件真相源
 .gitignore - 忽略依赖、构建产物、Cloudflare 本地缓存、密钥文件
