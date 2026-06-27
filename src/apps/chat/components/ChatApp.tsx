@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 react hooks、Supabase auth、getApiUrl、../../base/types 的 AppProps
+ * [INPUT]: 依赖 react hooks、Supabase auth、LoginDialog、getApiUrl、../../base/types 的 AppProps
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，解析 0/d/3 流帧并管理 channelId、历史消息、图片附件、autoSend
+ * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，前置登录门禁，解析 0/d/3 流帧并管理 channelId、历史消息、图片附件、autoSend
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { ChatMessages, type Message } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { Button } from "@/components/ui/button";
+import { LoginDialog } from "@/components/dialogs/LoginDialog";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { supabase } from "@/lib/supabase";
 import { getApiUrl } from "@/utils/platform";
@@ -66,6 +67,7 @@ export function ChatAppComponent({
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
   const [pendingImages, setPendingImages] = useState<ImageAttachment[]>([]);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   // 清理旧版本遗留的 localStorage
   useEffect(() => {
@@ -197,6 +199,12 @@ export function ChatAppComponent({
       const hasImages = pendingImages.length > 0;
       if ((!input.trim() && !hasImages) || isLoading) return;
 
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session?.access_token) {
+        setIsLoginOpen(true);
+        return;
+      }
+
       const now = Date.now();
       const userMessage: Message = {
         id: `user-${now}`,
@@ -220,11 +228,6 @@ export function ChatAppComponent({
       let hasAddedMessage = false;
 
       try {
-        const session = (await supabase.auth.getSession()).data.session;
-        if (!session?.access_token) {
-          throw new Error(UNAUTHORIZED);
-        }
-
         const response = await fetch(getApiUrl("/api/agent/chat"), {
           method: "POST",
           headers: {
@@ -327,6 +330,7 @@ export function ChatAppComponent({
           // 用户取消
         } else {
           console.error("Chat error:", error);
+          if (isUnauthorizedError(error)) setIsLoginOpen(true);
           const content = getChatErrorMessage(
             error,
             t("apps.chat.error", "抱歉，发生了错误，请重试。"),
@@ -502,6 +506,7 @@ export function ChatAppComponent({
           />
         </div>
       </div>
+      <LoginDialog isOpen={isLoginOpen} onOpenChange={setIsLoginOpen} />
     </WindowFrame>
   );
 }
@@ -542,8 +547,12 @@ function getChatErrorMessage(
   loginRequired: string
 ): string {
   if (!(error instanceof Error)) return fallback;
-  if (error.message === UNAUTHORIZED || error.message.includes("401")) {
-    return loginRequired;
-  }
+  if (isUnauthorizedError(error)) return loginRequired;
   return error.message || fallback;
+}
+
+function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof Error && (
+    error.message === UNAUTHORIZED || error.message.includes("401")
+  );
 }
