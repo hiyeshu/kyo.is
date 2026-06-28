@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * [INPUT]: 依赖 ./test-kyo-item-tools、./test-deepseek-classification、./test-worker-api 与 ./test-utils 的 BASE_URL
- * [OUTPUT]: 默认运行 Mastra 工具契约、DeepSeek 分类契约与 Cloudflare Worker API 测试套件，失败时 exit 1
+ * [INPUT]: 依赖 ./test-kyo-item-tools、./test-deepseek-classification、./test-chat-stream-contract、./test-sync-tombstones、./test-worker-api 与 ./test-utils 的 BASE_URL
+ * [OUTPUT]: 默认运行 Mastra 工具契约、DeepSeek 分类契约、聊天流、同步 tombstone 与 Cloudflare Worker API 测试套件，失败时 exit 1
  * [POS]: tests/ 的统一入口，被 package.json test / test:api 调用
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -9,6 +9,7 @@
 import { runKyoItemToolTests } from "./test-kyo-item-tools";
 import { runChatStreamContractTests } from "./test-chat-stream-contract";
 import { runDeepSeekClassificationTests } from "./test-deepseek-classification";
+import { runSyncTombstoneTests } from "./test-sync-tombstones";
 import { runWorkerApiTests } from "./test-worker-api";
 import { BASE_URL } from "./test-utils";
 
@@ -22,6 +23,7 @@ const suites = [
   { name: "kyo-item-tools", run: runKyoItemToolTests },
   { name: "deepseek-classification", run: runDeepSeekClassificationTests },
   { name: "chat-stream-contract", run: runChatStreamContractTests },
+  { name: "sync-tombstones", run: runSyncTombstoneTests },
   { name: "worker-api", run: runWorkerApiTests },
 ];
 

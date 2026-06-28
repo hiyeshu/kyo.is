@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * [INPUT]: 依赖 src/mastra/tools/kyoItemsTool 与 ./test-utils，使用 mock Supabase query builder
- * [OUTPUT]: runKyoItemToolTests，验证 agent item tools 的输入契约、桌面便签验证闭环、用户作用域、clientEffects 与写入 payload
+ * [OUTPUT]: runKyoItemToolTests，验证 agent item tools 的搜索、输入契约、桌面便签验证闭环、用户作用域、clientEffects 与写入 payload
  * [POS]: tests/ 的 Mastra 工具契约套件，不需要真实 Supabase session 或 DeepSeek key
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -12,6 +12,7 @@ import {
   createDesktopStickyTool,
   createDeleteKyoItemTool,
   createReorderKyoItemsTool,
+  createSearchKyoItemsTool,
   createUpdateKyoItemTool,
   createUpsertKyoItemTool,
 } from "../src/mastra/tools/kyoItemsTool";
@@ -68,6 +69,24 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
       !("oneOf" in schema) && !("anyOf" in schema),
       "DeepSeek requires function parameters to be a top-level object, not a root union"
     );
+  });
+
+  await runTest("search uses search_items rpc for saved items", async () => {
+    const { client, calls } = createMockSupabase({
+      data: [{ id: BOOKMARK_ID, type: "bookmark", title: "赵纯想独立开发课程" }],
+      error: null,
+    });
+    const trace: ToolTraceEntry[] = [];
+    const tool = createSearchKyoItemsTool(createContext(client, trace));
+
+    const result = await tool.execute({ query: "  纯想  ", limit: 7 });
+
+    assertEq(result.query, "纯想");
+    assertEq(result.items.length, 1);
+    const rpc = calls.find((call) => call.method === "rpc");
+    assertEq(rpc?.args?.[0], "search_items");
+    assertJsonEq(rpc?.args?.[1], { q: "纯想", lim: 7 });
+    assertEq(trace.at(-1)?.status, "success");
   });
 
   await runTest("desktop sticky tool verifies row and requests client sync", async () => {
@@ -294,6 +313,12 @@ function createContext(client: SupabaseClient, trace: ToolTraceEntry[] = []) {
 function createMockSupabase(...responses: MockResponse[]) {
   const state: MockState = { calls: [], responses: [...responses] };
   const client = {
+    rpc(name: string, args: Record<string, unknown>) {
+      state.calls.push({ table: "rpc", method: "rpc", args: [name, args] });
+      const response = state.responses.shift();
+      if (!response) throw new Error("No mock response left for rpc");
+      return Promise.resolve(response);
+    },
     from(table: string) {
       state.calls.push({ table, method: "from" });
       return new MockQueryBuilder(state, table);

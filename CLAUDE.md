@@ -22,7 +22,7 @@ supabase/ - 数据库迁移、RLS 策略与函数安全边界 (kyo_items、link_
 src-tauri/ - Tauri 桌面应用配置 (Rust 后端)
 extension/ - Chrome Extension (Manifest V3, 新标签页 + 一键收藏 + 云同步)
 scripts/ - 构建与开发脚本 (图标生成、文档生成、i18n 工具)
-tests/ - Agent 工具契约 + DeepSeek 分类契约 + Worker API 黑盒测试 (Mastra typed tools、分类 fallback、静态资源、CORS、鉴权、兼容 API)
+tests/ - Agent 工具契约 + DeepSeek 分类契约 + Worker API 黑盒 + 同步策略回归测试 (Mastra typed tools、分类 fallback、静态资源、CORS、鉴权、兼容 API、删除 tombstone)
 docs/ - 项目文档 (架构、API 参考、开发指南)
 </directory>
 

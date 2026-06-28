@@ -384,6 +384,9 @@ export function ChatAppComponent({
           }
         }
         processLine(buffer);
+        if (!hasAddedMessage) {
+          throw new Error("Agent returned an empty response");
+        }
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           // 用户取消

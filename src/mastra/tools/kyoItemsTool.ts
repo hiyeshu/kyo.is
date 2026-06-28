@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 @mastra/core/tools、zod、Supabase client、../../server/types
- * [OUTPUT]: createDesktopStickyTool / createUpsertKyoItemTool / createSearchKyoItemsTool / createUpdateKyoItemTool / createDeleteKyoItemTool / createReorderKyoItemsTool
- * [POS]: mastra/tools 的 Kyo 数据工具，唯一允许 agent 写入 kyo_items 的受控边界
+ * [OUTPUT]: createDesktopStickyTool / createUpsertKyoItemTool / createSearchKyoItemsTool / createUpdateKyoItemTool / createDeleteKyoItemTool / createReorderKyoItemsTool，搜索统一走 search_items
+ * [POS]: mastra/tools 的 Kyo 数据工具，唯一允许 agent 写入 kyo_items 与桌面便利贴字段的受控边界
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -154,6 +154,7 @@ const searchInputSchema = z.object({
 
 const searchOutputSchema = z.object({
   items: z.array(z.record(z.string(), z.unknown())),
+  query: z.string(),
 });
 
 export function createDesktopStickyTool(context: ToolContext) {
@@ -228,7 +229,8 @@ export function createReorderKyoItemsTool(context: ToolContext) {
 export function createSearchKyoItemsTool(context: ToolContext) {
   return createTool({
     id: "search-kyo-items",
-    description: "Search the current user's saved Kyo bookmarks and sticky notes.",
+    description:
+      "Search the current user's saved Kyo bookmarks and notes from kyo_items. This is for 收藏, 书签, notes, sticky notes, desktop bookmark placement, and saved URLs; it is not workspace file search.",
     inputSchema: searchInputSchema,
     outputSchema: searchOutputSchema,
     execute: (input) =>
@@ -364,23 +366,13 @@ async function searchKyoItems(
   context: ToolContext,
   input: z.infer<typeof searchInputSchema>
 ): Promise<z.infer<typeof searchOutputSchema>> {
-  const query = context.client
-    .from("kyo_items")
-    .select("*")
-    .eq("user_id", context.userId)
-    .order("order_index", { ascending: true })
-    .order("created_at", { ascending: false })
-    .limit(input.limit ?? 5);
-
-  const { data, error } = input.query
-    ? await query.textSearch("title,summary,text", input.query, {
-        type: "websearch",
-        config: "simple",
-      })
-    : await query;
-
+  const query = (input.query ?? "").trim();
+  const { data, error } = await context.client.rpc("search_items", {
+    q: query,
+    lim: input.limit ?? 5,
+  });
   if (error) throw error;
-  return { items: (data ?? []) as Record<string, unknown>[] };
+  return { items: (data ?? []) as Record<string, unknown>[], query };
 }
 
 async function findBookmarkByUrl(context: ToolContext, url: string) {

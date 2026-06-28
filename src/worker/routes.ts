@@ -249,6 +249,10 @@ function streamAgentOutput(params: {
           emitFrame("0", assistantTurn.content);
         }
 
+        if (!fullContent.trim()) {
+          throw new Error("Agent returned an empty response");
+        }
+
         const persist = persistAssistantTurn({
           ...params,
           content: assistantTurn.content,
