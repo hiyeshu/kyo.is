@@ -3,7 +3,7 @@
 
 成员清单
 classifyContentTool.ts: Mastra 内容分类工具，调用 DeepSeek 生成 title/summary/tags/category。
-kyoItemsTool.ts: Mastra Kyo 数据工具，受控读写当前用户 kyo_items。
+kyoItemsTool.ts: Mastra Kyo 数据工具，受控读写当前用户 kyo_items，搜索统一走 search_items，id/url 更新避免覆写未传字段，onDesktop 映射桌面显示。
 workspaceFilesTool.ts: Mastra 文件系统工具，受控读写当前用户 workspace_files。
 
 架构决策

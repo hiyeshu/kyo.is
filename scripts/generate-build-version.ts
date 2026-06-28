@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url';
 // ============================================================================
 const MAJOR = 1;
 const MINOR = 1;
-const PATCH = 78;
+const PATCH = 79;
 // ============================================================================
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

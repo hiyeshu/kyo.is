@@ -163,6 +163,10 @@ function streamAgentOutput(params: {
           controller.enqueue(encoder.encode(`0:${JSON.stringify(value)}\n`));
         }
 
+        if (!fullContent.trim()) {
+          throw new Error("Agent returned an empty response");
+        }
+
         const persist = persistAssistantTurn({
           ...params,
           content: fullContent,

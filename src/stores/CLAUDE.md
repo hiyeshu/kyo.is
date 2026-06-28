@@ -14,6 +14,7 @@ useThemeStore.ts: 主题状态，当前主题，存储键 kyo:theme 和 kyo:them
 useCustomThemeStore.ts: 自定义主题状态，基于 themeSchema 管理用户自定义主题，编辑器临时状态
 useStickiesStore.ts: 便利贴状态，便签列表、颜色、位置与尺寸，持久化，每次增删改同步写云端
 useSyncStore.ts: 云端数据加载，登录时 initialSync 拉取云端覆盖本地，首次登录推送本地到云端
+syncTombstones.ts: 同步删除记忆层，localStorage 保存带 TTL 的 deleted id tombstone，阻止 Realtime/merge 复活已删除 kyo_items
 useKyoItemStore.ts: KyoItem 统一查询层，不持有数据，从 bookmark + stickies 派生 KyoItem 格式
 useLinkMetaStore.ts: 链接元数据缓存，URL 预览信息（标题、描述、图片）
 useBrowserDataStore.ts: 浏览器原生数据瞬态存储，接收插件通过 postMessage 注入的 Chrome 书签和历史记录，不持久化，被 CommandPalette 消费

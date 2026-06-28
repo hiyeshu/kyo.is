@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 @/lib/cloudSync 云端操作，依赖 @/lib/supabase Realtime 订阅，
- *          依赖 useBookmarkStore/useStickiesStore 本地数据
+ *          依赖 syncTombstones 与 useBookmarkStore/useStickiesStore 本地数据
  * [OUTPUT]: 对外提供 useSyncStore — initialSync / startRealtime / stopRealtime
  *           对外提供 markLocalChange / trackDeletion（被 bookmark/stickies store 消费）
  * [POS]: stores/ 的云端数据层，登录时双向 merge + Realtime 实时同步
@@ -20,6 +20,12 @@ import {
   type Bookmark,
 } from "./useBookmarkStore";
 import { useStickiesStore, type StickyNote } from "./useStickiesStore";
+import {
+  getDeletedIds,
+  pruneDeletionTombstones,
+  shouldRejectRemoteItemChange,
+  trackDeletionTombstone,
+} from "./syncTombstones";
 
 // ─── 类型定义 ─────────────────────────────────────────────────────────────────
 
@@ -109,50 +115,8 @@ export function markLocalChange(id: string) {
   );
 }
 
-// ─── 离线删除追踪 ────────────────────────────────────────────────────────────
-// 用户在登出/离线期间删除的条目 ID，登录后 merge 时跳过这些条目并从云端清除
-
-const DELETED_IDS_KEY = "kyo:deleted-ids";
-
 export function trackDeletion(id: string) {
-  try {
-    const raw = localStorage.getItem(DELETED_IDS_KEY);
-    const ids: string[] = raw ? JSON.parse(raw) : [];
-    if (!ids.includes(id)) {
-      ids.push(id);
-      localStorage.setItem(DELETED_IDS_KEY, JSON.stringify(ids));
-    }
-  } catch { /* noop */ }
-}
-
-
-
-function getDeletedIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem(DELETED_IDS_KEY);
-    return new Set<string>(raw ? JSON.parse(raw) : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function clearDeletedIds(idsToRemove?: Set<string>) {
-  if (!idsToRemove) {
-    localStorage.removeItem(DELETED_IDS_KEY);
-    return;
-  }
-  try {
-    const raw = localStorage.getItem(DELETED_IDS_KEY);
-    const ids: string[] = raw ? JSON.parse(raw) : [];
-    const remaining = ids.filter((id) => !idsToRemove.has(id));
-    if (remaining.length === 0) {
-      localStorage.removeItem(DELETED_IDS_KEY);
-    } else {
-      localStorage.setItem(DELETED_IDS_KEY, JSON.stringify(remaining));
-    }
-  } catch {
-    localStorage.removeItem(DELETED_IDS_KEY);
-  }
+  trackDeletionTombstone(id);
 }
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -279,23 +243,13 @@ export const useSyncStore = create<SyncState>((set) => ({
         await cloudUpsertItem(item);
       }
 
-      const confirmedGone = new Set<string>();
-
-      // 本来就不在云端的 → 确认消失
-      for (const id of deletedIds) {
-        if (!cloudBmMap.has(id) && !cloudNtMap.has(id)) {
-          confirmedGone.add(id);
-        }
-      }
-
-      // 尝试删除云端残留的，成功的 → 确认消失
+      // 尝试删除云端残留；tombstone 保留到 TTL，抵挡其他客户端迟到 upsert。
       for (const id of toDeleteCloud) {
         markLocalChange(id);
-        const ok = await cloudDeleteItem(id);
-        if (ok) confirmedGone.add(id);
+        await cloudDeleteItem(id);
       }
 
-      clearDeletedIds(confirmedGone);
+      pruneDeletionTombstones();
       set({ status: "done" });
     } catch (e) {
       console.error("[sync] initialSync failed:", e);
@@ -320,6 +274,14 @@ export const useSyncStore = create<SyncState>((set) => ({
           const { eventType, new: newRow, old: oldRow } = payload;
           const row = (newRow || oldRow) as Record<string, unknown>;
           const id = row?.id as string;
+
+          if (shouldRejectRemoteItemChange(id)) {
+            if (eventType !== "DELETE") {
+              markLocalChange(id);
+              void cloudDeleteItem(id);
+            }
+            return;
+          }
 
           if (recentLocalIds.has(id)) return;
 
