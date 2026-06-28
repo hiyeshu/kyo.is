@@ -3,7 +3,7 @@
 
 ## 成员清单
 
-BookmarkBoardApp.tsx: 书签应用主组件，书签网格布局、拖拽排序、搜索过滤、文件夹管理
+BookmarkBoardApp.tsx: 书签应用主组件，书签网格布局、手动/名称/最近使用排序、搜索过滤、文件夹管理
 BookmarkBoardMenuBar.tsx: 书签应用菜单栏，文件菜单（添加、导入、导出）、编辑菜单（删除、重命名）、视图菜单（网格/列表）
 
 ## 依赖关系
@@ -13,7 +13,7 @@ BookmarkBoardMenuBar.tsx: 书签应用菜单栏，文件菜单（添加、导入
 - 被 apps/bookmark-board/index.ts 导出
 
 ## 组件约束
-1. 书签卡片支持拖拽排序，使用 HTML5 Drag API
+1. 书签卡片支持拖拽排序，使用 HTML5 Drag API，菜单提供 manual/name/recent 三种排序
 2. 搜索支持模糊匹配、标签过滤
 3. 文件夹支持嵌套、展开/折叠
 4. 书签卡片显示标题、图标、URL、描述

@@ -18,6 +18,7 @@ export interface ServerChatMessage {
   role: ChatRole;
   content: string;
   created_at?: string;
+  attachments?: unknown;
   tool_trace?: ToolTraceEntry[];
 }
 

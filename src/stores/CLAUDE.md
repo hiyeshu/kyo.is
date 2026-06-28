@@ -7,13 +7,13 @@ helpers.ts: Zustand 浅比较辅助函数，优化 store 订阅性能，避免�
 useAppStore.ts: 应用管理核心状态，窗口实例、最近应用、AI 模型选择，存储键 kyo:app-store
 useAudioSettingsStore.ts: 音频设置状态，系统音效开关、音量控制，持久化
 useAuthStore.ts: 认证状态管理，Google OAuth 登录/登出，Supabase Auth 监听，登录时触发 initialSync
-useBookmarkStore.ts: 书签管理状态，书签列表、分类、拖拽排序、桌面显示标记(onDesktop)、Dock 固定标记(inDock)，持久化，每次增删改同步写云端，favicon 只存 URL（Icon Horse 或 FAVICON_OVERRIDES），v10 迁移清除 base64 和 faviconResolved
+useBookmarkStore.ts: 书签管理状态，书签列表、分类、orderIndex 手动排序、桌面显示标记(onDesktop)、Dock 固定标记(inDock)，持久化，每次增删改排序同步写云端，favicon 只存 URL（Icon Horse 或 FAVICON_OVERRIDES），v11 迁移补齐 orderIndex
 useDisplaySettingsStore.ts: 显示设置状态，显示模式、壁纸、屏保，存储键 kyo:display-settings
 useDockStore.ts: Dock 栏状态，仅固定应用列表（书签 inDock 已迁移至 useBookmarkStore）、拖拽排序、显示/隐藏，持久化
 useThemeStore.ts: 主题状态，当前主题，存储键 kyo:theme 和 kyo:theme-sync-wallpaper
 useCustomThemeStore.ts: 自定义主题状态，基于 themeSchema 管理用户自定义主题，编辑器临时状态
-useStickiesStore.ts: 便利贴状态，便签列表、颜色、位置与尺寸，持久化，每次增删改同步写云端
-useSyncStore.ts: 云端数据加载，登录时 initialSync 拉取云端覆盖本地，首次登录推送本地到云端
+useStickiesStore.ts: 便利贴状态，便签列表、颜色、位置、尺寸与 orderIndex，持久化，每次增删改排序同步写云端
+useSyncStore.ts: 云端数据加载，登录时 initialSync 双向合并，agent action 后 refreshCloudItems 读云刷新，并按 deletedItems hint 清理本地桌面残影，本地/云端按 updatedAt 裁决，并维护 orderIndex 排序同构
 syncTombstones.ts: 同步删除记忆层，localStorage 保存带 TTL 的 deleted id tombstone，阻止 Realtime/merge 复活已删除 kyo_items
 useKyoItemStore.ts: KyoItem 统一查询层，不持有数据，从 bookmark + stickies 派生 KyoItem 格式
 useLinkMetaStore.ts: 链接元数据缓存，URL 预览信息（标题、描述、图片）

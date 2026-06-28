@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * [INPUT]: 依赖 fs/path/process，读取 wrangler.jsonc、package.json、env 文件、public/dist/supabase/src
- * [OUTPUT]: 输出 Cloudflare + Supabase + Mastra 迁移门禁结果，失败时 exit 1
+ * [OUTPUT]: 输出 Cloudflare + Supabase + Mastra 迁移门禁结果，包含 agent 工具契约测试白名单，失败时 exit 1
  * [POS]: scripts/ 的迁移发布前检查器，被 package.json check:migration 调用
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -73,7 +73,7 @@ function checkPackageScripts() {
   add("cloudflare deploy", Boolean(scripts["deploy:cloudflare"]), "deploy:cloudflare required");
   add("migration preflight", Boolean(scripts["check:migration"]), "check:migration required");
   add("worker types", Boolean(scripts["types:worker"]), "types:worker must regenerate Worker env types");
-  add("worker tests", scripts.test === "bun run tests/run-all-tests.ts", "test must run Worker API tests");
+  add("worker tests", scripts.test === "bun run tests/run-all-tests.ts", "test must run agent tool and Worker API tests");
 }
 
 function checkEnvNames() {
@@ -132,7 +132,13 @@ function checkStaticAssets() {
 
 function checkTests() {
   const files = listFiles("tests").map((file) => file.replace(/\\/g, "/"));
-  const allowed = ["tests/CLAUDE.md", "tests/run-all-tests.ts", "tests/test-utils.ts", "tests/test-worker-api.ts"];
+  const allowed = [
+    "tests/CLAUDE.md",
+    "tests/run-all-tests.ts",
+    "tests/test-kyo-item-tools.ts",
+    "tests/test-utils.ts",
+    "tests/test-worker-api.ts",
+  ];
   const extra = files.filter((file) => !allowed.includes(file));
   add("worker test suite", files.includes("tests/test-worker-api.ts"), "Worker API tests required");
   add("removed legacy API tests", extra.length === 0, extra.length ? extra.join(", ") : "no legacy test files");

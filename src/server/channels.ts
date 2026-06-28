@@ -79,7 +79,7 @@ export async function listChannelMessages(
     .limit(limit);
 
   if (error) throw error;
-  return ((data ?? []) as ServerChatMessage[]).reverse();
+  return ((data ?? []) as ServerChatMessage[]).reverse().filter(isRenderableMessage);
 }
 
 export async function saveChannelMessage(
@@ -115,6 +115,11 @@ export async function saveChannelMessage(
     .eq("user_id", params.userId);
 
   return data as ServerChatMessage;
+}
+
+function isRenderableMessage(message: ServerChatMessage): boolean {
+  if (message.role === "assistant") return message.content.trim().length > 0;
+  return true;
 }
 
 export async function createAgentRun(

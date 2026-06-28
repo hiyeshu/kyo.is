@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * [INPUT]: 依赖 ./test-utils，请求当前 Cloudflare Worker API 边界
- * [OUTPUT]: runWorkerApiTests，验证静态资源、SPA fallback、CORS、鉴权、兼容 API 与音频转写占位
+ * [OUTPUT]: runWorkerApiTests，验证静态资源、SPA fallback、CORS、鉴权、scrape 降级、兼容 API 与音频转写占位
  * [POS]: tests/ 的 Worker API 套件，替代旧 serverless API / chat-room / lyrics 测试
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -97,6 +97,18 @@ export async function runWorkerApiTests(): Promise<{ passed: number; failed: num
       body: JSON.stringify({}),
     });
     assertEq(response.status, 400);
+  });
+
+  await runTest("scrape falls back when metadata provider fails", async () => {
+    const response = await fetchWithOrigin(`${BASE_URL}/api/scrape`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: "https://example.com" }),
+    });
+    assertEq(response.status, 200);
+    const body = (await response.json()) as { title?: unknown; tags?: unknown };
+    assertEq(body.title, "example.com");
+    assert(Array.isArray(body.tags), "Expected tags array");
   });
 
   await runTest("bookmark preview validates url", async () => {

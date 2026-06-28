@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 无外部依赖
  * [OUTPUT]: KyoItem, KyoBookmarkItem, KyoNoteItem, LinkMeta 类型
- * [POS]: types/ 的统一信息抽象，被 useKyoItemStore 和 useLinkMetaStore 消费
+ * [POS]: types/ 的统一信息抽象，被 useKyoItemStore 和 useLinkMetaStore 消费，携带 orderIndex 排序语义
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -30,6 +30,7 @@ export interface KyoBookmarkItem {
   summary: string;
   tags: string[];
   createdAt: number; // unix ms
+  orderIndex: number;
   favicon?: string;
 }
 
@@ -40,6 +41,7 @@ export interface KyoNoteItem {
   tags: string[];
   createdAt: number; // unix ms
   updatedAt: number;
+  orderIndex: number;
   color: string;
 }
 

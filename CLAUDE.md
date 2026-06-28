@@ -3,6 +3,7 @@
 React 19 + TypeScript + Vite + Tailwind CSS + Zustand + Cloudflare Workers + Mastra + DeepSeek + Supabase + Tauri
 
 <directory>
+.github/ - GitHub Actions 自动化入口 (1 子目录: workflows)
 src/ - 前端与 Worker 源码 (12 子目录: apps, components, config, hooks, lib, mastra, server, stores, styles, types, utils, worker)
   apps/ - 应用模块，每个应用独立目录 (bookmark-board, chat, finder, textedit, macpaint...)
   components/ - 共享 React 组件 (4 子目录: ui, layout, shared, dialogs)
@@ -21,11 +22,12 @@ supabase/ - 数据库迁移、RLS 策略与函数安全边界 (kyo_items、link_
 src-tauri/ - Tauri 桌面应用配置 (Rust 后端)
 extension/ - Chrome Extension (Manifest V3, 新标签页 + 一键收藏 + 云同步)
 scripts/ - 构建与开发脚本 (图标生成、文档生成、i18n 工具)
-tests/ - Worker API、Mastra 工具与同步策略回归测试 (静态资源、CORS、鉴权、兼容 API、kyo_items 工具契约、删除 tombstone)
+tests/ - Agent 工具契约 + DeepSeek 分类契约 + Worker API 黑盒 + 同步策略回归测试 (Mastra typed tools、分类 fallback、静态资源、CORS、鉴权、兼容 API、删除 tombstone)
 docs/ - 项目文档 (架构、API 参考、开发指南)
 </directory>
 
 <config>
+.github/workflows/deploy-cloudflare.yml - main 分支到 Cloudflare Worker 的自动部署流水线
 package.json - 依赖管理，Bun 1.3.5，React 19，Cloudflare/Mastra 脚本命令
 bun.lock - Bun 依赖锁文件，唯一锁文件真相源
 .gitignore - 忽略依赖、构建产物、Cloudflare 本地缓存、密钥文件
@@ -122,7 +124,7 @@ Cloudflare 预览: bun run preview:cloudflare
 Cloudflare 部署: bun run deploy:cloudflare
 发布边界: Cloudflare Worker `kyo-is` 已绑定 `kyo.is` / `www.kyo.is`；Workers Builds/Git trigger 未配置，推送 main 不会自动部署
 预览: bun run preview
-测试: bun run test (默认验证 Cloudflare Worker API)
+测试: bun run test (默认验证 Mastra 工具契约与 Cloudflare Worker API)
 Lint: bun run lint
 桌面应用: bun run tauri:dev / bun run tauri:build
 国际化: bun run i18n:extract → i18n:sync → i18n:translate

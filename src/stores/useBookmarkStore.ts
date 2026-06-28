@@ -1,7 +1,7 @@
 /**
  * [INPUT]: zustand + zustand/middleware(persist)，依赖 @/lib/cloudSync 云端写入
  * [OUTPUT]: useBookmarkStore, Bookmark, isBookmark, openBookmarkUrl, getBookmarkIconInfo, getBookmarkShortName, getFaviconUrl, SortMode, clearAll
- * [POS]: 书签数据的单一真相源，管理 onDesktop/inDock 展示位置、排序偏好，被 bookmark-board、Dock、Desktop 消费，每次变更同步写云端，clearAll 用于退出登录时清空本地
+ * [POS]: 书签数据的单一真相源，管理 onDesktop/inDock/orderIndex 展示位置、排序偏好，被 bookmark-board、Dock、Desktop 消费，每次变更同步写云端，clearAll 用于退出登录时清空本地
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -93,6 +93,7 @@ function bookmarkToCloud(b: Bookmark) {
     tags: b.tags || [],
     on_desktop: b.onDesktop || false,
     in_dock: b.inDock || false,
+    order_index: b.orderIndex ?? 0,
     created_at: b.createdAt || new Date().toISOString(),
     updated_at: b.updatedAt || b.createdAt || new Date().toISOString(),
   };
@@ -406,11 +407,12 @@ export interface Bookmark {
   lastUsed?: string;
   onDesktop?: boolean;
   inDock?: boolean;
+  orderIndex?: number;
   favicon?: string;
   icon?: BookmarkIcon;
 }
 
-export type SortMode = "recent" | "name";
+export type SortMode = "manual" | "recent" | "name";
 
 
 // 向后兼容：旧数据可能包含文件夹对象
@@ -490,7 +492,7 @@ const createBookmark = (
   title: string,
   url: string,
   favicon?: string,
-  meta?: { summary?: string; tags?: string[]; createdAt?: string; onDesktop?: boolean; inDock?: boolean }
+  meta?: { summary?: string; tags?: string[]; createdAt?: string; onDesktop?: boolean; inDock?: boolean; orderIndex?: number }
 ): Bookmark => ({
   id: generateId(),
   title,
@@ -501,6 +503,7 @@ const createBookmark = (
   updatedAt: new Date().toISOString(),
   onDesktop: meta?.onDesktop ?? false,
   inDock: meta?.inDock ?? false,
+  orderIndex: meta?.orderIndex,
   favicon: favicon || getFaviconUrl(new URL(url).hostname),
 });
 
@@ -513,7 +516,12 @@ const createDefaultItems = (): Bookmark[] => [
   createBookmark("Cursor", "https://cursor.com"),
   createBookmark("GitHub", "https://github.com"),
   createBookmark("Flomo", "https://flomoapp.com"),
-];
+].map((item, orderIndex) => ({ ...item, orderIndex }));
+
+const byManualOrder = (a: Bookmark, b: Bookmark) =>
+  (a.orderIndex ?? 0) - (b.orderIndex ?? 0) ||
+  a.createdAt.localeCompare(b.createdAt) ||
+  a.id.localeCompare(b.id);
 
 // ─── Store ───────────────────────────────────────────────────────────────────
 
@@ -526,12 +534,13 @@ interface BookmarkStore {
   addBookmark: (title: string, url: string, favicon?: string, options?: { onDesktop?: boolean; inDock?: boolean }) => string;
   addAiBookmark: (title: string, url: string, summary: string, tags: string[], options?: { onDesktop?: boolean; inDock?: boolean }) => string;
   getBookmarkByUrl: (url: string) => Bookmark | undefined;
-  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags" | "onDesktop" | "inDock" | "lastUsed">>) => void;
+  updateBookmark: (id: string, updates: Partial<Pick<Bookmark, "title" | "url" | "favicon" | "icon" | "summary" | "tags" | "onDesktop" | "inDock" | "lastUsed" | "orderIndex">>) => void;
   removeBookmark: (id: string) => void;
   touchBookmark: (id: string) => void; // 更新 lastUsed
 
   // 排序
   reorderItems: (fromIndex: number, toIndex: number) => void;
+  reorderItemsByIds: (orderedIds: string[]) => void;
   setSortMode: (mode: SortMode) => void;
   setGroupByDomain: (enabled: boolean) => void;
 
@@ -547,13 +556,14 @@ export const useBookmarkStore = create<BookmarkStore>()(
   persist(
     (set, get) => ({
       items: createDefaultItems(),
-      sortMode: "recent" as SortMode,
+      sortMode: "manual" as SortMode,
       groupByDomain: false,
 
       addBookmark: (title, url, favicon, options) => {
         const newBookmark = createBookmark(title, url, favicon, {
           onDesktop: options?.onDesktop,
           inDock: options?.inDock,
+          orderIndex: get().items.length,
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
         markLocalChange(newBookmark.id);
@@ -575,6 +585,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           createdAt: new Date().toISOString(),
           onDesktop: options?.onDesktop,
           inDock: options?.inDock,
+          orderIndex: get().items.length,
         });
         set((s) => ({ items: [...s.items, newBookmark] }));
         markLocalChange(newBookmark.id);
@@ -620,33 +631,60 @@ export const useBookmarkStore = create<BookmarkStore>()(
         }
       },
 
-      reorderItems: (fromIndex, toIndex) =>
+      reorderItems: (fromIndex, toIndex) => {
+        const nextIds = [...get().items.map((item) => item.id)];
+        const [moved] = nextIds.splice(fromIndex, 1);
+        nextIds.splice(toIndex, 0, moved);
+        get().reorderItemsByIds(nextIds);
+      },
+
+      reorderItemsByIds: (orderedIds) => {
+        let reordered: Bookmark[] = [];
+        const now = new Date().toISOString();
         set((s) => {
-          const newItems = [...s.items];
-          const [moved] = newItems.splice(fromIndex, 1);
-          newItems.splice(toIndex, 0, moved);
-          return { items: newItems };
-        }),
+          const byId = new Map(s.items.map((item) => [item.id, item]));
+          const ordered = Array.from(new Set(orderedIds))
+            .map((id) => byId.get(id))
+            .filter((item): item is Bookmark => Boolean(item));
+          if (ordered.length === 0) return s;
+
+          const orderedSet = new Set(ordered.map((item) => item.id));
+          let nextSlot = 0;
+          reordered = [...s.items]
+            .sort(byManualOrder)
+            .map((item) => (orderedSet.has(item.id) ? ordered[nextSlot++] : item))
+            .map((item, orderIndex) => ({
+              ...item,
+              orderIndex,
+              updatedAt: now,
+            }));
+          return { items: reordered, sortMode: "manual" };
+        });
+        reordered.forEach((bookmark) => {
+          markLocalChange(bookmark.id);
+          cloudUpsertItem(bookmarkToCloud(bookmark));
+        });
+      },
 
       setSortMode: (mode) => set({ sortMode: mode }),
       setGroupByDomain: (enabled) => set({ groupByDomain: enabled }),
 
       getBookmarkById: (id) => get().items.find((b) => b.id === id),
 
-      resetToDefaults: () => set({ items: createDefaultItems() }),
+      resetToDefaults: () => set({ items: createDefaultItems(), sortMode: "manual" }),
 
       clearAll: () => set({ items: [] }), // 清空所有书签，不恢复默认项
     }),
     {
       name: "kyo:bookmark-store",
-      version: 10, // v10: favicon 只存 URL，删除 base64 和 faviconResolved
+      version: 11, // v11: add orderIndex for persistent manual ordering
       migrate: (persisted, version) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const old = persisted as any;
 
         // v4 以下：数据结构差异太大，直接重置
         if (version < 4) {
-          return { items: createDefaultItems(), sortMode: "recent", groupByDomain: false };
+          return { items: createDefaultItems(), sortMode: "manual", groupByDomain: false };
         }
 
         // v5: add metadata fields
@@ -723,6 +761,14 @@ export const useBookmarkStore = create<BookmarkStore>()(
             }
             return rest;
           });
+        }
+
+        if (version < 11 && old.items) {
+          old.items = old.items.map((item: Bookmark, orderIndex: number) => ({
+            ...item,
+            orderIndex: item.orderIndex ?? orderIndex,
+          }));
+          old.sortMode = old.sortMode ?? "manual";
         }
 
         return persisted as BookmarkStore;

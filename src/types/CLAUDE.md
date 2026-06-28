@@ -6,6 +6,7 @@
 aiModels.ts: AI 模型类型定义，支持的模型列表、模型配置、能力描述
 appInitialData.ts: 应用初始数据类型，应用启动时的初始状态、配置、参数
 js-dos.d.ts: js-dos 库类型声明，DOS 模拟器 API 类型定义
+kyoItem.ts: Kyo 统一信息条目类型，定义 bookmark/note/linkMeta 与 orderIndex 排序语义
 lyrics.ts: 歌词类型定义，歌词行、时间戳、翻译、同步歌词
 shader.ts: 着色器类型定义，GLSL 着色器配置、uniform 参数
 types.ts: 通用类型定义，窗口、文件系统、应用状态、主题、壁纸

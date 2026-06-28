@@ -1863,6 +1863,7 @@
       "editBookmark": "ブックマークを編集",
       "openInNewTab": "新しいタブで開く",
       "addToDock": "Dockに追加",
+      "sortManual": "手動順",
       "sortByName": "名前順",
       "sortByRecent": "最近使用した順",
       "groupByDomain": "ドメインで分類",
