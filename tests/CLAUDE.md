@@ -2,9 +2,10 @@
 > L2 | 父级: /CLAUDE.md
 
 成员清单
-run-all-tests.ts: 测试统一入口，运行 Mastra 工具契约与当前 Cloudflare Worker API 套件，支持按名称筛选。
+run-all-tests.ts: 测试统一入口，运行 Mastra 工具契约、聊天流契约与当前 Cloudflare Worker API 套件，支持按名称筛选。
 test-utils.ts: 测试工具，提供 BASE_URL、断言、fetch helper 与结果汇总。
 test-kyo-item-tools.ts: Mastra 工具契约测试，mock Supabase query builder，验证 upsert/update/delete/reorder 的输入契约、用户作用域与 payload。
+test-chat-stream-contract.ts: 聊天流契约测试，验证空 assistant stream 不会变成空 Kyo 消息，tool-only turn 有可见完成文案。
 test-worker-api.ts: Worker API 边界测试，覆盖静态资源、SPA fallback、CORS、鉴权、scrape 降级、兼容 API 与 501 音频转写占位。
 
 架构决策
@@ -12,6 +13,7 @@ tests/ 验证当前生产入口与 agent 工具契约，不保留已删除 legac
 
 依赖关系
 package.json -> tests/run-all-tests.ts -> tests/test-kyo-item-tools.ts -> src/mastra/tools/kyoItemsTool.ts
+package.json -> tests/run-all-tests.ts -> tests/test-chat-stream-contract.ts -> src/worker/routes.ts
 package.json -> tests/run-all-tests.ts -> tests/test-worker-api.ts -> Cloudflare Worker
 
 [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md

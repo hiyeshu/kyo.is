@@ -7,6 +7,7 @@
  */
 
 import { runKyoItemToolTests } from "./test-kyo-item-tools";
+import { runChatStreamContractTests } from "./test-chat-stream-contract";
 import { runWorkerApiTests } from "./test-worker-api";
 import { BASE_URL } from "./test-utils";
 
@@ -18,6 +19,7 @@ type TestSuiteResult = {
 
 const suites = [
   { name: "kyo-item-tools", run: runKyoItemToolTests },
+  { name: "chat-stream-contract", run: runChatStreamContractTests },
   { name: "worker-api", run: runWorkerApiTests },
 ];
 

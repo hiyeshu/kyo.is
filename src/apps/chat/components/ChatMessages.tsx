@@ -163,6 +163,7 @@ export function ChatMessages({
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const currentTheme = useThemeStore((s) => s.current);
+  const visibleMessages = messages.filter(hasVisiblePayload);
 
   // -------------------------------------------------------------------------
   // 滚动处理
@@ -224,7 +225,7 @@ export function ChatMessages({
 
         {/* 消息列表 */}
         <AnimatePresence initial={false} mode="sync">
-          {messages.map((message) => {
+          {visibleMessages.map((message) => {
             const isUser = message.role === "user";
             const messageKey = message.id;
             const bgColorClass = isUser
@@ -363,4 +364,8 @@ export function ChatMessages({
       <ScrollToBottomButton isAtBottom={isAtBottom} onClick={scrollToBottom} />
     </div>
   );
+}
+
+function hasVisiblePayload(message: Message): boolean {
+  return message.content.trim().length > 0 || Boolean(message.images?.length);
 }

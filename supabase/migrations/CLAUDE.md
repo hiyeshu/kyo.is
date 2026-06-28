@@ -8,6 +8,7 @@
 20260627043503_harden_function_search_path.sql: 重建 search_items 与 update_updated_at，固定 search_path 为 public，消除函数名解析漂移。
 20260627043821_harden_agent_indexes.sql: 补齐 agent 表 user_id 外键索引，保留 kyo_items URL 唯一部分索引，删除旧库重复索引。
 20260627075848_add_kyo_item_order_index.sql: 为 kyo_items 增加 order_index，给用户/agent 指定排序提供稳定真相源。
+20260628024543_prevent_empty_assistant_messages.sql: 删除旧空 assistant 消息，并增加约束禁止新空 assistant content。
 
 架构决策
 迁移文件只描述数据库现实，不放应用逻辑。用户数据、agent 可变状态、工具痕迹必须能从这些表审计。

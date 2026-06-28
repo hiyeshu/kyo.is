@@ -513,6 +513,7 @@ export function ChatAppComponent({
 
 function toUiMessage(message: ApiMessage): Message[] {
   if (message.role !== "user" && message.role !== "assistant") return [];
+  if (message.role === "assistant" && message.content.trim().length === 0) return [];
   return [
     {
       id: message.id ?? `${message.role}-${message.created_at ?? crypto.randomUUID()}`,

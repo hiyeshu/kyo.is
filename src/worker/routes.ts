@@ -26,6 +26,9 @@ import type {
   ToolTraceEntry,
 } from "../server/types";
 
+const EMPTY_ASSISTANT_RESPONSE = "Agent returned an empty response";
+const TOOL_ONLY_ASSISTANT_RESPONSE = "已完成。";
+
 export async function handleChannels(request: Request, env: KyoWorkerEnv): Promise<Response> {
   const auth = createUserSupabase(request, env);
   if (!auth) return errorJson("Unauthorized", 401);
@@ -133,9 +136,10 @@ function getUserMessage(body: AgentChatRequest): string {
   return last?.content.trim() ?? "";
 }
 
-function toAgentPrompt(messages: ServerChatMessage[]): string {
+export function toAgentPrompt(messages: ServerChatMessage[]): string {
   return messages
     .filter((message) => message.role === "user" || message.role === "assistant")
+    .filter((message) => message.content.trim().length > 0)
     .map((message) => `${message.role.toUpperCase()}: ${message.content}`)
     .join("\n");
 }
@@ -163,9 +167,15 @@ function streamAgentOutput(params: {
           controller.enqueue(encoder.encode(`0:${JSON.stringify(value)}\n`));
         }
 
+        const assistantTurn = resolveAssistantTurn(fullContent, params.toolTrace);
+        if (!assistantTurn.ok) throw new Error(assistantTurn.error);
+        if (assistantTurn.synthetic) {
+          controller.enqueue(encoder.encode(`0:${JSON.stringify(assistantTurn.content)}\n`));
+        }
+
         const persist = persistAssistantTurn({
           ...params,
-          content: fullContent,
+          content: assistantTurn.content,
           status: "success",
         });
         params.ctx.waitUntil(persist);
@@ -203,6 +213,25 @@ function streamAgentOutput(params: {
       Connection: "keep-alive",
     },
   });
+}
+
+export type AssistantTurnResolution =
+  | { ok: true; content: string; synthetic: boolean }
+  | { ok: false; error: string };
+
+export function resolveAssistantTurn(
+  content: string,
+  toolTrace: ToolTraceEntry[]
+): AssistantTurnResolution {
+  if (content.trim().length > 0) return { ok: true, content, synthetic: false };
+  if (hasSuccessfulToolTrace(toolTrace)) {
+    return { ok: true, content: TOOL_ONLY_ASSISTANT_RESPONSE, synthetic: true };
+  }
+  return { ok: false, error: EMPTY_ASSISTANT_RESPONSE };
+}
+
+function hasSuccessfulToolTrace(toolTrace: ToolTraceEntry[]): boolean {
+  return toolTrace.some((entry) => entry.status === "success");
 }
 
 async function persistAssistantTurn(params: {
