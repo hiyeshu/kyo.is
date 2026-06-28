@@ -1,7 +1,7 @@
 /**
- * [INPUT]: 依赖 react hooks、Supabase auth、LoginDialog、getApiUrl、../../base/types 的 AppProps
+ * [INPUT]: 依赖 react hooks、Supabase auth、LoginDialog、getApiUrl、useSyncStore、../../base/types 的 AppProps
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，前置登录门禁，解析 0/d/3 流帧并管理 channelId、历史消息、图片附件、autoSend
+ * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，前置登录门禁，解析 0/d/3 流帧与 clientEffects，并管理 channelId、历史消息、图片附件、autoSend
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -14,6 +14,7 @@ import { ChatInput } from "./ChatInput";
 import { Button } from "@/components/ui/button";
 import { LoginDialog } from "@/components/dialogs/LoginDialog";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { useSyncStore } from "@/stores/useSyncStore";
 import { supabase } from "@/lib/supabase";
 import { getApiUrl } from "@/utils/platform";
 import {
@@ -32,6 +33,17 @@ interface ApiMessage {
   role: "user" | "assistant" | "tool";
   content: string;
   created_at?: string;
+}
+
+interface AgentClientEffect {
+  type: "sync-kyo-items";
+  itemIds?: string[];
+  reason?: string;
+}
+
+interface AgentDoneFrame {
+  channelId?: string;
+  clientEffects?: AgentClientEffect[];
 }
 
 const UNAUTHORIZED = "Unauthorized";
@@ -298,10 +310,11 @@ export function ChatAppComponent({
 
           if (line.startsWith("d:")) {
             try {
-              const data = JSON.parse(line.slice(2));
+              const data = JSON.parse(line.slice(2)) as AgentDoneFrame;
               if (data.channelId) {
                 setChannelId(data.channelId);
               }
+              applyAgentClientEffects(data.clientEffects);
             } catch {
               // 忽略解析错误
             }
@@ -556,4 +569,12 @@ function isUnauthorizedError(error: unknown): boolean {
   return error instanceof Error && (
     error.message === UNAUTHORIZED || error.message.includes("401")
   );
+}
+
+function applyAgentClientEffects(effects?: AgentClientEffect[]): void {
+  const itemIds = effects
+    ?.filter((effect) => effect.type === "sync-kyo-items")
+    .flatMap((effect) => effect.itemIds ?? []) ?? [];
+  if (itemIds.length === 0) return;
+  void useSyncStore.getState().refreshCloudItems(itemIds);
 }

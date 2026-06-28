@@ -6,7 +6,7 @@
 index.tsx: 聊天应用入口，导出 ChatApp 配置对象，被 appRegistry 加载
 
 ### components/
-ChatApp.tsx: 聊天应用主组件，恢复最新 channel 历史并过滤旧空 assistant 壳子，管理 channelId、图片附件，对接 /api/agent/chat 的 Mastra agent 流，登录前置门禁并解析错误帧
+ChatApp.tsx: 聊天应用主组件，恢复最新 channel 历史并过滤旧空 assistant 壳子，管理 channelId、图片附件，对接 /api/agent/chat 的 Mastra agent 流，登录前置门禁，解析错误帧与 clientEffects，工具写入后触发读云刷新
 ChatMessages.tsx: 消息列表组件，展示有可见 payload 的聊天历史（文本+图片）、自动滚动、加载状态
 ChatInput.tsx: 输入框组件，图片选择/预览/粘贴、发送/停止按钮
 ChatMenuBar.tsx: 菜单栏组件，文件菜单、帮助菜单

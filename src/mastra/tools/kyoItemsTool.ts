@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 @mastra/core/tools、zod、Supabase client、../../server/types
- * [OUTPUT]: createUpsertKyoItemTool / createSearchKyoItemsTool / createUpdateKyoItemTool / createDeleteKyoItemTool / createReorderKyoItemsTool
+ * [OUTPUT]: createDesktopStickyTool / createUpsertKyoItemTool / createSearchKyoItemsTool / createUpdateKyoItemTool / createDeleteKyoItemTool / createReorderKyoItemsTool
  * [POS]: mastra/tools 的 Kyo 数据工具，唯一允许 agent 写入 kyo_items 的受控边界
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -53,11 +53,47 @@ const itemInputSchema = itemBaseSchema
     }
   });
 
+const desktopStickyInputSchema = z.object({
+  title: z.string().optional(),
+  text: z.string().min(1),
+  color: z.enum(stickyColors).optional(),
+  tags: z.array(z.string()).default([]),
+  orderIndex: z.number().int().min(0).optional(),
+});
+
+const verifiedDesktopNoteSchema = z.object({
+  id: z.string(),
+  title: z.string().nullable(),
+  text: z.string().nullable(),
+  color: z.string().nullable(),
+  tags: z.array(z.string()),
+  onDesktop: z.boolean(),
+  orderIndex: z.number(),
+});
+
+const clientEffectSchema = z.object({
+  type: z.literal("sync-kyo-items"),
+  itemIds: z.array(z.string()),
+  reason: z.string(),
+});
+
 const itemOutputSchema = z.object({
   id: z.string(),
   type: z.enum(["bookmark", "note"]),
   saved: z.boolean(),
   action: z.enum(["created", "updated"]),
+  clientEffect: clientEffectSchema,
+});
+
+const desktopStickyOutputSchema = z.object({
+  id: z.string(),
+  type: z.literal("note"),
+  saved: z.boolean(),
+  action: z.literal("created"),
+  verified: z.boolean(),
+  onDesktop: z.boolean(),
+  row: verifiedDesktopNoteSchema,
+  clientEffect: clientEffectSchema,
 });
 
 const updateInputSchema = z.object({
@@ -77,6 +113,7 @@ const updateInputSchema = z.object({
 const updateOutputSchema = z.object({
   id: z.string(),
   updated: z.boolean(),
+  clientEffect: clientEffectSchema,
 });
 
 const deleteInputSchema = z.object({
@@ -86,6 +123,7 @@ const deleteInputSchema = z.object({
 const deleteOutputSchema = z.object({
   id: z.string(),
   deleted: z.boolean(),
+  clientEffect: clientEffectSchema,
 });
 
 const reorderInputSchema = z.object({
@@ -94,6 +132,7 @@ const reorderInputSchema = z.object({
 
 const reorderOutputSchema = z.object({
   updated: z.number().int().min(0),
+  clientEffect: clientEffectSchema,
 });
 
 const searchInputSchema = z.object({
@@ -104,6 +143,20 @@ const searchInputSchema = z.object({
 const searchOutputSchema = z.object({
   items: z.array(z.record(z.string(), z.unknown())),
 });
+
+export function createDesktopStickyTool(context: ToolContext) {
+  return createTool({
+    id: "create-desktop-sticky",
+    description:
+      "Create a sticky note that must appear on the desktop. Always verifies the saved row has on_desktop=true and asks the client to sync desktop items.",
+    inputSchema: desktopStickyInputSchema,
+    outputSchema: desktopStickyOutputSchema,
+    execute: (input) =>
+      runWithTrace(context, "create-desktop-sticky", input, () =>
+        createDesktopSticky(context, { ...input, tags: input.tags ?? [] })
+      ),
+  });
+}
 
 export function createUpsertKyoItemTool(context: ToolContext) {
   return createTool({
@@ -176,6 +229,31 @@ export function createSearchKyoItemsTool(context: ToolContext) {
   });
 }
 
+async function createDesktopSticky(
+  context: ToolContext,
+  input: z.infer<typeof desktopStickyInputSchema>
+): Promise<z.infer<typeof desktopStickyOutputSchema>> {
+  const payload = await toInsertPayload(context, {
+    ...input,
+    type: "note",
+    onDesktop: true,
+    inDock: false,
+  });
+  const row = await insertAndReadDesktopNote(context, payload);
+  if (!row.onDesktop) throw new Error("Desktop sticky verification failed");
+
+  return {
+    id: row.id,
+    type: "note",
+    saved: true,
+    action: "created",
+    verified: true,
+    onDesktop: row.onDesktop,
+    row,
+    clientEffect: kyoItemsEffect([row.id], "desktop-sticky-created"),
+  };
+}
+
 async function upsertKyoItem(
   context: ToolContext,
   input: z.infer<typeof itemInputSchema>
@@ -184,7 +262,13 @@ async function upsertKyoItem(
     const existing = await findBookmarkByUrl(context, input.url);
     if (existing?.id) {
       await updateById(context, existing.id as string, toUpdatePayload(input));
-      return { id: existing.id as string, type: input.type, saved: true, action: "updated" };
+      return {
+        id: existing.id as string,
+        type: input.type,
+        saved: true,
+        action: "updated",
+        clientEffect: kyoItemsEffect([existing.id as string], "kyo-item-updated"),
+      };
     }
   }
 
@@ -196,7 +280,14 @@ async function upsertKyoItem(
     .single();
 
   if (error) throw error;
-  return { id: data.id as string, type: data.type as "bookmark" | "note", saved: true, action: "created" };
+  const id = data.id as string;
+  return {
+    id,
+    type: data.type as "bookmark" | "note",
+    saved: true,
+    action: "created",
+    clientEffect: kyoItemsEffect([id], "kyo-item-created"),
+  };
 }
 
 async function updateKyoItem(
@@ -206,7 +297,7 @@ async function updateKyoItem(
   const payload = toUpdatePayload(input);
   if (Object.keys(payload).length === 1) throw new Error("No fields to update");
   await updateById(context, input.id, payload);
-  return { id: input.id, updated: true };
+  return { id: input.id, updated: true, clientEffect: kyoItemsEffect([input.id], "kyo-item-updated") };
 }
 
 async function deleteKyoItem(
@@ -222,7 +313,7 @@ async function deleteKyoItem(
     .single();
 
   if (error) throw error;
-  return { id, deleted: true };
+  return { id, deleted: true, clientEffect: kyoItemsEffect([id], "kyo-item-deleted") };
 }
 
 async function reorderKyoItems(
@@ -245,7 +336,10 @@ async function reorderKyoItems(
     )
   );
 
-  return { updated: orderedIds.length };
+  return {
+    updated: orderedIds.length,
+    clientEffect: kyoItemsEffect(orderedIds, "kyo-items-reordered"),
+  };
 }
 
 async function searchKyoItems(
@@ -281,6 +375,32 @@ async function findBookmarkByUrl(context: ToolContext, url: string) {
 
   if (error) throw error;
   return data as { id: string } | null;
+}
+
+async function insertAndReadDesktopNote(
+  context: ToolContext,
+  payload: Record<string, unknown>
+): Promise<z.infer<typeof verifiedDesktopNoteSchema>> {
+  const { data, error } = await context.client
+    .from("kyo_items")
+    .insert(payload)
+    .select("id,title,text,color,tags,on_desktop,order_index")
+    .single();
+
+  if (error) throw error;
+  return toVerifiedDesktopNote(data as Record<string, unknown>);
+}
+
+function toVerifiedDesktopNote(row: Record<string, unknown>): z.infer<typeof verifiedDesktopNoteSchema> {
+  return {
+    id: row.id as string,
+    title: (row.title as string | null) ?? null,
+    text: (row.text as string | null) ?? null,
+    color: (row.color as string | null) ?? null,
+    tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
+    onDesktop: row.on_desktop === true,
+    orderIndex: Number(row.order_index ?? 0),
+  };
 }
 
 async function toInsertPayload(
@@ -351,6 +471,14 @@ async function updateById(
 
 function normalizeTags(tags: string[] = []): string[] {
   return Array.from(new Set(tags.map((tag) => tag.trim()).filter(Boolean))).slice(0, 12);
+}
+
+function kyoItemsEffect(itemIds: string[], reason: string): z.infer<typeof clientEffectSchema> {
+  return {
+    type: "sync-kyo-items",
+    itemIds,
+    reason,
+  };
 }
 
 async function runWithTrace<TInput, TOutput>(

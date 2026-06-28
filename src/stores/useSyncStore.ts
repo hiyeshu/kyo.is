@@ -1,9 +1,9 @@
 /**
  * [INPUT]: 依赖 @/lib/cloudSync 云端操作，依赖 @/lib/supabase Realtime 订阅，
  *          依赖 useBookmarkStore/useStickiesStore 本地数据
- * [OUTPUT]: 对外提供 useSyncStore — initialSync / startRealtime / stopRealtime
+ * [OUTPUT]: 对外提供 useSyncStore — initialSync / refreshCloudItems / startRealtime / stopRealtime
  *           对外提供 markLocalChange / trackDeletion（被 bookmark/stickies store 消费）
- * [POS]: stores/ 的云端数据层，登录时双向 merge + Realtime 实时同步，维护 orderIndex 排序同构
+ * [POS]: stores/ 的云端数据层，登录时双向 merge，agent action 后读云刷新，Realtime 实时同步，维护 orderIndex 排序同构
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -28,6 +28,7 @@ export type SyncStatus = "idle" | "loading" | "done" | "error";
 interface SyncState {
   status: SyncStatus;
   initialSync: () => Promise<void>;
+  refreshCloudItems: (itemIds?: string[]) => Promise<void>;
   startRealtime: (userId: string) => void;
   stopRealtime: () => void;
 }
@@ -305,6 +306,54 @@ export const useSyncStore = create<SyncState>((set) => ({
       console.error("[sync] initialSync failed:", e);
       set({ status: "error" });
     }
+  },
+
+  refreshCloudItems: async (itemIds: string[] = []) => {
+    const result = await cloudFetchAll();
+    if (!result) return;
+
+    const affectedIds = new Set(itemIds.filter(Boolean));
+    const { bookmarks: cloudBookmarks, notes: cloudNotes } = result;
+
+    const cloudBmMap = new Map<string, Record<string, unknown>>();
+    for (const bookmark of cloudBookmarks) {
+      cloudBmMap.set(bookmark.id, bookmark as unknown as Record<string, unknown>);
+    }
+
+    const cloudNtMap = new Map<string, Record<string, unknown>>();
+    for (const note of cloudNotes) {
+      cloudNtMap.set(note.id, note as unknown as Record<string, unknown>);
+    }
+
+    const localBookmarks = useBookmarkStore.getState().items;
+    const localBmMap = new Map(localBookmarks.map((item) => [item.id, item]));
+    const mergedBookmarks = localBookmarks.flatMap((local) => {
+      const cloud = cloudBmMap.get(local.id);
+      if (cloud) return [cloudRowToBookmark(cloud)];
+      return affectedIds.has(local.id) ? [] : [local];
+    });
+
+    for (const [id, cloud] of cloudBmMap) {
+      if (!localBmMap.has(id)) mergedBookmarks.push(cloudRowToBookmark(cloud));
+    }
+
+    const localNotes = useStickiesStore.getState().notes;
+    const localNtMap = new Map(localNotes.map((item) => [item.id, item]));
+    const mergedNotes = localNotes.flatMap((local) => {
+      const cloud = cloudNtMap.get(local.id);
+      if (cloud) {
+        const cloudNote = cloudRowToNote(cloud);
+        return [{ ...cloudNote, position: local.position, size: local.size }];
+      }
+      return affectedIds.has(local.id) ? [] : [local];
+    });
+
+    for (const [id, cloud] of cloudNtMap) {
+      if (!localNtMap.has(id)) mergedNotes.push(cloudRowToNote(cloud, mergedNotes.length));
+    }
+
+    useBookmarkStore.setState({ items: sortByOrderIndex(mergedBookmarks) });
+    useStickiesStore.setState({ notes: sortByOrderIndex(mergedNotes) });
   },
 
   startRealtime: (userId: string) => {

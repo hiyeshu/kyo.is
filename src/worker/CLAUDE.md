@@ -4,7 +4,7 @@
 成员清单
 env.d.ts: Wrangler 生成的 WorkerBindings 类型，声明 ASSETS、Supabase、DeepSeek binding 名称。
 index.ts: Cloudflare Worker fetch 入口，处理 /api、静态资源、无扩展 HTML、SPA fallback、缓存头。
-routes.ts: Worker API 路由，处理 agent chat、channel 列表、channel messages，并把空 assistant stream 转成可见完成文案或明确错误。
+routes.ts: Worker API 路由，处理 agent chat、channel 列表、channel messages，并把空 assistant stream 转成可见完成文案或明确错误，同时从 toolTrace 收集 clientEffects 下发给前端同步桌面状态。
 compatRoutes.ts: Worker 兼容 API 路由，处理 scrape、bookmark-preview、audio-transcribe、save/search/sync/items，并统一前端 camelCase 与数据库 snake_case 字段，包括 orderIndex/order_index。
 
 架构决策

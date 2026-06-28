@@ -1,12 +1,13 @@
 #!/usr/bin/env bun
 /**
  * [INPUT]: 依赖 src/worker/routes 的 assistant turn 归一化函数与 ./test-utils
- * [OUTPUT]: runChatStreamContractTests，验证空 assistant stream 不会成为可持久化空消息
- * [POS]: tests/ 的聊天流契约套件，锁住“只显示 Kyo 日期没有气泡”的回归
+ * [OUTPUT]: runChatStreamContractTests，验证空 assistant stream、tool-only 文案与 clientEffects 收集契约
+ * [POS]: tests/ 的聊天流契约套件，锁住“只显示 Kyo 日期没有气泡”和“工具成功但前端不同步”的回归
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import {
+  collectClientEffects,
   resolveAssistantTurn,
   toAgentPrompt,
 } from "../src/worker/routes";
@@ -39,6 +40,44 @@ export async function runChatStreamContractTests(): Promise<{ passed: number; fa
     }
   });
 
+  await runTest("desktop sticky tool-only turn names verified desktop note", async () => {
+    const result = resolveAssistantTurn("", [
+      toolTrace("create-desktop-sticky", "success", {
+        verified: true,
+        row: { title: "今天吃什么", onDesktop: true },
+      }),
+    ]);
+    assert(result.ok, "Expected verified desktop sticky to be renderable");
+    if (result.ok) assertEq(result.content, "已创建并固定到桌面：今天吃什么");
+  });
+
+  await runTest("desktop sticky tool-only turn does not claim unverified desktop state", async () => {
+    const result = resolveAssistantTurn("", [
+      toolTrace("create-desktop-sticky", "success", {
+        verified: false,
+        row: { title: "今天吃什么", onDesktop: false },
+      }),
+    ]);
+    assert(result.ok, "Expected successful tool-only turn to remain renderable");
+    if (result.ok) assertEq(result.content, "已完成。");
+  });
+
+  await runTest("client effects are collected from successful tool outputs", async () => {
+    const effects = collectClientEffects([
+      toolTrace("create-desktop-sticky", "running"),
+      toolTrace("create-desktop-sticky", "success", {
+        clientEffect: {
+          type: "sync-kyo-items",
+          itemIds: ["note-a"],
+          reason: "desktop-sticky-created",
+        },
+      }),
+    ]);
+    assertEq(effects.length, 1);
+    assertEq(effects[0]?.type, "sync-kyo-items");
+    assertEq(effects[0]?.itemIds[0], "note-a");
+  });
+
   await runTest("real assistant text is preserved", async () => {
     const result = resolveAssistantTurn("  hello\n", []);
     assert(result.ok, "Expected non-empty assistant text to pass");
@@ -60,10 +99,11 @@ export async function runChatStreamContractTests(): Promise<{ passed: number; fa
   return printSummary();
 }
 
-function toolTrace(tool: string, status: ToolTraceEntry["status"]): ToolTraceEntry {
+function toolTrace(tool: string, status: ToolTraceEntry["status"], output?: unknown): ToolTraceEntry {
   return {
     tool,
     status,
+    output,
     at: new Date(0).toISOString(),
   };
 }

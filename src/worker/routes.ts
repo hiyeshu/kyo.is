@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 server/channel/supabase/http/types 与 mastra/createKyoAgent
- * [OUTPUT]: handleAgentChat / handleChannels / handleChannelMessages 路由处理函数
- * [POS]: worker/ 的 API 路由层，承接 Cloudflare Worker 请求并调用产品服务边界
+ * [OUTPUT]: handleAgentChat / handleChannels / handleChannelMessages / collectClientEffects 路由处理函数
+ * [POS]: worker/ 的 API 路由层，承接 Cloudflare Worker 请求并调用产品服务边界，把 agent toolTrace 归一成可持久化消息与前端 clientEffects
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -28,6 +28,12 @@ import type {
 
 const EMPTY_ASSISTANT_RESPONSE = "Agent returned an empty response";
 const TOOL_ONLY_ASSISTANT_RESPONSE = "已完成。";
+
+export interface AgentClientEffect {
+  type: "sync-kyo-items";
+  itemIds: string[];
+  reason: string;
+}
 
 export async function handleChannels(request: Request, env: KyoWorkerEnv): Promise<Response> {
   const auth = createUserSupabase(request, env);
@@ -186,6 +192,7 @@ function streamAgentOutput(params: {
               channelId: params.channelId,
               runId: params.runId,
               toolTrace: params.toolTrace,
+              clientEffects: collectClientEffects(params.toolTrace),
             })}\n`
           )
         );
@@ -225,13 +232,54 @@ export function resolveAssistantTurn(
 ): AssistantTurnResolution {
   if (content.trim().length > 0) return { ok: true, content, synthetic: false };
   if (hasSuccessfulToolTrace(toolTrace)) {
-    return { ok: true, content: TOOL_ONLY_ASSISTANT_RESPONSE, synthetic: true };
+    return { ok: true, content: toolOnlyMessage(toolTrace), synthetic: true };
   }
   return { ok: false, error: EMPTY_ASSISTANT_RESPONSE };
 }
 
 function hasSuccessfulToolTrace(toolTrace: ToolTraceEntry[]): boolean {
   return toolTrace.some((entry) => entry.status === "success");
+}
+
+function toolOnlyMessage(toolTrace: ToolTraceEntry[]): string {
+  const note = toolTrace.find((entry) => {
+    const output = asRecord(entry.output);
+    const row = asRecord(output?.row);
+    return entry.tool === "create-desktop-sticky"
+      && entry.status === "success"
+      && output?.verified === true
+      && row?.onDesktop === true;
+  });
+  const row = asRecord(asRecord(note?.output)?.row);
+  const label = String(row?.title || row?.text || "").trim();
+  return note ? `已创建并固定到桌面${label ? `：${label}` : "。"}` : TOOL_ONLY_ASSISTANT_RESPONSE;
+}
+
+export function collectClientEffects(toolTrace: ToolTraceEntry[]): AgentClientEffect[] {
+  const seen = new Set<string>();
+  return toolTrace.flatMap((entry) => {
+    if (entry.status !== "success") return [];
+    const effect = readClientEffect(asRecord(entry.output)?.clientEffect);
+    if (!effect) return [];
+    const key = `${effect.type}:${effect.itemIds.join(",")}:${effect.reason}`;
+    if (seen.has(key)) return [];
+    seen.add(key);
+    return [effect];
+  });
+}
+
+function readClientEffect(value: unknown): AgentClientEffect | null {
+  const effect = asRecord(value);
+  if (effect?.type !== "sync-kyo-items") return null;
+  const itemIds = Array.isArray(effect.itemIds) ? effect.itemIds.map(String).filter(Boolean) : [];
+  if (itemIds.length === 0) return null;
+  return { type: "sync-kyo-items", itemIds, reason: String(effect.reason ?? "agent-tool-success") };
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
 }
 
 async function persistAssistantTurn(params: {

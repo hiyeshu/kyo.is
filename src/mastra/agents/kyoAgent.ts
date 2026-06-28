@@ -9,6 +9,7 @@ import { Agent } from "@mastra/core/agent";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClassifyContentTool } from "../tools/classifyContentTool";
 import {
+  createDesktopStickyTool,
   createDeleteKyoItemTool,
   createReorderKyoItemsTool,
   createSearchKyoItemsTool,
@@ -37,7 +38,11 @@ export function createKyoAgent(context: KyoAgentContext) {
       "You are Kyo's workspace agent.",
       "Operate only inside the current user's channel and workspace.",
       "Use tools for all persistent changes. Never invent that a save succeeded.",
-      "When saving a URL or note, classify it first, then write it with upsert-kyo-item.",
+      "Only describe actions that actually happened in tool results. Do not say you searched, checked, saved, or synced unless the relevant tool result proves it.",
+      "For Kyo item operations a user could do in the UI, use typed tools: create/save, edit text/title/tags/color, pin or unpin desktop, pin or unpin dock, delete, and reorder.",
+      "For any request to create a desktop sticky note or 便利贴, use create-desktop-sticky instead of generic upsert-kyo-item.",
+      "Only say a sticky note is on the desktop when create-desktop-sticky returns verified=true and onDesktop=true.",
+      "When saving a URL or non-desktop note, classify it first, then write it with upsert-kyo-item.",
       "Before renaming, retagging, deleting, or reordering existing items, search for the target item and use its exact id.",
       "Use update-kyo-item for rename, tags, note text, color, desktop pin, dock pin, and order index changes.",
       "Use delete-kyo-item for deletion and reorder-kyo-items for explicit user-defined ordering.",
@@ -51,6 +56,7 @@ export function createKyoAgent(context: KyoAgentContext) {
     },
     tools: {
       classifyContentTool: createClassifyContentTool(context),
+      createDesktopStickyTool: createDesktopStickyTool(context),
       searchKyoItemsTool: createSearchKyoItemsTool(context),
       upsertKyoItemTool: createUpsertKyoItemTool(context),
       updateKyoItemTool: createUpdateKyoItemTool(context),

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * [INPUT]: 依赖 src/mastra/tools/kyoItemsTool 与 ./test-utils，使用 mock Supabase query builder
- * [OUTPUT]: runKyoItemToolTests，验证 agent item tools 的输入契约、用户作用域与写入 payload
+ * [OUTPUT]: runKyoItemToolTests，验证 agent item tools 的输入契约、桌面便签验证闭环、用户作用域、clientEffects 与写入 payload
  * [POS]: tests/ 的 Mastra 工具契约套件，不需要真实 Supabase session 或 DeepSeek key
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -9,6 +9,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import {
+  createDesktopStickyTool,
   createDeleteKyoItemTool,
   createReorderKyoItemsTool,
   createUpdateKyoItemTool,
@@ -69,6 +70,46 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
     );
   });
 
+  await runTest("desktop sticky tool verifies row and requests client sync", async () => {
+    const { client, calls } = createMockSupabase(
+      { data: { order_index: 4 }, error: null },
+      {
+        data: {
+          id: NOTE_ID,
+          title: "今天吃什么",
+          text: "思考今天的晚食计划",
+          color: "yellow",
+          tags: ["life"],
+          on_desktop: true,
+          order_index: 5,
+        },
+        error: null,
+      }
+    );
+    const trace: ToolTraceEntry[] = [];
+    const tool = createDesktopStickyTool(createContext(client, trace));
+    const schema = z.toJSONSchema(tool.inputSchema);
+
+    assertEq(schema.type, "object");
+    const result = await tool.execute({
+      title: "今天吃什么",
+      text: "思考今天的晚食计划",
+      tags: ["life"],
+    });
+
+    assertEq(result.verified, true);
+    assertEq(result.onDesktop, true);
+    assertEq(result.row.onDesktop, true);
+    assertEq(result.clientEffect.type, "sync-kyo-items");
+    assertJsonEq(result.clientEffect.itemIds, [NOTE_ID]);
+    assertEq(trace.at(-1)?.status, "success");
+
+    const payload = firstPayload(calls, "insert");
+    assertEq(payload.type, "note");
+    assertEq(payload.on_desktop, true);
+    assertEq(payload.in_dock, false);
+  });
+
   await runTest("upsert note creates scoped payload with next order index", async () => {
     const { client, calls } = createMockSupabase(
       { data: { order_index: 4 }, error: null },
@@ -86,6 +127,8 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
     });
 
     assertEq(result.action, "created");
+    assertEq(result.clientEffect.type, "sync-kyo-items");
+    assertJsonEq(result.clientEffect.itemIds, [NOTE_ID]);
     assertEq(trace.at(-1)?.status, "success");
     assert(hasEq(calls, "user_id", USER_ID), "Query must scope by current user");
 
@@ -114,6 +157,8 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
     });
 
     assertEq(result.action, "updated");
+    assertEq(result.clientEffect.type, "sync-kyo-items");
+    assertJsonEq(result.clientEffect.itemIds, [BOOKMARK_ID]);
     assert(!calls.some((call) => call.method === "insert"), "Existing bookmark must not insert duplicate");
     assert(hasEq(calls, "id", BOOKMARK_ID), "Update must target exact id");
     assert(hasEq(calls, "user_id", USER_ID), "Update must scope by current user");
@@ -142,6 +187,8 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
     });
 
     assertEq(result.action, "created");
+    assertEq(result.clientEffect.type, "sync-kyo-items");
+    assertJsonEq(result.clientEffect.itemIds, [BOOKMARK_ID]);
     assert(hasEq(calls, "user_id", USER_ID), "Create query must scope by current user");
 
     const payload = firstPayload(calls, "insert");
@@ -164,7 +211,7 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
     const updateTool = createUpdateKyoItemTool(createContext(client));
     const deleteTool = createDeleteKyoItemTool(createContext(client));
 
-    await updateTool.execute({
+    const updateResult = await updateTool.execute({
       id: BOOKMARK_ID,
       title: "Renamed",
       text: "更新后的便签内容",
@@ -172,8 +219,12 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
       tags: ["later", "later"],
       orderIndex: 3,
     });
-    await deleteTool.execute({ id: BOOKMARK_ID });
+    const deleteResult = await deleteTool.execute({ id: BOOKMARK_ID });
 
+    assertEq(updateResult.clientEffect.type, "sync-kyo-items");
+    assertJsonEq(updateResult.clientEffect.itemIds, [BOOKMARK_ID]);
+    assertEq(deleteResult.clientEffect.type, "sync-kyo-items");
+    assertJsonEq(deleteResult.clientEffect.itemIds, [BOOKMARK_ID]);
     assert(hasEq(calls, "id", BOOKMARK_ID), "Mutation must target exact id");
     assert(hasEq(calls, "user_id", USER_ID), "Mutation must scope by current user");
     assert(calls.some((call) => call.method === "delete"), "Delete query must be issued");
@@ -197,6 +248,8 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
     const result = await tool.execute({ orderedIds: [NOTE_ID, OTHER_ID] });
 
     assertEq(result.updated, 2);
+    assertEq(result.clientEffect.type, "sync-kyo-items");
+    assertJsonEq(result.clientEffect.itemIds, [NOTE_ID, OTHER_ID]);
     assert(calls.some((call) => call.method === "in"), "Ownership query must filter requested ids");
     assert(hasEq(calls, "user_id", USER_ID), "Ownership and updates must scope by current user");
 
