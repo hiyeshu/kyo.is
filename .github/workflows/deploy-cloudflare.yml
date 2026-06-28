@@ -1,6 +1,6 @@
-# [INPUT]: 依赖 GitHub Actions、Bun 1.3.5、GitHub Secrets 与 wrangler.jsonc。
-# [OUTPUT]: 对 main 分支 push 和手动 workflow_dispatch 提供 Cloudflare Worker 生产部署。
-# [POS]: .github/workflows 的发布入口，让 GitHub main 成为 kyo-is Worker 的部署真相源。
+# [INPUT]: 依赖 GitHub Actions、Bun 1.3.5、GitHub Secrets、GitHub Production 环境与 wrangler.jsonc。
+# [OUTPUT]: 对 main 分支 push 和手动 workflow_dispatch 提供 Cloudflare Worker 生产部署与 kyo.is 环境状态。
+# [POS]: .github/workflows 的发布入口，让 GitHub main 与 Production 环境指向 Cloudflare Worker。
 # [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
 
 name: Deploy Cloudflare Worker
@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  deployments: write
 
 concurrency:
   group: deploy-cloudflare-worker
@@ -22,6 +23,9 @@ jobs:
   deploy:
     name: Deploy kyo-is
     runs-on: ubuntu-latest
+    environment:
+      name: Production
+      url: https://kyo.is
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
