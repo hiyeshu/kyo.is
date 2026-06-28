@@ -29,18 +29,29 @@ const itemBaseSchema = z.object({
   orderIndex: z.number().int().min(0).optional(),
 });
 
-const itemInputSchema = z.discriminatedUnion("type", [
-  itemBaseSchema.extend({
-    type: z.literal("bookmark"),
-    url: z.string().url(),
-    text: z.string().optional(),
-  }),
-  itemBaseSchema.extend({
-    type: z.literal("note"),
+const itemInputSchema = itemBaseSchema
+  .extend({
+    type: z.enum(["bookmark", "note"]),
     url: z.string().url().optional(),
-    text: z.string().min(1),
-  }),
-]);
+    text: z.string().optional(),
+  })
+  .superRefine((input, ctx) => {
+    if (input.type === "bookmark" && !input.url) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["url"],
+        message: "Bookmark requires url",
+      });
+    }
+
+    if (input.type === "note" && !input.text?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["text"],
+        message: "Note requires text",
+      });
+    }
+  });
 
 const itemOutputSchema = z.object({
   id: z.string(),

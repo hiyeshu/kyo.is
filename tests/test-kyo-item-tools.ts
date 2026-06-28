@@ -7,6 +7,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
 import {
   createDeleteKyoItemTool,
   createReorderKyoItemsTool,
@@ -53,6 +54,18 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
     assert(
       tool.inputSchema.safeParse({ type: "bookmark", url: "https://example.com" }).success,
       "Valid bookmark should parse"
+    );
+  });
+
+  await runTest("upsert tool exposes DeepSeek-compatible object schema", async () => {
+    const { client } = createMockSupabase();
+    const tool = createUpsertKyoItemTool(createContext(client));
+    const schema = z.toJSONSchema(tool.inputSchema);
+
+    assertEq(schema.type, "object");
+    assert(
+      !("oneOf" in schema) && !("anyOf" in schema),
+      "DeepSeek requires function parameters to be a top-level object, not a root union"
     );
   });
 
