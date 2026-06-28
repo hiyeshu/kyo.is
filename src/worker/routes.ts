@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 server/channel/supabase/http/types 与 mastra/createKyoAgent
- * [OUTPUT]: handleAgentChat / handleChannels / handleChannelMessages / collectClientEffects / collectClientToolEvents 路由处理函数
- * [POS]: worker/ 的 API 路由层，承接 Cloudflare Worker 请求并调用产品服务边界，把 agent toolTrace 归一成可持久化消息、前端步骤帧与 clientEffects
+ * [OUTPUT]: handleAgentChat / handleChannels / handleChannelMessages / collectClientEffects / collectClientToolEvents 路由处理函数与对外错误脱敏工具
+ * [POS]: worker/ 的 API 路由层，承接 Cloudflare Worker 请求并调用产品服务边界，把 agent toolTrace 归一成可持久化消息、前端步骤帧、脱敏错误与 clientEffects
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -259,17 +259,18 @@ function streamAgentOutput(params: {
         emitFrame("d", {
           channelId: params.channelId,
           runId: params.runId,
-          toolTrace: params.toolTrace,
+          toolTrace: sanitizeToolTraceForClient(params.toolTrace),
           clientEffects: collectClientEffects(params.toolTrace),
         });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Agent stream failed";
+        const internalMessage = error instanceof Error ? error.message : "Agent stream failed";
+        const message = publicAgentErrorMessage(error);
         params.ctx.waitUntil(
           persistAssistantTurn({
             ...params,
             content: message,
             status: "error",
-            error: message,
+            error: internalMessage,
           })
         );
         emitFrame("3", message);
@@ -354,6 +355,21 @@ export function collectClientToolEvents(
   return { nextIndex: toolTrace.length, events };
 }
 
+export function sanitizeToolTraceForClient(toolTrace: ToolTraceEntry[]): ToolTraceEntry[] {
+  return toolTrace.map((entry) => {
+    if (entry.status !== "error") return entry;
+    return { ...entry, error: toolErrorMessage(entry) };
+  });
+}
+
+export function publicAgentErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  const cleaned = cleanToolError(message);
+  if (message === EMPTY_ASSISTANT_RESPONSE) return "抱歉，暂时没有生成回复，请再试一次。";
+  if (isInternalErrorMessage(message)) return "工具执行失败，请重试。";
+  return cleaned;
+}
+
 function readClientEffect(value: unknown): AgentClientEffect | null {
   const effect = asRecord(value);
   if (effect?.type !== "sync-kyo-items") return null;
@@ -403,7 +419,7 @@ function formatToolStep(entry: ToolTraceEntry): string {
   const label = readToolLabel(output) || readToolLabel(input);
 
   if (entry.status === "running") return runningToolMessage(entry.tool);
-  if (entry.status === "error") return `${toolDisplayName(entry.tool)}失败：${entry.error ?? "未知错误"}`;
+  if (entry.status === "error") return toolErrorMessage(entry);
   return TOOL_SUCCESS_MESSAGES[entry.tool]?.(entry, label) ?? `${toolDisplayName(entry.tool)}已完成。`;
 }
 
@@ -413,6 +429,30 @@ function runningToolMessage(tool: string): string {
 
 function toolDisplayName(tool: string): string {
   return tool.split("-").filter(Boolean).join(" ");
+}
+
+function toolErrorMessage(entry: ToolTraceEntry): string {
+  if (entry.tool === "classify-content") return "整理标题和标签失败，已跳过自动打标。";
+  return `${toolDisplayName(entry.tool)}失败：${cleanToolError(entry.error)}`;
+}
+
+function cleanToolError(value: unknown): string {
+  const message = String(value ?? "").trim();
+  if (!message) return "未知错误";
+  if (message.includes("invalid_value") || message.includes("Invalid option")) {
+    return "返回格式不符合要求";
+  }
+  return message.length > 120 ? `${message.slice(0, 117)}...` : message;
+}
+
+function isInternalErrorMessage(message: string): boolean {
+  const trimmed = message.trim();
+  return trimmed.startsWith("{")
+    || trimmed.startsWith("[")
+    || trimmed.includes("invalid_value")
+    || trimmed.includes("Invalid option")
+    || trimmed.includes("ZodError")
+    || trimmed.includes("expected one of");
 }
 
 function readToolLabel(value: Record<string, unknown> | null): string {

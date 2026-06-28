@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 react hooks、Supabase auth、LoginDialog、getApiUrl、useSyncStore、../../base/types 的 AppProps
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，前置登录门禁，解析 0/3/8/d 流帧、agent step 气泡与 clientEffects，并管理 channelId、历史消息、图片附件、autoSend
+ * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，前置登录门禁，解析 0/3/8/d 流帧、降噪错误、agent step 气泡与 clientEffects，并管理 channelId、历史消息、图片附件、autoSend
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -595,7 +595,7 @@ async function readApiError(response: Response): Promise<string> {
 
 function readStreamError(line: string): string {
   try {
-    return JSON.parse(line.slice(2));
+    return toPublicChatError(JSON.parse(line.slice(2))) || "Agent stream failed";
   } catch {
     return "Agent stream failed";
   }
@@ -608,7 +608,24 @@ function getChatErrorMessage(
 ): string {
   if (!(error instanceof Error)) return fallback;
   if (isUnauthorizedError(error)) return loginRequired;
-  return error.message || fallback;
+  return toPublicChatError(error.message) || fallback;
+}
+
+function toPublicChatError(value: unknown): string {
+  const message = String(value ?? "").trim();
+  if (!message || isInternalChatError(message)) return "";
+  return message;
+}
+
+function isInternalChatError(message: string): boolean {
+  const trimmed = message.trim();
+  return trimmed === "Agent stream failed"
+    || trimmed.startsWith("{")
+    || trimmed.startsWith("[")
+    || trimmed.includes("invalid_value")
+    || trimmed.includes("Invalid option")
+    || trimmed.includes("ZodError")
+    || trimmed.includes("expected one of");
 }
 
 function isUnauthorizedError(error: unknown): boolean {

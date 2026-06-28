@@ -6,7 +6,7 @@ types.ts: 共享服务端契约，把 KyoWorkerEnv 绑定到生成的 WorkerBind
 http.ts: HTTP 边界工具，统一 JSON、CORS、bearer token、环境变量读取。
 supabase.ts: Supabase 入口，创建用户作用域客户端与可选 service-role 服务端客户端。
 channels.ts: Channel/message/agent_run 数据层，维护聊天真相源和工具审计记录。
-deepseek.ts: DeepSeek 结构化分类器，替代旧打标工作流。
+deepseek.ts: DeepSeek 结构化分类器，替代旧打标工作流，把模型 JSON、category 别名和 fallback 字段归一为产品契约。
 linkMeta.ts: 链接摄取数据层，LinkMeta API 可失败降级，DeepSeek 继续摘要打标，有 service-role 时写入 link_meta 缓存。
 
 架构决策

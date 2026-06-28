@@ -2,7 +2,7 @@
 > L2 | 父级: /src/mastra/CLAUDE.md
 
 成员清单
-classifyContentTool.ts: Mastra 内容分类工具，调用 DeepSeek 生成 title/summary/tags/category。
+classifyContentTool.ts: Mastra 内容分类工具，调用 DeepSeek 生成 title/summary/tags/category，失败时返回 fallback 分类并留下 error trace，避免打标阻断保存/删除。
 kyoItemsTool.ts: Mastra Kyo 数据工具，提供 create-desktop-sticky/search/upsert/update/delete/reorder，受控读写当前用户 kyo_items，对桌面便签执行写后读回验证，并在删除时返回 deletedItems hint 供客户端清理本地投影。
 workspaceFilesTool.ts: Mastra 文件系统工具，受控读写当前用户 workspace_files。
 

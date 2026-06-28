@@ -1,13 +1,13 @@
 /**
  * [INPUT]: 依赖 @mastra/core/tools、zod、../../server/deepseek、../../server/types
  * [OUTPUT]: createClassifyContentTool，提供 classifyContent Mastra 工具
- * [POS]: mastra/tools 的模型分类工具，被 Kyo agent 调用，负责内容摘要与标签生成
+ * [POS]: mastra/tools 的模型分类工具，被 Kyo agent 调用，负责内容摘要与标签生成，失败时降级输出以免阻断保存/删除
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { classifyContent } from "../../server/deepseek";
+import { classifyContent, normalizeClassification } from "../../server/deepseek";
 import type { KyoWorkerEnv, ToolTraceEntry } from "../../server/types";
 
 interface ToolContext {
@@ -43,7 +43,7 @@ export function createClassifyContentTool(context: ToolContext) {
         return output;
       } catch (error) {
         pushTrace(context.trace, "classify-content", "error", input, undefined, error);
-        throw error;
+        return normalizeClassification({}, input);
       }
     },
   });
