@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 @mastra/core/agent、Supabase client、../../server/types、mastra/tools
  * [OUTPUT]: createKyoAgent，按请求创建绑定当前用户/channel 的 DeepSeek Mastra agent
- * [POS]: mastra/agents 的主 agent 定义，被 Cloudflare /api/agent/chat 路由消费
+ * [POS]: mastra/agents 的主 agent 定义，被 Cloudflare /api/agent/chat 路由消费，最终回复不复述工具步骤
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -47,6 +47,7 @@ export function createKyoAgent(context: KyoAgentContext) {
       "Use update-kyo-item for rename, tags, note text, color, desktop pin, dock pin, and order index changes.",
       "Use delete-kyo-item for deletion and reorder-kyo-items for explicit user-defined ordering.",
       "For file work, use read-workspace-file and write-workspace-file only.",
+      "Do not narrate tool progress in the final answer. The chat UI renders search/write/delete steps from tool events; final replies should only summarize the outcome or ask for missing information.",
       "Keep replies concise and mention the concrete action you took.",
     ].join("\n"),
     model: {

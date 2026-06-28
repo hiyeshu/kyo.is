@@ -71,10 +71,21 @@ const verifiedDesktopNoteSchema = z.object({
   orderIndex: z.number(),
 });
 
+const deletedItemHintSchema = z.object({
+  id: z.string(),
+  type: z.enum(["bookmark", "note"]).optional(),
+  title: z.string().nullable().optional(),
+  text: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+  color: z.string().nullable().optional(),
+  onDesktop: z.boolean().optional(),
+});
+
 const clientEffectSchema = z.object({
   type: z.literal("sync-kyo-items"),
   itemIds: z.array(z.string()),
   reason: z.string(),
+  deletedItems: z.array(deletedItemHintSchema).optional(),
 });
 
 const itemOutputSchema = z.object({
@@ -123,6 +134,7 @@ const deleteInputSchema = z.object({
 const deleteOutputSchema = z.object({
   id: z.string(),
   deleted: z.boolean(),
+  item: deletedItemHintSchema,
   clientEffect: clientEffectSchema,
 });
 
@@ -304,16 +316,22 @@ async function deleteKyoItem(
   context: ToolContext,
   id: string
 ): Promise<z.infer<typeof deleteOutputSchema>> {
-  const { error } = await context.client
+  const { data, error } = await context.client
     .from("kyo_items")
     .delete()
     .eq("id", id)
     .eq("user_id", context.userId)
-    .select("id")
+    .select("id,type,title,text,url,color,on_desktop")
     .single();
 
   if (error) throw error;
-  return { id, deleted: true, clientEffect: kyoItemsEffect([id], "kyo-item-deleted") };
+  const item = toDeletedItemHint(data as Record<string, unknown>);
+  return {
+    id,
+    deleted: true,
+    item,
+    clientEffect: kyoItemsEffect([id], "kyo-item-deleted", { deletedItems: [item] }),
+  };
 }
 
 async function reorderKyoItems(
@@ -403,6 +421,19 @@ function toVerifiedDesktopNote(row: Record<string, unknown>): z.infer<typeof ver
   };
 }
 
+function toDeletedItemHint(row: Record<string, unknown>): z.infer<typeof deletedItemHintSchema> {
+  const type = row.type === "bookmark" || row.type === "note" ? row.type : undefined;
+  return {
+    id: row.id as string,
+    ...(type ? { type } : {}),
+    title: (row.title as string | null) ?? null,
+    text: (row.text as string | null) ?? null,
+    url: (row.url as string | null) ?? null,
+    color: (row.color as string | null) ?? null,
+    onDesktop: row.on_desktop === true,
+  };
+}
+
 async function toInsertPayload(
   context: ToolContext,
   input: z.infer<typeof itemInputSchema>
@@ -473,11 +504,16 @@ function normalizeTags(tags: string[] = []): string[] {
   return Array.from(new Set(tags.map((tag) => tag.trim()).filter(Boolean))).slice(0, 12);
 }
 
-function kyoItemsEffect(itemIds: string[], reason: string): z.infer<typeof clientEffectSchema> {
+function kyoItemsEffect(
+  itemIds: string[],
+  reason: string,
+  extra: Partial<Pick<z.infer<typeof clientEffectSchema>, "deletedItems">> = {}
+): z.infer<typeof clientEffectSchema> {
   return {
     type: "sync-kyo-items",
     itemIds,
     reason,
+    ...extra,
   };
 }
 

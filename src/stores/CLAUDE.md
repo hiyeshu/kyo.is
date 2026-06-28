@@ -13,7 +13,7 @@ useDockStore.ts: Dock 栏状态，仅固定应用列表（书签 inDock 已迁�
 useThemeStore.ts: 主题状态，当前主题，存储键 kyo:theme 和 kyo:theme-sync-wallpaper
 useCustomThemeStore.ts: 自定义主题状态，基于 themeSchema 管理用户自定义主题，编辑器临时状态
 useStickiesStore.ts: 便利贴状态，便签列表、颜色、位置、尺寸与 orderIndex，持久化，每次增删改排序同步写云端
-useSyncStore.ts: 云端数据加载，登录时 initialSync 双向合并，agent action 后 refreshCloudItems 读云刷新，本地/云端按 updatedAt 裁决，并维护 orderIndex 排序同构
+useSyncStore.ts: 云端数据加载，登录时 initialSync 双向合并，agent action 后 refreshCloudItems 读云刷新，并按 deletedItems hint 清理本地桌面残影，本地/云端按 updatedAt 裁决，并维护 orderIndex 排序同构
 useKyoItemStore.ts: KyoItem 统一查询层，不持有数据，从 bookmark + stickies 派生 KyoItem 格式
 useLinkMetaStore.ts: 链接元数据缓存，URL 预览信息（标题、描述、图片）
 useBrowserDataStore.ts: 浏览器原生数据瞬态存储，接收插件通过 postMessage 注入的 Chrome 书签和历史记录，不持久化，被 CommandPalette 消费

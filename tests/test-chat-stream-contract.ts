@@ -8,6 +8,7 @@
 
 import {
   collectClientEffects,
+  collectClientToolEvents,
   resolveAssistantTurn,
   toAgentPrompt,
 } from "../src/worker/routes";
@@ -76,6 +77,33 @@ export async function runChatStreamContractTests(): Promise<{ passed: number; fa
     assertEq(effects.length, 1);
     assertEq(effects[0]?.type, "sync-kyo-items");
     assertEq(effects[0]?.itemIds[0], "note-a");
+  });
+
+  await runTest("client effects preserve deleted item hints", async () => {
+    const effects = collectClientEffects([
+      toolTrace("delete-kyo-item", "success", {
+        clientEffect: {
+          type: "sync-kyo-items",
+          itemIds: ["note-a"],
+          reason: "kyo-item-deleted",
+          deletedItems: [{ id: "note-a", type: "note", text: "旧内容", color: "purple" }],
+        },
+      }),
+    ]);
+    assertEq(effects[0]?.deletedItems?.[0]?.text, "旧内容");
+    assertEq(effects[0]?.deletedItems?.[0]?.color, "purple");
+  });
+
+  await runTest("tool trace can be rendered as separate step events", async () => {
+    const result = collectClientToolEvents([
+      toolTrace("search-kyo-items", "running"),
+      toolTrace("search-kyo-items", "success", { items: [{ id: "note-a" }] }),
+      toolTrace("delete-kyo-item", "success", { id: "note-a", deleted: true }),
+    ]);
+    assertEq(result.events.length, 3);
+    assertEq(result.events[0]?.status, "running");
+    assert(result.events[0]?.content.includes("搜索"), "Expected a search step message");
+    assert(result.events[2]?.content.includes("删除"), "Expected a delete step message");
   });
 
   await runTest("real assistant text is preserved", async () => {

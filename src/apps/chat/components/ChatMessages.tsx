@@ -1,14 +1,15 @@
 /**
- * [INPUT]: 依赖 react, framer-motion, @phosphor-icons/react, useThemeStore, ImageAttachment
+ * [INPUT]: 依赖 react, framer-motion, use-stick-to-bottom, @phosphor-icons/react, useThemeStore, ImageAttachment
  * [OUTPUT]: 对外提供 ChatMessages 组件, Message 类型
- * [POS]: apps/chat/components 的消息列表组件，支持文本+图片消息渲染
+ * [POS]: apps/chat/components 的消息列表组件，支持文本+图片消息渲染，并用现有 stick-to-bottom 行为承接流式滚动
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { CaretDown, Copy, Check } from "@phosphor-icons/react";
+import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 
 import { useThemeStore } from "@/stores/useThemeStore";
 import type { ImageAttachment } from "../utils/imagePreprocessing";
@@ -68,16 +69,11 @@ function isEmojiOnly(text: string): boolean {
 // 滚动到底部按钮
 // ============================================================================
 
-function ScrollToBottomButton({
-  isAtBottom,
-  onClick,
-}: {
-  isAtBottom: boolean;
-  onClick: () => void;
-}) {
+function ScrollToBottomButton() {
   const { t } = useTranslation();
   const currentTheme = useThemeStore((s) => s.current);
   const isMacTheme = currentTheme === "macosx";
+  const { isAtBottom, scrollToBottom } = useStickToBottomContext();
 
   return (
     <AnimatePresence>
@@ -102,7 +98,7 @@ function ScrollToBottomButton({
             border: isMacTheme ? undefined : "1px solid rgba(0,0,0,0.3)",
             backdropFilter: isMacTheme ? "blur(2px)" : undefined,
           }}
-          onClick={onClick}
+          onClick={() => void scrollToBottom("smooth")}
           aria-label={t("apps.chat.scrollToBottom", "滚动到底部")}
         >
           {isMacTheme && (
@@ -158,42 +154,10 @@ export function ChatMessages({
   onAddToInput,
 }: ChatMessagesProps) {
   const { t } = useTranslation();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isAtBottom, setIsAtBottom] = useState(true);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const currentTheme = useThemeStore((s) => s.current);
   const visibleMessages = messages.filter(hasVisiblePayload);
-
-  // -------------------------------------------------------------------------
-  // 滚动处理
-  // -------------------------------------------------------------------------
-
-  const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-      // 只有当内容可滚动时才判断是否在底部
-      const isScrollable = scrollHeight > clientHeight;
-      const nearBottom = scrollHeight - scrollTop - clientHeight < 50;
-      setIsAtBottom(!isScrollable || nearBottom);
-    }
-  };
-
-  // 自动滚动到底部
-  useEffect(() => {
-    if (isAtBottom) {
-      scrollToBottom();
-    }
-  }, [messages, isAtBottom]);
 
   // -------------------------------------------------------------------------
   // 复制消息
@@ -214,13 +178,13 @@ export function ChatMessages({
   // -------------------------------------------------------------------------
 
   return (
-    <div className="relative h-full flex flex-col">
+    <StickToBottom
+      className="relative h-full flex flex-col"
+      resize="smooth"
+      initial="instant"
+    >
       {/* 消息滚动区域 */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-3 py-2"
-      >
+      <StickToBottom.Content className="min-h-full px-3 py-2">
 
 
         {/* 消息列表 */}
@@ -358,11 +322,11 @@ export function ChatMessages({
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </StickToBottom.Content>
 
       {/* 滚动到底部按钮 */}
-      <ScrollToBottomButton isAtBottom={isAtBottom} onClick={scrollToBottom} />
-    </div>
+      <ScrollToBottomButton />
+    </StickToBottom>
   );
 }
 

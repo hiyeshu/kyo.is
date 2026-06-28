@@ -3,7 +3,7 @@
  *          依赖 useBookmarkStore/useStickiesStore 本地数据
  * [OUTPUT]: 对外提供 useSyncStore — initialSync / refreshCloudItems / startRealtime / stopRealtime
  *           对外提供 markLocalChange / trackDeletion（被 bookmark/stickies store 消费）
- * [POS]: stores/ 的云端数据层，登录时双向 merge，agent action 后读云刷新，Realtime 实时同步，维护 orderIndex 排序同构
+ * [POS]: stores/ 的云端数据层，登录时双向 merge，agent action 后读云刷新并按删除 hint 清理本地投影，Realtime 实时同步，维护 orderIndex 排序同构
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -25,10 +25,20 @@ import { useStickiesStore, type StickyNote } from "./useStickiesStore";
 
 export type SyncStatus = "idle" | "loading" | "done" | "error";
 
+export interface DeletedKyoItemHint {
+  id: string;
+  type?: "bookmark" | "note";
+  title?: string | null;
+  text?: string | null;
+  url?: string | null;
+  color?: string | null;
+  onDesktop?: boolean;
+}
+
 interface SyncState {
   status: SyncStatus;
   initialSync: () => Promise<void>;
-  refreshCloudItems: (itemIds?: string[]) => Promise<void>;
+  refreshCloudItems: (itemIds?: string[], deletedItems?: DeletedKyoItemHint[]) => Promise<void>;
   startRealtime: (userId: string) => void;
   stopRealtime: () => void;
 }
@@ -158,6 +168,40 @@ function clearDeletedIds(idsToRemove?: Set<string>) {
   } catch {
     localStorage.removeItem(DELETED_IDS_KEY);
   }
+}
+
+function shouldDropBookmark(
+  bookmark: Bookmark,
+  affectedIds: Set<string>,
+  deletedItems: DeletedKyoItemHint[]
+): boolean {
+  if (affectedIds.has(bookmark.id)) return true;
+  return deletedItems.some((item) => {
+    if (item.type && item.type !== "bookmark") return false;
+    return item.id === bookmark.id
+      || sameNonEmpty(item.url, bookmark.url)
+      || sameNonEmpty(item.title, bookmark.title);
+  });
+}
+
+function shouldDropNote(
+  note: StickyNote,
+  affectedIds: Set<string>,
+  deletedItems: DeletedKyoItemHint[]
+): boolean {
+  if (affectedIds.has(note.id)) return true;
+  return deletedItems.some((item) => {
+    if (item.type && item.type !== "note") return false;
+    const sameBody = sameNonEmpty(item.text, note.content) || sameNonEmpty(item.title, note.content);
+    const sameColor = !item.color || item.color === note.color;
+    return item.id === note.id || (sameBody && sameColor);
+  });
+}
+
+function sameNonEmpty(left: unknown, right: unknown): boolean {
+  const a = String(left ?? "").trim();
+  const b = String(right ?? "").trim();
+  return a.length > 0 && b.length > 0 && a === b;
 }
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -308,11 +352,14 @@ export const useSyncStore = create<SyncState>((set) => ({
     }
   },
 
-  refreshCloudItems: async (itemIds: string[] = []) => {
+  refreshCloudItems: async (itemIds: string[] = [], deletedItems: DeletedKyoItemHint[] = []) => {
     const result = await cloudFetchAll();
     if (!result) return;
 
-    const affectedIds = new Set(itemIds.filter(Boolean));
+    const affectedIds = new Set([
+      ...itemIds.filter(Boolean),
+      ...deletedItems.map((item) => item.id).filter(Boolean),
+    ]);
     const { bookmarks: cloudBookmarks, notes: cloudNotes } = result;
 
     const cloudBmMap = new Map<string, Record<string, unknown>>();
@@ -330,7 +377,7 @@ export const useSyncStore = create<SyncState>((set) => ({
     const mergedBookmarks = localBookmarks.flatMap((local) => {
       const cloud = cloudBmMap.get(local.id);
       if (cloud) return [cloudRowToBookmark(cloud)];
-      return affectedIds.has(local.id) ? [] : [local];
+      return shouldDropBookmark(local, affectedIds, deletedItems) ? [] : [local];
     });
 
     for (const [id, cloud] of cloudBmMap) {
@@ -345,7 +392,7 @@ export const useSyncStore = create<SyncState>((set) => ({
         const cloudNote = cloudRowToNote(cloud);
         return [{ ...cloudNote, position: local.position, size: local.size }];
       }
-      return affectedIds.has(local.id) ? [] : [local];
+      return shouldDropNote(local, affectedIds, deletedItems) ? [] : [local];
     });
 
     for (const [id, cloud] of cloudNtMap) {

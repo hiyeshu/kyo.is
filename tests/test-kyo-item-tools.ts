@@ -145,7 +145,18 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
   await runTest("upsert bookmark updates existing url instead of duplicating", async () => {
     const { client, calls } = createMockSupabase(
       { data: { id: BOOKMARK_ID }, error: null },
-      { data: { id: BOOKMARK_ID }, error: null }
+      {
+        data: {
+          id: BOOKMARK_ID,
+          type: "bookmark",
+          title: "Renamed",
+          url: "https://example.com",
+          text: null,
+          color: null,
+          on_desktop: true,
+        },
+        error: null,
+      }
     );
     const tool = createUpsertKyoItemTool(createContext(client));
 
@@ -205,7 +216,18 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
   await runTest("update and delete require exact id plus current user", async () => {
     const { client, calls } = createMockSupabase(
       { data: { id: BOOKMARK_ID }, error: null },
-      { data: { id: BOOKMARK_ID }, error: null }
+      {
+        data: {
+          id: BOOKMARK_ID,
+          type: "bookmark",
+          title: "Renamed",
+          text: null,
+          url: "https://example.com",
+          color: null,
+          on_desktop: true,
+        },
+        error: null,
+      }
     );
 
     const updateTool = createUpdateKyoItemTool(createContext(client));
@@ -225,6 +247,9 @@ export async function runKyoItemToolTests(): Promise<{ passed: number; failed: n
     assertJsonEq(updateResult.clientEffect.itemIds, [BOOKMARK_ID]);
     assertEq(deleteResult.clientEffect.type, "sync-kyo-items");
     assertJsonEq(deleteResult.clientEffect.itemIds, [BOOKMARK_ID]);
+    assertEq(deleteResult.item.title, "Renamed");
+    assertEq(deleteResult.item.onDesktop, true);
+    assertEq(deleteResult.clientEffect.deletedItems?.[0]?.id, BOOKMARK_ID);
     assert(hasEq(calls, "id", BOOKMARK_ID), "Mutation must target exact id");
     assert(hasEq(calls, "user_id", USER_ID), "Mutation must scope by current user");
     assert(calls.some((call) => call.method === "delete"), "Delete query must be issued");

@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 依赖 react hooks、Supabase auth、LoginDialog、getApiUrl、useSyncStore、../../base/types 的 AppProps
  * [OUTPUT]: 对外提供 ChatAppComponent 组件
- * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，前置登录门禁，解析 0/d/3 流帧与 clientEffects，并管理 channelId、历史消息、图片附件、autoSend
+ * [POS]: apps/chat/components 的主组件，对接 /api/agent/chat 与 channel APIs，前置登录门禁，解析 0/3/8/d 流帧、agent step 气泡与 clientEffects，并管理 channelId、历史消息、图片附件、autoSend
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -39,6 +39,24 @@ interface AgentClientEffect {
   type: "sync-kyo-items";
   itemIds?: string[];
   reason?: string;
+  deletedItems?: DeletedKyoItemHint[];
+}
+
+interface DeletedKyoItemHint {
+  id: string;
+  type?: "bookmark" | "note";
+  title?: string | null;
+  text?: string | null;
+  url?: string | null;
+  color?: string | null;
+  onDesktop?: boolean;
+}
+
+interface AgentToolStepEvent {
+  id: string;
+  status: "running" | "success" | "error";
+  content: string;
+  at?: string;
 }
 
 interface AgentDoneFrame {
@@ -272,6 +290,24 @@ export function ChatAppComponent({
         const decoder = new TextDecoder();
         let fullContent = "";
         const assistantTimestamp = Date.now();
+        const appendToolStepMessage = (event: AgentToolStepEvent) => {
+          const content = event.content.trim();
+          if (!content) return;
+          const id = `tool-${event.id}`;
+          const timestamp = event.at ? new Date(event.at).getTime() : Date.now();
+          setMessages((prev) => {
+            if (prev.some((message) => message.id === id)) return prev;
+            return [
+              ...prev,
+              {
+                id,
+                role: "assistant",
+                content,
+                timestamp: Number.isFinite(timestamp) ? timestamp : Date.now(),
+              },
+            ];
+          });
+        };
 
         let buffer = "";
         const processLine = (line: string) => {
@@ -315,6 +351,16 @@ export function ChatAppComponent({
                 setChannelId(data.channelId);
               }
               applyAgentClientEffects(data.clientEffects);
+            } catch {
+              // 忽略解析错误
+            }
+            return;
+          }
+
+          if (line.startsWith("8:")) {
+            try {
+              const event = JSON.parse(line.slice(2)) as AgentToolStepEvent;
+              appendToolStepMessage(event);
             } catch {
               // 忽略解析错误
             }
@@ -572,9 +618,11 @@ function isUnauthorizedError(error: unknown): boolean {
 }
 
 function applyAgentClientEffects(effects?: AgentClientEffect[]): void {
-  const itemIds = effects
-    ?.filter((effect) => effect.type === "sync-kyo-items")
-    .flatMap((effect) => effect.itemIds ?? []) ?? [];
-  if (itemIds.length === 0) return;
-  void useSyncStore.getState().refreshCloudItems(itemIds);
+  const syncEffects = effects?.filter((effect) => effect.type === "sync-kyo-items") ?? [];
+  const itemIds = syncEffects
+    .flatMap((effect) => effect.itemIds ?? []);
+  const deletedItems = syncEffects
+    .flatMap((effect) => effect.deletedItems ?? []);
+  if (itemIds.length === 0 && deletedItems.length === 0) return;
+  void useSyncStore.getState().refreshCloudItems(itemIds, deletedItems);
 }
